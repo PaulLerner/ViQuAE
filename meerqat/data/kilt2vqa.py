@@ -7,7 +7,7 @@ from spacy.symbols import dobj, nsubj, pobj, obj, nsubjpass, poss, obl
 
 from docopt import docopt
 
-from .loading import map_kilt_triviaqa
+from meerqat.data.loading import map_kilt_triviaqa
 
 
 INVALID_ENTITIES = {DATE, TIME, PERCENT, MONEY, QUANTITY, ORDINAL, CARDINAL}
@@ -94,18 +94,21 @@ def stats(kilt_subset):
     return string
 
 
-def stringify(kilt_subset, include_answer=True, include_provenance=True):
+def stringify(kilt_subset, include_answer=True, include_provenance=True, include_dep=False):
     results = []
     invalid = []
     for item in kilt_subset:
         if item['vq']:
             result = [f"Q: {item['input']}"]
             for vq in item['vq']:
-                result.append(f"-> {vq}")
+                dep = ""
+                if include_dep:
+                    dep = "("+" ".join([f"{token.text}-{token.dep_}" for token in vq['entity']])+")"
+                result.append(f"-> {vq['input']} {dep}")
             if include_answer:
                 result.append(f"A: {item['output']['answer'][0]}")
             if include_provenance:
-                result.append(f"\t{item['output']['answer']['provenance']['title'][0]}")
+                result.append(f"\t{item['output']['provenance'][0]['title'][0]}")
             results.append("\n".join(result))
         else:
             invalid.append(item['input'])
