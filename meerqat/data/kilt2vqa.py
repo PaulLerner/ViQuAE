@@ -8,7 +8,7 @@ from spacy.symbols import dobj, nsubj, pobj, obj, nsubjpass, poss, obl
 from docopt import docopt
 from tabulate import tabulate
 
-from meerqat.data.loading import map_kilt_triviaqa
+from meerqat.data.loading import map_kilt_triviaqa, DATA_ROOT_PATH
 from meerqat.visualization.utils import viz_spacy
 
 INVALID_ENTITIES = {DATE, TIME, PERCENT, MONEY, QUANTITY, ORDINAL, CARDINAL}
@@ -16,8 +16,8 @@ VALID_DEP = {dobj, nsubj, pobj, obj, nsubjpass, poss, obl}
 np.random.seed(0)
 
 
-def subset2placeholder(kilt_subset, model):
-    """Goes through a KILT subset (e.g. TriviaQA) and make the question suitable for VQA
+def item2placeholder(item, model=None):
+    """Make input question suitable for VQA
     by replacing an explicit entity mention and its syntactic children by a placeholder.
     e.g. 'Who wrote the opera Carmen?' -> 'Who wrote {mention}'
     Note that, not only the entity mention ('Carmen') but its syntactic children ('the opera')
@@ -28,59 +28,58 @@ def subset2placeholder(kilt_subset, model):
 
     Parameters
     ----------
-    kilt_subset: List[dict]
+    item: dict
         original question should be in 'input' key
     model: spacy.lang.en.English
         Full spacy pipeline, we use both NER and dependency parsing
 
     Returns
     -------
-    kilt_subset: List[dict]
+    item: dict
         same as input with extra keys:
         - "placeholder": List[dict]
           One dict like {"input": str, "entity": Span, "dependency": str}
         - "spacy_input": Doc
 
-    Note
-    ----
-    kilt_subset should likely be a datasets.Dataset and not a List[dict]
+    Usage
+    -----
+    hugging_face_dataset.map(item2placeholder, fn_kwargs={"model": spacy_model})
     """
-    for item in kilt_subset:
-        item['placeholder'] = []
-        item['spacy_input'] = model(item['input'])
-        question = item['spacy_input']
-        # filter questions without entities
-        if not question.ents:
+    item['placeholder'] = []
+    item['spacy_input'] = model(item['input'])
+    question = item['spacy_input']
+    # filter questions without entities
+    if not question.ents:
+        return item
+    potential_questions = {}
+    for e in question.ents:
+        # filter invalid entities
+        if e.label in INVALID_ENTITIES:
             continue
-        potential_questions = {}
-        for e in question.ents:
-            # filter invalid entities
-            if e.label in INVALID_ENTITIES:
+        for token in e:
+            # filter invalid dependencies
+            if token.dep not in VALID_DEP:
                 continue
-            for token in e:
-                # filter invalid dependencies
-                if token.dep not in VALID_DEP:
-                    continue
-                # get leftmost and rightmost syntactic children
-                start, end = token.left_edge.i, token.right_edge.i
-                potential_questions[(start, end)] = (e, token)
-        # keep only the biggest span for overlapping mentions
-        for (start, end), (e, token) in potential_questions.items():
-            included = False
-            for other_start, other_end in potential_questions:
-                # included from the left
-                if start >= other_start and end < other_end:
-                    included = True
-                # included from the right
-                elif start > other_start and end <= other_end:
-                    included = True
-            if not included:
-                # replace entity and its syntactic children by a placeholder
-                placeholder = question[:start].text_with_ws + "{mention}" + token.right_edge.whitespace_ + question[end + 1:].text
-                item['placeholder'].append({'input': placeholder,
-                                            'entity': e,
-                                            'dependency': token.dep_})
-    return kilt_subset
+            # get leftmost and rightmost syntactic children
+            start, end = token.left_edge.i, token.right_edge.i
+            potential_questions[(start, end)] = (e, token)
+    # keep only the biggest span for overlapping mentions
+    for (start, end), (e, token) in potential_questions.items():
+        included = False
+        for other_start, other_end in potential_questions:
+            # included from the left
+            if start >= other_start and end < other_end:
+                included = True
+            # included from the right
+            elif start > other_start and end <= other_end:
+                included = True
+        if not included:
+            # replace entity and its syntactic children by a placeholder
+            placeholder = question[:start].text_with_ws + "{mention}" + token.right_edge.whitespace_ + question[end + 1:].text
+            item['placeholder'].append({'input': placeholder,
+                                        'entity': e,
+                                        'dependency': token.dep_})
+    return item
 
 
 def stats(kilt_subset):
@@ -116,18 +115,31 @@ def stringify(kilt_subset, field="placeholder", include_answer=True, include_pro
 
 
 if __name__ == '__main__':
+    # parse arguments
     args = docopt(__doc__)
     subset = args['<subset>']
+
+    # load model and data
     model = spacy.load("en_core_web_lg")
     kilt_tasks = map_kilt_triviaqa()
+    kilt_subset = kilt_tasks[subset]
 
-    # test on a random subset
-    # TODO save the data using pyarrow
+    # go through the dataset and make input question suitable for VQA
+    kilt_subset = kilt_subset.map(item2placeholder, fn_kwargs={"model": model})
+    print(stats(kilt_subset))
+
+    # save data
+    output_path = DATA_ROOT_PATH/f"meerqat_{subset}.arrow"
+    kilt_subset.save_to_disk(output_path)
+    print(f"Successfully saved output to '{output_path}'")
+
+    # show N random examples
+    N = 100
     indices = np.arange(kilt_tasks[subset].shape[0])
     np.random.shuffle(indices)
-    kilt_subset = [kilt_tasks[subset][i.item()] for i in indices[:100]]
-    kilt_subset = subset2placeholder(kilt_subset, model)
-    print(stats(kilt_subset))
-    results, invalid = stringify(kilt_subset)
+    randoms = [kilt_subset[i.item()] for i in indices[:N]]
+    results, invalid = stringify(randoms)
+    print(f"\nGenerated questions out of {N} random examples:\n")
     print(results)
+    print(f"\nPruned questions out of {N} random examples:\n")
     print(invalid)

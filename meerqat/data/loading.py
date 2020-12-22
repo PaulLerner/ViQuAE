@@ -1,5 +1,10 @@
 # coding: utf-8
 from datasets import load_dataset
+from pathlib import Path
+
+from meerqat import __file__ as ROOT_PATH
+
+DATA_ROOT_PATH = Path(ROOT_PATH).parent.parent/"data"
 
 
 def map_kilt_triviaqa():
