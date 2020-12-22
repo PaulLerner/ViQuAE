@@ -3,7 +3,7 @@
 import numpy as np
 import spacy
 from spacy.symbols import DATE, TIME, PERCENT, MONEY, QUANTITY, ORDINAL, CARDINAL
-from spacy.symbols import dobj, nsubj, pobj, obj, nsubjpass, poss, obl
+from spacy.symbols import dobj, nsubj, pobj, obj, nsubjpass, poss, obl, root
 
 from docopt import docopt
 from tabulate import tabulate
@@ -12,7 +12,7 @@ from meerqat.data.loading import map_kilt_triviaqa, DATA_ROOT_PATH
 from meerqat.visualization.utils import viz_spacy
 
 INVALID_ENTITIES = {DATE, TIME, PERCENT, MONEY, QUANTITY, ORDINAL, CARDINAL}
-VALID_DEP = {dobj, nsubj, pobj, obj, nsubjpass, poss, obl}
+VALID_DEP = {dobj, nsubj, pobj, obj, nsubjpass, poss, obl, root}
 np.random.seed(0)
 
 
@@ -93,7 +93,7 @@ def stats(kilt_subset):
         stat_dict["placeholders"] += len_placeholder
         stat_dict["distinct source"] += min(1, len_placeholder)
 
-    return tabulate([stat_dict])
+    return tabulate([stat_dict], headers="keys")
 
 
 def stringify(kilt_subset, field="placeholder", include_answer=True, include_provenance=True, include_dep=False):
