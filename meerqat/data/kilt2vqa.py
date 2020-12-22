@@ -38,16 +38,18 @@ def item2placeholder(item, model=None):
     item: dict
         same as input with extra keys:
         - "placeholder": List[dict]
-          One dict like {"input": str, "entity": Span, "dependency": str}
-        - "spacy_input": Doc
+          One dict like {"input": str, "entity": dict, "dependency": str}
+        - "spacy_input": dict
+          Original input, POS and NER-tagged with spacy in dict format
+          (using Doc.to_json())
 
     Usage
     -----
     hugging_face_dataset.map(item2placeholder, fn_kwargs={"model": spacy_model})
     """
     item['placeholder'] = []
-    item['spacy_input'] = model(item['input'])
-    question = item['spacy_input']
+    question = model(item['input'])
+    item['spacy_input'] = question.to_json()
     # filter questions without entities
     if not question.ents:
         return item
@@ -77,7 +79,7 @@ def item2placeholder(item, model=None):
             # replace entity and its syntactic children by a placeholder
             placeholder = question[:start].text_with_ws + "{mention}" + token.right_edge.whitespace_ + question[end + 1:].text
             item['placeholder'].append({'input': placeholder,
-                                        'entity': e,
+                                        'entity': e.as_doc().to_json(),
                                         'dependency': token.dep_})
     return item
 
@@ -125,11 +127,12 @@ if __name__ == '__main__':
     kilt_subset = kilt_tasks[subset]
 
     # go through the dataset and make input question suitable for VQA
-    kilt_subset = kilt_subset.map(item2placeholder, fn_kwargs={"model": model})
+    fn_kwargs = {"model": model}
+    kilt_subset = kilt_subset.map(item2placeholder, fn_kwargs=fn_kwargs)
     print(stats(kilt_subset))
 
     # save data
-    output_path = DATA_ROOT_PATH/f"meerqat_{subset}.arrow"
+    output_path = DATA_ROOT_PATH/f"meerqat_{subset}"
     kilt_subset.save_to_disk(output_path)
     print(f"Successfully saved output to '{output_path}'")
 
