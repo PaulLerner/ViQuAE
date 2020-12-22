@@ -6,12 +6,12 @@ from spacy.symbols import DATE, TIME, PERCENT, MONEY, QUANTITY, ORDINAL, CARDINA
 from spacy.symbols import dobj, nsubj, pobj, obj, nsubjpass, poss, obl
 
 from docopt import docopt
+from tabulate import tabulate
 
 from meerqat.data.loading import map_kilt_triviaqa
-
+from meerqat.visualization.utils import viz_spacy
 
 INVALID_ENTITIES = {DATE, TIME, PERCENT, MONEY, QUANTITY, ORDINAL, CARDINAL}
-# TODO check validity of obj, nsubjpass, poss and **obl**
 VALID_DEP = {dobj, nsubj, pobj, obj, nsubjpass, poss, obl}
 np.random.seed(0)
 
@@ -37,18 +37,18 @@ def subset2placeholder(kilt_subset, model):
     -------
     kilt_subset: List[dict]
         same as input with extra keys:
-        - "vq": List[dict]
-          One dict like {"input": str, "entity": spacy.tokens.token.Token}
-        - "question": spacy.tokens.doc.Doc
+        - "placeholder": List[dict]
+          One dict like {"input": str, "entity": Span, "dependency": str}
+        - "spacy_input": Doc
 
     Note
     ----
     kilt_subset should likely be a datasets.Dataset and not a List[dict]
     """
     for item in kilt_subset:
-        item['vq'] = []
-        item['question'] = model(item['input'])
-        question = item['question']
+        item['placeholder'] = []
+        item['spacy_input'] = model(item['input'])
+        question = item['spacy_input']
         # filter questions without entities
         if not question.ents:
             continue
@@ -76,42 +76,42 @@ def subset2placeholder(kilt_subset, model):
                     included = True
             if not included:
                 # replace entity and its syntactic children by a placeholder
-                vq = question[:start].text_with_ws + "{mention}" + token.right_edge.whitespace_ + question[end + 1:].text
-                item['vq'].append({'input': vq, 'entity': e})
+                placeholder = question[:start].text_with_ws + "{mention}" + token.right_edge.whitespace_ + question[end + 1:].text
+                item['placeholder'].append({'input': placeholder,
+                                            'entity': e,
+                                            'dependency': token.dep_})
     return kilt_subset
 
 
 def stats(kilt_subset):
-    total_vq, total_distinct = 0, 0
+    stat_dict = {
+        "placeholders": 0,
+        "originals": len(kilt_subset),
+        "distinct source": 0
+    }
     for item in kilt_subset:
-        len_vq = len(item['vq'])
-        total_vq += len_vq
-        total_distinct += min(1, len_vq)
+        len_placeholder = len(item["placeholder"])
+        stat_dict["placeholders"] += len_placeholder
+        stat_dict["distinct source"] += min(1, len_placeholder)
 
-    string = f"""Generated {total_vq} placeholder-questions by replacing entity
-              mentions in {len(kilt_subset)} original questions 
-              (from {total_distinct} distinct questions)."""
-    return string
+    return tabulate([stat_dict])
 
 
-def stringify(kilt_subset, include_answer=True, include_provenance=True, include_dep=False):
+def stringify(kilt_subset, field="placeholder", include_answer=True, include_provenance=True, include_dep=False):
     results = []
     invalid = []
     for item in kilt_subset:
-        if item['vq']:
+        if item[field]:
             result = [f"Q: {item['input']}"]
-            for vq in item['vq']:
-                dep = ""
-                if include_dep:
-                    dep = "("+" ".join([f"{token.text}-{token.dep_}" for token in vq['entity']])+")"
-                result.append(f"-> {vq['input']} {dep}")
+            for vq in item[field]:
+                result.append(f"-> {vq['input']} {vq['dependency'] if include_dep else ''}")
             if include_answer:
                 result.append(f"A: {item['output']['answer'][0]}")
             if include_provenance:
                 result.append(f"\t{item['output']['provenance'][0]['title'][0]}")
             results.append("\n".join(result))
         else:
-            invalid.append(item['input'])
+            invalid.append(viz_spacy(item['spacy_input']))
     return "\n\n\n".join(results), "\n".join(invalid)
 
 
