@@ -94,7 +94,7 @@ def stats(kilt_subset):
         stat_dict["placeholders"] += len_placeholder
         stat_dict["distinct source"] += min(1, len_placeholder)
 
-    return tabulate([stat_dict])
+    return tabulate([stat_dict], headers="keys")
 
 
 def stringify(kilt_subset, field="placeholder", include_answer=True, include_provenance=True, include_dep=False):
