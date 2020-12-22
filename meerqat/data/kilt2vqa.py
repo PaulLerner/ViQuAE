@@ -66,7 +66,7 @@ def item2placeholder(item, model=None):
             # min/max hack is in case the "valid dependency token" is not the head in the entity span
             # e.g. "Who wrote the poem ‘The Lady of the Lake’?", "Lake" is pobj but a leaf
             start = min(token.left_edge.i, e.start)
-            end = max(token.right_edge.i, e.end)
+            end = max(token.right_edge.i, e.end-1)
             potential_questions[(start, end)] = (e, token)
     # keep only the biggest span for overlapping mentions
     for (start, end), (e, token) in potential_questions.items():
