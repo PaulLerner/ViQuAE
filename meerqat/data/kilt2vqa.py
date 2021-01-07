@@ -1,19 +1,31 @@
 # coding: utf-8
-"""Usage: kilt2vqa.py <subset>"""
+"""Usage:
+kilt2vqa.py ner <subset>
+kilt2vqa.py ned <subset>
+"""
 import numpy as np
+import re
 import spacy
+from spacy.gold import align
 from spacy.symbols import DATE, TIME, PERCENT, MONEY, QUANTITY, ORDINAL, CARDINAL
 from spacy.symbols import dobj, nsubj, pobj, obj, nsubjpass, poss, obl, root
 
 from docopt import docopt
 from tabulate import tabulate
 
+from datasets import load_dataset, load_from_disk
 from meerqat.data.loading import map_kilt_triviaqa, DATA_ROOT_PATH
 from meerqat.visualization.utils import viz_spacy
 
 INVALID_ENTITIES = {DATE, TIME, PERCENT, MONEY, QUANTITY, ORDINAL, CARDINAL}
 VALID_DEP = {dobj, nsubj, pobj, obj, nsubjpass, poss, obl, root}
 np.random.seed(0)
+
+
+def wer(a, b):
+    """Compute Word Error Rate (word-level Levenshtein distance) using spacy"""
+    length = max(len(a), len(b))
+    return align(a, b)[0] / length
 
 
 def item2placeholder(item, model=None):
@@ -119,10 +131,12 @@ def stringify(kilt_subset, field="placeholder", include_answer=True, include_pro
     return "\n\n\n".join(results), "\n".join(invalid)
 
 
-if __name__ == '__main__':
-    # parse arguments
-    args = docopt(__doc__)
-    subset = args['<subset>']
+def ner(subset):
+    """
+    1st step: Named Entity Recognition (NER):
+    Goes through the kilt subset and apply 'item2placeholder' function (see its docstring)
+    Save the resulting dataset to f"{DATA_ROOT_PATH}/meerqat_{subset}"
+    """
 
     # load model and data
     model = spacy.load("en_core_web_lg")
@@ -135,13 +149,13 @@ if __name__ == '__main__':
     print(stats(kilt_subset))
 
     # save data
-    output_path = DATA_ROOT_PATH/f"meerqat_{subset}"
+    output_path = DATA_ROOT_PATH / f"meerqat_{subset}"
     kilt_subset.save_to_disk(output_path)
     print(f"Successfully saved output to '{output_path}'")
 
     # show N random examples
     N = 100
-    indices = np.arange(kilt_tasks[subset].shape[0])
+    indices = np.arange(kilt_subset.shape[0])
     np.random.shuffle(indices)
     randoms = [kilt_subset[i.item()] for i in indices[:N]]
     results, invalid = stringify(randoms)
@@ -149,3 +163,67 @@ if __name__ == '__main__':
     print(results)
     print(f"\nPruned questions out of {N} random examples:\n")
     print(invalid)
+
+
+def disambiguate(item, wikipedia, wikipedia_ids, pedia_index):
+    """Go through candidate pages from TriviaQA and compute WER between entity mention and Wikipedia title/aliases
+    One should filter entities with a minimal WER of 0.5 (see 'wer' key)
+    """
+    for vq in item["placeholder"]:
+        ent = vq["entity"]['text'].lower().strip().split()
+        wers = {}
+        # process each wikipedia article only once (answer might come from different paragraphs but it's irrelevant for this)
+        provenances = {provenance['wikipedia_id'][0]: re.sub("\(.+\)", "", provenance['title'][0].lower()).strip() for
+                       provenance in item['output']['provenance']}
+        for wid, title in provenances.items():
+            aliases = {title}
+            # get aliases from wikipedia
+            pedia_index.setdefault(wid, np.where(wikipedia_ids == wid)[0].item())
+            wiki_item = wikipedia[pedia_index[wid]]
+            aliases.update({alias.lower().strip() for alias in wiki_item['wikidata_info']['aliases']['alias']})
+            # compute WER and keep minimal for all aliases
+            word_er = min([wer(ent, alias.split()) for alias in aliases])
+            wers[wid] = word_er
+        # keep minimal WER for all candidate articles
+        best_provenance = min(wers, key=wers.get)
+        best_wer = wers[best_provenance]
+        wiki_item = wikipedia[pedia_index[best_provenance]]
+        vq["entity"]['wikidata_info'] = wiki_item['wikidata_info']
+        vq["entity"]['wikipedia_id'] = wiki_item['wikipedia_id']
+        vq["wer"] = best_wer
+    return item
+
+
+def ned(subset):
+    """
+    2nd step: Named Entity Disambiguation (NED) using TriviaQA provided list
+    Assumes that you already ran NER and loads dataset from f"{DATA_ROOT_PATH}/meerqat_{subset}"
+    and wikipedia from DATA_ROOT_PATH
+    """
+    # load data
+    dataset = load_from_disk(DATA_ROOT_PATH / f"meerqat_{subset}")
+    wikipedia = load_dataset('kilt_wikipedia', cache_dir=DATA_ROOT_PATH)['full']
+    wikipedia_ids = np.array(wikipedia["wikipedia_id"])
+    pedia_index = {}
+    fn_kwargs = {"wikipedia": wikipedia, "wikipedia_ids": wikipedia_ids, "pedia_index": pedia_index}
+
+    # go through dataset
+    dataset = dataset.map(disambiguate, fn_kwargs=fn_kwargs)
+
+    # save data
+    output_path = DATA_ROOT_PATH / f"meerqat_{subset}"
+    dataset.save_to_disk(output_path)
+    print(f"Successfully saved output to '{output_path}'")
+
+
+if __name__ == '__main__':
+    # parse arguments
+    args = docopt(__doc__)
+    subset = args['<subset>']
+
+    if args['ner']:
+        ner(subset)
+
+    if args['ned']:
+        ned(subset)
+
