@@ -190,7 +190,7 @@ def disambiguate(item, wikipedia, wikipedia_ids, pedia_index):
         wiki_item = wikipedia[pedia_index[best_provenance]]
         vq["entity"]['wikidata_info'] = wiki_item['wikidata_info']
         vq["entity"]['wikipedia_id'] = wiki_item['wikipedia_id']
-        vq["wer"] = best_wer
+        vq["entity"]["wer"] = best_wer
     return item
 
 
