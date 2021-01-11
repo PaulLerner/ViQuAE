@@ -39,11 +39,15 @@ def data(wikidata_ids):
         List of wikidata QIDs
     """
     sparql = SPARQLWrapper(WIKIDATA_ENDPOINT)
-    formatted_qids = " ".join([f"wd:{qid}" for qid in wikidata_ids])
-    sparql.setQuery(WIKIDATA_QUERY % formatted_qids)
     sparql.setReturnFormat(JSON)
-    print(f"Querying Wikidata about {len(wikidata_ids)} entities, might take a while...")
-    results = sparql.query().convert()['results']['bindings']
+    results, qids = [], []
+    # query only 100 qid at a time
+    for i, qid in enumerate(tqdm(wikidata_ids, desc="Querying Wikidata")):
+        qids.append(f"wd:{qid}")
+        if (i+1) % 100 == 0 or i == (len(wikidata_ids) - 1):
+            sparql.setQuery(WIKIDATA_QUERY % " ".join(qids))
+            results += sparql.query().convert()['results']['bindings']
+            qids = []
     print(f"Query succeeded! Got {len(results)} results")
 
     return results
@@ -63,7 +67,7 @@ def update_from_data(subset):
     results = data(entities.keys())
 
     # update entities with results
-    for result in tqdm(results):
+    for result in tqdm(results, desc="Updating entities"):
         qid = result['entity']['value'].split('/')[-1]
         # handle keys/attributes that are unique
         for unique_key in ({'entityLabel', 'gender', 'genderLabel', 'image', 'commons'} & result.keys()):
@@ -79,7 +83,7 @@ def update_from_data(subset):
             multiple_value = result[multiple_key]['value']
             entities[qid][multiple_key][multiple_value] = result[multiple_key]
 
-    with open(path) as file:
+    with open(path, 'w') as file:
         json.dump(entities, file)
 
     print(f"Successfully saved output to {path}")
@@ -90,4 +94,4 @@ if __name__ == '__main__':
     subset = args['<subset>']
 
     if args['data']:
-        data(subset)
+        update_from_data(subset)
