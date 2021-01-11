@@ -238,13 +238,13 @@ def count_entities(subset, wer_threshold=0.5):
             entities[wikidata_id]["n_questions"] += 1
 
     output_path = path / "entities.json"
-    with open(output_path) as file:
+    with open(output_path, 'w') as file:
         json.dump(entities, file)
     print(f"\nSuccessfully saved output to {output_path}")
     values = np.array([entity["n_questions"] for entity in entities.values()])
 
     value_stats = [values.sum(), np.mean(values)]
-    value_stats += np.quantile(values, [0., 0.25, 0.5, 0.75, 1.0])
+    value_stats += np.quantile(values, [0., 0.25, 0.5, 0.75, 1.0]).tolist()
     headers = ["sum", "mean", "min", "1st quartile", "median", "3rd quartile", "max"]
     print(tabulate([value_stats], headers=headers))
 
