@@ -2,7 +2,11 @@
 """Usage:
 kilt2vqa.py ner <subset>
 kilt2vqa.py ned <subset>
+kilt2vqa.py count_entities <subset> [--threshold=<threshold>]
 """
+
+from collections import Counter
+import json
 import numpy as np
 import re
 import spacy
@@ -11,6 +15,7 @@ from spacy.symbols import DATE, TIME, PERCENT, MONEY, QUANTITY, ORDINAL, CARDINA
 from spacy.symbols import dobj, nsubj, pobj, obj, nsubjpass, poss, obl, root
 
 from docopt import docopt
+from tqdm import tqdm
 from tabulate import tabulate
 
 from datasets import load_dataset, load_from_disk
@@ -216,6 +221,34 @@ def ned(subset):
     print(f"Successfully saved output to '{output_path}'")
 
 
+def count_entities(subset, wer_threshold=0.5):
+    path = DATA_ROOT_PATH / f"meerqat_{subset}"
+    dataset = load_from_disk(path)
+    entities = {}
+
+    for item in tqdm(dataset):
+        for vq in item['placeholder']:
+            entity = vq['entity']
+            if entity['wer'] > wer_threshold:
+                continue
+            wikidata_id = entity['wikidata_info']['wikidata_id']
+            entities.setdefault(wikidata_id, {})
+            entities[wikidata_id]["wikipedia_id"] = entity["wikipedia_id"]
+            entities[wikidata_id].setdefault("n_questions", 0)
+            entities[wikidata_id]["n_questions"] += 1
+
+    output_path = path / "entities.json"
+    with open(output_path) as file:
+        json.dump(entities, file)
+    print(f"\nSuccessfully saved output to {output_path}")
+    values = np.array([entity["n_questions"] for entity in entities.values()])
+
+    value_stats = [values.sum(), np.mean(values)]
+    value_stats += np.quantile(values, [0., 0.25, 0.5, 0.75, 1.0])
+    headers = ["sum", "mean", "min", "1st quartile", "median", "3rd quartile", "max"]
+    print(tabulate([value_stats], headers=headers))
+
+
 if __name__ == '__main__':
     # parse arguments
     args = docopt(__doc__)
@@ -223,7 +256,9 @@ if __name__ == '__main__':
 
     if args['ner']:
         ner(subset)
-
-    if args['ned']:
+    elif args['ned']:
         ned(subset)
+    elif args['count_entities']:
+        wer_threshold = float(args['--threshold']) if args['--threshold'] else 0.5
+        count_entities(subset, wer_threshold=wer_threshold)
 
