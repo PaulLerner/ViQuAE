@@ -39,7 +39,7 @@ def count_entities(entities, distinct=False):
         "gender": Counter(),
         "occupation": Counter(),
         "depictions": Counter(),
-        "depiction_dist": Counter()
+        "depiction_dist": []
     }
     for entity in entities.values():
         n = 1 if distinct else entity["n_questions"]
@@ -49,7 +49,7 @@ def count_entities(entities, distinct=False):
             counters[key][bool(entity.get(key))] += n
 
         # how many depictions per entity ?
-        counters["depiction_dist"][len(entity.get("depictions", []))] += 1
+        counters["depiction_dist"].append(len(entity.get("depictions", [])))
 
         # does it have a gender ? if yes, which one ?
         genderLabel = entity.get('genderLabel')
@@ -94,7 +94,7 @@ def visualize_entities(counters, path=Path.cwd(), subset="meerqat"):
         plt.figure(figsize=(16, 16))
         title = f"Distribution of {key} in {subset}"
         plt.title(title)
-        plt.bar(counter.keys(), counter.values())
+        plt.hist(counter, bins=50, density=True)
         output = path / title.replace(" ", "_")
         plt.savefig(output)
         plt.close()
