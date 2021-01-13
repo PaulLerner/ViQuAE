@@ -25,6 +25,8 @@ def count_entities(entities, distinct=False):
         Whether to count distinct entities or # of questions per entity
         e.g. if we have 2 questions about Barack Obama, 'distinct' counts one human
         and '!distinct' counts 2
+        This has no effect on "depiction_dist"
+        which counts the # of depictions per (distinct) entity
 
     Returns
     -------
@@ -35,14 +37,19 @@ def count_entities(entities, distinct=False):
         "image": Counter(),
         "instanceof": Counter(),
         "gender": Counter(),
-        "occupation": Counter()
+        "occupation": Counter(),
+        "depictions": Counter(),
+        "depiction_dist": Counter()
     }
     for entity in entities.values():
         n = 1 if distinct else entity["n_questions"]
 
-        # is commons category or image available ?
-        for key in ["commons", "image"]:
+        # is commons category, image or depictions available ?
+        for key in ["commons", "image", "depictions"]:
             counters[key][bool(entity.get(key))] += n
+
+        # how many depictions per entity ?
+        counters["depiction_dist"][len(entity.get("depictions", []))] += 1
 
         # does it have a gender ? if yes, which one ?
         genderLabel = entity.get('genderLabel')
@@ -81,8 +88,20 @@ def visualize_entities(counters, path=Path.cwd(), subset="meerqat"):
         plt.close()
         print(f"Successfully saved {output}")
 
+    # barplot distributions
+    for key in ["depiction_dist"]:
+        counter = counters[key]
+        plt.figure(figsize=(16, 16))
+        title = f"Distribution of {key} in {subset}"
+        plt.title(title)
+        plt.bar(counter.keys(), counter.values())
+        output = path / title.replace(" ", "_")
+        plt.savefig(output)
+        plt.close()
+        print(f"Successfully saved {output}")
+
     # print statistics for counters with fue values
-    for key in ["gender", "commons", "image"]:
+    for key in ["gender", "commons", "image", "depictions"]:
         counter = counters[key]
         print(key)
         print(tabulate([counter], headers="keys", tablefmt="latex"), "\n\n")
