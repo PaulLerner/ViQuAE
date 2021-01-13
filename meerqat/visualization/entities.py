@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from collections import Counter
 
 from meerqat.data.loading import DATA_ROOT_PATH
+from meerqat.visualization.utils import simple_stats
 
 
 def count_entities(entities, distinct=False):
@@ -88,13 +89,18 @@ def visualize_entities(counters, path=Path.cwd(), subset="meerqat"):
         plt.close()
         print(f"Successfully saved {output}")
 
-    # barplot distributions
+    # barplot distributions and print some stats
     for key in ["depiction_dist"]:
         counter = counters[key]
+
+        # print some stats
+        print(simple_stats(counter, tablefmt="latex"))
+
+        # barplot
         plt.figure(figsize=(16, 16))
         title = f"Distribution of {key} in {subset}"
         plt.title(title)
-        plt.hist(counter, bins=50, density=True)
+        plt.hist(counter, bins=50, density=False)
         output = path / title.replace(" ", "_")
         plt.savefig(output)
         plt.close()
