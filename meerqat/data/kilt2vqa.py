@@ -20,7 +20,7 @@ from tabulate import tabulate
 
 from datasets import load_dataset, load_from_disk
 from meerqat.data.loading import map_kilt_triviaqa, DATA_ROOT_PATH
-from meerqat.visualization.utils import viz_spacy
+from meerqat.visualization.utils import viz_spacy, simple_stats
 
 INVALID_ENTITIES = {DATE, TIME, PERCENT, MONEY, QUANTITY, ORDINAL, CARDINAL}
 VALID_DEP = {dobj, nsubj, pobj, obj, nsubjpass, poss, obl, root}
@@ -241,12 +241,8 @@ def count_entities(subset, wer_threshold=0.5):
     with open(output_path, 'w') as file:
         json.dump(entities, file)
     print(f"\nSuccessfully saved output to {output_path}")
-    values = np.array([entity["n_questions"] for entity in entities.values()])
 
-    value_stats = [values.sum(), np.mean(values)]
-    value_stats += np.quantile(values, [0., 0.25, 0.5, 0.75, 1.0]).tolist()
-    headers = ["sum", "mean", "min", "1st quartile", "median", "3rd quartile", "max"]
-    print(tabulate([value_stats], headers=headers))
+    print(simple_stats([entity["n_questions"] for entity in entities.values()]))
 
 
 if __name__ == '__main__':
