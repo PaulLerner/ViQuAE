@@ -22,8 +22,27 @@ from datasets import load_dataset, load_from_disk
 from meerqat.data.loading import map_kilt_triviaqa, DATA_ROOT_PATH
 from meerqat.visualization.utils import viz_spacy, simple_stats
 
+# spacy constants for NER
 INVALID_ENTITIES = {DATE, TIME, PERCENT, MONEY, QUANTITY, ORDINAL, CARDINAL}
+# TODO check root: in practice, it never happened on TriviaQA dev set
 VALID_DEP = {dobj, nsubj, pobj, obj, nsubjpass, poss, obl, root}
+
+# spacy constants for pronoun-mention generation
+HE_SHE_DEP = {spacy.symbols.NAMES[dep] for dep in [nsubj, nsubjpass]}
+HIM_HER_DEP = {spacy.symbols.NAMES[dep] for dep in [dobj, obj, obl, pobj]}
+HIS_HERS_DEP = {spacy.symbols.NAMES[poss]}
+
+# Wikidata constants for pronoun-mention generation
+#            'male'      'trans. male'
+HE_GENDER = {'Q6581097', 'Q2449503'}
+#             'female'    'trans. female'
+SHE_GENDER = {'Q6581072', 'Q1052281'}
+#            'intersex'  'non-binary'
+NA_GENDER = {'Q1097630', 'Q48270'}
+#             'male'    'female'
+ANIMAL_SEX = {'Q44148', 'Q43445'}
+
+# set random seed to get consistent random examples
 np.random.seed(0)
 
 
