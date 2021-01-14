@@ -2,10 +2,10 @@
 """Usage:
 kilt2vqa.py ner <subset>
 kilt2vqa.py ned <subset>
+kilt2vqa.py generate mentions <subset> [--threshold=<threshold>]
 kilt2vqa.py count_entities <subset> [--threshold=<threshold>]
 """
 
-from collections import Counter
 import json
 import numpy as np
 import re
@@ -17,6 +17,7 @@ from spacy.symbols import dobj, nsubj, pobj, obj, nsubjpass, poss, obl, root
 from docopt import docopt
 from tqdm import tqdm
 from tabulate import tabulate
+import warnings
 
 from datasets import load_dataset, load_from_disk
 from meerqat.data.loading import map_kilt_triviaqa, DATA_ROOT_PATH
@@ -41,6 +42,8 @@ SHE_GENDER = {'Q6581072', 'Q1052281'}
 NA_GENDER = {'Q1097630', 'Q48270'}
 #             'male'    'female'
 ANIMAL_SEX = {'Q44148', 'Q43445'}
+# HACK: set human as uri instead of QID, should maybe get rid of uris in wiki.py ?
+HUMAN = 'http://www.wikidata.org/entity/Q5'
 
 # set random seed to get consistent random examples
 np.random.seed(0)
@@ -264,16 +267,106 @@ def count_entities(subset, wer_threshold=0.5):
     print(simple_stats([entity["n_questions"] for entity in entities.values()]))
 
 
+def generate_mention(item, entities, wer_threshold=0.5):
+    for vq in item["placeholder"]:
+        entity = vq['entity']
+
+        # filter ambiguous entities
+        if entity['wer'] > wer_threshold:
+            return item
+
+        dependency = vq['dependency']
+        ambiguous_mentions = {
+            "pronouns": [],
+            "man_woman": [],
+            "occupation": [],
+            "instanceof": []
+        }
+        qid = entity['wikidata_info']['wikidata_id']
+        entity_data = entities[qid]
+
+        gender = entity_data.get('gender', {}).get('value')
+        gender = gender.split("/")[-1] if gender else gender
+        human = HUMAN in entity_data.get('instanceof', {})
+
+        # man_woman and pronouns
+        if gender not in ANIMAL_SEX:
+            # man_woman
+            if gender in HE_GENDER:
+                ambiguous_mentions["man_woman"].append("this man")
+            elif gender in SHE_GENDER:
+                ambiguous_mentions["man_woman"].append("this woman")
+            elif gender in NA_GENDER or not gender:
+                pass
+            else:
+                warnings.warn(f"No case were set for this gender: '{gender}'")
+
+            # pronouns
+            if dependency in HE_SHE_DEP:
+                if gender in HE_GENDER:
+                    ambiguous_mentions["pronouns"].append("he")
+                elif gender in SHE_GENDER:
+                    ambiguous_mentions["pronouns"].append("she")
+            elif dependency in HIM_HER_DEP:
+                if gender in HE_GENDER:
+                    ambiguous_mentions["pronouns"].append("him")
+                elif gender in SHE_GENDER:
+                    ambiguous_mentions["pronouns"].append("her")
+            elif dependency in HIS_HERS_DEP:
+                if gender in HE_GENDER:
+                    ambiguous_mentions["pronouns"].append("his")
+                elif gender in SHE_GENDER:
+                    ambiguous_mentions["pronouns"].append("hers")
+            else:
+                warnings.warn(f"No case were set for this dependency: '{dependency}'")
+
+        # occupation
+        if entity_data.get('occupation') and human:
+            for occupation in entity_data['occupation'].values():
+                occupation_label = occupation['label']['value']
+                ambiguous_mentions['occupation'].append(f"this {occupation_label}")
+        # pronouns and instanceof
+        elif not human:
+            # instanceof
+            for instanceof in entity_data.get('instanceof', {}).values():
+                instanceof_label = instanceof['label']['value']
+                ambiguous_mentions['instanceof'].append(f"this {instanceof_label}")
+        vq['ambiguous_mentions'] = ambiguous_mentions
+
+    return item
+
+
+def generate_mentions(subset, wer_threshold=0.5):
+    """3rd step: generate ambiguous mentions given entities attributes (run `wiki.py data` first)"""
+    # load data
+    dataset_path = DATA_ROOT_PATH / f"meerqat_{subset}"
+    dataset = load_from_disk(dataset_path)
+    with open(dataset_path / "entities.json", 'r') as file:
+        entities = json.load(file)
+    fn_kwargs = {"entities": entities, "wer_threshold": wer_threshold}
+
+    # go through dataset
+    dataset = dataset.map(generate_mention, fn_kwargs=fn_kwargs)
+
+    # save data
+    dataset.save_to_disk(dataset_path)
+    print(f"Successfully saved output to '{dataset_path}'")
+
+
 if __name__ == '__main__':
     # parse arguments
     args = docopt(__doc__)
     subset = args['<subset>']
+
+    wer_threshold = float(args['--threshold']) if args['--threshold'] else 0.5
 
     if args['ner']:
         ner(subset)
     elif args['ned']:
         ned(subset)
     elif args['count_entities']:
-        wer_threshold = float(args['--threshold']) if args['--threshold'] else 0.5
         count_entities(subset, wer_threshold=wer_threshold)
+    elif args['generate']:
+        if args['mentions']:
+            generate_mentions(subset, wer_threshold=wer_threshold)
 
