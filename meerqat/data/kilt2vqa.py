@@ -270,18 +270,19 @@ def count_entities(subset, wer_threshold=0.5):
 def generate_mention(item, entities, wer_threshold=0.5):
     for vq in item["placeholder"]:
         entity = vq['entity']
-
-        # filter ambiguous entities
-        if entity['wer'] > wer_threshold:
-            return item
-
-        dependency = vq['dependency']
         ambiguous_mentions = {
             "pronouns": [],
             "man_woman": [],
             "occupation": [],
             "instanceof": []
         }
+
+        # filter ambiguous entities
+        if entity['wer'] > wer_threshold:
+            vq['ambiguous_mentions'] = ambiguous_mentions
+            continue
+
+        dependency = vq['dependency']
         qid = entity['wikidata_info']['wikidata_id']
         entity_data = entities[qid]
 
