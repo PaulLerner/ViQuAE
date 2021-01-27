@@ -44,11 +44,12 @@ SELECT ?depicted_entity ?commons_entity ?special_path ?url ?encoding WHERE {
 COMMONS_SPARQL_ENDPOINT = "https://wcqs-beta.wmflabs.org/sparql"
 
 
-def query_sparql_entities(query, endpoint, wikidata_ids,
-                          n=100, return_format=JSON, description=""):
+def query_sparql_entities(query, endpoint, wikidata_ids, prefix='wd:',
+                          n=100, return_format=JSON, description=None):
     """
     Queries query%entities by batch of n (defaults 100)
-    where entities is n QIDs in wikidata_ids space-separated and prefixed by 'wd:'
+    where entities is n QIDs in wikidata_ids space-separated and prefixed by prefix
+    (should be 'wd:' for Wikidata entities and 'sdc:' for Commons entities)
 
     Returns query results
     """
@@ -57,7 +58,7 @@ def query_sparql_entities(query, endpoint, wikidata_ids,
     results, qids = [], []
     # query only n qid at a time
     for i, qid in enumerate(tqdm(wikidata_ids, desc=description)):
-        qids.append(f"wd:{qid}")
+        qids.append(prefix+qid)
         if (i + 1) % n == 0 or i == (len(wikidata_ids) - 1):
             sparql.setQuery(query % " ".join(qids))
             results += sparql.query().convert()['results']['bindings']
