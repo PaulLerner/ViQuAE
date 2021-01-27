@@ -1,6 +1,7 @@
 # coding: utf-8
 """Usage:
-wiki.py data <subset>
+wiki.py data entities <subset>
+wiki.py data depicted <subset>
 wiki.py commons sparql depicts <subset>
 wiki.py commons sparql depicted <subset>
 """
@@ -136,6 +137,30 @@ def query_depicted_entities(depictions):
     return depictions
 
 
+def depiction_instanceof_heuristic(depictions, entities):
+    for qid, entity in entities.items():
+        if 'instanceof' not in entity:
+            continue
+        instanceof = entity['instanceof'].keys()
+        entity_depictions = entity.get("depictions", {})    
+        for mid, depiction in entity_depictions.items():
+            depiction["prominent_instanceof_heuristic"] = True
+            # iterate over all other entities depicted in depiction
+            for other_qid in depictions[mid]:
+                # skip self
+                if other_qid.endswith(qid):
+                    continue
+                other_entity = entities[other_qid]
+                other_instanceof = other_entity.get('instanceof', {}).keys()
+                # heuristic: the depiction is prominent if the entity is the only one of the same instance
+                # e.g. pic of Barack Obama and Joe Biden -> not prominent
+                #      pic of Barack Obama and the Eiffel Tower -> prominent
+                if instanceof & other_instanceof:
+                    depiction["prominent_instanceof_heuristic"] = False
+                    break
+    return entities
+
+
 if __name__ == '__main__':
     # parse arguments
     args = docopt(__doc__)
@@ -146,31 +171,46 @@ if __name__ == '__main__':
     path = subset_path / "entities.json"
     with open(path) as file:
         entities = json.load(file)
+    depictions_path = subset_path / "depictions.json"
 
     # update from Wikidata or Wikimedia Commons
     if args['data']:
-        entities = update_from_data(entities)
-        # save output
-        with open(path, 'w') as file:
-            json.dump(entities, file)
+        if args['entities']:
+            output = update_from_data(entities)
+
+        elif args['depicted']:
+            # load depictions
+            with open(depictions_path) as file:
+                depictions = json.load(file)
+            depicted_entities = {qid: {"n_questions": 0} 
+                                 for depiction in depictions.values() 
+                                 for qid in depiction}
+            # query data about all depicted entities
+            depicted_entities = update_from_data(depicted_entities)
+            # update with the original entities data
+            depicted_entities.update(entities)
+            # apply "instance of" heuristic to tell if a depiction is prominent or not
+            # note the result is saved in 'entities' as it is entity-dependent
+            # (the same picture can be prominent for entity A but not for B and C)
+            output = depiction_instanceof_heuristic(depictions, depicted_entities)
+
     elif args['commons']:
         if args['sparql']:
             # find images that depict the entities
             if args['depicts']:
-                entities = update_from_commons_sparql(entities)
-                # save output
-                with open(path, 'w') as file:
-                    json.dump(entities, file)
+                output = update_from_commons_sparql(entities)
+
             # find entities depicted in the images
             elif args['depicted']:
                 # get depictions
                 depictions = {depiction.split('/')[-1]: []
                               for entity in entities.values()
                               for depiction in entity.get("depictions", {})}
-                depictions = query_depicted_entities(depictions)
-                # save output
-                path = subset_path / "depictions.json"
-                with open(path, 'w') as file:
-                    json.dump(depictions, file)
+                output = query_depicted_entities(depictions)
+                path = depictions_path
+
+    # save output
+    with open(path, 'w') as file:
+        json.dump(output, file)
 
     print(f"Successfully saved output to {path}")
