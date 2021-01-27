@@ -1,7 +1,8 @@
 # coding: utf-8
 """Usage:
 wiki.py data <subset>
-wiki.py commons sparql <subset>
+wiki.py commons sparql depicts <subset>
+wiki.py commons sparql depicted <subset>
 """
 import json
 from SPARQLWrapper import SPARQLWrapper, JSON
@@ -39,6 +40,13 @@ SELECT ?depicted_entity ?commons_entity ?special_path ?url ?encoding WHERE {
   # restrict media to be images handleable by PIL.Image
   VALUES ?encoding { "image/png" "image/jpg" "image/jpeg" "image/tiff" "image/gif" }
   bind(iri(concat("http://commons.wikimedia.org/wiki/Special:FilePath/", wikibase:decodeUri(substr(str(?url),53)))) AS ?special_path)
+}
+"""
+# query entities depicted in images given image identifier (see above for more details)
+COMMONS_DEPICTED_ENTITIES_QUERY = """
+SELECT ?commons_entity ?depicted_entity WHERE {
+  VALUES ?commons_entity { %s }
+  ?commons_entity wdt:P180 ?depicted_entity .
 }
 """
 COMMONS_SPARQL_ENDPOINT = "https://wcqs-beta.wmflabs.org/sparql"
@@ -115,25 +123,53 @@ def update_from_commons_sparql(entities):
     return entities
 
 
+def query_depicted_entities(depictions):
+    # query Wikimedia Commons
+    results = query_sparql_entities(COMMONS_SPARQL_QUERY, COMMONS_SPARQL_ENDPOINT,
+                                    depictions.keys(), prefix="sdc:",
+                                    description="Querying Wikimedia Commons")
+    # update depictions with results
+    for result in tqdm(results, desc="Updating depictions"):
+        qid = result['commons_entity'].split('/')[-1]
+        depictions[qid].add(result["depicted_entity"])
+    return depictions
+
+
 if __name__ == '__main__':
     # parse arguments
     args = docopt(__doc__)
     subset = args['<subset>']
 
     # load entities
-    path = DATA_ROOT_PATH / f"meerqat_{subset}" / "entities.json"
+    subset_path = DATA_ROOT_PATH / f"meerqat_{subset}"
+    path = subset_path / "entities.json"
     with open(path) as file:
         entities = json.load(file)
 
     # update from Wikidata or Wikimedia Commons
     if args['data']:
         entities = update_from_data(entities)
+        # save output
+        with open(path, 'w') as file:
+            json.dump(entities, file)
     elif args['commons']:
         if args['sparql']:
-            entities = update_from_commons_sparql(entities)
-
-    # save output
-    with open(path, 'w') as file:
-        json.dump(entities, file)
+            # find images that depict the entities
+            if args['depicts']:
+                entities = update_from_commons_sparql(entities)
+                # save output
+                with open(path, 'w') as file:
+                    json.dump(entities, file)
+            # find entities depicted in the images
+            elif args['depicted']:
+                # get depictions
+                depictions = {depiction.split('/')[-1]: set()
+                              for entity in entities.values()
+                              for depiction in entity.get("depictions", {})}
+                depictions = query_depicted_entities(depictions)
+                # save output
+                path = subset_path / "depictions.json"
+                with open(path, 'w') as file:
+                    json.dump(depictions, file)
 
     print(f"Successfully saved output to {path}")
