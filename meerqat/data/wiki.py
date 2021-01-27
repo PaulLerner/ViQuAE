@@ -31,10 +31,13 @@ WIKIDATA_ENDPOINT = "https://query.wikidata.org/sparql"
 # template for beta-commons SPARQL API to query images that depict (P180) entities
 # same usage as WIKIDATA_QUERY
 COMMONS_SPARQL_QUERY = """
-SELECT ?depicted_entity ?commons_entity ?special_path ?url WHERE {
+SELECT ?depicted_entity ?commons_entity ?special_path ?url ?encoding WHERE {
   VALUES ?depicted_entity { %s }
   ?commons_entity wdt:P180 ?depicted_entity .
   ?commons_entity schema:contentUrl ?url .
+  ?commons_entity schema:encodingFormat ?encoding .
+  # restrict media to be images handleable by PIL.Image
+  VALUES ?encoding { "image/png" "image/jpg" "image/jpeg" "image/tiff" "image/gif" }
   bind(iri(concat("http://commons.wikimedia.org/wiki/Special:FilePath/", wikibase:decodeUri(substr(str(?url),53)))) AS ?special_path)
 }
 """
