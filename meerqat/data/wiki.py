@@ -125,13 +125,14 @@ def update_from_commons_sparql(entities):
 
 def query_depicted_entities(depictions):
     # query Wikimedia Commons
-    results = query_sparql_entities(COMMONS_SPARQL_QUERY, COMMONS_SPARQL_ENDPOINT,
+    results = query_sparql_entities(COMMONS_DEPICTED_ENTITIES_QUERY,
+                                    COMMONS_SPARQL_ENDPOINT,
                                     depictions.keys(), prefix="sdc:",
                                     description="Querying Wikimedia Commons")
     # update depictions with results
     for result in tqdm(results, desc="Updating depictions"):
-        qid = result['commons_entity'].split('/')[-1]
-        depictions[qid].add(result["depicted_entity"])
+        qid = result['commons_entity']['value'].split('/')[-1]
+        depictions[qid].append(result["depicted_entity"]['value'])
     return depictions
 
 
@@ -163,7 +164,7 @@ if __name__ == '__main__':
             # find entities depicted in the images
             elif args['depicted']:
                 # get depictions
-                depictions = {depiction.split('/')[-1]: set()
+                depictions = {depiction.split('/')[-1]: []
                               for entity in entities.values()
                               for depiction in entity.get("depictions", {})}
                 depictions = query_depicted_entities(depictions)
