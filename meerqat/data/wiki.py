@@ -7,6 +7,8 @@ wiki.py commons sparql depicted <subset>
 """
 import time
 import json
+import warnings
+
 from SPARQLWrapper import SPARQLWrapper, JSON
 from urllib.error import HTTPError
 from tqdm import tqdm
