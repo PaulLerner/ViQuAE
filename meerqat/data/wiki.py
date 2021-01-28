@@ -152,17 +152,19 @@ def query_depicted_entities(depictions):
 
 
 def depiction_instanceof_heuristic(depictions, entities):
-    for qid, entity in entities.items():
+    for qid, entity in tqdm(entities.items(), desc="Applying 'instanceof' heuristic"):
         if 'instanceof' not in entity:
             continue
         instanceof = entity['instanceof'].keys()
         entity_depictions = entity.get("depictions", {})    
         for mid, depiction in entity_depictions.items():
+            mid = mid.split('/')[-1]
             depiction["prominent_instanceof_heuristic"] = True
             # iterate over all other entities depicted in depiction
             for other_qid in depictions[mid]:
+                other_qid = other_qid.split('/')[-1]
                 # skip self
-                if other_qid.endswith(qid):
+                if other_qid == qid:
                     continue
                 other_entity = entities[other_qid]
                 other_instanceof = other_entity.get('instanceof', {}).keys()
@@ -196,7 +198,7 @@ if __name__ == '__main__':
             # load depictions
             with open(depictions_path) as file:
                 depictions = json.load(file)
-            depicted_entities = {qid: {"n_questions": 0} 
+            depicted_entities = {qid.split('/')[-1]: {"n_questions": 0} 
                                  for depiction in depictions.values() 
                                  for qid in depiction}
             # query data about all depicted entities
