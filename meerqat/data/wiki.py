@@ -5,8 +5,10 @@ wiki.py data depicted <subset>
 wiki.py commons sparql depicts <subset>
 wiki.py commons sparql depicted <subset>
 """
+import time
 import json
 from SPARQLWrapper import SPARQLWrapper, JSON
+from urllib.error import HTTPError
 from tqdm import tqdm
 from docopt import docopt
 
@@ -70,7 +72,19 @@ def query_sparql_entities(query, endpoint, wikidata_ids, prefix='wd:',
         qids.append(prefix+qid)
         if (i + 1) % n == 0 or i == (len(wikidata_ids) - 1):
             sparql.setQuery(query % " ".join(qids))
-            results += sparql.query().convert()['results']['bindings']
+            try:
+                response = sparql.query()
+            except HTTPError:
+                # HACK: sleep 60s to avoid 'HTTP Error 429: Too Many Requests'
+                time.sleep(60)
+                # try one more time
+                try: 
+                    response = sparql.query()
+                except HTTPError as e:
+                    warnings.warn(f"Query failed twice after waiting 60s in-between, skipping the following qids:\n{qids}")
+                    qids = []
+                    continue
+            results += response.convert()['results']['bindings']
             qids = []
     print(f"Query succeeded! Got {len(results)} results")
 
