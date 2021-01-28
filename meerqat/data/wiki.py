@@ -179,6 +179,17 @@ def depiction_instanceof_heuristic(depictions, entities):
     return entities
 
 
+def keep_prominent_depictions(entities):
+    for entity in entities.values():
+        depictions = entity.get("depictions")
+        if not depictions:
+            continue
+        # filter out non-prominent depictions
+        entity["depictions"] = {mid: depiction for mid, depiction in depictions.items()
+                                if depiction.get('prominent_instanceof_heuristic', False)}
+    return entities
+
+
 if __name__ == '__main__':
     # parse arguments
     args = docopt(__doc__)
