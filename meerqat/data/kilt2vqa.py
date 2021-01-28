@@ -8,6 +8,7 @@ kilt2vqa.py count_entities <subset> [--threshold=<threshold>]
 
 import json
 import numpy as np
+import random
 import re
 import spacy
 from spacy.gold import align
@@ -352,6 +353,54 @@ def generate_mentions(subset, wer_threshold=0.5):
     # save data
     dataset.save_to_disk(dataset_path)
     print(f"Successfully saved output to '{dataset_path}'")
+
+
+def generate_vqa(item, entities, unique_per_entity=True):
+    """
+    Generate a image (url), question, answer triple by choosing uniformly:
+        - an image from the depictions (note that prominent depictions should be filtered before-hand
+        - a mention type and a mention from this mention type
+
+    Parameters
+    ----------
+    item: Dataset item
+    entities: dict (see wiki.py)
+    unique_per_entity: bool
+        Whether to use unique images for the same entity
+        Note this modifies entities as depictions are popped using dict.popitem
+        Defaults to True.
+
+    Returns
+    -------
+    item: Dataset item
+        with a new 'vq' key (List[dict])
+    """
+    item['vq'] = []
+    for placeholder in item['placeholder']:
+        mention_types = [mention_type for mention_type in placeholder.get('ambiguous_mentions', {}).values() if mention_type]
+        if not mention_types:
+            continue
+        qid = placeholder['entity']['wikidata_info']['wikidata_id']
+        depictions = entities[qid].get("depictions")
+        if not depictions:
+            continue
+        # try to use unique images per entity -> pop depictions
+        if unique_per_entity:
+            depiction = depictions.popitem()[1]
+        # choose random depiction without modifying depictions
+        else:
+            depiction = random.choice(list(depictions.values()))
+        url = depiction['url']['value']
+        # choose mention type (e.g. pronoun or occupation) uniformly from all types (that are not empty)
+        mention_type = random.choice(mention_types)
+        # choose mention uniformly from all mentions in this type (e.g. Barack Obama is a politician and a statesperson)
+        mention = random.choice(mention_type)
+
+        vq = {'input': placeholder['input'].format(mention=mention),
+              'url': url}
+        item['vq'].append(vq)
+
+    return item
 
 
 if __name__ == '__main__':
