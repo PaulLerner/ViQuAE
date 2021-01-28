@@ -4,17 +4,22 @@ wiki.py data entities <subset>
 wiki.py data depicted <subset>
 wiki.py commons sparql depicts <subset>
 wiki.py commons sparql depicted <subset>
+wiki.py commons rest <subset>
 """
 import time
 import json
 import warnings
 
+import requests
 from SPARQLWrapper import SPARQLWrapper, JSON
 from urllib.error import HTTPError
 from tqdm import tqdm
 from docopt import docopt
 
 from meerqat.data.loading import DATA_ROOT_PATH
+
+# restrict media to be images handleable by PIL.Image
+VALID_ENCODING = {"png", "jpg", "jpeg", "tiff", "gif"}
 
 # Template for wikidata to query 'instance of' (P31), 'commons category' (P373),
 # 'image' (P18), 'occupation' (P106) and 'gender' (P21) given a list of entities
@@ -55,6 +60,19 @@ SELECT ?commons_entity ?depicted_entity WHERE {
 }
 """
 COMMONS_SPARQL_ENDPOINT = "https://wcqs-beta.wmflabs.org/sparql"
+
+# get all files or sub-categories in a Commons category
+# use like COMMONS_REST_LIST.format(cmtitle=<str including "Category:" prefix>, cmtype="subcat"|"file")
+# e.g. COMMONS_REST_LIST.format(cmtitle="Category:Barack Obama in 2004", cmtype="subcat")
+COMMONS_REST_LIST = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle={cmtitle}&cmprop=title&format=json&cmcontinue&cmlimit=500&cmtype={cmtype}"
+
+# query images URL, categories and description
+# use like COMMONS_REST_TITLE.format(titles=<title1>|<title2>) including the "File:" prefix
+# e.g. COMMONS_REST_TITLE.format(titles="File:Barack Obama foreign trips.png|File:Women for Obama luncheon September 23, 2004.png")
+COMMONS_REST_TITLE = "https://commons.wikimedia.org/w/api.php?action=query&titles={titles}&prop=categories|description|imageinfo&format=json&iiprop=url|extmetadata&clshow=!hidden"
+
+def bytes2dict(b):
+    return json.loads(b.decode("utf-8"))
 
 
 def query_sparql_entities(query, endpoint, wikidata_ids, prefix='wd:',
@@ -190,6 +208,79 @@ def keep_prominent_depictions(entities):
     return entities
 
 
+def query_commons_subcategories(category):
+    query = COMMONS_REST_LIST.format(cmtitle=category, cmtype="subcat")
+    response = requests.get(query)
+    if response.status_code != requests.codes.ok:
+        warnings.warn(f"Something went wrong when requesting for '{query}', "
+                      f"status code: {response.status_code}")
+        return {category}
+    results = bytes2dict(response.content)['query']['categorymembers']
+    # base case: queried all subcategories down to the leaf
+    if not results:
+        return {category}
+    # recursive call: query subcategories of the subcategories
+    categories = {category}
+    for result in results:
+        categories.update(query_commons_subcategories(result['title']))
+    return categories
+
+
+def query_commons_images(categories):
+    images = {}
+    for category in categories:
+        query = COMMONS_REST_LIST.format(cmtitle=category, cmtype="file")
+        response = requests.get(query)
+        if response.status_code != requests.codes.ok:
+            warnings.warn(f"Something went wrong when requesting for '{query}', "
+                          f"status code: {response.status_code}")
+            continue
+        results = bytes2dict(response.content)['query']['categorymembers']
+        for result in results:
+            title = result['title']
+            # avoid querying the same image again and again as the same image is often in multiple categories
+            if title in images:
+                continue
+            encoding = title.split('.')[-1]
+            if encoding not in VALID_ENCODING:
+                continue
+
+            # query images URL, categories and description
+            # note: it might be better to batch the query but when experimenting with
+            # batch size as low as 25 I had to deal with 'continue' responses...
+            query = COMMONS_REST_TITLE.format(titles=title)
+            response = requests.get(query)
+            if response.status_code != requests.codes.ok:
+                warnings.warn(f"Something went wrong when requesting for '{query}', "
+                              f"status code: {response.status_code}")
+            result = bytes2dict(response.content)['query']['pages']
+            # get first (only) value
+            result = next(iter(result.values()))
+            imageinfo = result['imageinfo'][0]
+            images[title] = {
+                "categories": {c['title'] for c in result['categories']},
+                "url": imageinfo["url"],
+                "description": imageinfo['extmetadata']['ImageDescription']['value']
+            }
+
+    return images
+
+
+def update_from_commons_rest(entities):
+    for entity in tqdm(entities.values(), desc="Updating entities from Commons"):
+        # query only entities that appear in dataset (some may come from 'depictions')
+        if entity['n_questions'] < 1 or "commons" not in entity:
+            continue
+        category = "Category:" + entity['commons']
+        # find all subcategories of entity Commons category
+        categories = query_commons_subcategories(category)
+
+        # query all images (according to VALID_ENCODING) in the categories
+        images = query_commons_images(categories)
+        entity['images'] = images
+    return entities
+
+
 if __name__ == '__main__':
     # parse arguments
     args = docopt(__doc__)
@@ -237,6 +328,9 @@ if __name__ == '__main__':
                               for depiction in entity.get("depictions", {})}
                 output = query_depicted_entities(depictions)
                 path = depictions_path
+        elif args['rest']:
+            output = update_from_commons_rest(entities)
+
 
     # save output
     with open(path, 'w') as file:
