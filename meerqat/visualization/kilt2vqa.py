@@ -65,7 +65,7 @@ def subset2vqa(dataset, entities, n=50):
     np.random.shuffle(indices)
     subset = []
     for i in tqdm(indices, desc="Generating visual questions"):
-        item = generate_vqa(dataset[i], entities)
+        item = generate_vqa(dataset[i.item()], entities)
         if not item['vq']:
             continue
         subset.append(item)
