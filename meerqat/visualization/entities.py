@@ -1,19 +1,44 @@
 # coding: utf-8
 """Usage:
 entities.py <subset>
+entities.py images [--n=<n> --max=<max>] <subset>
+
+Options:
+--n         Number of entities [default: 10]
+--max       Max. number of images per entity [default: 18]
 """
 
 from docopt import docopt
 import json
 from pathlib import Path
 from tabulate import tabulate
+from tqdm import tqdm
+import random
 
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import Counter
 
 from meerqat.data.loading import DATA_ROOT_PATH
+from meerqat.data.wiki import categories_heuristic
 from meerqat.visualization.utils import simple_stats
+
+HTML_FORMAT = """
+<html>
+    <head>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    {entities}
+</html>
+"""
+ENTITY_FORMAT = """
+<h2>{qid} ({label}) illustrative image: <img src="{url}" width="400"></h2>
+<table>
+    {trs}
+</table>
+"""
+TR_format = "<tr>{tds}</tr>"
+TD_FORMAT = '<td><p>{description}</p><img src="{url}" width="200"></td>'
 
 
 def count_entities(entities, distinct=False):
@@ -113,20 +138,48 @@ def visualize_entities(counters, path=Path.cwd(), subset="meerqat"):
         print(tabulate([counter], headers="keys", tablefmt="latex"), "\n\n")
 
 
-def main(subset):
-    path = DATA_ROOT_PATH / f"meerqat_{subset}" / "entities.json"
-    with open(path) as file:
-        entities = json.load(file)
-
-    counters = count_entities(entities)
-    output = DATA_ROOT_PATH / "visualization"
-    output.mkdir(exist_ok=True)
-    visualize_entities(counters, output, subset)
+def visualize_images(entities, output, n=10, max_images=18):
+    html_entities = []
+    for _ in tqdm(range(n)):
+        qid, entity = entities.popitem()
+        label = entity.get("entityLabel", {}).get("value")
+        images = entity.get('images')
+        illustrative_image = entity.get('image', {})['value']
+        if not (label and images and illustrative_image):
+            continue
+        trs, tds = [], []
+        images_list = list(images.keys())
+        random.shuffle(images_list)
+        for i, title in enumerate(images_list[:max_images]):
+            image = images[title]
+            url = image.get("url")
+            if not url:
+                continue
+            tds.append(TD_FORMAT.format(description=image.get("description",""), url=url))
+            if (i+1) % 6 == 0 or i == max_images-1:
+                trs.append(TR_format.format(tds="\n".join(tds)))
+                tds = []
+        html_entity = ENTITY_FORMAT.format(qid=qid, label=label, url=illustrative_image, trs="\n".join(trs))
+        html_entities.append(html_entity)
+    html = HTML_FORMAT.format(entities="\n".join(html_entities))
+    with open(output/"entities.html", 'w') as file:
+        file.write(html)
 
 
 if __name__ == '__main__':
     # parse arguments
     args = docopt(__doc__)
     subset = args['<subset>']
+    path = DATA_ROOT_PATH / f"meerqat_{subset}" / "entities.json"
+    with open(path) as file:
+        entities = json.load(file)
+    output = DATA_ROOT_PATH / "visualization"
+    output.mkdir(exist_ok=True)
 
-    main(subset)
+    if args['images']:
+        n = int(args['--n'])
+        max_images = int(args['--max'])
+        visualize_images(entities, output, n=n, max_images=max_images)
+    else:
+        counters = count_entities(entities)
+        visualize_entities(counters, output, subset)
