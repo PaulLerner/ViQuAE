@@ -208,7 +208,7 @@ def keep_prominent_depictions(entities):
     return entities
 
 
-def query_commons_subcategories(category):
+def query_commons_subcategories(category, categories):
     query = COMMONS_REST_LIST.format(cmtitle=category, cmtype="subcat")
     response = requests.get(query)
     if response.status_code != requests.codes.ok:
@@ -220,9 +220,13 @@ def query_commons_subcategories(category):
     if not results:
         return {category}
     # recursive call: query subcategories of the subcategories
-    categories = {category}
+    categories.add(category)
     for result in results:
-        categories.update(query_commons_subcategories(result['title']))
+        title = result['title']
+        # avoid 1. to get stuck in a loop 2. extra processing: skip already processed categories
+        if title in categories:
+            continue
+        categories.update(query_commons_subcategories(title, categories))
     return categories
 
 
@@ -271,9 +275,10 @@ def update_from_commons_rest(entities):
         # query only entities that appear in dataset (some may come from 'depictions')
         if entity['n_questions'] < 1 or "commons" not in entity:
             continue
-        category = "Category:" + entity['commons']
+        category = "Category:" + entity['commons']['value']
         # find all subcategories of entity Commons category
-        categories = query_commons_subcategories(category)
+        categories = set()
+        query_commons_subcategories(category, categories)
 
         # query all images (according to VALID_ENCODING) in the categories
         images = query_commons_images(categories)
