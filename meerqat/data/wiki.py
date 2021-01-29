@@ -5,6 +5,7 @@ wiki.py data depicted <subset>
 wiki.py commons sparql depicts <subset>
 wiki.py commons sparql depicted <subset>
 wiki.py commons rest <subset>
+wiki.py commons filter [--categories --description] <subset>
 """
 import time
 import json
@@ -287,6 +288,24 @@ def update_from_commons_rest(entities):
     return entities
 
 
+def categories_heuristic(entities):
+    for entity in tqdm(entities.values(), desc="Applying 'categories' heuristic"):
+        label = entity.get("entityLabel", {}).get("value")
+        if not label or 'images' not in entity:
+            continue
+        images = {}
+        for title, image in entity['images'].items():
+            included = True
+            for category in image['categories']:
+                if label not in category:
+                    included = False
+                    break
+            if included:
+                images[title] = image
+        entity['images'] = images
+    return entities
+
+
 if __name__ == '__main__':
     # parse arguments
     args = docopt(__doc__)
@@ -336,6 +355,17 @@ if __name__ == '__main__':
                 path = depictions_path
         elif args['rest']:
             output = update_from_commons_rest(entities)
+        elif args['filter']:
+            # filter images based on heuristics
+            if args['--categories']:
+                # entity label should be included in all images categories
+                output = categories_heuristic(entities)
+
+            if args['--description']:
+                # entity label should be included in all images descriptions
+                raise NotImplementedError
+            elif not args['--categories']:
+                raise ValueError(f"Please provide at least one optional heuristic in 'filter' mode:\n{__doc__}")
 
 
     # save output
