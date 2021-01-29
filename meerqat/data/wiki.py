@@ -260,11 +260,12 @@ def query_commons_images(categories):
             result = bytes2dict(response.content)['query']['pages']
             # get first (only) value
             result = next(iter(result.values()))
-            imageinfo = result['imageinfo'][0]
+            imageinfo = result.get('imageinfo', [{}])[0]
+            image_categories = [c.get('title') for c in result['categories']] if 'categories' in result else None
             images[title] = {
-                "categories": {c['title'] for c in result['categories']},
-                "url": imageinfo["url"],
-                "description": imageinfo['extmetadata']['ImageDescription']['value']
+                "categories": image_categories,
+                "url": imageinfo.get("url"),
+                "description": imageinfo.get('extmetadata', {}).get('ImageDescription', {}).get('value')
             }
 
     return images
