@@ -5,7 +5,7 @@ from pathlib import Path
 from meerqat import __file__ as ROOT_PATH
 
 DATA_ROOT_PATH = Path(ROOT_PATH).parent.parent/"data"
-
+KVQA_PATH = DATA_ROOT_PATH/"KVQA"
 
 def map_kilt_triviaqa():
     """As instructed by https://github.com/huggingface/datasets/blob/master/datasets/kilt_tasks/README.md"""
