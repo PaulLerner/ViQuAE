@@ -22,9 +22,9 @@ def freebase2wikidata(entities):
     mapping = {}
     for qid, entity in entities.items():
         mid = entity.get("freebase")
-        if not qid:
+        if not mid:
             continue
-        mid = wikidata2freebase(mid)
+        mid = wikidata2freebase(mid['value'])
         mapping[mid] = qid
     return mapping
 
