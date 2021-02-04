@@ -52,11 +52,11 @@ def write_html(questions, annotations, visualization_path, subset, n=50):
         answers = []
         for answer, count in annotation['answer_counter'].items():
             answers.append(f"{answer} ({count['count']})")
-        image_path = MSCOCO_PATH / JPG_FORMAT.format(subset=subset, image_id=question['image_id'])
+        image_path = MSCOCO_PATH / f"{subset}2014" / JPG_FORMAT.format(subset=subset, image_id=question['image_id'])
         td = TD_FORMAT.format(
                 path=image_path,
                 question=question['question'],
-                answers=",".join(answers)
+                answers=", ".join(answers)
             )
         tds.append(td)
     html = HTML_FORMAT.format(tds="\n".join(tds))
