@@ -27,7 +27,7 @@ VALID_ENCODING = {"png", "jpg", "jpeg", "tiff", "gif"}
 # should be used like 'WIKIDATA_QUERY % "wd:Q76 wd:Q78579194 wd:Q42 wd:Q243"'
 # i.e. entity ids are space-separated and prefixed by 'wd:'
 WIKIDATA_QUERY = """
-SELECT ?entity ?entityLabel ?instanceof ?instanceofLabel ?commons ?image ?occupation ?occupationLabel ?gender ?genderLabel ?freebase
+SELECT ?entity ?entityLabel ?instanceof ?instanceofLabel ?commons ?image ?occupation ?occupationLabel ?gender ?genderLabel ?freebase ?date_of_birth ?date_of_death
 {
   VALUES ?entity { %s }
   OPTIONAL{ ?entity wdt:P373 ?commons . }
@@ -36,6 +36,8 @@ SELECT ?entity ?entityLabel ?instanceof ?instanceofLabel ?commons ?image ?occupa
   OPTIONAL { ?entity wdt:P21 ?gender . }
   OPTIONAL { ?entity wdt:P106 ?occupation . }
   OPTIONAL { ?entity wdt:P646 ?freebase . }
+  OPTIONAL { ?entity wdt:P569 ?date_of_birth . }
+  OPTIONAL { ?entity wdt:P570 ?date_of_death . }
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
 }
 """
@@ -124,7 +126,7 @@ def update_from_data(entities):
     for result in tqdm(results, desc="Updating entities"):
         qid = result['entity']['value'].split('/')[-1]
         # handle keys/attributes that are unique
-        for unique_key in ({'entityLabel', 'gender', 'genderLabel', 'image', 'commons', 'freebase'} & result.keys()):
+        for unique_key in ({'entityLabel', 'gender', 'genderLabel', 'image', 'commons', 'freebase', 'date_of_birth', 'date_of_death'} & result.keys()):
             # simply add or update the key/attribute
             entities[qid][unique_key] = result[unique_key]
         # handle keys/attributes that may be multiple
