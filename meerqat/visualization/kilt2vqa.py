@@ -46,7 +46,12 @@ TD_FORMAT = """
 """
 
 
-def write_html(dataset, visualization_path):
+def write_html(dataset, visualization_path, args={}):
+    args_hash = str(hash(str(args)))
+    visualization_path /= args_hash
+    visualization_path.mkdir(exist_ok=True)
+    with open(visualization_path/"args.json") as file:
+        json.dump(args, file)
     tds = []
     for item in dataset:
         for vq in item['vq']:
@@ -107,5 +112,5 @@ if __name__ == '__main__':
     subset = subset2vqa(dataset, entities, n=n)
 
     # write result to HTML for visualization
-    write_html(subset, visualization_path)
+    write_html(subset, visualization_path, args)
 
