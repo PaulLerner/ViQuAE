@@ -2,6 +2,7 @@
 """Usage:
 wiki.py data entities <subset>
 wiki.py data depicted <subset>
+wiki.py data superclasses <subset>
 wiki.py commons sparql depicts <subset>
 wiki.py commons sparql depicted <subset>
 wiki.py commons rest <subset>
@@ -38,6 +39,17 @@ SELECT ?entity ?entityLabel ?instanceof ?instanceofLabel ?commons ?image ?occupa
   OPTIONAL { ?entity wdt:P646 ?freebase . }
   OPTIONAL { ?entity wdt:P569 ?date_of_birth . }
   OPTIONAL { ?entity wdt:P570 ?date_of_death . }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+}
+"""
+
+# query all super classes of a given class list
+WIKIDATA_SUPERCLASSES_QUERY = """
+SELECT ?class ?classLabel ?subclassof ?subclassofLabel
+WHERE 
+{
+  VALUES ?class { %s }.
+  ?class wdt:P279+ ?subclassof.
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
 }
 """
@@ -341,6 +353,23 @@ if __name__ == '__main__':
             # note the result is saved in 'entities' as it is entity-dependent
             # (the same picture can be prominent for entity A but not for B and C)
             output = depiction_instanceof_heuristic(depictions, depicted_entities)
+
+        elif args['superclasses']:
+            # get all 'instanceof' i.e. all classes
+            classes = {qid.split('/')[-1]: class_
+                       for entity in entities.values()
+                       for qid, class_ in entity.get('instanceof',{}).items()}
+            # query all 'subclassof' i.e. all superclasses
+            results = query_sparql_entities(WIKIDATA_SUPERCLASSES_QUERY, WIKIDATA_ENDPOINT,
+                                            classes.keys(), description="Querying superclasses")
+            output = {}
+            for result in results:
+                qid_uri = result["class"]["value"]
+                output.setdefault(qid_uri, {})
+                subclassof = result["subclassof"]["value"]
+                result["subclassof"]["label"] = result["subclassofLabel"]
+                output[qid_uri][subclassof] = result["subclassof"]
+            path = subset_path / "superclasses.json"
 
     elif args['commons']:
         if args['sparql']:
