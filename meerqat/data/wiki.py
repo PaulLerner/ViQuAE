@@ -2,11 +2,16 @@
 """Usage:
 wiki.py data entities <subset>
 wiki.py data depicted <subset>
-wiki.py data superclasses <subset>
+wiki.py data superclasses <subset> [--n=<n>]
 wiki.py commons sparql depicts <subset>
 wiki.py commons sparql depicted <subset>
 wiki.py commons rest <subset>
 wiki.py commons filter [--categories --description] <subset>
+
+Options:
+--n=<n>             Maximum level of superclasses. Defaults to all superclasses
+--categories        Heuristic: entity label should be included in all images categories
+--description       Heuristic: entity label should be included in the image description
 """
 import time
 import json
@@ -43,13 +48,14 @@ SELECT ?entity ?entityLabel ?instanceof ?instanceofLabel ?commons ?image ?occupa
 }
 """
 
-# query all super classes of a given class list
+# query super classes of a given class list
+# use WIKIDATA_SUPERCLASSES_QUERY % (qids, "wdt:P279+") to query all superclasses
 WIKIDATA_SUPERCLASSES_QUERY = """
 SELECT ?class ?classLabel ?subclassof ?subclassofLabel
 WHERE 
 {
   VALUES ?class { %s }.
-  ?class wdt:P279+ ?subclassof.
+  ?class %s ?subclassof.
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
 }
 """
@@ -355,6 +361,18 @@ if __name__ == '__main__':
             output = depiction_instanceof_heuristic(depictions, depicted_entities)
 
         elif args['superclasses']:
+            n_levels = int(args['--n']) if args['--n'] else None
+
+            if n_levels:
+                level, levels = [], []
+                for _ in range(n_levels):
+                    level.append("wdt:P279")
+                    levels.append("/".join(level))
+                levels = "|".join(levels)
+            else:
+                levels = "wdt:P279+"
+
+            WIKIDATA_SUPERCLASSES_QUERY = WIKIDATA_SUPERCLASSES_QUERY % ("%s", levels)
             # get all 'instanceof' i.e. all classes
             classes = {qid.split('/')[-1]: class_
                        for entity in entities.values()
@@ -369,7 +387,7 @@ if __name__ == '__main__':
                 subclassof = result["subclassof"]["value"]
                 result["subclassof"]["label"] = result["subclassofLabel"]
                 output[qid_uri][subclassof] = result["subclassof"]
-            path = subset_path / "superclasses.json"
+            path = subset_path / f"{n_levels if n_levels else 'all'}_superclasses.json"
 
     elif args['commons']:
         if args['sparql']:
