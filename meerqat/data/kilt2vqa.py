@@ -381,7 +381,8 @@ def generate_vqa(item, entities, unique_per_entity=True):
         if not mention_types:
             continue
         qid = placeholder['entity']['wikidata_info']['wikidata_id']
-        depictions = entities[qid].get("depictions")
+        # entity might have been filtered before-hand -> get qid instead of "[qid]"
+        depictions = entities.get(qid, {}).get("depictions")
         if not depictions:
             continue
         # try to use unique images per entity -> pop depictions
