@@ -25,6 +25,7 @@ from docopt import docopt
 
 from meerqat.data.loading import DATA_ROOT_PATH
 
+QID_URI_PREFIX = "http://www.wikidata.org/entity/"
 # restrict media to be images handleable by PIL.Image
 VALID_ENCODING = {"png", "jpg", "jpeg", "tiff", "gif"}
 
@@ -325,6 +326,27 @@ def categories_heuristic(entities):
                 images[title] = image
         entity['images'] = images
     return entities
+
+
+def exclude_classes(entities, classes_to_exclude, superclasses={}):
+    filtered_entities = {}
+    for qid, entity in tqdm(entities.items(), desc="Filtering entities classes"):
+        classes = entity.get('instanceof', {}).keys()
+        # class should be excluded
+        if classes & classes_to_exclude:
+            continue
+        exclude_super_class = False
+        for class_ in classes:
+            # superclass should be excluded
+            if superclasses.get(class_, {}).keys() & classes_to_exclude:
+                exclude_super_class = True
+                break
+        if exclude_super_class:
+            continue
+        # else keep entity/class
+        filtered_entities[qid] = entity
+
+    return filtered_entities
 
 
 if __name__ == '__main__':

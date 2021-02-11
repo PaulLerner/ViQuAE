@@ -1,10 +1,12 @@
 # coding: utf-8
 """Usage:
-kilt2vqa.py <subset> [--n=<n> --prominent]
+kilt2vqa.py <subset> [--n=<n> --prominent --abstract=<superclass_level> <classes_to_exclude>...]
 
 Options:
-    --n=<n>         Number of examples to visualize [default: 50].
-    --prominent     Whether to consider only prominent depictions.
+--n=<n>                          Number of examples to visualize [default: 50].
+--prominent                      Whether to consider only prominent depictions.
+--abstract=<superclass_level>    Whether to filter out abstract entities based on the level of superclasses
+<classes_to_exclude>...          Additional classes to exclude (e.g. "Q5 Q82794")
 """
 
 from datasets import load_from_disk
@@ -14,7 +16,7 @@ from docopt import docopt
 from tqdm import tqdm
 
 from meerqat.data.loading import DATA_ROOT_PATH
-from meerqat.data.wiki import keep_prominent_depictions
+from meerqat.data.wiki import keep_prominent_depictions, exclude_classes, QID_URI_PREFIX
 from meerqat.data.kilt2vqa import generate_vqa
 
 # HTML document format
@@ -80,6 +82,8 @@ if __name__ == '__main__':
     subset = args['<subset>']
     n = int(args['--n'])
     prominent_only = args['--prominent']
+    superclass_level = int(args['--abstract']) if args['--abstract'] else None
+    classes_to_exclude = set(QID_URI_PREFIX + qid for qid in args['<classes_to_exclude>'])
     visualization_path = DATA_ROOT_PATH / "visualization" / subset
     visualization_path.mkdir(exist_ok=True, parents=True)
 
@@ -90,6 +94,14 @@ if __name__ == '__main__':
         entities = json.load(file)
     if prominent_only:
         entities = keep_prominent_depictions(entities)
+    if superclass_level:
+        with open(subset_path/f"{superclass_level}_superclasses.json") as file:
+            superclasses = json.load(file)
+        with open(DATA_ROOT_PATH/"abstract_entities.csv") as file:
+            abstract_entities = set(line.split(",")[0] for line in file.read().split("\n")[1:] if line != '')
+        classes_to_exclude.update(abstract_entities)
+    entities = exclude_classes(entities, classes_to_exclude, superclasses)
+
 
     # generate a subset of VQA triples
     subset = subset2vqa(dataset, entities, n=n)
