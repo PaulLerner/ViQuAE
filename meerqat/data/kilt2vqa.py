@@ -268,8 +268,7 @@ def count_entities(subset, wer_threshold=0.5):
     print(simple_stats([entity["n_questions"] for entity in entities.values()]))
 
 
-def generate_mention(item, entities, wer_threshold=0.5):
-    # TODO handle female form of label (P2521)
+def generate_mention(item, entities, wer_threshold=0.5, feminine_labels={}):
     for vq in item["placeholder"]:
         entity = vq['entity']
         ambiguous_mentions = {
@@ -326,7 +325,12 @@ def generate_mention(item, entities, wer_threshold=0.5):
         # occupation
         if entity_data.get('occupation') and human:
             for occupation in entity_data['occupation'].values():
-                occupation_label = occupation['label']['value']
+                feminine_label = feminine_labels.get(occupation['value'])
+                if feminine_label and gender in SHE_GENDER:
+                    occupation_label = feminine_label
+                # default label is default value since most names in English don't have genders
+                else:
+                    occupation_label = occupation['label']['value']
                 ambiguous_mentions['occupation'].append(f"this {occupation_label}")
         # taxon rank (e.g. "species") or class (aka instanceof)
         elif not human:
@@ -336,7 +340,12 @@ def generate_mention(item, entities, wer_threshold=0.5):
             # class (instanceof)
             else:
                 for instanceof in entity_data.get('instanceof', {}).values():
-                    instanceof_label = instanceof['label']['value']
+                    feminine_label = feminine_labels.get(instanceof['value'])
+                    if feminine_label and gender in SHE_GENDER:
+                        instanceof_label = feminine_label
+                    # default label is default value since most names in English don't have genders
+                    else:
+                        instanceof_label = instanceof['label']['value']
                     ambiguous_mentions['instanceof'].append(f"this {instanceof_label}")
         vq['ambiguous_mentions'] = ambiguous_mentions
 
@@ -350,7 +359,17 @@ def generate_mentions(subset, wer_threshold=0.5):
     dataset = load_from_disk(dataset_path)
     with open(dataset_path / "entities.json", 'r') as file:
         entities = json.load(file)
-    fn_kwargs = {"entities": entities, "wer_threshold": wer_threshold}
+    feminine_labels_path = dataset_path / "feminine_labels.json"
+    if feminine_labels_path.exists():
+        with open(feminine_labels_path, "r") as file:
+            feminine_labels = json.load(file)
+    else:
+        feminine_labels = {}
+    fn_kwargs = {
+        "entities": entities,
+        "wer_threshold": wer_threshold,
+        "feminine_labels": feminine_labels
+    }
 
     # go through dataset
     dataset = dataset.map(generate_mention, fn_kwargs=fn_kwargs)
