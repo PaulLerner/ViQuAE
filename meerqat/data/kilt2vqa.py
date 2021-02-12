@@ -398,7 +398,8 @@ def generate_vqa(item, entities, unique_per_entity=True):
         mention = random.choice(mention_type)
 
         vq = {'input': placeholder['input'].format(mention=mention),
-              'url': url}
+              'url': url,
+              'wikidata_id': qid}
         item['vq'].append(vq)
 
     return item

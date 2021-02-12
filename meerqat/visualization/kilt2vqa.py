@@ -26,13 +26,12 @@ from meerqat.data.kilt2vqa import generate_vqa
 HTML_FORMAT = """
 <html>
 <head>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../styles.css">
 </head>
 <table>
     <tr>
-        <th>Original Question</th>
         <th>Image</th>
-        <th>Generated Question</th>
+        <th>Question</th>
         <th>Answer</th>
     </tr>
     {tds}
@@ -41,8 +40,12 @@ HTML_FORMAT = """
 """
 TD_FORMAT = """
 <tr>
+    <td rowspan="3"><img src="{url}" width="400"></td>
     <td>{original_question}</td>
-    <td><img src="{url}" width="400"></td>
+<tr>
+    <td><a href="http://www.wikidata.org/entity/{qid}">{qid}</a></td>
+</tr>
+<tr>
     <td>{generated_question}</td>
     <td>{answer}</td>
 </tr>
@@ -62,7 +65,8 @@ def write_html(dataset, visualization_path, args={}):
                 original_question=item['input'],
                 url=vq['url'],
                 generated_question=vq['input'],
-                answer=item['output']['answer'][0]
+                answer=item['output']['answer'][0],
+                qid=item['wikidata_id']
             )
             tds.append(td)
     html = HTML_FORMAT.format(tds="\n".join(tds))
