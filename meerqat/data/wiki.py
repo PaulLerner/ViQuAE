@@ -1,6 +1,7 @@
 # coding: utf-8
 """Usage:
 wiki.py data entities <subset>
+wiki.py data feminine <subset>
 wiki.py data depicted <subset>
 wiki.py data superclasses <subset> [--n=<n>]
 wiki.py commons sparql depicts <subset>
@@ -33,7 +34,6 @@ VALID_ENCODING = {"png", "jpg", "jpeg", "tiff", "gif"}
 # should be used like
 # >>> WIKIDATA_QUERY % "wd:Q76 wd:Q78579194 wd:Q42 wd:Q243"
 # i.e. entity ids are space-separated and prefixed by 'wd:'
-# TODO query female form of label (P2521)
 WIKIDATA_QUERY = """
 SELECT ?entity ?entityLabel ?instanceof ?instanceofLabel ?commons ?image ?occupation ?occupationLabel ?gender ?genderLabel ?freebase ?date_of_birth ?date_of_death ?taxon_rank ?taxon_rankLabel
 {
@@ -48,6 +48,15 @@ SELECT ?entity ?entityLabel ?instanceof ?instanceofLabel ?commons ?image ?occupa
   OPTIONAL { ?entity wdt:P570 ?date_of_death . }
   OPTIONAL { ?entity wdt:P105 ?taxon_rank . }
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+}
+"""
+# get all feminine labels
+WIKIDATA_FEMININE_QUERY = """
+SELECT ?entity ?entity_female_label 
+{
+  VALUES ?entity { %s }
+  ?entity wdt:P2521 ?entity_female_label .
+  FILTER(LANG(?entity_female_label) = "en").
 }
 """
 
@@ -413,6 +422,33 @@ def query_superclasses(entities, wikidata_superclasses_query, n_levels=None):
     return superclasses
 
 
+def uri_to_qid(uri):
+    return uri.split("/")[-1]
+
+
+def uris_to_qids(uris):
+    return {uri_to_qid(uri) for uri in uris}
+
+
+def query_feminine_labels(entities):
+    # 1. get all classes and occupations
+    qids = set()
+    for entity in entities.values():
+        qids.update(uris_to_qids(entity.get("instanceof", {}).keys()))
+        qids.update(uris_to_qids(entity.get("occupation", {}).keys()))
+
+    # 2. query feminine labels of qids
+    results = query_sparql_entities(WIKIDATA_FEMININE_QUERY, WIKIDATA_ENDPOINT,
+                                    qids, description="Querying feminine labels")
+    feminine_labels = {}
+    for result in results:
+        qid = result["entity"]["value"]
+        feminine_label = result["entity_female_label"]["value"]
+        feminine_labels.setdefault(qid, feminine_label)
+
+    return feminine_labels
+
+
 if __name__ == '__main__':
     # parse arguments
     args = docopt(__doc__)
@@ -429,7 +465,9 @@ if __name__ == '__main__':
     if args['data']:
         if args['entities']:
             output = update_from_data(entities)
-
+        elif args['feminine']:
+            output = query_feminine_labels(entities)
+            path = subset_path/"feminine_labels.json"
         elif args['depicted']:
             # load depictions
             with open(depictions_path) as file:
