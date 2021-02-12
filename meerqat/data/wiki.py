@@ -385,6 +385,34 @@ def keep_classes(entities, classes_to_keep, superclasses={}, attributes_to_keep=
     return filtered_entities
 
 
+def query_superclasses(entities, wikidata_superclasses_query, n_levels=None):
+    if n_levels:
+        level, levels = [], []
+        for _ in range(n_levels):
+            level.append("wdt:P279")
+            levels.append("/".join(level))
+        levels = "|".join(levels)
+    else:
+        levels = "wdt:P279+"
+
+    wikidata_superclasses_query = wikidata_superclasses_query % ("%s", levels)
+    # get all 'instanceof' i.e. all classes
+    classes = {qid.split('/')[-1]: class_
+               for entity in entities.values()
+               for qid, class_ in entity.get('instanceof', {}).items()}
+    # query all 'subclassof' i.e. all superclasses
+    results = query_sparql_entities(wikidata_superclasses_query, WIKIDATA_ENDPOINT,
+                                    classes.keys(), description="Querying superclasses")
+    superclasses = {}
+    for result in results:
+        qid_uri = result["class"]["value"]
+        superclasses.setdefault(qid_uri, {})
+        subclassof = result["subclassof"]["value"]
+        result["subclassof"]["label"] = result["subclassofLabel"]
+        superclasses[qid_uri][subclassof] = result["subclassof"]
+    return superclasses
+
+
 if __name__ == '__main__':
     # parse arguments
     args = docopt(__doc__)
@@ -420,31 +448,7 @@ if __name__ == '__main__':
 
         elif args['superclasses']:
             n_levels = int(args['--n']) if args['--n'] else None
-
-            if n_levels:
-                level, levels = [], []
-                for _ in range(n_levels):
-                    level.append("wdt:P279")
-                    levels.append("/".join(level))
-                levels = "|".join(levels)
-            else:
-                levels = "wdt:P279+"
-
-            WIKIDATA_SUPERCLASSES_QUERY = WIKIDATA_SUPERCLASSES_QUERY % ("%s", levels)
-            # get all 'instanceof' i.e. all classes
-            classes = {qid.split('/')[-1]: class_
-                       for entity in entities.values()
-                       for qid, class_ in entity.get('instanceof',{}).items()}
-            # query all 'subclassof' i.e. all superclasses
-            results = query_sparql_entities(WIKIDATA_SUPERCLASSES_QUERY, WIKIDATA_ENDPOINT,
-                                            classes.keys(), description="Querying superclasses")
-            output = {}
-            for result in results:
-                qid_uri = result["class"]["value"]
-                output.setdefault(qid_uri, {})
-                subclassof = result["subclassof"]["value"]
-                result["subclassof"]["label"] = result["subclassofLabel"]
-                output[qid_uri][subclassof] = result["subclassof"]
+            output = query_superclasses(entities, WIKIDATA_SUPERCLASSES_QUERY, n_levels=n_levels)
             path = subset_path / f"{n_levels if n_levels else 'all'}_superclasses.json"
 
     elif args['commons']:
