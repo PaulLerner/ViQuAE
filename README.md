@@ -42,7 +42,36 @@ The goal is to generate questions suitable for VQA by replacing explicit entity 
 
 ### `wiki.py`
 
-Gathers data about entities mentioned in questions via Wikidata and Wikimedia Commons SPARQL services.
+Gathers data about entities mentioned in questions via Wikidata and Wikimedia Commons SPARQL services 
+(`wiki.py commons rest` that uses Wikimedia REST API is intractable atm).
+
+You should run all of these in this order to get the whole cake:
+#### `wiki.py data entities <subset>` 
+**input/ouput**: `entities.json` (output of `kilt2vqa.py count_entities`)  
+queries many different attributes for all entities in the questions 
+#### `wiki.py data feminine <subset>` 
+**input**: `entities.json`  
+**ouput**: `feminine_labels.json`  
+gets feminine labels for classes and occupations of these entities
+#### `wiki.py data superclasses <subset> [--n=<n>]` 
+**input**: `entities.json`  
+**ouput**: `<n>_superclasses.json`  
+gets the superclasses of the entities classes up `n` level (defaults to 'all', i.e. up to the root)
+#### `wiki.py commons sparql depicts <subset>`
+**input/ouput**: `entities.json`  
+Find all images in Commons that *depict* the entities
+#### `wiki.py commons sparql depicted <subset>`
+**input**: `entities.json`  
+**ouput**: `depictions.json`  
+Find all entities depicted in the previously gathered step
+#### `wiki.py data depicted <subset>` 
+**input**: `entities.json`, `depictions.json`   
+**ouput**: `entities.json`  
+Gathers the same data as in `wiki.py data entities <subset>` for *all* entities depicted in any of the depictions  
+Then apply a heuristic to tell whether an image depicts the entity prominently or not: 
+> *the depiction is prominent if the entity is the only one of its class*  
+  e.g. *pic of Barack Obama and Joe Biden* -> not prominent  
+       *pic of Barack Obama and the Eiffel Tower* -> prominent  
 
 ## `meerqat.visualization`
 
