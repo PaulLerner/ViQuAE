@@ -269,6 +269,7 @@ def count_entities(subset, wer_threshold=0.5):
 
 
 def generate_mention(item, entities, wer_threshold=0.5):
+    # TODO handle female form of label (P2521)
     for vq in item["placeholder"]:
         entity = vq['entity']
         ambiguous_mentions = {
@@ -290,7 +291,7 @@ def generate_mention(item, entities, wer_threshold=0.5):
         gender = entity_data.get('gender', {}).get('value')
         gender = gender.split("/")[-1] if gender else gender
         human = HUMAN in entity_data.get('instanceof', {})
-
+        taxon_rankLabel = entity_data.get('taxon_rankLabel', {}).get('value')
         # man_woman and pronouns
         if gender not in ANIMAL_SEX:
             # man_woman
@@ -327,12 +328,16 @@ def generate_mention(item, entities, wer_threshold=0.5):
             for occupation in entity_data['occupation'].values():
                 occupation_label = occupation['label']['value']
                 ambiguous_mentions['occupation'].append(f"this {occupation_label}")
-        # pronouns and instanceof
+        # taxon rank (e.g. "species") or class (aka instanceof)
         elif not human:
-            # instanceof
-            for instanceof in entity_data.get('instanceof', {}).values():
-                instanceof_label = instanceof['label']['value']
-                ambiguous_mentions['instanceof'].append(f"this {instanceof_label}")
+            # taxon rank
+            if taxon_rankLabel:
+                ambiguous_mentions['instanceof'].append(f"this {taxon_rankLabel}")
+            # class (instanceof)
+            else:
+                for instanceof in entity_data.get('instanceof', {}).values():
+                    instanceof_label = instanceof['label']['value']
+                    ambiguous_mentions['instanceof'].append(f"this {instanceof_label}")
         vq['ambiguous_mentions'] = ambiguous_mentions
 
     return item

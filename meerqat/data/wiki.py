@@ -29,12 +29,13 @@ QID_URI_PREFIX = "http://www.wikidata.org/entity/"
 # restrict media to be images handleable by PIL.Image
 VALID_ENCODING = {"png", "jpg", "jpeg", "tiff", "gif"}
 
-# Template for wikidata to query 'instance of' (P31), 'commons category' (P373),
-# 'image' (P18), 'occupation' (P106), 'gender' (P21) and 'Freebase ID' (P646) given a list of entities
-# should be used like 'WIKIDATA_QUERY % "wd:Q76 wd:Q78579194 wd:Q42 wd:Q243"'
+# Template for wikidata to query many different attributes of a list of entities
+# should be used like
+# >>> WIKIDATA_QUERY % "wd:Q76 wd:Q78579194 wd:Q42 wd:Q243"
 # i.e. entity ids are space-separated and prefixed by 'wd:'
+# TODO query female form of label (P2521)
 WIKIDATA_QUERY = """
-SELECT ?entity ?entityLabel ?instanceof ?instanceofLabel ?commons ?image ?occupation ?occupationLabel ?gender ?genderLabel ?freebase ?date_of_birth ?date_of_death
+SELECT ?entity ?entityLabel ?instanceof ?instanceofLabel ?commons ?image ?occupation ?occupationLabel ?gender ?genderLabel ?freebase ?date_of_birth ?date_of_death ?taxon_rank ?taxon_rankLabel
 {
   VALUES ?entity { %s }
   OPTIONAL{ ?entity wdt:P373 ?commons . }
@@ -45,12 +46,15 @@ SELECT ?entity ?entityLabel ?instanceof ?instanceofLabel ?commons ?image ?occupa
   OPTIONAL { ?entity wdt:P646 ?freebase . }
   OPTIONAL { ?entity wdt:P569 ?date_of_birth . }
   OPTIONAL { ?entity wdt:P570 ?date_of_death . }
+  OPTIONAL { ?entity wdt:P105 ?taxon_rank . }
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
 }
 """
 
 # query super classes of a given class list
-# use WIKIDATA_SUPERCLASSES_QUERY % (qids, "wdt:P279+") to query all superclasses
+# use
+# >>> WIKIDATA_SUPERCLASSES_QUERY % (qids, "wdt:P279+")
+# to query all superclasses
 WIKIDATA_SUPERCLASSES_QUERY = """
 SELECT ?class ?classLabel ?subclassof ?subclassofLabel
 WHERE 
@@ -85,13 +89,17 @@ SELECT ?commons_entity ?depicted_entity WHERE {
 COMMONS_SPARQL_ENDPOINT = "https://wcqs-beta.wmflabs.org/sparql"
 
 # get all files or sub-categories in a Commons category
-# use like COMMONS_REST_LIST.format(cmtitle=<str including "Category:" prefix>, cmtype="subcat"|"file")
-# e.g. COMMONS_REST_LIST.format(cmtitle="Category:Barack Obama in 2004", cmtype="subcat")
+# use like
+# >>> COMMONS_REST_LIST.format(cmtitle=<str including "Category:" prefix>, cmtype="subcat"|"file")
+# e.g.
+# >>> COMMONS_REST_LIST.format(cmtitle="Category:Barack Obama in 2004", cmtype="subcat")
 COMMONS_REST_LIST = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle={cmtitle}&cmprop=title&format=json&cmcontinue&cmlimit=500&cmtype={cmtype}"
 
 # query images URL, categories and description
-# use like COMMONS_REST_TITLE.format(titles=<title1>|<title2>) including the "File:" prefix
-# e.g. COMMONS_REST_TITLE.format(titles="File:Barack Obama foreign trips.png|File:Women for Obama luncheon September 23, 2004.png")
+# use like
+# >>> COMMONS_REST_TITLE.format(titles=<title1>|<title2>) including the "File:" prefix
+# e.g.
+# >>> COMMONS_REST_TITLE.format(titles="File:Barack Obama foreign trips.png|File:Women for Obama luncheon September 23, 2004.png")
 COMMONS_REST_TITLE = "https://commons.wikimedia.org/w/api.php?action=query&titles={titles}&prop=categories|description|imageinfo&format=json&iiprop=url|extmetadata&clshow=!hidden"
 
 def bytes2dict(b):
@@ -145,7 +153,7 @@ def update_from_data(entities):
     for result in tqdm(results, desc="Updating entities"):
         qid = result['entity']['value'].split('/')[-1]
         # handle keys/attributes that are unique
-        for unique_key in ({'entityLabel', 'gender', 'genderLabel', 'image', 'commons', 'freebase', 'date_of_birth', 'date_of_death'} & result.keys()):
+        for unique_key in ({'entityLabel', 'gender', 'genderLabel', 'image', 'commons', 'freebase', 'date_of_birth', 'date_of_death', 'taxon_rank', 'taxon_rankLabel'} & result.keys()):
             # simply add or update the key/attribute
             entities[qid][unique_key] = result[unique_key]
         # handle keys/attributes that may be multiple
