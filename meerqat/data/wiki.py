@@ -349,6 +349,34 @@ def exclude_classes(entities, classes_to_exclude, superclasses={}):
     return filtered_entities
 
 
+def keep_classes(entities, classes_to_keep, superclasses={}, attributes_to_keep={"gender", "occupation"}):
+    filtered_entities = {}
+    for qid, entity in tqdm(entities.items(), desc="Filtering entities classes"):
+        # keep all entities with an attribute in attributes_to_keep
+        has_attribute = False
+        for attribute in attributes_to_keep:
+            if entity.get(attribute):
+                has_attribute = True
+                break
+        if has_attribute:
+            filtered_entities[qid] = entity
+            continue
+
+        # else keep entities with appropriate class or superclass
+        classes = entity.get('instanceof', {}).keys()
+        # class should be kept
+        if classes & classes_to_keep:
+            filtered_entities[qid] = entity
+            continue
+        for class_ in classes:
+            # superclass should be kept
+            if superclasses.get(class_, {}).keys() & classes_to_keep:
+                filtered_entities[qid] = entity
+                break
+
+    return filtered_entities
+
+
 if __name__ == '__main__':
     # parse arguments
     args = docopt(__doc__)

@@ -1,12 +1,15 @@
 # coding: utf-8
 """Usage:
-kilt2vqa.py <subset> [--n=<n> --prominent --abstract=<superclass_level> <classes_to_exclude>...]
+kilt2vqa.py <subset> [--n=<n> --prominent --superclass=<level> --positive_filter --negative_filter <classes_to_exclude>...]
 
 Options:
 --n=<n>                          Number of examples to visualize [default: 50].
 --prominent                      Whether to consider only prominent depictions.
---abstract=<superclass_level>    Whether to filter out abstract entities based on the level of superclasses
-<classes_to_exclude>...          Additional classes to exclude (e.g. "Q5 Q82794")
+--superclass=<level>             Level of superclasses in the filter, int or "all" (defaults to None i.e. filter only classes)
+--positive_filter                Keep only classes in "concrete_entities" + entities with gender (P21) or occupation (P106).
+                                    Applied before negative_filter.
+--negative_filter                Keep only classes that are not in "abstract_entities". Applied after positive_filter
+<classes_to_exclude>...          Additional classes to exclude in the negative_filter (e.g. "Q5 Q82794")
 """
 
 from datasets import load_from_disk
@@ -16,7 +19,7 @@ from docopt import docopt
 from tqdm import tqdm
 
 from meerqat.data.loading import DATA_ROOT_PATH
-from meerqat.data.wiki import keep_prominent_depictions, exclude_classes, QID_URI_PREFIX
+from meerqat.data.wiki import keep_prominent_depictions, exclude_classes, keep_classes, QID_URI_PREFIX
 from meerqat.data.kilt2vqa import generate_vqa
 
 # HTML document format
@@ -50,7 +53,7 @@ def write_html(dataset, visualization_path, args={}):
     args_hash = str(hash(str(args)))
     visualization_path /= args_hash
     visualization_path.mkdir(exist_ok=True)
-    with open(visualization_path/"args.json") as file:
+    with open(visualization_path/"args.json", "w") as file:
         json.dump(args, file)
     tds = []
     for item in dataset:
@@ -87,7 +90,11 @@ if __name__ == '__main__':
     subset = args['<subset>']
     n = int(args['--n'])
     prominent_only = args['--prominent']
-    superclass_level = int(args['--abstract']) if args['--abstract'] else None
+    positive_filter = args['--positive_filter']
+    negative_filter = args['--negative_filter']
+    superclass_level = args['--superclass']
+    if superclass_level and superclass_level != "all":
+        superclass_level = int(superclass_level)
     classes_to_exclude = set(QID_URI_PREFIX + qid for qid in args['<classes_to_exclude>'])
     visualization_path = DATA_ROOT_PATH / "visualization" / subset
     visualization_path.mkdir(exist_ok=True, parents=True)
@@ -102,10 +109,19 @@ if __name__ == '__main__':
     if superclass_level:
         with open(subset_path/f"{superclass_level}_superclasses.json") as file:
             superclasses = json.load(file)
+    else:
+        superclasses = {}
+    if positive_filter:
+        with open(DATA_ROOT_PATH/"concrete_entities.csv") as file:
+            classes_to_keep = set(line.split(",")[0] for line in file.read().split("\n")[1:] if line != '')
+        entities = keep_classes(entities, classes_to_keep, superclasses)
+    if negative_filter:
         with open(DATA_ROOT_PATH/"abstract_entities.csv") as file:
             abstract_entities = set(line.split(",")[0] for line in file.read().split("\n")[1:] if line != '')
         classes_to_exclude.update(abstract_entities)
-    entities = exclude_classes(entities, classes_to_exclude, superclasses)
+
+    if classes_to_exclude:
+        entities = exclude_classes(entities, classes_to_exclude, superclasses)
 
 
     # generate a subset of VQA triples
