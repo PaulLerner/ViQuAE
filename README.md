@@ -29,15 +29,16 @@ The goal is to generate questions suitable for VQA by replacing explicit entity 
     For every entity mention we compute Word Error Rate (WER, i.e. word-level Levenshtein distance) for every wikipedia title
     and aliases. We save the minimal match and WER and recommand filtering out WER > 0.5  
     More data about these entities is gathered in `wiki.py`, 
-    just run `kilt2vqa.py count_entities` first to save a dict with all disambiguated entities.
+    just run `kilt2vqa.py count_entities` first to save a dict with all disambiguated entities (outputs `entities.json`).
 3. `generate mentions` - Generate ambiguous entity mentions that can be used to replace the placeholder in the input question 
     (you need to run `wiki.py data` first):  
     - if the gender is available (not animal sex):
         - 'this man' or 'this woman' (respecting transgender)
         - 'he/him/his' or 'she/her/hers' w.r.t mention dependency              
-    - if human and occupation is available : 'this `{occupation}`'
+    - if human and occupation is available : 'this `{occupation}`' (respecting gender if relevant, e.g. for 'actress')
     - else if non-human:
-        - 'this `{instance of}`'        
+        - if a taxon : 'this `{taxon rank}`' (e.g. 'species') 
+        - else 'this `{class}`' (e.g. 'this tower')        
 
 ### `wiki.py`
 
