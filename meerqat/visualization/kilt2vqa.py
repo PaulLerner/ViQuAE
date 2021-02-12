@@ -66,7 +66,7 @@ def write_html(dataset, visualization_path, args={}):
                 url=vq['url'],
                 generated_question=vq['input'],
                 answer=item['output']['answer'][0],
-                qid=item['wikidata_id']
+                qid=vq['wikidata_id']
             )
             tds.append(td)
     html = HTML_FORMAT.format(tds="\n".join(tds))
