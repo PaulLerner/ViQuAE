@@ -40,7 +40,10 @@ SELECT ?entity ?entityLabel ?instanceof ?instanceofLabel ?commons ?image ?occupa
   VALUES ?entity { %s }
   OPTIONAL{ ?entity wdt:P373 ?commons . }
   ?entity wdt:P31 ?instanceof .
-  OPTIONAL { ?entity wdt:P18 ?image . }
+  OPTIONAL { 
+    ?entity wdt:P18 ?tmp . 
+    BIND(replace(wikibase:decodeUri(STR(?tmp))," ","_") AS ?image)
+  }
   OPTIONAL { ?entity wdt:P21 ?gender . }
   OPTIONAL { ?entity wdt:P106 ?occupation . }
   OPTIONAL { ?entity wdt:P646 ?freebase . }
@@ -162,15 +165,15 @@ def update_from_data(entities):
     for result in tqdm(results, desc="Updating entities"):
         qid = result['entity']['value'].split('/')[-1]
         # handle keys/attributes that are unique
-        for unique_key in ({'entityLabel', 'gender', 'genderLabel', 'image', 'commons', 'freebase', 'date_of_birth', 'date_of_death', 'taxon_rank', 'taxon_rankLabel'} & result.keys()):
+        for unique_key in ({'entityLabel', 'gender', 'genderLabel', 'commons', 'freebase', 'date_of_birth', 'date_of_death', 'taxon_rank', 'taxon_rankLabel'} & result.keys()):
             # simply add or update the key/attribute
             entities[qid][unique_key] = result[unique_key]
         # handle keys/attributes that may be multiple
-        for multiple_key in ({'instanceof', 'occupation'} & result.keys()):
+        for multiple_key in ({'instanceof', 'occupation', 'image'} & result.keys()):
             # create a new dict for this key/attribute so we don't duplicate data
             entities[qid].setdefault(multiple_key, {})
             # store corresponding label in the 'label' field
-            result[multiple_key]['label'] = result[multiple_key + 'Label']
+            result[multiple_key]['label'] = result.get(multiple_key + 'Label')
             # value (e.g. QID) of the attribute serves as key
             multiple_value = result[multiple_key]['value']
             entities[qid][multiple_key][multiple_value] = result[multiple_key]
