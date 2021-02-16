@@ -105,7 +105,7 @@ COMMONS_SPARQL_ENDPOINT = "https://wcqs-beta.wmflabs.org/sparql"
 # >>> COMMONS_REST_LIST.format(cmtitle=<str including "Category:" prefix>, cmtype="subcat"|"file")
 # e.g.
 # >>> COMMONS_REST_LIST.format(cmtitle="Category:Barack Obama in 2004", cmtype="subcat")
-COMMONS_REST_LIST = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle={cmtitle}&cmprop=title&format=json&cmcontinue&cmlimit=500&cmtype={cmtype}"
+COMMONS_REST_LIST = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle={cmtitle}&cmprop=title&format=json&cmcontinue&cmlimit=max&cmtype={cmtype}"
 
 # query images URL, categories and description
 # use like
