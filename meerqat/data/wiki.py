@@ -251,7 +251,7 @@ def keep_prominent_depictions(entities):
     return entities
 
 
-def query_commons_subcategories(category, categories, images):
+def query_commons_subcategories(category, categories, images, max_images=1000):
     query = COMMONS_REST_LIST.format(cmtitle=category, cmtype="subcat|file")
     response = requests.get(query)
     if response.status_code != requests.codes.ok:
@@ -261,16 +261,13 @@ def query_commons_subcategories(category, categories, images):
     results = bytes2dict(response.content)['query']['categorymembers']
 
     # recursive call: query subcategories of the subcategories
-    categories.add(category)
+    categories[category] = True
+    todo = set()
     for result in results:
         title = result['title']
         type_ = result["type"]
-        if type_ == "subcat":
-            # avoid 1. to get stuck in a loop 2. extra processing: skip already processed categories
-            if title in categories:
-                continue
-            query_commons_subcategories(title, categories, images)
-        elif type_ == "file":
+        # first query all files in the category before querying subcategories
+        if type_ == "file":
             # avoid querying the same image again and again as the same image is often in multiple categories
             if title in images:
                 continue
@@ -278,6 +275,18 @@ def query_commons_subcategories(category, categories, images):
             if encoding not in VALID_ENCODING:
                 continue
             images[title] = query_image(title)
+        elif type_ == "subcat":
+            # avoid 1. to get stuck in a loop 2. extra processing:
+            # skip already processed categories
+            todo.add(title)
+            # and keep track of the processed categories
+            categories.setdefault(title, False)
+    # return when we have enough images
+    if len(images) > max_images:
+        return categories, images
+    # else query all subcategories
+    for title in todo:
+        query_commons_subcategories(title, categories, images)
     return categories, images
 
 
@@ -318,9 +327,10 @@ def update_from_commons_rest(entities):
             continue
         category = "Category:" + entity['commons']['value']
         # query all images in of entity Commons category and subcategories recursively
-        categories, images = set(), dict()
+        categories, images = {}, {}
         query_commons_subcategories(category, categories, images)
         entity['images'] = images
+        entity['categories'] = list(categories)
     return entities
 
 
