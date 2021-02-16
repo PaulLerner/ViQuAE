@@ -8,11 +8,17 @@ wiki.py commons sparql depicts <subset>
 wiki.py commons sparql depicted <subset>
 wiki.py commons rest <subset>
 wiki.py commons filter [--categories --description] <subset>
+wiki.py filter <subset> [--superclass=<level> --positive --negative <classes_to_exclude>...]
 
 Options:
---n=<n>             Maximum level of superclasses. Defaults to all superclasses
---categories        Heuristic: entity label should be included in all images categories
---description       Heuristic: entity label should be included in the image description
+--n=<n>                          Maximum level of superclasses. Defaults to all superclasses
+--categories                     Heuristic: entity label should be included in all images categories
+--description                    Heuristic: entity label should be included in the image description
+--superclass=<level>             Level of superclasses in the filter, int or "all" (defaults to None i.e. filter only classes)
+--positive                       Keep only classes in "concrete_entities" + entities with gender (P21) or occupation (P106).
+                                    Applied before negative_filter.
+--negative                       Keep only classes that are not in "abstract_entities". Applied after positive_filter
+<classes_to_exclude>...          Additional classes to exclude in the negative_filter (e.g. "Q5 Q82794")
 """
 import time
 import json
@@ -523,7 +529,30 @@ if __name__ == '__main__':
                 raise NotImplementedError
             elif not args['--categories']:
                 raise ValueError(f"Please provide at least one optional heuristic in 'filter' mode:\n{__doc__}")
+    elif args['filter']:
+        positive_filter = args['--positive']
+        negative_filter = args['--negative']
+        superclass_level = args['--superclass']
+        if superclass_level and superclass_level != "all":
+            superclass_level = int(superclass_level)
+        classes_to_exclude = set(QID_URI_PREFIX + qid for qid in args['<classes_to_exclude>'])
+        if superclass_level:
+            with open(subset_path / f"{superclass_level}_superclasses.json") as file:
+                superclasses = json.load(file)
+        else:
+            superclasses = {}
+        if positive_filter:
+            with open(DATA_ROOT_PATH / "concrete_entities.csv") as file:
+                classes_to_keep = set(line.split(",")[0] for line in file.read().split("\n")[1:] if line != '')
+            entities = keep_classes(entities, classes_to_keep, superclasses)
+        if negative_filter:
+            with open(DATA_ROOT_PATH / "abstract_entities.csv") as file:
+                abstract_entities = set(line.split(",")[0] for line in file.read().split("\n")[1:] if line != '')
+            classes_to_exclude.update(abstract_entities)
 
+        if classes_to_exclude:
+            entities = exclude_classes(entities, classes_to_exclude, superclasses)
+        output = entities
 
     # save output
     with open(path, 'w') as file:
