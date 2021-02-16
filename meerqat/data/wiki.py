@@ -305,10 +305,16 @@ def query_commons_images(categories):
             result = next(iter(result.values()))
             imageinfo = result.get('imageinfo', [{}])[0]
             image_categories = [c.get('title') for c in result['categories']] if 'categories' in result else None
+            # filter metadata
+            extmetadata = imageinfo.get('extmetadata', {})
+            extmetadata.pop('Categories', None)
+            # not sure how the description of an image is metadata but anyway, I fount it there...
+            imageDescription = extmetadata.pop('ImageDescription', {})
             images[title] = {
                 "categories": image_categories,
                 "url": imageinfo.get("url"),
-                "description": imageinfo.get('extmetadata', {}).get('ImageDescription', {}).get('value')
+                "description": imageDescription,
+                "extmetadata": extmetadata
             }
 
     return images
