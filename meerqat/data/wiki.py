@@ -105,7 +105,7 @@ COMMONS_SPARQL_ENDPOINT = "https://wcqs-beta.wmflabs.org/sparql"
 # >>> COMMONS_REST_LIST.format(cmtitle=<str including "Category:" prefix>, cmtype="subcat"|"file")
 # e.g.
 # >>> COMMONS_REST_LIST.format(cmtitle="Category:Barack Obama in 2004", cmtype="subcat")
-COMMONS_REST_LIST = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle={cmtitle}&cmprop=title&format=json&cmcontinue&cmlimit=max&cmtype={cmtype}"
+COMMONS_REST_LIST = "https://commons.wikimedia.org/w/api.php?action=query&list=categorymembers&cmtitle={cmtitle}&cmprop=title|type&format=json&cmcontinue&cmlimit=max&cmtype={cmtype}"
 
 # query images URL, categories and description
 # use like
@@ -251,73 +251,64 @@ def keep_prominent_depictions(entities):
     return entities
 
 
-def query_commons_subcategories(category, categories):
-    query = COMMONS_REST_LIST.format(cmtitle=category, cmtype="subcat")
+def query_commons_subcategories(category, categories, images):
+    query = COMMONS_REST_LIST.format(cmtitle=category, cmtype="subcat|file")
     response = requests.get(query)
     if response.status_code != requests.codes.ok:
         warnings.warn(f"Something went wrong when requesting for '{query}', "
                       f"status code: {response.status_code}")
-        return {category}
+        return categories, images
     results = bytes2dict(response.content)['query']['categorymembers']
-    # base case: queried all subcategories down to the leaf
-    if not results:
-        return {category}
+
     # recursive call: query subcategories of the subcategories
     categories.add(category)
     for result in results:
         title = result['title']
-        # avoid 1. to get stuck in a loop 2. extra processing: skip already processed categories
-        if title in categories:
-            continue
-        categories.update(query_commons_subcategories(title, categories))
-    return categories
-
-
-def query_commons_images(categories):
-    images = {}
-    for category in categories:
-        query = COMMONS_REST_LIST.format(cmtitle=category, cmtype="file")
-        response = requests.get(query)
-        if response.status_code != requests.codes.ok:
-            warnings.warn(f"Something went wrong when requesting for '{query}', "
-                          f"status code: {response.status_code}")
-            continue
-        results = bytes2dict(response.content)['query']['categorymembers']
-        for result in results:
-            title = result['title']
+        type_ = result["type"]
+        if type_ == "subcat":
+            # avoid 1. to get stuck in a loop 2. extra processing: skip already processed categories
+            if title in categories:
+                continue
+            query_commons_subcategories(title, categories, images)
+        elif type_ == "file":
             # avoid querying the same image again and again as the same image is often in multiple categories
             if title in images:
                 continue
             encoding = title.split('.')[-1]
             if encoding not in VALID_ENCODING:
                 continue
+            images[title] = query_image(title)
+    return categories, images
 
-            # query images URL, categories and description
-            # note: it might be better to batch the query but when experimenting with
-            # batch size as low as 25 I had to deal with 'continue' responses...
-            query = COMMONS_REST_TITLE.format(titles=title)
-            response = requests.get(query)
-            if response.status_code != requests.codes.ok:
-                warnings.warn(f"Something went wrong when requesting for '{query}', "
-                              f"status code: {response.status_code}")
-            result = bytes2dict(response.content)['query']['pages']
-            # get first (only) value
-            result = next(iter(result.values()))
-            imageinfo = result.get('imageinfo', [{}])[0]
-            image_categories = [c.get('title') for c in result['categories']] if 'categories' in result else None
-            # filter metadata
-            extmetadata = imageinfo.get('extmetadata', {})
-            extmetadata.pop('Categories', None)
-            # not sure how the description of an image is metadata but anyway, I fount it there...
-            imageDescription = extmetadata.pop('ImageDescription', {})
-            images[title] = {
-                "categories": image_categories,
-                "url": imageinfo.get("url"),
-                "description": imageDescription,
-                "extmetadata": extmetadata
-            }
 
-    return images
+def query_image(title):
+    # query images URL, categories and description
+    # note: it might be better to batch the query but when experimenting with
+    # batch size as low as 25 I had to deal with 'continue' responses...
+    query = COMMONS_REST_TITLE.format(titles=title)
+    response = requests.get(query)
+    if response.status_code != requests.codes.ok:
+        warnings.warn(f"Something went wrong when requesting for '{query}', "
+                      f"status code: {response.status_code}")
+        return None
+    result = bytes2dict(response.content)['query']['pages']
+    # get first (only) value
+    result = next(iter(result.values()))
+    imageinfo = result.get('imageinfo', [{}])[0]
+    image_categories = [c.get('title') for c in result['categories']] if 'categories' in result else None
+    # filter metadata
+    extmetadata = imageinfo.get('extmetadata', {})
+    extmetadata.pop('Categories', None)
+    # TODO add some preference rules according to extmetadata["LicenseShortName"]
+    # not sure how the description of an image is metadata but anyway, I fount it there...
+    imageDescription = extmetadata.pop('ImageDescription', {})
+    image = {
+        "categories": image_categories,
+        "url": imageinfo.get("url"),
+        "description": imageDescription,
+        "extmetadata": extmetadata
+    }
+    return image
 
 
 def update_from_commons_rest(entities):
@@ -326,12 +317,9 @@ def update_from_commons_rest(entities):
         if entity['n_questions'] < 1 or "commons" not in entity:
             continue
         category = "Category:" + entity['commons']['value']
-        # find all subcategories of entity Commons category
-        categories = set()
-        query_commons_subcategories(category, categories)
-
-        # query all images (according to VALID_ENCODING) in the categories
-        images = query_commons_images(categories)
+        # query all images in of entity Commons category and subcategories recursively
+        categories, images = set(), dict()
+        query_commons_subcategories(category, categories, images)
         entity['images'] = images
     return entities
 
