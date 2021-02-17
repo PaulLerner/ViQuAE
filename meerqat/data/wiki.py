@@ -27,6 +27,7 @@ import warnings
 import requests
 from SPARQLWrapper import SPARQLWrapper, JSON
 from urllib.error import HTTPError
+from urllib3.exceptions import MaxRetryError
 from tqdm import tqdm
 from docopt import docopt
 
@@ -257,12 +258,30 @@ def keep_prominent_depictions(entities):
     return entities
 
 
+def request(query):
+    """GET query via requests, handles exceptions and returns None if something went wrong"""
+    response = None
+    base_msg = f"Something went wrong when requesting for '{query}':\n"
+    try:
+        response = requests.get(query)
+    except requests.exceptions.ConnectionError as e:
+        warnings.warn(f"{base_msg}requests.exceptions.ConnectionError: {e}")
+    except MaxRetryError as e:
+        warnings.warn(f"{base_msg}MaxRetryError: {e}")
+    except OSError as e:
+        warnings.warn(f"{base_msg}OSError: {e}")
+    except Exception as e:
+        warnings.warn(f"{base_msg}Exception: {e}")
+    if response.status_code != requests.codes.ok:
+        warnings.warn(f"{base_msg}status code: {response.status_code}")
+        response = None
+    return response
+
+
 def query_commons_subcategories(category, categories, images, max_images=1000):
     query = COMMONS_REST_LIST.format(cmtitle=category, cmtype="subcat|file")
-    response = requests.get(query)
-    if response.status_code != requests.codes.ok:
-        warnings.warn(f"Something went wrong when requesting for '{query}', "
-                      f"status code: {response.status_code}")
+    response = request(query)
+    if not response:
         return categories, images
     results = bytes2dict(response.content)['query']['categorymembers']
 
@@ -302,10 +321,8 @@ def query_image(title):
     # note: it might be better to batch the query but when experimenting with
     # batch size as low as 25 I had to deal with 'continue' responses...
     query = COMMONS_REST_TITLE.format(titles=title)
-    response = requests.get(query)
-    if response.status_code != requests.codes.ok:
-        warnings.warn(f"Something went wrong when requesting for '{query}', "
-                      f"status code: {response.status_code}")
+    response = request(query)
+    if not response:
         return None
     result = bytes2dict(response.content)['query']['pages']
     # get first (only) value
