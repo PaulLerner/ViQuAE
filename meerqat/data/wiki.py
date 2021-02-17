@@ -268,7 +268,7 @@ def query_commons_subcategories(category, categories, images, max_images=1000):
 
     # recursive call: query subcategories of the subcategories
     categories[category] = True
-    todo = set()
+    todo = []
     for result in results:
         title = result['title']
         type_ = result["type"]
@@ -284,9 +284,10 @@ def query_commons_subcategories(category, categories, images, max_images=1000):
         elif type_ == "subcat":
             # avoid 1. to get stuck in a loop 2. extra processing:
             # skip already processed categories
-            todo.add(title)
-            # and keep track of the processed categories
-            categories.setdefault(title, False)
+            if title not in categories:
+                todo.append(title)
+                # and keep track of the processed categories
+                categories[category] = False
     # return when we have enough images
     if len(images) > max_images:
         return categories, images
