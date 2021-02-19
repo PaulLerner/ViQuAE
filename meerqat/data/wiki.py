@@ -272,7 +272,7 @@ def request(query):
         warnings.warn(f"{base_msg}OSError: {e}")
     except Exception as e:
         warnings.warn(f"{base_msg}Exception: {e}")
-    if response.status_code != requests.codes.ok:
+    if response and response.status_code != requests.codes.ok:
         warnings.warn(f"{base_msg}status code: {response.status_code}")
         response = None
     return response
@@ -354,7 +354,7 @@ def update_from_commons_rest(entities):
         categories, images = {}, {}
         query_commons_subcategories(category, categories, images)
         entity['images'] = images
-        entity['categories'] = list(categories)
+        entity['categories'] = categories
     return entities
 
 
