@@ -4,8 +4,8 @@ entities.py <subset>
 entities.py images [--n=<n> --max=<max>] <subset>
 
 Options:
---n         Number of entities [default: 10]
---max       Max. number of images per entity [default: 18]
+--n=<n>           Number of entities [default: 10]
+--max=<max>       Max. number of images per entity [default: 18]
 """
 
 from docopt import docopt

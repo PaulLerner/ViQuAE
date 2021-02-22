@@ -5,7 +5,8 @@ kilt2vqa.py ned <subset>
 kilt2vqa.py generate mentions <subset> [--threshold=<threshold>]
 kilt2vqa.py count_entities <subset> [--threshold=<threshold>]
 """
-
+# TODO convert to labelstudio
+# make identifier by hashing KILT id + QID + mention + url
 import json
 import numpy as np
 import random
