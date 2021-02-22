@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 from collections import Counter
 
 from meerqat.data.loading import DATA_ROOT_PATH
-from meerqat.data.wiki import categories_heuristic
+from meerqat.data.wiki import get_license, license_score, special_path_to_file_name
 from meerqat.visualization.utils import simple_stats
 
 HTML_FORMAT = """
@@ -28,7 +28,8 @@ HTML_FORMAT = """
     <head>
         <link rel="stylesheet" href="styles.css">
     </head>
-    {entities}
+    <a href="{previous}">previous</a>
+    {entity}
 </html>
 """
 ENTITY_FORMAT = """
@@ -38,7 +39,7 @@ ENTITY_FORMAT = """
 </table>
 """
 TR_format = "<tr>{tds}</tr>"
-TD_FORMAT = '<td><p>{description}</p><img src="{url}" width="200"></td>'
+TD_FORMAT = '<td><p>{description}</p><p>{license}</p><p>{score}</p><p>{heuristics}</p><img src="{url}" width="200"></td>'
 
 
 def count_entities(entities, distinct=False):
@@ -139,31 +140,42 @@ def visualize_entities(counters, path=Path.cwd(), subset="meerqat"):
 
 
 def visualize_images(entities, output, n=10, max_images=18):
-    html_entities = []
+    previous = None
     for _ in tqdm(range(n)):
         qid, entity = entities.popitem()
         label = entity.get("entityLabel", {}).get("value")
         images = entity.get('images')
-        illustrative_image = entity.get('image', {})['value']
+        illustrative_image = entity.get('image', {})
         if not (label and images and illustrative_image):
             continue
+        # remove illustrative image from the candidates
+        for reserved_image in map(special_path_to_file_name, illustrative_image):
+            images.pop(reserved_image, None)
+
         trs, tds = [], []
-        images_list = list(images.keys())
-        random.shuffle(images_list)
-        for i, title in enumerate(images_list[:max_images]):
+        # sort images 1. by heuristic score, 2. by permissivity of the license
+        sorted_images = sorted(images,
+                               key=lambda name: (len(images[name]['heuristics']), license_score(images[name])),
+                               reverse=True)
+        for i, title in enumerate(sorted_images[:max_images]):
             image = images[title]
             url = image.get("url")
             if not url:
                 continue
-            tds.append(TD_FORMAT.format(description=image.get("description",""), url=url))
-            if (i+1) % 6 == 0 or i == max_images-1:
+            td = TD_FORMAT.format(description=image.get("description", ""),
+                                  url=url,
+                                  license=get_license(image),
+                                  score=len(image['heuristics']),
+                                  heuristics=", ".join(image['heuristics']))
+            tds.append(td)
+            if (i + 1) % 6 == 0 or i == max_images - 1:
                 trs.append(TR_format.format(tds="\n".join(tds)))
                 tds = []
-        html_entity = ENTITY_FORMAT.format(qid=qid, label=label, url=illustrative_image, trs="\n".join(trs))
-        html_entities.append(html_entity)
-    html = HTML_FORMAT.format(entities="\n".join(html_entities))
-    with open(output/"entities.html", 'w') as file:
-        file.write(html)
+        html_entity = ENTITY_FORMAT.format(qid=qid, label=label, url=next(iter(illustrative_image)), trs="\n".join(trs))
+        html = HTML_FORMAT.format(entity=html_entity, previous=previous)
+        previous = output / f"{qid}.html"
+        with open(previous, 'w') as file:
+            file.write(html)
 
 
 if __name__ == '__main__':
@@ -173,7 +185,7 @@ if __name__ == '__main__':
     path = DATA_ROOT_PATH / f"meerqat_{subset}" / "entities.json"
     with open(path) as file:
         entities = json.load(file)
-    output = DATA_ROOT_PATH / "visualization"
+    output = DATA_ROOT_PATH / "visualization" / str(hash(str(args)))
     output.mkdir(exist_ok=True)
 
     if args['images']:
