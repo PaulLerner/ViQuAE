@@ -140,7 +140,7 @@ def visualize_entities(counters, path=Path.cwd(), subset="meerqat"):
 
 
 def visualize_images(entities, output, n=10, max_images=18):
-    previous = None
+    previous = Path()
     for _ in tqdm(range(n)):
         qid, entity = entities.popitem()
         label = entity.get("entityLabel", {}).get("value")
@@ -172,7 +172,7 @@ def visualize_images(entities, output, n=10, max_images=18):
                 trs.append(TR_format.format(tds="\n".join(tds)))
                 tds = []
         html_entity = ENTITY_FORMAT.format(qid=qid, label=label, url=next(iter(illustrative_image)), trs="\n".join(trs))
-        html = HTML_FORMAT.format(entity=html_entity, previous=previous)
+        html = HTML_FORMAT.format(entity=html_entity, previous=previous.name)
         previous = output / f"{qid}.html"
         with open(previous, 'w') as file:
             file.write(html)
