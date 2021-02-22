@@ -7,15 +7,15 @@ wiki.py data superclasses <subset> [--n=<n>]
 wiki.py commons sparql depicts <subset>
 wiki.py commons sparql depicted <subset>
 wiki.py commons rest <subset> [--max_images=<max_images>]
-wiki.py commons filter [--categories --description] <subset>
+wiki.py commons heuristics <subset> [<heuristic>...]
 wiki.py filter <subset> [--superclass=<level> --positive --negative <classes_to_exclude>...]
 
 Options:
 --n=<n>                          Maximum level of superclasses. Defaults to all superclasses
 --max_images=<max_images>        Maximum number of images to query per entity/root category.
                                      Set to 0 if you only want to query categories [default: 1000].
---categories                     Heuristic: entity label should be included in all images categories
---description                    Heuristic: entity label should be included in the image description
+<heuristic>...                   Heuristic to compute for the image, one of {"categories", "description", "depictions"}
+                                    Defaults to all valid heuristics (listed above)
 --superclass=<level>             Level of superclasses in the filter, int or "all" (defaults to None i.e. filter only classes)
 --positive                       Keep only classes in "concrete_entities" + entities with gender (P21) or occupation (P106).
                                     Applied before negative_filter.
@@ -54,15 +54,7 @@ tmp = {
     "CC BY-NC-ND {v}": 1
 }
 LICENSES.update({l.format(v=v): preference for l, preference in tmp.items() for v in ["1.0", "2.0", "2.5", "3.0", "4.0"]})
-#TODO heuristics + score + visualiser selon le score
-"""\begin{itemize}
-    \item catégorie où le nom de l'entité n'est pas inclue
-    \item description où le nom de l'entité n'est pas inclue
-    \item intersections avec les \textit{depictions}
-    \item trop d'entités détectés dans la description (ou ``\textit{linkés}'')
-    \item[?] trop de visages détectés
-\end{itemize}
-"""
+
 # Template for wikidata to query many different attributes of a list of entities
 # should be used like
 # >>> WIKIDATA_QUERY % "wd:Q76 wd:Q78579194 wd:Q42 wd:Q243"
@@ -146,6 +138,9 @@ COMMONS_REST_LIST = "https://commons.wikimedia.org/w/api.php?action=query&list=c
 # e.g.
 # >>> COMMONS_REST_TITLE.format(titles="File:Barack Obama foreign trips.png|File:Women for Obama luncheon September 23, 2004.png")
 COMMONS_REST_TITLE = "https://commons.wikimedia.org/w/api.php?action=query&titles={titles}&prop=categories|description|imageinfo&format=json&iiprop=url|extmetadata&clshow=!hidden"
+
+VALID_IMAGE_HEURISTICS = {"categories", "description", "depictions"}
+
 
 def bytes2dict(b):
     return json.loads(b.decode("utf-8"))
@@ -405,21 +400,41 @@ def update_from_commons_rest(entities, max_images=1000):
     return entities
 
 
-def categories_heuristic(entities):
-    for entity in tqdm(entities.values(), desc="Applying 'categories' heuristic"):
+def image_heuristic(entities, heuristics=VALID_IMAGE_HEURISTICS):
+    invalid_heuristics = VALID_IMAGE_HEURISTICS - heuristics
+    if invalid_heuristics:
+        raise NotImplementedError(f"No heuristic was implemented for {invalid_heuristics}\n"
+                                  f"Use one of {VALID_IMAGE_HEURISTICS}")
+
+    # TODO named entity/link in description heuristic
+    for entity in tqdm(entities.values(), desc="Applying heuristics"):
         label = entity.get("entityLabel", {}).get("value")
         if not label or 'images' not in entity:
             continue
-        images = {}
+        # get file names of the depictions (add "File:" prefix and replace underscores with spaces)
+        if "depictions" in heuristics:
+            depictions = {"File:"+depiction["special_path"]["value"].split("/")[-1].replace('_', ' ')
+                          for depiction in entity.get("depictions", {}).values()}
         for title, image in entity['images'].items():
-            included = True
-            for category in image['categories']:
-                if label not in category:
-                    included = False
-                    break
-            if included:
-                images[title] = image
-        entity['images'] = images
+            image.setdefault("heuristics", {})
+
+            # entity label should be included in all of the images categories
+            if "categories" in heuristics and image.get("categories"):
+                included = True
+                for category in image['categories']:
+                    if label not in category:
+                        included = False
+                        break
+                if included:
+                    image["heuristics"]["categories"] = True
+
+            # entity label should be included in the description
+            if "description" in heuristics and image.get("description") and label in image["description"]["value"]:
+                image["heuristics"]["description"] = True
+
+            # image should be tagged as depicting (P180) the entity on Commons
+            if "depictions" in heuristics and title in depictions:
+                image["heuristics"]["depictions"] = True
     return entities
 
 
@@ -584,17 +599,9 @@ if __name__ == '__main__':
         elif args['rest']:
             max_images = int(args['--max_images'])
             output = update_from_commons_rest(entities, max_images)
-        elif args['filter']:
-            # filter images based on heuristics
-            if args['--categories']:
-                # entity label should be included in all images categories
-                output = categories_heuristic(entities)
-
-            if args['--description']:
-                # entity label should be included in all images descriptions
-                raise NotImplementedError
-            elif not args['--categories']:
-                raise ValueError(f"Please provide at least one optional heuristic in 'filter' mode:\n{__doc__}")
+        elif args['heuristics']:
+            heuristics = set(args['<heuristic>']) if args['<heuristic>'] else VALID_IMAGE_HEURISTICS
+            output = image_heuristic(entities, heuristics)
     elif args['filter']:
         positive_filter = args['--positive']
         negative_filter = args['--negative']
