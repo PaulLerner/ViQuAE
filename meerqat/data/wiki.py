@@ -38,7 +38,31 @@ from meerqat.data.loading import DATA_ROOT_PATH
 QID_URI_PREFIX = "http://www.wikidata.org/entity/"
 # restrict media to be images handleable by PIL.Image
 VALID_ENCODING = {"png", "jpg", "jpeg", "tiff", "gif"}
-
+# rules of preferences over licenses, the higher the better (0 is reserved for missing values or other licenses)
+LICENSES = {
+    "CC0": 7,
+    "PUBLIC DOMAIN MARK": 6,
+    "PUBLIC DOMAIN": 6,
+    "PDM": 6
+}
+tmp = {
+    "CC BY {v}": 5,
+    "CC BY-SA {v}": 5,
+    "CC BY-NC {v}": 4,
+    "CC BY-ND {v}": 3,
+    "CC BY-NC-SA {v}": 2,
+    "CC BY-NC-ND {v}": 1
+}
+LICENSES.update({l.format(v=v): preference for l, preference in tmp.items() for v in ["1.0", "2.0", "2.5", "3.0", "4.0"]})
+#TODO heuristics + score + visualiser selon le score
+"""\begin{itemize}
+    \item catégorie où le nom de l'entité n'est pas inclue
+    \item description où le nom de l'entité n'est pas inclue
+    \item intersections avec les \textit{depictions}
+    \item trop d'entités détectés dans la description (ou ``\textit{linkés}'')
+    \item[?] trop de visages détectés
+\end{itemize}
+"""
 # Template for wikidata to query many different attributes of a list of entities
 # should be used like
 # >>> WIKIDATA_QUERY % "wd:Q76 wd:Q78579194 wd:Q42 wd:Q243"
