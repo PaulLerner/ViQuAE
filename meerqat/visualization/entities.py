@@ -26,7 +26,7 @@ from meerqat.visualization.utils import simple_stats
 HTML_FORMAT = """
 <html>
     <head>
-        <link rel="stylesheet" href="styles.css">
+        <link rel="stylesheet" href="../styles.css">
     </head>
     <a href="{previous}">previous</a>
     {entity}
@@ -162,7 +162,7 @@ def visualize_images(entities, output, n=10, max_images=18):
             url = image.get("url")
             if not url:
                 continue
-            td = TD_FORMAT.format(description=image.get("description", ""),
+            td = TD_FORMAT.format(description=image.get("description", {}).get("value", ""),
                                   url=url,
                                   license=get_license(image),
                                   score=len(image['heuristics']),
