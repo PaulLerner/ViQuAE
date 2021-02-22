@@ -22,6 +22,7 @@ Options:
 --negative                       Keep only classes that are not in "abstract_entities". Applied after positive_filter
 <classes_to_exclude>...          Additional classes to exclude in the negative_filter (e.g. "Q5 Q82794")
 """
+import re
 import time
 import json
 import warnings
@@ -40,20 +41,17 @@ QID_URI_PREFIX = "http://www.wikidata.org/entity/"
 VALID_ENCODING = {"png", "jpg", "jpeg", "tiff", "gif"}
 # rules of preferences over licenses, the higher the better (0 is reserved for missing values or other licenses)
 LICENSES = {
-    "CC0": 7,
-    "PUBLIC DOMAIN MARK": 6,
-    "PUBLIC DOMAIN": 6,
-    "PDM": 6
+    "CC0": 8,
+    "PUBLIC DOMAIN MARK": 7,
+    "PUBLIC DOMAIN": 7,
+    "PDM": 7,
+    "BY": 6,
+    "BY-SA": 5,
+    "BY-NC": 4,
+    "BY-ND": 3,
+    "BY-NC-SA": 2,
+    "BY-NC-ND": 1
 }
-tmp = {
-    "CC BY {v}": 5,
-    "CC BY-SA {v}": 5,
-    "CC BY-NC {v}": 4,
-    "CC BY-ND {v}": 3,
-    "CC BY-NC-SA {v}": 2,
-    "CC BY-NC-ND {v}": 1
-}
-LICENSES.update({l.format(v=v): preference for l, preference in tmp.items() for v in ["1.0", "2.0", "2.5", "3.0", "4.0"]})
 
 # Template for wikidata to query many different attributes of a list of entities
 # should be used like
@@ -144,6 +142,21 @@ VALID_IMAGE_HEURISTICS = {"categories", "description", "depictions"}
 
 def bytes2dict(b):
     return json.loads(b.decode("utf-8"))
+
+
+def get_license(image):
+    """Get license short-name, upper-cased. Returns empty-string ('') if unavailable"""
+    return image.get("extmetadata", {}).get("LicenseShortName", {}).get("value", "").upper()
+
+
+def license_score(image):
+    """Gets license value, normalize it and return score (in LICENSES)"""
+    license_ = get_license(image)
+    # look for the kind of CC license (handles dashes)
+    cc = re.match(r"CC[ -](BY\S*)[ -]\d\.\d", license_)
+    if cc is not None:
+        license_ = cc.group(1)
+    return LICENSES.get(license_, 0)
 
 
 def query_sparql_entities(query, endpoint, wikidata_ids, prefix='wd:',
