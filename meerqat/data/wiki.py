@@ -400,6 +400,11 @@ def update_from_commons_rest(entities, max_images=1000):
     return entities
 
 
+def special_path_to_file_name(special_path):
+    """split url, add "File:" prefix and replace underscores with spaces"""
+    return "File:"+special_path.split("/")[-1].replace('_', ' ')
+
+
 def image_heuristic(entities, heuristics=VALID_IMAGE_HEURISTICS):
     invalid_heuristics = VALID_IMAGE_HEURISTICS - heuristics
     if invalid_heuristics:
@@ -413,7 +418,7 @@ def image_heuristic(entities, heuristics=VALID_IMAGE_HEURISTICS):
             continue
         # get file names of the depictions (add "File:" prefix and replace underscores with spaces)
         if "depictions" in heuristics:
-            depictions = {"File:"+depiction["special_path"]["value"].split("/")[-1].replace('_', ' ')
+            depictions = {special_path_to_file_name(depiction["special_path"]["value"])
                           for depiction in entity.get("depictions", {}).values()}
         for title, image in entity['images'].items():
             image.setdefault("heuristics", {})
