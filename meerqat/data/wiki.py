@@ -58,14 +58,30 @@ LICENSES = {
 # >>> WIKIDATA_QUERY % "wd:Q76 wd:Q78579194 wd:Q42 wd:Q243"
 # i.e. entity ids are space-separated and prefixed by 'wd:'
 WIKIDATA_QUERY = """
-SELECT ?entity ?entityLabel ?instanceof ?instanceofLabel ?commons ?image ?occupation ?occupationLabel ?gender ?genderLabel ?freebase ?date_of_birth ?date_of_death ?taxon_rank ?taxon_rankLabel
+SELECT ?entity ?entityLabel ?instanceof ?instanceofLabel ?commons ?image ?flag ?coat_of_arms ?logo ?service_ribbon ?occupation ?occupationLabel ?gender ?genderLabel ?freebase ?date_of_birth ?date_of_death ?taxon_rank ?taxon_rankLabel
 {
   VALUES ?entity { %s }
   OPTIONAL{ ?entity wdt:P373 ?commons . }
   ?entity wdt:P31 ?instanceof .
   OPTIONAL { 
-    ?entity wdt:P18 ?tmp . 
-    BIND(replace(wikibase:decodeUri(STR(?tmp))," ","_") AS ?image)
+    ?entity wdt:P18 ?_image . 
+    BIND(replace(wikibase:decodeUri(STR(?_image))," ","_") AS ?image)
+  }
+  OPTIONAL { 
+    ?entity wdt:P41 ?_flag . 
+    BIND(replace(wikibase:decodeUri(STR(?_flag))," ","_") AS ?flag)
+  }
+  OPTIONAL { 
+    ?entity wdt:P94 ?_coat_of_arms . 
+    BIND(replace(wikibase:decodeUri(STR(?_coat_of_arms))," ","_") AS ?coat_of_arms)
+  }
+  OPTIONAL { 
+    ?entity wdt:P154 ?_logo . 
+    BIND(replace(wikibase:decodeUri(STR(?_logo))," ","_") AS ?logo)
+  }
+  OPTIONAL { 
+    ?entity wdt:P2425 ?_service_ribbon . 
+    BIND(replace(wikibase:decodeUri(STR(?_service_ribbon))," ","_") AS ?service_ribbon)
   }
   OPTIONAL { ?entity wdt:P21 ?gender . }
   OPTIONAL { ?entity wdt:P106 ?occupation . }
@@ -210,7 +226,7 @@ def update_from_data(entities):
             # simply add or update the key/attribute
             entities[qid][unique_key] = result[unique_key]
         # handle keys/attributes that may be multiple
-        for multiple_key in ({'instanceof', 'occupation', 'image'} & result.keys()):
+        for multiple_key in ({'instanceof', 'occupation', 'image', 'flag', 'coat_of_arms', 'logo', 'service_ribbon'} & result.keys()):
             # create a new dict for this key/attribute so we don't duplicate data
             entities[qid].setdefault(multiple_key, {})
             # store corresponding label in the 'label' field
