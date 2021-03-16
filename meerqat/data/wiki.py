@@ -328,7 +328,7 @@ def request(query):
     return response
 
 
-def query_commons_subcategories(category, categories, images, max_images=1000):
+def query_commons_subcategories(category, categories, images, max_images=1000, max_categories=100):
     """Query all commons subcategories (and optionally images) from a root category recursively
 
     Parameters
@@ -343,6 +343,9 @@ def query_commons_subcategories(category, categories, images, max_images=1000):
         Maximum number of images to query per entity/root category.
         Set to 0 if you only want to query categories (images dict will be left empty)
         Defaults to 1000
+    max_categories: int, optional
+        Maximum number of categories to query per entity/root category.
+        Defaults to 100
 
     Returns
     -------
@@ -353,7 +356,9 @@ def query_commons_subcategories(category, categories, images, max_images=1000):
     response = request(query)
     if not response:
         return categories, images
-    results = bytes2dict(response.content)['query']['categorymembers']
+    results = bytes2dict(response.content).get('query', {}).get('categorymembers')
+    if results is None:
+        return categories, images
 
     # recursive call: query subcategories of the subcategories
     categories[category] = True
@@ -378,12 +383,12 @@ def query_commons_subcategories(category, categories, images, max_images=1000):
                 todo.append(title)
                 # and keep track of the processed categories
                 categories[category] = False
-    # return when we have enough images
-    if len(images) > max_images:
+    # return when we have enough images or categories
+    if len(images) > max_images or (len(categories)-len(todo)) > max_categories:
         return categories, images
     # else query all subcategories
     for title in todo:
-        query_commons_subcategories(title, categories, images)
+        query_commons_subcategories(title, categories, images, max_images=max_images, max_categories=max_categories)
     return categories, images
 
 
