@@ -23,6 +23,7 @@ import warnings
 
 from datasets import load_dataset, load_from_disk
 from meerqat.data.loading import map_kilt_triviaqa, DATA_ROOT_PATH
+from meerqat.data.wiki import HUMAN
 from meerqat.visualization.utils import viz_spacy, simple_stats
 
 # spacy constants for NER
@@ -44,8 +45,6 @@ SHE_GENDER = {'Q6581072', 'Q1052281'}
 NA_GENDER = {'Q1097630', 'Q48270'}
 #             'male'    'female'
 ANIMAL_SEX = {'Q44148', 'Q43445'}
-# HACK: set human as uri instead of QID, should maybe get rid of uris in wiki.py ?
-HUMAN = 'http://www.wikidata.org/entity/Q5'
 
 # set random seed to get consistent random examples
 np.random.seed(0)

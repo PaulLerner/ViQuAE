@@ -36,7 +36,12 @@ from docopt import docopt
 
 from meerqat.data.loading import DATA_ROOT_PATH
 
+
 QID_URI_PREFIX = "http://www.wikidata.org/entity/"
+HUMAN = QID_URI_PREFIX + 'Q5'
+
+VALID_DATE_TYPE = 'http://www.w3.org/2001/XMLSchema#dateTime'
+
 # restrict media to be images handleable by PIL.Image
 VALID_ENCODING = {"png", "jpg", "jpeg", "tiff", "gif"}
 # rules of preferences over licenses, the higher the better (0 is reserved for missing values or other licenses)
