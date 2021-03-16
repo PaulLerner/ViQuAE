@@ -124,6 +124,11 @@ WHERE
 """
 WIKIDATA_ENDPOINT = "https://query.wikidata.org/sparql"
 
+# see update_from_data
+RESERVED_IMAGES = {'image', 'flag', 'coat_of_arms', 'logo', 'service_ribbon'}
+MULTIPLE_KEYS = {'instanceof', 'occupation'}.union(RESERVED_IMAGES)
+UNIQUE_KEYS = {'entityLabel', 'gender', 'genderLabel', 'commons', 'freebase', 'date_of_birth', 'date_of_death', 'taxon_rank', 'taxon_rankLabel'}
+
 # template for beta-commons SPARQL API to query images that depict (P180) entities
 # same usage as WIKIDATA_QUERY
 COMMONS_SPARQL_QUERY = """
@@ -224,16 +229,15 @@ def update_from_data(entities):
     # query Wikidata
     results = query_sparql_entities(WIKIDATA_QUERY, WIKIDATA_ENDPOINT, entities.keys(),
                                     description="Querying Wikidata")
-
     # update entities with results
     for result in tqdm(results, desc="Updating entities"):
         qid = result['entity']['value'].split('/')[-1]
         # handle keys/attributes that are unique
-        for unique_key in ({'entityLabel', 'gender', 'genderLabel', 'commons', 'freebase', 'date_of_birth', 'date_of_death', 'taxon_rank', 'taxon_rankLabel'} & result.keys()):
+        for unique_key in (UNIQUE_KEYS & result.keys()):
             # simply add or update the key/attribute
             entities[qid][unique_key] = result[unique_key]
         # handle keys/attributes that may be multiple
-        for multiple_key in ({'instanceof', 'occupation', 'image', 'flag', 'coat_of_arms', 'logo', 'service_ribbon'} & result.keys()):
+        for multiple_key in (MULTIPLE_KEYS & result.keys()):
             # create a new dict for this key/attribute so we don't duplicate data
             entities[qid].setdefault(multiple_key, {})
             # store corresponding label in the 'label' field
