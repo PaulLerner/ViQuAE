@@ -8,7 +8,7 @@ wiki.py commons sparql depicts <subset>
 wiki.py commons sparql depicted <subset>
 wiki.py commons rest <subset> [--max_images=<max_images>]
 wiki.py commons heuristics <subset> [<heuristic>...]
-wiki.py filter <subset> [--superclass=<level> --positive --negative <classes_to_exclude>...]
+wiki.py filter <subset> [--superclass=<level> --positive --negative --deceased=<year> <classes_to_exclude>...]
 
 Options:
 --n=<n>                          Maximum level of superclasses. Defaults to all superclasses
@@ -20,12 +20,14 @@ Options:
 --positive                       Keep only classes in "concrete_entities" + entities with gender (P21) or occupation (P106).
                                     Applied before negative_filter.
 --negative                       Keep only classes that are not in "abstract_entities". Applied after positive_filter
+--deceased=<year>                Remove humans (Q5) that are alive or deceased after <year> (might avoid trouble with GDPR)
 <classes_to_exclude>...          Additional classes to exclude in the negative_filter (e.g. "Q5 Q82794")
 """
 import re
 import time
 import json
 import warnings
+import datetime
 
 import requests
 from SPARQLWrapper import SPARQLWrapper, JSON
@@ -531,6 +533,27 @@ def keep_classes(entities, classes_to_keep, superclasses={}, attributes_to_keep=
     return filtered_entities
 
 
+def iso2year(iso):
+    """Handles negative dates"""
+    if iso.startswith("-"):
+        return - datetime.datetime.fromisoformat(iso[1:]).year
+    return datetime.datetime.fromisoformat(iso).year
+
+
+def remove_alive_humans(entities, year_threshold=float("inf")):
+    filtered_entities = {}
+    for qid, entity in tqdm(entities.items(), desc="Removing alive humans"):
+        if HUMAN in entity.get('instanceof', {}).keys():
+            date_of_death = entity.get("date_of_death", {})
+            if date_of_death.get('datatype') != VALID_DATE_TYPE:
+                continue
+            year_of_death = iso2year(date_of_death['value'][:-1])
+            if year_of_death > year_threshold:
+                continue
+        filtered_entities[qid] = entity
+    return filtered_entities
+
+
 def query_superclasses(entities, wikidata_superclasses_query, n_levels=None):
     if n_levels:
         level, levels = [], []
@@ -649,6 +672,7 @@ if __name__ == '__main__':
     elif args['filter']:
         positive_filter = args['--positive']
         negative_filter = args['--negative']
+        deceased = int(args['--deceased']) if args['--deceased'] else None
         superclass_level = args['--superclass']
         if superclass_level and superclass_level != "all":
             superclass_level = int(superclass_level)
@@ -669,6 +693,8 @@ if __name__ == '__main__':
 
         if classes_to_exclude:
             entities = exclude_classes(entities, classes_to_exclude, superclasses)
+        if deceased is not None:
+            entities = remove_alive_humans(entities, year_threshold=deceased)
         output = entities
 
     # save output
