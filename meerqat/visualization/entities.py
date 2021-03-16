@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 from collections import Counter
 
 from meerqat.data.loading import DATA_ROOT_PATH
-from meerqat.data.wiki import get_license, license_score, special_path_to_file_name
+from meerqat.data.wiki import get_license, license_score, special_path_to_file_name, RESERVED_IMAGES
 from meerqat.visualization.utils import simple_stats
 
 HTML_FORMAT = """
@@ -148,9 +148,12 @@ def visualize_images(entities, output, n=10, max_images=18):
         illustrative_image = entity.get('image', {})
         if not (label and images and illustrative_image):
             continue
-        # remove illustrative image from the candidates
-        for reserved_image in map(special_path_to_file_name, illustrative_image):
-            images.pop(reserved_image, None)
+        # remove reserved images (e.g. illustrative_image) from the candidates
+        for reserved_image_key in RESERVED_IMAGES:
+            for reserved_image in map(special_path_to_file_name, entity.get(reserved_image_key, {})):
+                images.pop(reserved_image, None)
+
+        # TODO remove images with "cosplay" in category
 
         trs, tds = [], []
         # sort images 1. by heuristic score, 2. by permissivity of the license
