@@ -28,12 +28,12 @@ from meerqat.visualization.utils import viz_spacy, simple_stats
 
 # spacy constants for NER
 INVALID_ENTITIES = {DATE, TIME, PERCENT, MONEY, QUANTITY, ORDINAL, CARDINAL}
-# TODO check root: in practice, it never happened on TriviaQA dev set
+# TODO check root and obj: in practice, it never happened on TriviaQA dev set
 VALID_DEP = {dobj, nsubj, pobj, obj, nsubjpass, poss, obl, root}
 
 # spacy constants for pronoun-mention generation
 HE_SHE_DEP = {spacy.symbols.NAMES[dep] for dep in [nsubj, nsubjpass]}
-HIM_HER_DEP = {spacy.symbols.NAMES[dep] for dep in [dobj, obj, obl, pobj]}
+HIM_HER_DEP = {spacy.symbols.NAMES[dep] for dep in [dobj, obj, obl]}
 HIS_HERS_DEP = {spacy.symbols.NAMES[poss]}
 
 # Wikidata constants for pronoun-mention generation
