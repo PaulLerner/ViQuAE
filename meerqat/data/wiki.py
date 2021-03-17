@@ -6,14 +6,15 @@ wiki.py data depicted <subset>
 wiki.py data superclasses <subset> [--n=<n>]
 wiki.py commons sparql depicts <subset>
 wiki.py commons sparql depicted <subset>
-wiki.py commons rest <subset> [--max_images=<max_images>]
+wiki.py commons rest <subset> [--max_images=<max_images> --max_categories=<max_categories>]
 wiki.py commons heuristics <subset> [<heuristic>...]
 wiki.py filter <subset> [--superclass=<level> --positive --negative --deceased=<year> <classes_to_exclude>...]
 
 Options:
 --n=<n>                          Maximum level of superclasses. Defaults to all superclasses
---max_images=<max_images>        Maximum number of images to query per entity/root category.
+--max_images=<n>                 Maximum number of images to query per entity/root category.
                                      Set to 0 if you only want to query categories [default: 1000].
+--max_categories=<n>             Maximum number of categories to query per entity/root category [default: 100].
 <heuristic>...                   Heuristic to compute for the image, one of {"categories", "description", "depictions"}
                                     Defaults to all valid heuristics (listed above)
 --superclass=<level>             Level of superclasses in the filter, int or "all" (defaults to None i.e. filter only classes)
@@ -339,7 +340,9 @@ def request(query):
     return response
 
 
-def query_commons_subcategories(category, categories, images, max_images=1000, max_categories=100):
+def query_commons_subcategories(category, categories, images,
+                                max_images=1000, max_categories=100,
+                                n_queried_categories=0):
     """Query all commons subcategories (and optionally images) from a root category recursively
 
     Parameters
@@ -356,7 +359,14 @@ def query_commons_subcategories(category, categories, images, max_images=1000, m
         Defaults to 1000
     max_categories: int, optional
         Maximum number of categories to query per entity/root category.
+        Enforced via:
+        - n_queried_categories if max_images > 0
+        - len(categories) otherwise
         Defaults to 100
+    n_queried_categories: int, optional
+        Keeps track of the number of queried categories in order to enforce max_categories
+        Should be equal to the number of True in categories
+        Defaults to 0
 
     Returns
     -------
@@ -373,6 +383,7 @@ def query_commons_subcategories(category, categories, images, max_images=1000, m
 
     # recursive call: query subcategories of the subcategories
     categories[category] = True
+    n_queried_categories += 1
     todo = []
     for result in results:
         title = result['title']
@@ -395,11 +406,16 @@ def query_commons_subcategories(category, categories, images, max_images=1000, m
                 # and keep track of the processed categories
                 categories[category] = False
     # return when we have enough images or categories
-    if len(images) > max_images or (len(categories)-len(todo)) > max_categories:
+    if len(images) > max_images or \
+        (max_images > 0 and n_queried_categories > max_categories) or \
+        (max_images <= 0 and len(categories) > max_categories):
         return categories, images
     # else query all subcategories
     for title in todo:
-        query_commons_subcategories(title, categories, images, max_images=max_images, max_categories=max_categories)
+        query_commons_subcategories(title, categories, images,
+                                    max_images=max_images,
+                                    max_categories=max_categories,
+                                    n_queried_categories=n_queried_categories)
     return categories, images
 
 
@@ -431,7 +447,7 @@ def query_image(title):
     return image
 
 
-def update_from_commons_rest(entities, max_images=1000):
+def update_from_commons_rest(entities, max_images=1000, max_categories=100):
     for entity in tqdm(entities.values(), desc="Updating entities from Commons"):
         # query only entities that appear in dataset (some may come from 'depictions')
         if entity['n_questions'] < 1 or "commons" not in entity:
@@ -439,7 +455,7 @@ def update_from_commons_rest(entities, max_images=1000):
         category = "Category:" + entity['commons']['value']
         # query all images in of entity Commons category and subcategories recursively
         categories, images = {}, {}
-        query_commons_subcategories(category, categories, images, max_images)
+        query_commons_subcategories(category, categories, images, max_images, max_categories)
         entity['images'] = images
         entity['categories'] = categories
     return entities
@@ -669,7 +685,8 @@ if __name__ == '__main__':
                 path = depictions_path
         elif args['rest']:
             max_images = int(args['--max_images'])
-            output = update_from_commons_rest(entities, max_images)
+            max_categories = int(args['--max_categories'])
+            output = update_from_commons_rest(entities, max_images, max_categories)
         elif args['heuristics']:
             heuristics = set(args['<heuristic>']) if args['<heuristic>'] else VALID_IMAGE_HEURISTICS
             output = image_heuristic(entities, heuristics)
