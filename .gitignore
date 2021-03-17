@@ -138,3 +138,6 @@ drafts/
 
 # libreoffice stuff
 .~lock.*.csv#
+
+# visual studio code
+.vscode/
