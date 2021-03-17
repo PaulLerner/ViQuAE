@@ -20,7 +20,7 @@ from tqdm import tqdm
 
 from meerqat.data.loading import DATA_ROOT_PATH
 from meerqat.data.wiki import keep_prominent_depictions, exclude_classes, keep_classes, QID_URI_PREFIX
-from meerqat.data.kilt2vqa import generate_vqa
+from meerqat.data.kilt2vqa import generate_vq
 
 # HTML document format
 HTML_FORMAT = """
@@ -79,7 +79,7 @@ def subset2vqa(dataset, entities, n=50):
     np.random.shuffle(indices)
     subset = []
     for i in tqdm(indices, desc="Generating visual questions"):
-        item = generate_vqa(dataset[i.item()], entities)
+        item = generate_vq(dataset[i.item()], entities)
         if not item['vq']:
             continue
         subset.append(item)

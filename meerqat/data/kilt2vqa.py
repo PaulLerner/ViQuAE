@@ -3,10 +3,10 @@
 kilt2vqa.py ner <subset>
 kilt2vqa.py ned <subset>
 kilt2vqa.py generate mentions <subset> [--threshold=<threshold>]
+kilt2vqa.py generate vq <subset> [<categories_to_exclude>...]
 kilt2vqa.py count_entities <subset> [--threshold=<threshold>]
+kilt2vqa.py labelstudio <subset>
 """
-# TODO convert to labelstudio
-# make identifier by hashing KILT id + QID + mention + url
 import json
 import numpy as np
 import random
@@ -23,7 +23,8 @@ import warnings
 
 from datasets import load_dataset, load_from_disk
 from meerqat.data.loading import map_kilt_triviaqa, DATA_ROOT_PATH
-from meerqat.data.wiki import HUMAN
+from meerqat.data.wiki import HUMAN, RESERVED_IMAGES, special_path_to_file_name, SPECIAL_PATH_URI_PREFIX
+from meerqat.data.utils import md5
 from meerqat.visualization.utils import viz_spacy, simple_stats
 
 # spacy constants for NER
@@ -379,20 +380,17 @@ def generate_mentions(subset, wer_threshold=0.5):
     print(f"Successfully saved output to '{dataset_path}'")
 
 
-def generate_vqa(item, entities, unique_per_entity=True):
+def generate_vq(item, entities):
     """
-    Generate a image (url), question, answer triple by choosing uniformly:
-        - an image from the depictions (note that prominent depictions should be filtered before-hand
-        - a mention type and a mention from this mention type
+    Generate a image (url), question, answer triple by choosing:
+        - uniformly a mention type and a mention from this mention type
+        - the image with the best score (with its title sorted last in "titles").
+                Tries to use a unique image per entity.
 
     Parameters
     ----------
     item: Dataset item
     entities: dict (see wiki.py)
-    unique_per_entity: bool
-        Whether to use unique images for the same entity
-        Note this modifies entities as depictions are popped using dict.popitem
-        Defaults to True.
 
     Returns
     -------
@@ -400,33 +398,100 @@ def generate_vqa(item, entities, unique_per_entity=True):
         with a new 'vq' key (List[dict])
     """
     item['vq'] = []
+    kilt_id = item['id']
     for placeholder in item['placeholder']:
         mention_types = [mention_type for mention_type in placeholder.get('ambiguous_mentions', {}).values() if mention_type]
         if not mention_types:
             continue
         qid = placeholder['entity']['wikidata_info']['wikidata_id']
         # entity might have been filtered before-hand -> get qid instead of "[qid]"
-        depictions = entities.get(qid, {}).get("depictions")
-        if not depictions:
+        entity = entities.get(qid, {})
+        titles = entity.get("titles")
+        if not titles:
             continue
-        # try to use unique images per entity -> pop depictions
-        if unique_per_entity:
-            depiction = depictions.popitem()[1]
-        # choose random depiction without modifying depictions
+        # try to use unique images per entity -> pop titles
+        if len(titles) > 1:
+            # note we assume that the images are sorted in ascending order w.r.t. their score
+            title = titles.pop()
         else:
-            depiction = random.choice(list(depictions.values()))
-        url = depiction['url']['value']
+            title = titles[0]
+        url = SPECIAL_PATH_URI_PREFIX+title.replace(" ", "_")
+
         # choose mention type (e.g. pronoun or occupation) uniformly from all types (that are not empty)
         mention_type = random.choice(mention_types)
         # choose mention uniformly from all mentions in this type (e.g. Barack Obama is a politician and a statesperson)
         mention = random.choice(mention_type)
 
-        vq = {'input': placeholder['input'].format(mention=mention),
+        inp = placeholder['input'].format(mention=mention)
+        meerqat_id = md5("".join((kilt_id, qid, inp, url)))
+        vq = {'input': inp,
               'url': url,
-              'wikidata_id': qid}
+              'wikidata_id': qid,
+              'meerqat_id': meerqat_id}
         item['vq'].append(vq)
 
     return item
+
+
+def generate_vqs(subset, exclude_categories=set()):
+    """
+    Parameters
+    ----------
+    subset: str
+        Name of the subset to load (e.g. validation_triviaqa)
+    exclude_categories: set, optional
+        Exclude image where these keywords are included in one of its categories
+        e.g. {'cosplay'} might save you some trouble with GDPR
+        Defaults to empty set (i.e. keep all)
+    """
+    # load data
+    dataset_path = DATA_ROOT_PATH / f"meerqat_{subset}"
+    dataset = load_from_disk(dataset_path)
+    with open(dataset_path / "entities.json", 'r') as file:
+        entities = json.load(file)
+
+    # sort images and remove forbidden ones (move to wiki.py if it's too slow?)
+    for entity in entities.values():
+        images = entity.get("images")
+        if not images:
+            continue
+
+        # remove reserved images (e.g. illustrative_image) from the candidates
+        for reserved_image_key in RESERVED_IMAGES:
+            for reserved_image in map(special_path_to_file_name, entity.get(reserved_image_key, {})):
+                images.pop(reserved_image, None)
+
+        # Exclude image where these keywords are included in one of its categories
+        if exclude_categories:
+            todel = []
+            for title, image in images.items():
+                del_image = False
+                for image_category in image.get("categories", []):
+                    image_category = image_category.lower()
+                    for category_to_exclude in exclude_categories:
+                        if category_to_exclude in image_category:
+                            del_image = True
+                            break
+                    if del_image:
+                        todel.append(title)
+                        break
+            for title in todel:
+                images.pop(title)
+
+        # sort images w.r.t. their score in ASCENDING order (allows simpler use of pop)
+        entity["titles"] = sorted(images, key=lambda title: len(images[title]['heuristics']))
+
+    # go through dataset
+    dataset = dataset.map(generate_vq, fn_kwargs=dict(entities=entities))
+
+    # save data
+    dataset.save_to_disk(dataset_path)
+    print(f"Successfully saved output to '{dataset_path}'")
+
+
+def labelstudio(subset):
+    """convert dataset to the Label Studio JSON format"""
+    raise NotImplementedError()
 
 
 if __name__ == '__main__':
@@ -445,4 +510,9 @@ if __name__ == '__main__':
     elif args['generate']:
         if args['mentions']:
             generate_mentions(subset, wer_threshold=wer_threshold)
+        elif args['vq']:
+            categories_to_exclude = set(args['<categories_to_exclude>'])
+            generate_vqs(subset, categories_to_exclude)
+    elif args['labelstudio']:
+        labelstudio(subset)
 

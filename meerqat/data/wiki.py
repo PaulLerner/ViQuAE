@@ -43,6 +43,7 @@ from meerqat.data.loading import DATA_ROOT_PATH
 QID_URI_PREFIX = "http://www.wikidata.org/entity/"
 HUMAN = QID_URI_PREFIX + 'Q5'
 
+SPECIAL_PATH_URI_PREFIX = "http://commons.wikimedia.org/wiki/Special:FilePath/"
 VALID_DATE_TYPE = 'http://www.w3.org/2001/XMLSchema#dateTime'
 
 # restrict media to be images handleable by PIL.Image
