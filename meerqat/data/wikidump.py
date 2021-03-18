@@ -60,8 +60,13 @@ def process_article(article, entities, entity_categories):
         # find categories
         categories = set()
         for internal_link in re.findall("\[\[(.+)\]\]", wikitext):
-            if internal_link.startswith("Category:"):
-                categories.add(internal_link)
+            if internal_link.lower().startswith("category:"):
+                # remove name from link
+                name = internal_link.find("|")
+                if name >= 0:
+                    internal_link = internal_link[: name]
+                # make "Category" sentence-cased
+                categories.add("C"+internal_link[1: ])
         # is there any entity with these categories?
         # note this also filters in case we did not find any category in wikitext
         if not (categories & entity_categories):
@@ -74,22 +79,19 @@ def process_article(article, entities, entity_categories):
         for field in ["Date", "Author"]:
             get_field(wikitext, image, field)
 
-        i_desc = wikitext.find("Description=")
-        if i_desc >= 0:
-            description = wikitext[i_desc:]
+        description = re.search(r"description\s*=\s*(.+)", wikitext, flags=re.IGNORECASE|re.DOTALL|re.MULTILINE)
+        if description is not None:
+            description = description.group(1)
             i_new_field = description.find("\n|")
             if i_new_field >= 0:
                 description = description[:i_new_field]
-            description = re.sub(r"Description=\s*", "", description)
-        else:
-            description = None
         image["description"] = description
 
-        license_match = next(re.finditer(r"{{int:license-header}}\s*=+", wikitext))
-        if license_match is not None:
+        for license_match in re.finditer(r"{{int:license-header}}\s*=+", wikitext):
             license_ = re.findall("{{.+}}", wikitext[license_match.end():])
-            if license:
+            if license_:
                 image["license"] = license_[0]
+            break
 
         # find entities with appropriate categories and save the image
         for entity in entities.values():
@@ -97,7 +99,7 @@ def process_article(article, entities, entity_categories):
                 continue
             if entity.get("categories", {}).keys() & categories:
                 entity.setdefault("images", {})
-                entity["images"]["title"] = image
+                entity["images"][title] = image
 
     return entities
 
@@ -106,7 +108,7 @@ def process_articles(dump_path, entities):
     # set of all categories to enable faster search
     categories = {category for entity in entities.values() if entity["n_questions"] > 0
                            for category in entity.get("categories", {})}
-    articles_path = dump_path.glob(r"commonswiki-latest-pages-articles[0-9]*")
+    articles_path = list(dump_path.glob(r"commonswiki-latest-pages-articles[0-9]*"))
     for article_path in tqdm(articles_path, desc="Processing articles"):
         article = parse_file(article_path).getroot()
         process_article(article, entities, categories)
