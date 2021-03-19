@@ -8,6 +8,7 @@ import json
 import re
 
 from meerqat.data.loading import DATA_ROOT_PATH
+from meerqat.data.wiki import VALID_ENCODING
 
 NAMESPACE = {"mw": "http://www.mediawiki.org/xml/export-0.10/"}
 
@@ -46,8 +47,8 @@ def get_field(wikitext, image, field):
 def process_article(article, entities, entity_categories):
     for page in article:
         title = find_text(page, "mw:title")
-        # keep only files
-        if title is None or not title.startswith("File:"):
+        # keep only files with valid encoding
+        if title is None or not title.startswith("File:") or title.split('.')[-1].lower() not in VALID_ENCODING:
             continue
 
         revision = find(page, "mw:revision")

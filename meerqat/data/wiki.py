@@ -395,7 +395,7 @@ def query_commons_subcategories(category, categories, images,
             # avoid querying the same image again and again as the same image is often in multiple categories
             if title in images:
                 continue
-            encoding = title.split('.')[-1]
+            encoding = title.split('.')[-1].lower()
             if encoding not in VALID_ENCODING:
                 continue
             images[title] = query_image(title)
