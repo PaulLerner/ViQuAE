@@ -454,13 +454,14 @@ def generate_vqs(subset, exclude_categories=set()):
         Defaults to empty set (i.e. keep all)
     """
     # load data
+    print("loading data...")
     dataset_path = DATA_ROOT_PATH / f"meerqat_{subset}"
     dataset = load_from_disk(dataset_path)
     with open(dataset_path / "entities.json", 'r') as file:
         entities = json.load(file)
 
     # sort images and remove forbidden ones (move to wiki.py if it's too slow?)
-    for entity in entities.values():
+    for entity in tqdm(entities.values(), desc="Processing images"):
         images = entity.get("images")
         if not images:
             continue
@@ -504,12 +505,15 @@ def generate_vqs(subset, exclude_categories=set()):
 
 def labelstudio(*args, alternative_images=8, **kwargs):
     """run generate_vqs and convert dataset to the Label Studio JSON format"""
+    print("Generating visual questions...")
     dataset, entities = generate_vqs(*args, **kwargs)
 
     # convert dataset to the Label Studio JSON format
     ls = {}
     i = 0
-    for item in dataset:
+    # try to get illustrative image, fallback on other images if available
+    illustrative_images = ["image"] + list(RESERVED_IMAGES - {"image"})
+    for item in tqdm(dataset, desc="Converting to Label Studio"):
         for vq in item["vq"]:
             # make some names more explicit and copy some stuff from original QA
             vq["image"] = vq.pop('url')
@@ -519,17 +523,26 @@ def labelstudio(*args, alternative_images=8, **kwargs):
             vq['mentions'] = ", ".join(vq['mentions'])
             qid = vq['wikidata_id']
             entity = entities[qid]
-
-            # HACK: pop 'type' and 'value' that might have been gathered
-            # when we considered only a single illustrative image per entity
-            entity['image'].pop('type', None)
-            entity['image'].pop('value', None)
-            if entity['image']:
-                vq['entity_image'] = next(iter(entity['image'].values()))['value']
+            
+            # try to get illustrative image, fallback on other images if available
+            for entity_image_key in illustrative_images:
+                entity_image = entity.get(entity_image_key)
+                if entity_image is not None:
+                    # HACK: pop 'type' and 'value' that might have been gathered
+                    # when we considered only a single illustrative image per entity
+                    entity_image.pop('type', None)
+                    entity_image.pop('value', None)
+                    break
+            
+            if entity_image:
+                vq['entity_image'] = next(iter(entity_image.values())).get('value')
+            # no missing values: use empty string instead
+            else:
+                vq['entity_image'] = ""
 
             # gather alternative images to vq["image"]
-            # remember images are sorted in ASC order wrt their score, thus the ": -1" to reverse the list
-            for j, title in enumerate(entity["titles"][: alternative_images: -1]):
+            # remember images are sorted in ASC order wrt their score, thus the [::-1] to reverse the list
+            for j, title in enumerate(entity["titles"][-alternative_images: ][::-1]):
                 # remove "File:" prefix and extension
                 caption = re.match(r"File:(.+)\.\w+", title)
                 caption = caption.group(1) if caption is not None else title
@@ -537,6 +550,10 @@ def labelstudio(*args, alternative_images=8, **kwargs):
                 url = SPECIAL_PATH_URI_PREFIX + title.replace(" ", "_")
                 vq[f"altimage{j}"] = url
                 vq[f"altimage{j}caption"] = caption
+            # no missing values: use empty string instead
+            for j in range(j+1, alternative_images):
+                vq[f"altimage{j}"] = ""
+                vq[f"altimage{j}caption"] = ""
 
             ls[str(i)] = {"data": vq}
             i += 1
@@ -565,10 +582,10 @@ if __name__ == '__main__':
         if args['mentions']:
             generate_mentions(subset, wer_threshold=wer_threshold)
         elif args['vq']:
-            categories_to_exclude = set(args['<categories_to_exclude>'])
-            generate_vqs(subset, categories_to_exclude)
+            exclude_categories = set(args['<categories_to_exclude>'])
+            generate_vqs(subset, exclude_categories)
     elif args['labelstudio']:
-        categories_to_exclude = set(args['<categories_to_exclude>'])
+        exclude_categories = set(args['<categories_to_exclude>'])
         alternative_images = int(args['--alternative_images'])
-        labelstudio(subset, categories_to_exclude=categories_to_exclude, alternative_images=alternative_images)
+        labelstudio(subset, exclude_categories=exclude_categories, alternative_images=alternative_images)
 
