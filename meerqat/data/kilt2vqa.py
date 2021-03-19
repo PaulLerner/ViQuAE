@@ -5,7 +5,12 @@ kilt2vqa.py ned <subset>
 kilt2vqa.py generate mentions <subset> [--threshold=<threshold>]
 kilt2vqa.py generate vq <subset> [<categories_to_exclude>...]
 kilt2vqa.py count_entities <subset> [--threshold=<threshold>]
-kilt2vqa.py labelstudio <subset>
+kilt2vqa.py labelstudio <subset> [--alternative_images=<n> <categories_to_exclude>...]
+
+Options:
+--threshold=<threshold>         Threshold for Word Error Rate (WER, i.e. word-level Levenshtein distance)
+                                    to consider the entity disambiguated [default: 0.5].
+--alternative_images=<n>        Number of alternative images to provide [default: 8].
 """
 import json
 import numpy as np
@@ -404,6 +409,7 @@ def generate_vq(item, entities):
         if not mention_types:
             continue
         qid = placeholder['entity']['wikidata_info']['wikidata_id']
+        description = placeholder['entity']['wikidata_info']['description']
         # entity might have been filtered before-hand -> get qid instead of "[qid]"
         entity = entities.get(qid, {})
         titles = entity.get("titles")
@@ -427,7 +433,10 @@ def generate_vq(item, entities):
         vq = {'input': inp,
               'url': url,
               'wikidata_id': qid,
-              'meerqat_id': meerqat_id}
+              'meerqat_id': meerqat_id,
+              'mentions': [mention for mention_type in mention_types for mention in mention_type],
+              'description': description
+              }
         item['vq'].append(vq)
 
     return item
@@ -466,7 +475,10 @@ def generate_vqs(subset, exclude_categories=set()):
             todel = []
             for title, image in images.items():
                 del_image = False
-                for image_category in image.get("categories", []):
+                image_categories = image.get("categories")
+                if image_categories is None:
+                    continue
+                for image_category in image_categories:
                     image_category = image_category.lower()
                     for category_to_exclude in exclude_categories:
                         if category_to_exclude in image_category:
@@ -487,11 +499,53 @@ def generate_vqs(subset, exclude_categories=set()):
     # save data
     dataset.save_to_disk(dataset_path)
     print(f"Successfully saved output to '{dataset_path}'")
+    return dataset, entities
 
 
-def labelstudio(subset):
-    """convert dataset to the Label Studio JSON format"""
-    raise NotImplementedError()
+def labelstudio(*args, alternative_images=8, **kwargs):
+    """run generate_vqs and convert dataset to the Label Studio JSON format"""
+    dataset, entities = generate_vqs(*args, **kwargs)
+
+    # convert dataset to the Label Studio JSON format
+    ls = {}
+    i = 0
+    for item in dataset:
+        for vq in item["vq"]:
+            # make some names more explicit and copy some stuff from original QA
+            vq["image"] = vq.pop('url')
+            vq['question'] = item['input']
+            vq["vq"] = vq.pop('input')
+            vq['answer'] = item['output']['answer'][0]
+            vq['mentions'] = ", ".join(vq['mentions'])
+            qid = vq['wikidata_id']
+            entity = entities[qid]
+
+            # HACK: pop 'type' and 'value' that might have been gathered
+            # when we considered only a single illustrative image per entity
+            entity['image'].pop('type', None)
+            entity['image'].pop('value', None)
+            if entity['image']:
+                vq['entity_image'] = next(iter(entity['image'].values()))['value']
+
+            # gather alternative images to vq["image"]
+            # remember images are sorted in ASC order wrt their score, thus the ": -1" to reverse the list
+            for j, title in enumerate(entity["titles"][: alternative_images: -1]):
+                # remove "File:" prefix and extension
+                caption = re.match(r"File:(.+)\.\w+", title)
+                caption = caption.group(1) if caption is not None else title
+                # title to url
+                url = SPECIAL_PATH_URI_PREFIX + title.replace(" ", "_")
+                vq[f"altimage{j}"] = url
+                vq[f"altimage{j}caption"] = caption
+
+            ls[str(i)] = {"data": vq}
+            i += 1
+
+    # save output
+    out_path = DATA_ROOT_PATH / f"meerqat_{subset}" / "labelstudio.json"
+    with open(out_path, 'w') as file:
+        json.dump(ls, file)
+    print(f"Successfully saved output to '{out_path}'")
 
 
 if __name__ == '__main__':
@@ -499,7 +553,7 @@ if __name__ == '__main__':
     args = docopt(__doc__)
     subset = args['<subset>']
 
-    wer_threshold = float(args['--threshold']) if args['--threshold'] else 0.5
+    wer_threshold = float(args['--threshold'])
 
     if args['ner']:
         ner(subset)
@@ -514,5 +568,7 @@ if __name__ == '__main__':
             categories_to_exclude = set(args['<categories_to_exclude>'])
             generate_vqs(subset, categories_to_exclude)
     elif args['labelstudio']:
-        labelstudio(subset)
+        categories_to_exclude = set(args['<categories_to_exclude>'])
+        alternative_images = int(args['--alternative_images'])
+        labelstudio(subset, categories_to_exclude=categories_to_exclude, alternative_images=alternative_images)
 
