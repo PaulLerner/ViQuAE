@@ -1,6 +1,8 @@
 # Annotation
 
-## Getting started
+
+## Getting started
+ 
 
 ### Install [Label Studio](https://labelstud.io/)
 Possibly in some virtual environment:  
