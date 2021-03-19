@@ -132,7 +132,6 @@ dmypy.json
 .idea/
 
 # internal data
-docs/
 drafts/
 /data
 
