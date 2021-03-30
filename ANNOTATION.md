@@ -52,7 +52,7 @@ Instead delete the completion and hit "label" again.
 
 ## Common errors and how to fix them
 
-original question | image | generate question | error category | explanation
+original question | image | generated question | error category | explanation
 ------------------|-------|-------------------|----------------|------------
 Which country is bordered by **Cambodia** and Laos to the west and China to the north? | - | Which country is bordered by **this sovereign state** to the west and China to the north? | *entity type* | Cambodia is a country, hard to illustrate thus it doesn't really fit our needs. These should have been filtered automatically but your annotation might allow to refine this filter.
 Where did **Richard III** ‘imprison’ his two young nephews [...] | <img src="./docs/Tomb_of_Richard_III_(1).jpeg" width="200"/> | Where did **he** ‘imprison’ his two young nephews [...] | *image* | image is related to the entity but doesn’t depict it directly. You should try to select an alternative image if possible.
