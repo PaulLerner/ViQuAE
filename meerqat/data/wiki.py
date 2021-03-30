@@ -39,7 +39,7 @@ from tqdm import tqdm
 from docopt import docopt
 
 from meerqat.data.loading import DATA_ROOT_PATH
-
+from meerqat.visualization.utils import simple_stats
 
 QID_URI_PREFIX = "http://www.wikidata.org/entity/"
 HUMAN = QID_URI_PREFIX + 'Q5'
@@ -450,6 +450,7 @@ def query_image(title):
 
 
 def update_from_commons_rest(entities, max_images=1000, max_categories=100):
+    n_images, n_categories = [], []
     for entity in tqdm(entities.values(), desc="Updating entities from Commons"):
         # query only entities that appear in dataset (some may come from 'depictions')
         if entity['n_questions'] < 1 or "commons" not in entity:
@@ -460,6 +461,10 @@ def update_from_commons_rest(entities, max_images=1000, max_categories=100):
         query_commons_subcategories(category, categories, images, max_images, max_categories)
         entity['images'] = images
         entity['categories'] = categories
+        n_images.append(len(images))
+        n_categories.append(len(categories))
+    print(f"{len(n_images)} entities out of {len(entities)} have a root Commons Category and questions in the dataset\n"
+          f"Retrieved images:\n{simple_stats(n_images)}\nand categories:\n{simple_stats(n_categories)}")
     return entities
 
 
@@ -475,10 +480,12 @@ def image_heuristic(entities, heuristics=VALID_IMAGE_HEURISTICS):
                                   f"Use one of {VALID_IMAGE_HEURISTICS}")
 
     # TODO named entity/link in description heuristic
+    scores, best_scores = [], []
     for entity in tqdm(entities.values(), desc="Applying heuristics"):
         label = entity.get("entityLabel", {}).get("value")
         if not label or 'images' not in entity:
             continue
+        best_score = -1
         # get file names of the depictions (add "File:" prefix and replace underscores with spaces)
         if "depictions" in heuristics:
             depictions = {special_path_to_file_name(depiction["special_path"]["value"])
@@ -504,6 +511,14 @@ def image_heuristic(entities, heuristics=VALID_IMAGE_HEURISTICS):
             # image should be tagged as depicting (P180) the entity on Commons
             if "depictions" in heuristics and title in depictions:
                 image["heuristics"]["depictions"] = True
+            score = len(image["heuristics"])
+            scores.append(score)
+            if score > best_score:
+                best_score = score
+        best_scores.append(best_score)
+    print(f"Applied heuristics {heuristics} on {len(entities)} entities/{len(scores)} images\n"
+          f"\nEntity-level best scores stats:\n{simple_stats(best_scores)}"
+          f"\nImage-level scores stats:\n{simple_stats(scores)}")
     return entities
 
 
@@ -525,6 +540,7 @@ def exclude_classes(entities, classes_to_exclude, superclasses={}):
         # else keep entity/class
         filtered_entities[qid] = entity
 
+    print(f"filtered {len(entities)} entities to {len(filtered_entities)}")
     return filtered_entities
 
 
@@ -553,6 +569,7 @@ def keep_classes(entities, classes_to_keep, superclasses={}, attributes_to_keep=
                 filtered_entities[qid] = entity
                 break
 
+    print(f"filtered {len(entities)} entities to {len(filtered_entities)}")
     return filtered_entities
 
 
@@ -574,6 +591,8 @@ def remove_alive_humans(entities, year_threshold=float("inf")):
             if year_of_death > year_threshold:
                 continue
         filtered_entities[qid] = entity
+
+    print(f"filtered {len(entities)} entities to {len(filtered_entities)} using year_threshold={year_threshold}")
     return filtered_entities
 
 
