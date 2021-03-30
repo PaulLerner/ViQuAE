@@ -137,14 +137,19 @@ def stats(kilt_subset):
     stat_dict = {
         "placeholders": 0,
         "originals": len(kilt_subset),
-        "distinct source": 0
+        "distinct source": 0,
+        "vqs": 0
     }
     for item in kilt_subset:
         len_placeholder = len(item["placeholder"])
         stat_dict["placeholders"] += len_placeholder
         stat_dict["distinct source"] += min(1, len_placeholder)
+        stat_dict["vqs"] += len(item.get("vq", []))
+        for vq in item['placeholder']:
+            stat_dict.setdefault(vq['dependency'], 0)
+            stat_dict[vq['dependency']] += 1
 
-    return tabulate([stat_dict], headers="keys")
+    return tabulate([stat_dict], headers="keys", tablefmt='latex')
 
 
 def stringify(kilt_subset, field="placeholder", include_answer=True, include_provenance=True, include_dep=False):
@@ -255,11 +260,14 @@ def count_entities(subset, wer_threshold=0.5):
     dataset = load_from_disk(path)
     entities = {}
 
+    total, disambiguated = 0, 0
     for item in tqdm(dataset):
         for vq in item['placeholder']:
+            total += 1
             entity = vq['entity']
             if entity['wer'] > wer_threshold:
                 continue
+            disambiguated += 1
             wikidata_id = entity['wikidata_info']['wikidata_id']
             entities.setdefault(wikidata_id, {})
             entities[wikidata_id]["wikipedia_id"] = entity["wikipedia_id"]
@@ -270,7 +278,8 @@ def count_entities(subset, wer_threshold=0.5):
     with open(output_path, 'w') as file:
         json.dump(entities, file)
     print(f"\nSuccessfully saved output to {output_path}")
-
+    print(f"Disambiguated {disambiguated} questions ({len(entities)} unique entities) "
+          f"out of {total} questions with a threshold of {wer_threshold}")
     print(simple_stats([entity["n_questions"] for entity in entities.values()]))
 
 
@@ -383,6 +392,14 @@ def generate_mentions(subset, wer_threshold=0.5):
     # save data
     dataset.save_to_disk(dataset_path)
     print(f"Successfully saved output to '{dataset_path}'")
+
+    total, with_mention = 0, 0
+    for item in dataset:
+        for vq in item["placeholder"]:
+            total += 1
+            if [mention for mention_type in vq['ambiguous_mentions'] for mention in mention_type]:
+                with_mention += 1
+    print(f"{with_mention*100/total:.2f}% of the visual questions have at least one ambiguous mention")
 
 
 def generate_vq(item, entities):
@@ -500,6 +517,9 @@ def generate_vqs(subset, exclude_categories=set()):
     # save data
     dataset.save_to_disk(dataset_path)
     print(f"Successfully saved output to '{dataset_path}'")
+
+    print(stats(dataset))
+
     return dataset, entities
 
 
