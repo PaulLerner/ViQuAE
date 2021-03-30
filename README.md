@@ -21,7 +21,7 @@ This should contain scripts to load the data, annotate it...
 The goal is to generate questions suitable for VQA by replacing explicit entity mentions in existing textual QA datasets
  by an ambiguous one and illustrate the question with an image (that depicts the entity).
 
-3 steps :
+4 steps :
 1. `ner` - Slight misnomer, does a bit more than NER, i.e. dependency parsing.  
     Detected entities with valid type and dependency are replaced by a placeholder along with its syntactic children.  
     e.g. 'Who wrote *the opera **Carmen***?' &rarr; 'Who wrote `{mention}`'  
@@ -43,39 +43,79 @@ The goal is to generate questions suitable for VQA by replacing explicit entity 
     - else if non-human:
         - if a taxon : 'this `{taxon rank}`' (e.g. 'species') 
         - else 'this `{class}`' (e.g. 'this tower')        
+4.  `generate vq` - make the VQA triple by choosing:  
+        - uniformly a mention type and a mention from this mention type (generated in the previous step)  
+        - the image with the best score (according to the heuristics computed in `wiki.py commons heuristics`).
+          Tries to use a unique image per entity.
+
+`labelstudio` first calls `generate vq` i.e. no need to call both!  
+The dataset is then converted to the Label Studio JSON format so you can annotate and convert the errors of the automatic pipeline (see [`ANNOTATION.md`](./ANNOTATION.md)).
 
 ### `wiki.py`
 
-Gathers data about entities mentioned in questions via Wikidata and Wikimedia Commons SPARQL services 
-(`wiki.py commons rest` that uses Wikimedia REST API is intractable atm).
+Gathers data about entities mentioned in questions via Wikidata, Wikimedia Commons SPARQL services and Wikimedia REST API.
 
 You should run all of these in this order to get the whole cake:
+
 #### `wiki.py data entities <subset>` 
-**input/ouput**: `entities.json` (output of `kilt2vqa.py count_entities`)  
+**input/output**: `entities.json` (output of `kilt2vqa.py count_entities`)  
 queries many different attributes for all entities in the questions 
+
 #### `wiki.py data feminine <subset>` 
 **input**: `entities.json`  
-**ouput**: `feminine_labels.json`  
+**output**: `feminine_labels.json`  
 gets feminine labels for classes and occupations of these entities
+
 #### `wiki.py data superclasses <subset> [--n=<n>]` 
 **input**: `entities.json`  
-**ouput**: `<n>_superclasses.json`  
+**output**: `<n>_superclasses.json`  
 gets the superclasses of the entities classes up `n` level (defaults to 'all', i.e. up to the root)
-#### `wiki.py commons sparql depicts <subset>`
-**input/ouput**: `entities.json`  
+#### (OPTIONAL) we found that heuristics/images based on depictions were not that discriminative
+##### `wiki.py commons sparql depicts <subset>`
+**input/output**: `entities.json`  
 Find all images in Commons that *depict* the entities
-#### `wiki.py commons sparql depicted <subset>`
+##### `wiki.py commons sparql depicted <subset>`
 **input**: `entities.json`  
-**ouput**: `depictions.json`  
+**output**: `depictions.json`  
 Find all entities depicted in the previously gathered step
-#### `wiki.py data depicted <subset>` 
+##### `wiki.py data depicted <subset>` 
 **input**: `entities.json`, `depictions.json`   
-**ouput**: `entities.json`  
+**output**: `entities.json`  
 Gathers the same data as in `wiki.py data entities <subset>` for *all* entities depicted in any of the depictions  
 Then apply a heuristic to tell whether an image depicts the entity prominently or not: 
 > *the depiction is prominent if the entity is the only one of its class*  
   e.g. *pic of Barack Obama and Joe Biden* -> not prominent  
        *pic of Barack Obama and the Eiffel Tower* -> prominent  
+
+Note this heuristic is not used in `commons heuristics`
+
+#### `wiki.py filter <subset> [--superclass=<level> --positive --negative --deceased=<year> <classes_to_exclude>...]`
+**input/output**: `entities.json`  
+Filters entities w.r.t. to their class/nature/"instance of" and date of death, see `wiki.py` docstring for option usage (TODO share concrete_entities/abstract_entities)
+
+Note this deletes data so maybe save it if you're unsure about the filter.
+
+#### `wiki.py commons rest <subset> [--max_images=<max_images> --max_categories=<max_categories>]`
+**input/output**: `entities.json`  
+
+Gathers images and subcategories recursively from the entity root commons-category
+
+Except if you have a very small dataset you should probably set `--max_images=0` to query only categories and use `wikidump.py` to gather images from those.  
+`--max_categories` defaults to 100.
+
+#### `wiki.py commons heuristics <subset> [<heuristic>...]`
+**input/output**: `entities.json`  
+Run `wikidump.py` first to gather images.  
+Compute heuristics for the image (control with `<heuristic>`, default to all):
+- `categories`: the entity label should be included in *all* of the image category
+- `description`: the entity label should be included in the image description
+- `depictions`: the image should be tagged as *depicting* the entity (gathered in `commons sparql depicts`)
+
+### `wikidump.py`
+**input/output**: `entities.json`  
+Usage: `wikidump.py <subset>`  
+Parses the dump (should be downloaded first, TODO add instructions), gathers images and assign them to the relevant entity given its common categories (retrieved in `wiki.py commons rest`)  
+Note that the wikicode is parsed very lazily and might need a second run depending on your application, e.g. templates are not expanded...
 
 ## `meerqat.visualization`
 

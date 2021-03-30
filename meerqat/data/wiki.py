@@ -23,6 +23,7 @@ Options:
 --negative                       Keep only classes that are not in "abstract_entities". Applied after positive_filter
 --deceased=<year>                Remove humans (Q5) that are alive or deceased after <year> (might avoid trouble with GDPR)
 <classes_to_exclude>...          Additional classes to exclude in the negative_filter (e.g. "Q5 Q82794")
+                                    Note that you can use this option even without --negative i.e. specifying your own "abstract_entities"
 """
 import re
 import time
