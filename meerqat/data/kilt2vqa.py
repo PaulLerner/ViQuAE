@@ -157,7 +157,7 @@ def stringify(kilt_subset, field="placeholder", include_answer=True, include_pro
                 result.append(f"-> {vq['input']} {vq['dependency'] if include_dep else ''}")
             if include_answer:
                 result.append(f"A: {item['output']['answer'][0]}")
-            if include_provenance:
+            if include_provenance and item['output']['provenance']:
                 result.append(f"\t{item['output']['provenance'][0]['title'][0]}")
             results.append("\n".join(result))
         else:
