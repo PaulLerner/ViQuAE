@@ -30,6 +30,8 @@ import time
 import json
 import warnings
 import datetime
+from collections import Counter
+from tabulate import tabulate
 
 import requests
 from SPARQLWrapper import SPARQLWrapper, JSON
@@ -651,6 +653,19 @@ def query_feminine_labels(entities):
     return feminine_labels
 
 
+def stats(entities):
+    """Simply count the # of field for every entity"""
+    counter = Counter()
+    for entity in entities.values():
+        counter += Counter(entity.keys())
+    return counter
+
+
+def print_stats(entities):
+    counter = stats(entities)
+    print(tabulate([counter], headers='keys', tablefmt='latex'))
+
+
 if __name__ == '__main__':
     # parse arguments
     args = docopt(__doc__)
@@ -739,6 +754,8 @@ if __name__ == '__main__':
         if deceased is not None:
             entities = remove_alive_humans(entities, year_threshold=deceased)
         output = entities
+
+    print_stats(output)
 
     # save output
     with open(path, 'w') as file:
