@@ -682,6 +682,7 @@ if __name__ == '__main__':
     if args['data']:
         if args['entities']:
             output = update_from_data(entities)
+            print_stats(output)
         elif args['feminine']:
             output = query_feminine_labels(entities)
             path = subset_path/"feminine_labels.json"
@@ -700,6 +701,7 @@ if __name__ == '__main__':
             # note the result is saved in 'entities' as it is entity-dependent
             # (the same picture can be prominent for entity A but not for B and C)
             output = depiction_instanceof_heuristic(depictions, depicted_entities)
+            print_stats(output)
 
         elif args['superclasses']:
             n_levels = int(args['--n']) if args['--n'] else None
@@ -711,6 +713,7 @@ if __name__ == '__main__':
             # find images that depict the entities
             if args['depicts']:
                 output = update_from_commons_sparql(entities)
+                print_stats(output)
 
             # find entities depicted in the images
             elif args['depicted']:
@@ -720,13 +723,16 @@ if __name__ == '__main__':
                               for depiction in entity.get("depictions", {})}
                 output = query_depicted_entities(depictions)
                 path = depictions_path
+                print_stats(output)
         elif args['rest']:
             max_images = int(args['--max_images'])
             max_categories = int(args['--max_categories'])
             output = update_from_commons_rest(entities, max_images, max_categories)
+            print_stats(output)
         elif args['heuristics']:
             heuristics = set(args['<heuristic>']) if args['<heuristic>'] else VALID_IMAGE_HEURISTICS
             output = image_heuristic(entities, heuristics)
+            print_stats(output)
     elif args['filter']:
         positive_filter = args['--positive']
         negative_filter = args['--negative']
@@ -754,8 +760,7 @@ if __name__ == '__main__':
         if deceased is not None:
             entities = remove_alive_humans(entities, year_threshold=deceased)
         output = entities
-
-    print_stats(output)
+        print_stats(output)
 
     # save output
     with open(path, 'w') as file:
