@@ -293,14 +293,14 @@ def generate_mention(item, entities, wer_threshold=0.5, feminine_labels={}):
             "instanceof": []
         }
 
-        # filter ambiguous entities
-        if entity['wer'] > wer_threshold:
+        # filter ambiguous entities and skip filtered entities
+        qid = entity['wikidata_info']['wikidata_id']
+        entity_data = entities.get(qid)
+        if entity['wer'] > wer_threshold or not entity_data:
             vq['ambiguous_mentions'] = ambiguous_mentions
             continue
 
         dependency = vq['dependency']
-        qid = entity['wikidata_info']['wikidata_id']
-        entity_data = entities[qid]
 
         gender = entity_data.get('gender', {}).get('value')
         gender = gender.split("/")[-1] if gender else gender
