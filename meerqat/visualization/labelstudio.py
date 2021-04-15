@@ -1,10 +1,15 @@
 # coding: utf-8
-"""Usage: labelstudio.py [<path>...]"""
+"""Usage: 
+labelstudio.py html [<path>...]
+labelstudio.py stats [<path>...]
+"""
 
 import json
 from docopt import docopt
 from tqdm import tqdm
 from pathlib import Path
+from collections import Counter
+from tabulate import tabulate
 
 from meerqat.data.labelstudio import retrieve_vqa
 from meerqat.visualization.kilt2vqa import HTML_FORMAT, TD_FORMAT
@@ -37,10 +42,28 @@ def write_html(completions):
         file.write(html)
 
 
+def stats(completions):
+    counter = Counter()
+    for completion_path in tqdm(completions):
+        completion_path = Path(completion_path)
+        with open(completion_path, 'r') as file:
+            completion = json.load(file)
+        vqa = retrieve_vqa(completion)
+        discard = vqa.pop("discard", None)
+        if discard is None:
+            counter['ok'] += 1
+        else:
+            counter[discard] += 1
+    print(tabulate([counter], headers='keys'))
+
+
 def main():
     args = docopt(__doc__)
     completions = args['<path>']
-    write_html(completions)
+    if args['html']:
+        write_html(completions)
+    elif args['stats']:
+        stats(completions)
 
 
 if __name__ == '__main__':
