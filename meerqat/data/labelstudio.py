@@ -6,21 +6,28 @@ labelstudio.py save images [<path>...]
 import json
 from docopt import docopt
 from tqdm import tqdm
+from collections import Counter
 from pathlib import Path
+from tabulate import tabulate
 
 from meerqat.data.wiki import COMMONS_PATH, save_image
 
 
 def save_images(completions):
     COMMONS_PATH.mkdir(exist_ok=True)
+    counter = Counter()
     for completion_path in tqdm(completions):
         completion_path = Path(completion_path)
         with open(completion_path, 'r') as file:
             completion = json.load(file)
         vqa = retrieve_vqa(completion)
-        if vqa.get("discard") is not None:
+        discard = vqa.pop("discard", None)
+        if discard is not None:
+            counter[discard] += 1
             continue
+        counter['ok'] += 1
         save_image(vqa['image'])
+    print(tabulate([counter], headers='keys'))
 
 
 def retrieve_vqa(completion):
