@@ -43,10 +43,14 @@ from docopt import docopt
 from meerqat.data.loading import DATA_ROOT_PATH
 from meerqat.visualization.utils import simple_stats
 
+
+COMMONS_PATH = DATA_ROOT_PATH / "Commons"
+
 QID_URI_PREFIX = "http://www.wikidata.org/entity/"
 HUMAN = QID_URI_PREFIX + 'Q5'
 
 SPECIAL_PATH_URI_PREFIX = "http://commons.wikimedia.org/wiki/Special:FilePath/"
+SPECIAL_FILE_PATH_URI_PREFIX = SPECIAL_PATH_URI_PREFIX + "File:"
 VALID_DATE_TYPE = 'http://www.w3.org/2001/XMLSchema#dateTime'
 
 # restrict media to be images handleable by PIL.Image
@@ -449,6 +453,20 @@ def query_image(title):
         "extmetadata": extmetadata
     }
     return image
+
+
+def save_image(url):
+    image_path = COMMONS_PATH / url[len(SPECIAL_FILE_PATH_URI_PREFIX):]
+    if not image_path.exists():
+        # request image
+        response = request(url)
+        if not response:
+            return None
+        # save if request went OK
+        with open(image_path, 'wb') as file:
+            file.write(response.content)
+
+    return image_path
 
 
 def update_from_commons_rest(entities, max_images=1000, max_categories=100):

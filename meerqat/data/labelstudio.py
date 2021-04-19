@@ -1,4 +1,27 @@
 # coding: utf-8
+"""Usage:
+labelstudio.py save images [<path>...]
+"""
+
+import json
+from docopt import docopt
+from tqdm import tqdm
+from pathlib import Path
+
+from meerqat.data.wiki import COMMONS_PATH, save_image
+
+
+def save_images(completions):
+    COMMONS_PATH.mkdir(exist_ok=True)
+    for completion_path in tqdm(completions):
+        completion_path = Path(completion_path)
+        with open(completion_path, 'r') as file:
+            completion = json.load(file)
+        vqa = retrieve_vqa(completion)
+        if "discard" in vqa:
+            continue
+        save_image(vqa['image'])
+
 
 def retrieve_vqa(completion):
     results = completion["completions"][0]["result"]
@@ -17,3 +40,15 @@ def retrieve_vqa(completion):
         vqa['image'] = data[change_image[1: -7]]
 
     return vqa
+
+
+def main():
+    args = docopt(__doc__)
+    completions = args['<path>']
+    if args['save']:
+        if args['images']:
+            save_images(completions)
+
+
+if __name__ == '__main__':
+    main()
