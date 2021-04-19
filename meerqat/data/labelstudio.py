@@ -18,7 +18,7 @@ def save_images(completions):
         with open(completion_path, 'r') as file:
             completion = json.load(file)
         vqa = retrieve_vqa(completion)
-        if "discard" in vqa:
+        if vqa.get("discard") is not None:
             continue
         save_image(vqa['image'])
 
