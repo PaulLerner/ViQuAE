@@ -342,9 +342,11 @@ def request(query):
         warnings.warn(f"{base_msg}OSError: {e}")
     except Exception as e:
         warnings.warn(f"{base_msg}Exception: {e}")
-    if response and response.status_code != requests.codes.ok:
+
+    if response is not None and response.status_code != requests.codes.ok:
         warnings.warn(f"{base_msg}status code: {response.status_code}")
         response = None
+
     return response
 
 
