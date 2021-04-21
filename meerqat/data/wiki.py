@@ -328,10 +328,13 @@ def keep_prominent_depictions(entities):
     return entities
 
 
-def request(query):
+def request(query, tries=0, max_tries=2):
     """GET query via requests, handles exceptions and returns None if something went wrong"""
     response = None
     base_msg = f"Something went wrong when requesting for '{query}':\n"
+    if tries >= max_tries:
+        warnings.warn(f"{base_msg}Maximum number of tries ({max_tries}) exceeded: {tries}")
+        return response
     try:
         response = requests.get(query)
     except requests.exceptions.ConnectionError as e:
@@ -344,6 +347,9 @@ def request(query):
         warnings.warn(f"{base_msg}Exception: {e}")
 
     if response is not None and response.status_code != requests.codes.ok:
+        if response.status_code == 429:
+            time.sleep(int(response.headers.get("Retry-After", 1)))
+            return request(query, tries+1, max_tries=max_tries)
         warnings.warn(f"{base_msg}status code: {response.status_code}")
         response = None
 
