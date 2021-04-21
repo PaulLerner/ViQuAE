@@ -13,25 +13,32 @@ from tabulate import tabulate
 from meerqat.data.wiki import COMMONS_PATH, save_image
 
 
-def save_images(completions):
+def save_images(completions_paths):
     COMMONS_PATH.mkdir(exist_ok=True)
     counter = Counter()
-    for completion_path in tqdm(completions):
-        completion_path = Path(completion_path)
-        with open(completion_path, 'r') as file:
-            completion = json.load(file)
-        vqa = retrieve_vqa(completion)
-        discard = vqa.pop("discard", None)
-        if discard is not None:
-            counter[discard] += 1
-            continue
-        counter['ok'] += 1
-        save_image(vqa['image'])
+    progress = tqdm()
+    for completions_path in completions_paths:
+        completions_path = Path(completions_path)
+        with open(completions_path, 'r') as file:
+            completions = json.load(file)
+        if not isinstance(completions, list):
+            completions = [completions]
+        for completion in completions:
+            vqa = retrieve_vqa(completion)
+            discard = vqa.pop("discard", None)
+            if discard is not None:
+                counter[discard] += 1
+                continue
+            counter['ok'] += 1
+            save_image(vqa['image'])
+            progress.update()
+    progress.close()
     print(tabulate([counter], headers='keys'))
 
 
 def retrieve_vqa(completion):
-    results = completion["completions"][0]["result"]
+    # "completions" was renamed to "annotations" in labelstudio 1.0
+    results = completion.get("completions", completion["annotations"])[0]["result"]
     data = completion["data"]
     vqa = dict(question=data["question"], wikidata_id=data["wikidata_id"], answer=data['answer'], image=data['image'])
     # make a proper dict out of the results
