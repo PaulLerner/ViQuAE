@@ -38,7 +38,7 @@ def save_images(completions_paths):
 
 def retrieve_vqa(completion):
     # "completions" was renamed to "annotations" in labelstudio 1.0
-    results = completion.get("completions", completion["annotations"])[0]["result"]
+    results = completion.get("completions", completion.get("annotations"))[0]["result"]
     data = completion["data"]
     vqa = dict(question=data["question"], wikidata_id=data["wikidata_id"], answer=data['answer'], image=data['image'])
     # make a proper dict out of the results
