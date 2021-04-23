@@ -109,6 +109,7 @@ Run `wikidump.py` first to gather images.
 Compute heuristics for the image (control with `<heuristic>`, default to all):
 - `categories`: the entity label should be included in *all* of the image category
 - `description`: the entity label should be included in the image description
+- `title`: the entity label should be included in the image title/file name
 - `depictions`: the image should be tagged as *depicting* the entity (gathered in `commons sparql depicts`)
 
 ### `wikidump.py`

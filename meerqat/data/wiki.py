@@ -15,7 +15,7 @@ Options:
 --max_images=<n>                 Maximum number of images to query per entity/root category.
                                      Set to 0 if you only want to query categories [default: 1000].
 --max_categories=<n>             Maximum number of categories to query per entity/root category [default: 100].
-<heuristic>...                   Heuristic to compute for the image, one of {"categories", "description", "depictions"}
+<heuristic>...                   Heuristic to compute for the image, one of {"categories", "description", "depictions", "title"}
                                     Defaults to all valid heuristics (listed above)
 --superclass=<level>             Level of superclasses in the filter, int or "all" (defaults to None i.e. filter only classes)
 --positive                       Keep only classes in "concrete_entities" + entities with gender (P21) or occupation (P106).
@@ -176,7 +176,7 @@ COMMONS_REST_LIST = "https://commons.wikimedia.org/w/api.php?action=query&list=c
 # >>> COMMONS_REST_TITLE.format(titles="File:Barack Obama foreign trips.png|File:Women for Obama luncheon September 23, 2004.png")
 COMMONS_REST_TITLE = "https://commons.wikimedia.org/w/api.php?action=query&titles={titles}&prop=categories|description|imageinfo&format=json&iiprop=url|extmetadata&clshow=!hidden"
 
-VALID_IMAGE_HEURISTICS = {"categories", "description", "depictions"}
+VALID_IMAGE_HEURISTICS = {"categories", "description", "depictions", "title"}
 
 
 def file_name_to_thumbnail(file_name, image_width=None):
@@ -580,6 +580,11 @@ def image_heuristic(entities, heuristics=VALID_IMAGE_HEURISTICS):
             # image should be tagged as depicting (P180) the entity on Commons
             if "depictions" in heuristics and title in depictions:
                 image["heuristics"]["depictions"] = True
+
+            # entity label should be included in the image title
+            if "title" in heuristics and label in title.lower():
+                image["heuristics"]["title"] = True
+
             score = len(image["heuristics"])
             scores.append(score)
             if score > best_score:
