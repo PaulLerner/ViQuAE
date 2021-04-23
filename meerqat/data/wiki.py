@@ -573,9 +573,12 @@ def image_heuristic(entities, heuristics=VALID_IMAGE_HEURISTICS):
                     image["heuristics"]["categories"] = True
 
             # entity label should be included in the description
-            if "description" in heuristics and image.get("description") and \
-                    (label in image["description"].lower() or (isinstance(image["description"], dict) and label in image["description"]["value"].lower())):
-                image["heuristics"]["description"] = True
+            if "description" in heuristics:
+                description = image.get("description", "")
+                if isinstance(description, dict):
+                    description = description.get('value')
+                if description and label in description.lower():
+                    image["heuristics"]["description"] = True
 
             # image should be tagged as depicting (P180) the entity on Commons
             if "depictions" in heuristics and title in depictions:
