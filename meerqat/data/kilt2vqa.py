@@ -29,7 +29,7 @@ import warnings
 
 from datasets import load_dataset, load_from_disk
 from meerqat.data.loading import map_kilt_triviaqa, DATA_ROOT_PATH
-from meerqat.data.wiki import HUMAN, RESERVED_IMAGES, special_path_to_file_name, file_name_to_thumbnail
+from meerqat.data.wiki import HUMAN, RESERVED_IMAGES, special_path_to_file_name, file_name_to_thumbnail, thumbnail_to_file_name
 from meerqat.data.utils import md5
 from meerqat.visualization.utils import viz_spacy, simple_stats
 
@@ -542,12 +542,17 @@ def labelstudio(*args, image_width=512, alternative_images=8, **kwargs):
         for vq in item["vq"]:
             # make some names more explicit and copy some stuff from original QA
             vq["image"] = vq.pop('url')
+            title = thumbnail_to_file_name(vq["image"]).replace('_', ' ')
+            caption = re.match(r"(.+)\.\w+", title)
+            caption = caption.group(1) if caption is not None else title
+            vq["image_caption"] = caption
             vq['question'] = item['input']
             vq["vq"] = vq.pop('input')
             vq['answer'] = item['output']['answer'][0]
             vq['mentions'] = ", ".join(vq['mentions'])
             qid = vq['wikidata_id']
             entity = entities[qid]
+            vq['entityLabel'] = entity.get("entityLabel", {}).get("value", "")
             
             # try to get illustrative image, fallback on other images if available
             for entity_image_key in illustrative_images:
