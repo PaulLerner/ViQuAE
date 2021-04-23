@@ -55,6 +55,7 @@ ANIMAL_SEX = {'Q44148', 'Q43445'}
 
 # set random seed to get consistent random examples
 np.random.seed(0)
+random.seed(0)
 
 
 def wer(a, b):
