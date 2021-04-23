@@ -553,6 +553,7 @@ def image_heuristic(entities, heuristics=VALID_IMAGE_HEURISTICS):
         label = entity.get("entityLabel", {}).get("value")
         if not label or 'images' not in entity:
             continue
+        label = label.lower()
         best_score = -1
         # get file names of the depictions (add "File:" prefix and replace underscores with spaces)
         if "depictions" in heuristics:
@@ -565,7 +566,7 @@ def image_heuristic(entities, heuristics=VALID_IMAGE_HEURISTICS):
             if "categories" in heuristics and image.get("categories"):
                 included = True
                 for category in image['categories']:
-                    if label not in category:
+                    if label not in category.lower():
                         included = False
                         break
                 if included:
@@ -573,7 +574,7 @@ def image_heuristic(entities, heuristics=VALID_IMAGE_HEURISTICS):
 
             # entity label should be included in the description
             if "description" in heuristics and image.get("description") and \
-                    (label in image["description"] or (isinstance(image["description"], dict) and label in image["description"]["value"])):
+                    (label in image["description"].lower() or (isinstance(image["description"], dict) and label in image["description"]["value"].lower())):
                 image["heuristics"]["description"] = True
 
             # image should be tagged as depicting (P180) the entity on Commons
