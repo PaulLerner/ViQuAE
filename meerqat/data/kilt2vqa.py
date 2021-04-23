@@ -3,14 +3,15 @@
 kilt2vqa.py ner <subset>
 kilt2vqa.py ned <subset>
 kilt2vqa.py generate mentions <subset> [--threshold=<threshold>]
-kilt2vqa.py generate vq <subset> [<categories_to_exclude>...]
+kilt2vqa.py generate vq <subset> [--image_width=<n> <categories_to_exclude>...]
 kilt2vqa.py count_entities <subset> [--threshold=<threshold>]
-kilt2vqa.py labelstudio <subset> [--alternative_images=<n> <categories_to_exclude>...]
+kilt2vqa.py labelstudio <subset> [--image_width=<n> --alternative_images=<n> <categories_to_exclude>...]
 
 Options:
 --threshold=<threshold>         Threshold for Word Error Rate (WER, i.e. word-level Levenshtein distance)
                                     to consider the entity disambiguated [default: 0.5].
 --alternative_images=<n>        Number of alternative images to provide [default: 8].
+--image_width=<n>               Desired thumbnail width in pixels for the image url. Defaults to full-size
 """
 import json
 import numpy as np
@@ -28,7 +29,7 @@ import warnings
 
 from datasets import load_dataset, load_from_disk
 from meerqat.data.loading import map_kilt_triviaqa, DATA_ROOT_PATH
-from meerqat.data.wiki import HUMAN, RESERVED_IMAGES, special_path_to_file_name, SPECIAL_PATH_URI_PREFIX
+from meerqat.data.wiki import HUMAN, RESERVED_IMAGES, special_path_to_file_name, file_name_to_thumbnail
 from meerqat.data.utils import md5
 from meerqat.visualization.utils import viz_spacy, simple_stats
 
@@ -402,7 +403,7 @@ def generate_mentions(subset, wer_threshold=0.5):
     print(f"{with_mention*100/total:.2f}% of the visual questions have at least one ambiguous mention")
 
 
-def generate_vq(item, entities):
+def generate_vq(item, entities, image_width=512):
     """
     Generate a image (url), question, answer triple by choosing:
         - uniformly a mention type and a mention from this mention type
@@ -413,6 +414,9 @@ def generate_vq(item, entities):
     ----------
     item: Dataset item
     entities: dict (see wiki.py)
+    image_width: int, optional
+        desired thumbnail width in pixels for the image url
+        Defaults to 512
 
     Returns
     -------
@@ -438,7 +442,7 @@ def generate_vq(item, entities):
             title = titles.pop()
         else:
             title = titles[0]
-        url = SPECIAL_PATH_URI_PREFIX+title.replace(" ", "_")
+        url = file_name_to_thumbnail(title[len("File:"):])
 
         # choose mention type (e.g. pronoun or occupation) uniformly from all types (that are not empty)
         mention_type = random.choice(mention_types)
@@ -459,7 +463,7 @@ def generate_vq(item, entities):
     return item
 
 
-def generate_vqs(subset, exclude_categories=set()):
+def generate_vqs(subset, exclude_categories=set(), image_width=512):
     """
     Parameters
     ----------
@@ -512,7 +516,7 @@ def generate_vqs(subset, exclude_categories=set()):
         entity["titles"] = sorted(images, key=lambda title: len(images[title]['heuristics']))
 
     # go through dataset
-    dataset = dataset.map(generate_vq, fn_kwargs=dict(entities=entities))
+    dataset = dataset.map(generate_vq, fn_kwargs=dict(entities=entities, image_width=image_width))
 
     # save data
     dataset.save_to_disk(dataset_path)
@@ -523,10 +527,10 @@ def generate_vqs(subset, exclude_categories=set()):
     return dataset, entities
 
 
-def labelstudio(*args, alternative_images=8, **kwargs):
+def labelstudio(*args, image_width=512, alternative_images=8, **kwargs):
     """run generate_vqs and convert dataset to the Label Studio JSON format"""
     print("Generating visual questions...")
-    dataset, entities = generate_vqs(*args, **kwargs)
+    dataset, entities = generate_vqs(*args, image_width=image_width, **kwargs)
 
     # convert dataset to the Label Studio JSON format
     ls = {}
@@ -567,7 +571,7 @@ def labelstudio(*args, alternative_images=8, **kwargs):
                 caption = re.match(r"File:(.+)\.\w+", title)
                 caption = caption.group(1) if caption is not None else title
                 # title to url
-                url = SPECIAL_PATH_URI_PREFIX + title.replace(" ", "_")
+                url = file_name_to_thumbnail(title[len("File:"):])
                 vq[f"altimage{j}"] = url
                 vq[f"altimage{j}caption"] = caption
             # no missing values: use empty string instead
@@ -603,9 +607,11 @@ if __name__ == '__main__':
             generate_mentions(subset, wer_threshold=wer_threshold)
         elif args['vq']:
             exclude_categories = set(args['<categories_to_exclude>'])
-            generate_vqs(subset, exclude_categories)
+            image_width = int(args['--image_width']) if args['--image_width'] is not None else None
+            generate_vqs(subset, exclude_categories, image_width=image_width)
     elif args['labelstudio']:
         exclude_categories = set(args['<categories_to_exclude>'])
         alternative_images = int(args['--alternative_images'])
-        labelstudio(subset, exclude_categories=exclude_categories, alternative_images=alternative_images)
+        image_width = int(args['--image_width']) if args['--image_width'] is not None else None
+        labelstudio(subset, exclude_categories=exclude_categories, alternative_images=alternative_images, image_width=image_width)
 

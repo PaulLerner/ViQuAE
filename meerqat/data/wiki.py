@@ -41,6 +41,7 @@ from tqdm import tqdm
 from docopt import docopt
 
 from meerqat.data.loading import DATA_ROOT_PATH
+from meerqat.data.utils import md5
 from meerqat.visualization.utils import simple_stats
 
 
@@ -51,6 +52,7 @@ HUMAN = QID_URI_PREFIX + 'Q5'
 
 SPECIAL_PATH_URI_PREFIX = "http://commons.wikimedia.org/wiki/Special:FilePath/"
 SPECIAL_FILE_PATH_URI_PREFIX = SPECIAL_PATH_URI_PREFIX + "File:"
+UPLOAD_URI_PREFIX = "http://upload.wikimedia.org/wikipedia/commons/"
 VALID_DATE_TYPE = 'http://www.w3.org/2001/XMLSchema#dateTime'
 
 # restrict media to be images handleable by PIL.Image
@@ -175,6 +177,44 @@ COMMONS_REST_LIST = "https://commons.wikimedia.org/w/api.php?action=query&list=c
 COMMONS_REST_TITLE = "https://commons.wikimedia.org/w/api.php?action=query&titles={titles}&prop=categories|description|imageinfo&format=json&iiprop=url|extmetadata&clshow=!hidden"
 
 VALID_IMAGE_HEURISTICS = {"categories", "description", "depictions"}
+
+
+def file_name_to_thumbnail(file_name, image_width=None):
+    """
+    get upload.wikimedia.org url from image file_name using the desired thumbnail width
+
+    Parameters
+    ----------
+    file_name: str
+        file name/title (without the "File:" prefix)
+    image_width: int, optional
+        desired thumbnail width in pixels for the image url
+        Defaults to full-size
+    """
+    file_name = file_name.replace(" ", "_")
+    file_hash = md5(file_name)
+    if image_width is None:
+        thumb, sized_name = "", ""
+    else:
+        thumb = "thumb/"
+        sized_name = f"/{image_width:d}px-{file_name}"
+    url = f"{UPLOAD_URI_PREFIX}{thumb}{file_hash[0]}/{file_hash[:2]}/{file_name}{sized_name}"
+
+    return url
+
+
+def thumbnail_to_file_name(url):
+    """Handles thumbnails and special file paths"""
+    if url.startswith(SPECIAL_FILE_PATH_URI_PREFIX):
+        return url[len(SPECIAL_FILE_PATH_URI_PREFIX):]
+    elif url.startswith(UPLOAD_URI_PREFIX):
+        file_name = url[len(UPLOAD_URI_PREFIX):]
+        if file_name.startswith('thumb/'):
+            return file_name[len('thumb/a/a8/'):].split('/')[0]
+        else:
+            return file_name[len('a/a8/'):]
+    else:
+        raise ValueError(f'Invalid url {url}')
 
 
 def bytes2dict(b):
@@ -464,7 +504,7 @@ def query_image(title):
 
 
 def save_image(url):
-    image_path = COMMONS_PATH / url[len(SPECIAL_FILE_PATH_URI_PREFIX):]
+    image_path = COMMONS_PATH / thumbnail_to_file_name(url)
     if not image_path.exists():
         # request image
         response = request(url)
