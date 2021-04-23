@@ -443,7 +443,7 @@ def generate_vq(item, entities, image_width=512):
             title = titles.pop()
         else:
             title = titles[0]
-        url = file_name_to_thumbnail(title[len("File:"):])
+        url = file_name_to_thumbnail(title[len("File:"):], image_width=image_width)
 
         # choose mention type (e.g. pronoun or occupation) uniformly from all types (that are not empty)
         mention_type = random.choice(mention_types)
@@ -577,7 +577,7 @@ def labelstudio(*args, image_width=512, alternative_images=8, **kwargs):
                 caption = re.match(r"File:(.+)\.\w+", title)
                 caption = caption.group(1) if caption is not None else title
                 # title to url
-                url = file_name_to_thumbnail(title[len("File:"):])
+                url = file_name_to_thumbnail(title[len("File:"):], image_width=image_width)
                 vq[f"altimage{j}"] = url
                 vq[f"altimage{j}caption"] = caption
             # no missing values: use empty string instead
