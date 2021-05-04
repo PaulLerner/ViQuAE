@@ -50,6 +50,13 @@ TD_FORMAT = """
     <td>{answer}</td>
 </tr>
 """
+SIMPLE_TD_FORMAT = """
+<tr>
+    <td><img src="{url}" width="400"></td>
+    <td>{generated_question}</td>
+    <td>{answer}</td>
+</tr>
+"""
 
 
 def write_html(dataset, visualization_path, args={}):
