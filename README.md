@@ -21,20 +21,20 @@ This should contain scripts to load the data, annotate it...
 The goal is to generate questions suitable for VQA by replacing explicit entity mentions in existing textual QA datasets
  by an ambiguous one and illustrate the question with an image (that depicts the entity).
 
-4 steps :
-1. `ner` - Slight misnomer, does a bit more than NER, i.e. dependency parsing.  
+[4 steps](./figures/kilt2vqa_big_picture.png) (click on the links to see the figures):
+1. [`ner`](./figures/kilt2vqa_nlp.png) - Slight misnomer, does a bit more than NER, i.e. dependency parsing.  
     Detected entities with valid type and dependency are replaced by a placeholder along with its syntactic children.  
     e.g. 'Who wrote *the opera **Carmen***?' &rarr; 'Who wrote `{mention}`'  
     Note that, not only the entity mention ('Carmen') but its syntactic children ('the opera')
     are replaced by the placeholder.
-2. `ned` - Disambiguate entity mentions using Wikipedia pages provided in KILT.  
+2. [`ned`](./figures/kilt2vqa_nlp.png) - Disambiguate entity mentions using Wikipedia pages provided in KILT.  
     TriviaQA was originally framed as a reading-comprehension problem so the authors applied off-the-shelf NED and filtered
     out pages that didn't contain the answer.  
     For every entity mention we compute Word Error Rate (WER, i.e. word-level Levenshtein distance) for every wikipedia title
     and aliases. We save the minimal match and WER and recommand filtering out WER > 0.5  
     More data about these entities is gathered in `wiki.py`, 
     just run `kilt2vqa.py count_entities` first to save a dict with all disambiguated entities (outputs `entities.json`).
-3. `generate mentions` - Generate ambiguous entity mentions that can be used to replace the placeholder in the input question 
+3. [`generate mentions`](./figures/kilt2vqa_mentiong_gen.png) - Generate ambiguous entity mentions that can be used to replace the placeholder in the input question 
     (you need to run `wiki.py data` first):  
     - if the gender is available (not animal sex):
         - 'this man' or 'this woman' (respecting transgender)
