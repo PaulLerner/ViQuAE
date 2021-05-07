@@ -16,6 +16,7 @@ Link | Description
 -----|------------
 https://mycore.core-cloud.net/index.php/s/l8sgKqAPvk0dfMr | 10 samples you can play with
 https://mycore.core-cloud.net/index.php/s/GYH5XijwQ2j5Rpv | the same 10 samples annotated by PL
+https://mycore.core-cloud.net/index.php/s/7ZhFObniOXf9PT7 | folder with only the interace, place your annotations (`tasks.json` file) there, like in the other folders
 
 ### run the project
 
