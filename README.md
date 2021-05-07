@@ -5,7 +5,7 @@ Source code and data used in my PhD/MEERQAT project.
 
 All the data should be stored there, although it will probably not be hosted on github (depending on the dataset size)
 
-## Annotation of the data
+## Annotation of the data
 
 Please refer to [`ANNOTATION.md`](./ANNOTATION.md) for the annotation instructions
 
