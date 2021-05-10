@@ -1,6 +1,7 @@
 # coding: utf-8
 """Usage:
 labelstudio.py save images [<path>...]
+labelstudio.py merge <output> [<path>...]
 """
 
 import json
@@ -13,17 +14,22 @@ from tabulate import tabulate
 from meerqat.data.wiki import COMMONS_PATH, save_image
 
 
+def load_completions(completions_path):
+    """Handles individual completions path and JSON exports"""
+    completions_path = Path(completions_path)
+    with open(completions_path, 'r') as file:
+        completions = json.load(file)
+    if not isinstance(completions, list):
+        completions = [completions]
+    return completions
+
+
 def save_images(completions_paths):
     COMMONS_PATH.mkdir(exist_ok=True)
     counter = Counter()
     progress = tqdm()
     for completions_path in completions_paths:
-        completions_path = Path(completions_path)
-        with open(completions_path, 'r') as file:
-            completions = json.load(file)
-        if not isinstance(completions, list):
-            completions = [completions]
-        for completion in completions:
+        for completion in load_completions(completions_path):
             vqa = retrieve_vqa(completion)
             discard = vqa.pop("discard", None)
             if discard is not None:
@@ -36,13 +42,61 @@ def save_images(completions_paths):
     print(tabulate([counter], headers='keys'))
 
 
+def merge(output_path, completions_paths):
+    progress = tqdm()
+    dataset = {}
+    for completions_path in completions_paths:
+        for completion in load_completions(completions_path):
+            vqa = retrieve_vqa(completion)
+            meerqat_id = vqa['meerqat_id']
+            dataset.setdefault(meerqat_id, [])
+            dataset[meerqat_id].append(vqa)
+            progress.update()
+    progress.close()
+    annotator_agreement(dataset)
+    with open(output_path, 'w') as file:
+        json.dump(dataset, file)
+
+
+def annotator_agreement(dataset):
+    # TODO Fleiss' Kappa
+    counter = Counter()
+    for meerqat_id, vqas in dataset.items():
+        counter['total'] += 1
+        if len(vqas) <= 1:
+            continue
+        counter['multiple_annotators'] += 1
+        categories = dict(binary_discard=Counter(), reason_discard=Counter(), binary_change_question=Counter(),
+                           binary_change_image=Counter(), change_image=Counter())
+        for vqa in vqas:
+            discard = vqa.get("discard")
+            if discard is not None:
+                categories['binary_discard'][True] += 1
+                categories['reason_discard'][discard] += 1
+            else:
+                categories['binary_discard'][False] += 1
+            categories['binary_change_question'][vqa.get('vq', '').lower() != vqa['old_vq'].lower()] += 1
+            if vqa['image'] != vqa['old_image']:
+                categories['binary_change_image'][True] += 1
+                categories['change_image'][vqa['image']] += 1
+            else:
+                categories['binary_change_image'][False] += 1
+        for category, values in categories.items():
+            # number of annotators who all agree on this question
+            counter[category] += int(len(values) == 1)
+
+    print(f"found {counter['multiple_annotators']} questions with at least 2 annotators over {counter['total']} questions")
+    print(tabulate([counter], headers='keys'))
+
+
 def retrieve_vqa(completion):
     # "completions" was renamed to "annotations" in labelstudio 1.0
     results = completion.get("completions", completion.get("annotations"))[0]["result"]
     data = completion["data"]
-    vqa = dict(question=data["question"], wikidata_id=data["wikidata_id"], answer=data['answer'], image=data['image'])
+    vqa = dict(question=data["question"], wikidata_id=data["wikidata_id"], answer=data['answer'],
+               image=data['image'], meerqat_id=data['meerqat_id'], old_vq=data['vq'], old_image=data['image'])
     # make a proper dict out of the results
-    # note that "vq" is always present in results, even if the user didn't modify it
+    # note that "vq" is present in results even if the user didn't modify it (only absent if skipped)
     for result in results:
         key = result["from_name"]
         vqa[key] = next(iter(result["value"].values()))[0]
@@ -59,9 +113,13 @@ def retrieve_vqa(completion):
 def main():
     args = docopt(__doc__)
     completions = args['<path>']
+
     if args['save']:
         if args['images']:
             save_images(completions)
+    elif args['merge']:
+        output_path = Path(args['<output>'])
+        merge(output_path, completions)
 
 
 if __name__ == '__main__':
