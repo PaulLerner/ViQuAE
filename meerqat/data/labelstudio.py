@@ -1,7 +1,12 @@
 # coding: utf-8
 """Usage:
-labelstudio.py save images [<path>...]
-labelstudio.py merge <output> [<path>...]
+labelstudio.py save images <path>...
+labelstudio.py merge <output> <path>...
+labelstudio.py assign <output> <todo> <start> <end> [--overlap=<n> --zip <config>...]
+
+Options:
+--overlap=<n>           Number of questions to leave in todo [default: 0].
+--zip                   Whether to zip the output directory
 """
 
 import json
@@ -9,6 +14,7 @@ from docopt import docopt
 from tqdm import tqdm
 from collections import Counter
 from pathlib import Path
+import shutil
 from tabulate import tabulate
 
 from meerqat.data.wiki import COMMONS_PATH, save_image
@@ -67,7 +73,7 @@ def annotator_agreement(dataset):
             continue
         counter['multiple_annotators'] += 1
         categories = dict(binary_discard=Counter(), reason_discard=Counter(), binary_change_question=Counter(),
-                           binary_change_image=Counter(), change_image=Counter())
+                          binary_change_image=Counter(), change_image=Counter())
         for vqa in vqas:
             discard = vqa.get("discard")
             if discard is not None:
@@ -110,6 +116,35 @@ def retrieve_vqa(completion):
     return vqa
 
 
+def assign_annotations(todo, start, end, overlap=0):
+    assigned = {}
+    for i in range(start, end - overlap):
+        i = str(i)
+        assigned[i] = todo.pop(i)
+    for i in range(end - overlap, end):
+        i = str(i)
+        assigned[i] = todo[i]
+    return assigned
+
+
+def assign(output_path, todo_path, start, end, overlap=0, zip=False, configs=[]):
+    with open(todo_path, 'r') as file:
+        todo = json.load(file)
+
+    assigned = assign_annotations(todo, start, end, overlap=overlap)
+
+    output_path.mkdir(exist_ok=True, parents=True)
+    with open(output_path/'tasks.json', 'w') as file:
+        json.dump(assigned, file)
+    for config in configs:
+        shutil.copy(config, output_path)
+    if zip:
+        shutil.make_archive(output_path, 'zip', output_path)
+
+    with open(todo_path, 'w') as file:
+        json.dump(todo, file)
+
+
 def main():
     args = docopt(__doc__)
     completions = args['<path>']
@@ -120,6 +155,12 @@ def main():
     elif args['merge']:
         output_path = Path(args['<output>'])
         merge(output_path, completions)
+    elif args['assign']:
+        output_path, todo_path = Path(args['<output>']), Path(args['<todo>'])
+        start, end, overlap = int(args['<start>']), int(args['<end>']), int(args['--overlap'])
+        zip = args['--zip']
+        configs = args['<config>']
+        assign(output_path, todo_path, start, end, overlap=overlap, zip=zip, configs=configs)
 
 
 if __name__ == '__main__':
