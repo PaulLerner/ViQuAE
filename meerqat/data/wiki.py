@@ -207,6 +207,8 @@ def thumbnail_to_file_name(url):
     """Handles thumbnails and special file paths"""
     if url.startswith(SPECIAL_FILE_PATH_URI_PREFIX):
         return url[len(SPECIAL_FILE_PATH_URI_PREFIX):]
+    elif url.startswith(SPECIAL_PATH_URI_PREFIX):
+        return url[len(SPECIAL_PATH_URI_PREFIX):]
     elif url.startswith(UPLOAD_URI_PREFIX):
         file_name = url[len(UPLOAD_URI_PREFIX):]
         if file_name.startswith('thumb/'):
