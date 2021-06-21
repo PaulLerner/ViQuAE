@@ -536,8 +536,6 @@ def labelstudio(*args, image_width=512, alternative_images=8, **kwargs):
     # convert dataset to the Label Studio JSON format
     ls = {}
     i = 0
-    # try to get illustrative image, fallback on other images if available
-    illustrative_images = ["image"] + list(RESERVED_IMAGES - {"image"})
     for item in tqdm(dataset, desc="Converting to Label Studio"):
         for vq in item["vq"]:
             # make some names more explicit and copy some stuff from original QA
@@ -555,7 +553,8 @@ def labelstudio(*args, image_width=512, alternative_images=8, **kwargs):
             vq['entityLabel'] = entity.get("entityLabel", {}).get("value", "")
             
             # try to get illustrative image, fallback on other images if available
-            for entity_image_key in illustrative_images:
+            # "image" is expected to be the first element of RESERVED_IMAGES
+            for entity_image_key in RESERVED_IMAGES:
                 entity_image = entity.get(entity_image_key)
                 if entity_image is not None:
                     # HACK: pop 'type' and 'value' that might have been gathered

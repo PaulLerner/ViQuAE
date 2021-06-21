@@ -136,7 +136,7 @@ WHERE
 WIKIDATA_ENDPOINT = "https://query.wikidata.org/sparql"
 
 # see update_from_data
-RESERVED_IMAGES = {'image', 'flag', 'coat_of_arms', 'logo', 'service_ribbon'}
+RESERVED_IMAGES = ['image', 'logo', 'flag', 'coat_of_arms', 'service_ribbon']
 MULTIPLE_KEYS = {'instanceof', 'occupation'}.union(RESERVED_IMAGES)
 UNIQUE_KEYS = {'entityLabel', 'gender', 'genderLabel', 'commons', 'freebase', 'date_of_birth', 'date_of_death', 'taxon_rank', 'taxon_rankLabel'}
 
