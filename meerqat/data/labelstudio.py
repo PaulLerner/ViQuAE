@@ -59,40 +59,41 @@ def merge(output_path, completions_paths):
             dataset[meerqat_id].append(vqa)
             progress.update()
     progress.close()
-    annotator_agreement(dataset)
+    disagreements = annotator_agreement(dataset)
     with open(output_path, 'w') as file:
         json.dump(dataset, file)
+    with open(output_path.parent/f"{output_path.stem}-disagreements.json", 'w') as file:
+        json.dump(disagreements, file)
 
 
 def annotator_agreement(dataset):
     # TODO Fleiss' Kappa
+    disagreements = {}
     counter = Counter()
     for meerqat_id, vqas in dataset.items():
         counter['total'] += 1
         if len(vqas) <= 1:
             continue
         counter['multiple_annotators'] += 1
-        categories = dict(binary_discard=Counter(), reason_discard=Counter(), binary_change_question=Counter(),
-                          binary_change_image=Counter(), change_image=Counter())
+        categories = dict(binary_discard=Counter(), binary_change_question=Counter(), binary_change_image=Counter())
         for vqa in vqas:
             discard = vqa.get("discard")
             if discard is not None:
                 categories['binary_discard'][True] += 1
-                categories['reason_discard'][discard] += 1
-            else:
-                categories['binary_discard'][False] += 1
+                # don't take into account question and image if the VQA triple was discarded
+                continue
+            categories['binary_discard'][False] += 1
             categories['binary_change_question'][vqa.get('vq', '').lower() != vqa['old_vq'].lower()] += 1
-            if vqa['image'] != vqa['old_image']:
-                categories['binary_change_image'][True] += 1
-                categories['change_image'][vqa['image']] += 1
-            else:
-                categories['binary_change_image'][False] += 1
+            categories['binary_change_image'][vqa['image'] != vqa['old_image']] += 1
         for category, values in categories.items():
-            # number of annotators who all agree on this question
-            counter[category] += int(len(values) == 1)
+            all_agree = len(values) == 1
+            counter[category] += int(all_agree)
+            if not all_agree:
+                disagreements[meerqat_id] = {'vqas': vqas, 'annotator_agreement': categories}
 
     print(f"found {counter['multiple_annotators']} questions with at least 2 annotators over {counter['total']} questions")
     print(tabulate([counter], headers='keys'))
+    return disagreements
 
 
 def retrieve_vqa(completion):
