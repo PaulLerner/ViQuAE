@@ -300,6 +300,25 @@ def update_from_data(entities):
     return entities
 
 
+def set_reference_images(entities):
+    """Set a reference image using RESERVED_IMAGES as order of preference if the entity has any available"""
+    for entity in entities.values():
+        # try to get illustrative image, fallback on other images if available
+        # "image" is expected to be the first element of RESERVED_IMAGES
+        for entity_image_key in RESERVED_IMAGES:
+            entity_image = entity.get(entity_image_key)
+            if entity_image is not None:
+                # HACK: pop 'type' and 'value' that might have been gathered
+                # when we considered only a single illustrative image per entity
+                entity_image.pop('type', None)
+                entity_image.pop('value', None)
+                break
+        if entity_image:
+            entity['reference_image'] = next(iter(entity_image.values())).get('value')
+            
+    return entities
+
+
 def update_from_commons_sparql(entities):
     # query Wikimedia Commons
     results = query_sparql_entities(COMMONS_SPARQL_QUERY, COMMONS_SPARQL_ENDPOINT,
@@ -758,7 +777,8 @@ if __name__ == '__main__':
     # update from Wikidata or Wikimedia Commons
     if args['data']:
         if args['entities']:
-            output = update_from_data(entities)
+            entities = update_from_data(entities)
+            output = set_reference_images(entities)
             print_stats(output)
         elif args['feminine']:
             output = query_feminine_labels(entities)

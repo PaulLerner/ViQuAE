@@ -551,23 +551,7 @@ def labelstudio(*args, image_width=512, alternative_images=8, **kwargs):
             qid = vq['wikidata_id']
             entity = entities[qid]
             vq['entityLabel'] = entity.get("entityLabel", {}).get("value", "")
-            
-            # try to get illustrative image, fallback on other images if available
-            # "image" is expected to be the first element of RESERVED_IMAGES
-            for entity_image_key in RESERVED_IMAGES:
-                entity_image = entity.get(entity_image_key)
-                if entity_image is not None:
-                    # HACK: pop 'type' and 'value' that might have been gathered
-                    # when we considered only a single illustrative image per entity
-                    entity_image.pop('type', None)
-                    entity_image.pop('value', None)
-                    break
-            
-            if entity_image:
-                vq['entity_image'] = next(iter(entity_image.values())).get('value')
-            # no missing values: use empty string instead
-            else:
-                vq['entity_image'] = ""
+            vq['entity_image'] = entity.get('reference_image', '')
 
             # gather alternative images to vq["image"]
             # remember images are sorted in ASC order wrt their score, thus the [::-1] to reverse the list
