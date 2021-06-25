@@ -47,6 +47,10 @@ from meerqat.visualization.utils import simple_stats
 
 COMMONS_PATH = DATA_ROOT_PATH / "Commons"
 
+# One client (user agent + IP) is allowed 60 seconds of processing time each 60 seconds
+# https://www.mediawiki.org/wiki/Wikidata_Query_Service/User_Manual
+WIKIDATA_COMPUTE_LIMIT = 60
+
 QID_URI_PREFIX = "http://www.wikidata.org/entity/"
 HUMAN = QID_URI_PREFIX + 'Q5'
 
@@ -249,7 +253,9 @@ def query_sparql_entities(query, endpoint, wikidata_ids, prefix='wd:',
     """
     sparql = SPARQLWrapper(endpoint)
     sparql.setReturnFormat(return_format)
+    sparql.setUseKeepAlive()
     results, qids = [], []
+    skip_total = 0
     # query only n qid at a time
     for i, qid in enumerate(tqdm(wikidata_ids, desc=description)):
         qids.append(prefix+qid)
@@ -257,19 +263,29 @@ def query_sparql_entities(query, endpoint, wikidata_ids, prefix='wd:',
             sparql.setQuery(query % " ".join(qids))
             try:
                 response = sparql.query()
-            except HTTPError:
-                # HACK: sleep 60s to avoid 'HTTP Error 429: Too Many Requests'
-                time.sleep(60)
-                # try one more time
-                try: 
-                    response = sparql.query()
-                except HTTPError as e:
-                    warnings.warn(f"Query failed twice after waiting 60s in-between, skipping the following qids:\n{qids}")
+            except HTTPError as e1:
+                if "429" in e1:
+                    # HACK: sleep WIKIDATA_COMPUTE_LIMIT seconds to avoid 'HTTP Error 429: Too Many Requests'
+                    time.sleep(WIKIDATA_COMPUTE_LIMIT)
+                    # try one more time
+                    try:
+                        response = sparql.query()
+                    except HTTPError as e2:
+                        warnings.warn(f"HTTPError: {e2}\n"
+                                      f"Query failed twice after waiting {WIKIDATA_COMPUTE_LIMIT}s in-between, "
+                                      f"skipping the following QIDs:\n{qids}")
+                        skip_total += len(qids)
+                        qids = []
+                        continue
+                else:
+                    warnings.warn(f"HTTPError: {e1}\nskipping the following QIDs:\n{qids}")
+                    skip_total += len(qids)
                     qids = []
                     continue
             results += response.convert()['results']['bindings']
             qids = []
-    print(f"Query succeeded! Got {len(results)} results")
+
+    print(f"Query succeeded! Got {len(results)} results, skipped {skip_total} QIDs")
 
     return results
 
