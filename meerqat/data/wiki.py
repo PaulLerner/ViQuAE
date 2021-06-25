@@ -1,6 +1,6 @@
 # coding: utf-8
 """Usage:
-wiki.py data entities <subset>
+wiki.py data entities <subset> [--skip=<attribute>]
 wiki.py data feminine <subset>
 wiki.py data depicted <subset>
 wiki.py data superclasses <subset> [--n=<n>]
@@ -290,11 +290,16 @@ def query_sparql_entities(query, endpoint, wikidata_ids, prefix='wd:',
     return results
 
 
-def update_from_data(entities):
+def update_from_data(entities, skip=None):
     """Updates entities with info queried in from Wikidata"""
 
     # query Wikidata
-    results = query_sparql_entities(WIKIDATA_QUERY, WIKIDATA_ENDPOINT, entities.keys(),
+    if skip is None:
+        wikidata_ids = entities.keys()
+    # skip all entities that already have the `skip` attribute
+    else:
+        wikidata_ids = [qid for qid in entities if skip not in entities[qid]]
+    results = query_sparql_entities(WIKIDATA_QUERY, WIKIDATA_ENDPOINT, wikidata_ids,
                                     description="Querying Wikidata")
     # update entities with results
     for result in tqdm(results, desc="Updating entities"):
@@ -793,7 +798,7 @@ if __name__ == '__main__':
     # update from Wikidata or Wikimedia Commons
     if args['data']:
         if args['entities']:
-            entities = update_from_data(entities)
+            entities = update_from_data(entities, skip=args["--skip"])
             output = set_reference_images(entities)
             print_stats(output)
         elif args['feminine']:
