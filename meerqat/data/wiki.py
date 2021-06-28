@@ -329,13 +329,20 @@ def set_reference_images(entities):
         for entity_image_key in RESERVED_IMAGES:
             entity_image = entity.get(entity_image_key)
             if entity_image is not None:
+                encoding = None
                 # HACK: pop 'type' and 'value' that might have been gathered
                 # when we considered only a single illustrative image per entity
                 entity_image.pop('type', None)
                 entity_image.pop('value', None)
-                break
-        if entity_image:
-            entity['reference_image'] = next(iter(entity_image.values())).get('value')
+
+                # filter encodings
+                for url in entity_image.values():
+                    encoding = url.split('.')[-1].lower()
+                    if encoding in VALID_ENCODING:
+                        entity['reference_image'] = url
+                        break
+                if encoding in VALID_ENCODING:
+                    break
             
     return entities
 
