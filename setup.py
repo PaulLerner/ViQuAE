@@ -1,3 +1,6 @@
+import os
+
+import pkg_resources
 from setuptools import setup, find_packages
 
 with open('README.md') as f:
@@ -6,6 +9,13 @@ with open('README.md') as f:
 setup(
     name='meerqat',
     packages=find_packages(),
+    install_requires=[
+        str(r)
+        for r in pkg_resources.parse_requirements(
+            open(os.path.join(os.path.dirname(__file__), "requirements.txt"))
+        )
+    ],
+
     long_description=long_description,
     long_description_content_type='text/markdown',
 
