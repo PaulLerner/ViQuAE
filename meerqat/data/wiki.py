@@ -336,7 +336,10 @@ def set_reference_images(entities):
                 entity_image.pop('value', None)
 
                 # filter encodings
-                for url in entity_image.values():
+                for v in entity_image.values():
+                    url = v.get('value')
+                    if v is None:
+                        continue
                     encoding = url.split('.')[-1].lower()
                     if encoding in VALID_ENCODING:
                         entity['reference_image'] = url
