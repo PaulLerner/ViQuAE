@@ -264,7 +264,7 @@ def query_sparql_entities(query, endpoint, wikidata_ids, prefix='wd:',
             try:
                 response = sparql.query()
             except HTTPError as e1:
-                if "429" in e1:
+                if str(e1.code).strip() == '429':
                     # HACK: sleep WIKIDATA_COMPUTE_LIMIT seconds to avoid 'HTTP Error 429: Too Many Requests'
                     time.sleep(WIKIDATA_COMPUTE_LIMIT)
                     # try one more time
