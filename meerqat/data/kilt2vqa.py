@@ -30,6 +30,8 @@ from tqdm import tqdm
 from tabulate import tabulate
 import warnings
 
+import requests
+
 from datasets import load_dataset, load_from_disk
 from meerqat.data.loading import map_kilt_triviaqa, DATA_ROOT_PATH
 from meerqat.data.wiki import HUMAN, RESERVED_IMAGES, special_path_to_file_name, file_name_to_thumbnail, thumbnail_to_file_name, save_image
@@ -581,16 +583,19 @@ def labelstudio(*args, image_width=512, alternative_images=8, **kwargs):
     print(f"Successfully saved output to '{out_path}'")
 
 
-def download_image(item, image_key='image', image_width=512):
+def download_image(item, session, image_key='image', image_width=512):
     file_name = thumbnail_to_file_name(item[image_key])
     url = file_name_to_thumbnail(file_name, image_width=image_width)
-    save_image(url)
+    save_image(url, session)
 
 
 def download_images(subset, fn_kwargs, **map_kwargs):
     print("loading data...")
     dataset_path = DATA_ROOT_PATH / f"meerqat_{subset}"
     dataset = load_from_disk(dataset_path)
+
+    fn_kwargs.update(session=requests.Session())
+
     # do not save image in the dataset
     dataset.map(download_image, fn_kwargs=fn_kwargs, **map_kwargs)
 

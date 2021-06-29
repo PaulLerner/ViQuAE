@@ -420,7 +420,7 @@ def keep_prominent_depictions(entities):
     return entities
 
 
-def request(query, tries=0, max_tries=2):
+def request(query, session, tries=0, max_tries=2):
     """GET query via requests, handles exceptions and returns None if something went wrong"""
     response = None
     base_msg = f"Something went wrong when requesting for '{query}':\n"
@@ -428,7 +428,7 @@ def request(query, tries=0, max_tries=2):
         warnings.warn(f"{base_msg}Maximum number of tries ({max_tries}) exceeded: {tries}")
         return response
     try:
-        response = requests.get(query)
+        response = session.get(query)
     except requests.exceptions.ConnectionError as e:
         warnings.warn(f"{base_msg}requests.exceptions.ConnectionError: {e}")
     except MaxRetryError as e:
@@ -441,7 +441,7 @@ def request(query, tries=0, max_tries=2):
     if response is not None and response.status_code != requests.codes.ok:
         if response.status_code == 429:
             time.sleep(int(response.headers.get("Retry-After", 1)))
-            return request(query, tries+1, max_tries=max_tries)
+            return request(query, session, tries+1, max_tries=max_tries)
         warnings.warn(f"{base_msg}status code: {response.status_code}")
         response = None
 
@@ -482,7 +482,8 @@ def query_commons_subcategories(category, categories, images,
         Same as input, hopefully enriched with new data
     """
     query = COMMONS_REST_LIST.format(cmtitle=category, cmtype="subcat|file")
-    response = request(query)
+    session = requests.Session()
+    response = request(query, session)
     if not response:
         return categories, images
     results = bytes2dict(response.content).get('query', {}).get('categorymembers')
@@ -505,7 +506,7 @@ def query_commons_subcategories(category, categories, images,
             encoding = title.split('.')[-1].lower()
             if encoding not in VALID_ENCODING:
                 continue
-            images[title] = query_image(title)
+            images[title] = query_image(title, session)
         elif type_ == "subcat":
             # avoid 1. to get stuck in a loop 2. extra processing:
             # skip already processed categories
@@ -527,12 +528,12 @@ def query_commons_subcategories(category, categories, images,
     return categories, images
 
 
-def query_image(title):
+def query_image(title, session):
     # query images URL, categories and description
     # note: it might be better to batch the query but when experimenting with
     # batch size as low as 25 I had to deal with 'continue' responses...
     query = COMMONS_REST_TITLE.format(titles=title)
-    response = request(query)
+    response = request(query, session)
     if not response:
         return None
     result = bytes2dict(response.content)['query']['pages']
@@ -555,11 +556,11 @@ def query_image(title):
     return image
 
 
-def save_image(url):
+def save_image(url, session):
     image_path = COMMONS_PATH / thumbnail_to_file_name(url)
     if not image_path.exists():
         # request image
-        response = request(url)
+        response = request(url, session)
         if not response:
             return None
         # save if request went OK

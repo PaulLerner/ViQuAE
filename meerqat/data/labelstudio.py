@@ -16,6 +16,7 @@ from collections import Counter
 from pathlib import Path
 import shutil
 from tabulate import tabulate
+import requests
 
 from meerqat.data.wiki import COMMONS_PATH, save_image
 
@@ -34,6 +35,7 @@ def save_images(completions_paths):
     COMMONS_PATH.mkdir(exist_ok=True)
     counter = Counter()
     progress = tqdm()
+    session = requests.Session()
     for completions_path in completions_paths:
         for completion in load_completions(completions_path):
             vqa = retrieve_vqa(completion)
@@ -42,7 +44,7 @@ def save_images(completions_paths):
                 counter[discard] += 1
                 continue
             counter['ok'] += 1
-            save_image(vqa['image'])
+            save_image(vqa['image'], session)
             progress.update()
     progress.close()
     print(tabulate([counter], headers='keys'))
