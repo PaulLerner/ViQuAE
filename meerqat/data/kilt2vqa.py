@@ -6,12 +6,14 @@ kilt2vqa.py generate mentions <subset> [--threshold=<threshold>]
 kilt2vqa.py generate vq <subset> [--image_width=<n> <categories_to_exclude>...]
 kilt2vqa.py count_entities <subset> [--threshold=<threshold>]
 kilt2vqa.py labelstudio <subset> [--image_width=<n> --alternative_images=<n> <categories_to_exclude>...]
+kilt2vqa.py download <subset> [--image_width=<n> --image_key=<image_key>]
 
 Options:
 --threshold=<threshold>         Threshold for Word Error Rate (WER, i.e. word-level Levenshtein distance)
-                                    to consider the entity disambiguated [default: 0.5].
+                                to consider the entity disambiguated [default: 0.5].
 --alternative_images=<n>        Number of alternative images to provide [default: 8].
 --image_width=<n>               Desired thumbnail width in pixels for the image url. Defaults to full-size
+--image_key=<image_key>         Used to index the dataset item [default: image]
 """
 import json
 import numpy as np
@@ -29,7 +31,7 @@ import warnings
 
 from datasets import load_dataset, load_from_disk
 from meerqat.data.loading import map_kilt_triviaqa, DATA_ROOT_PATH
-from meerqat.data.wiki import HUMAN, RESERVED_IMAGES, special_path_to_file_name, file_name_to_thumbnail, thumbnail_to_file_name
+from meerqat.data.wiki import HUMAN, RESERVED_IMAGES, special_path_to_file_name, file_name_to_thumbnail, thumbnail_to_file_name, save_image
 from meerqat.data.utils import md5
 from meerqat.visualization.utils import viz_spacy, simple_stats
 
@@ -578,21 +580,35 @@ def labelstudio(*args, image_width=512, alternative_images=8, **kwargs):
     print(f"Successfully saved output to '{out_path}'")
 
 
+def download_image(item, image_key='image', image_width=512):
+    file_name = thumbnail_to_file_name(item[image_key])
+    url = file_name_to_thumbnail(file_name, image_width=image_width)
+    save_image(url)
+
+
+def download_images(subset, **kwargs):
+    print("loading data...")
+    dataset_path = DATA_ROOT_PATH / f"meerqat_{subset}"
+    dataset = load_from_disk(dataset_path)
+    # do not save image in the dataset
+    dataset.map(download_image, fn_kwargs=kwargs)
+
+
 if __name__ == '__main__':
     # parse arguments
     args = docopt(__doc__)
     subset = args['<subset>']
-
-    wer_threshold = float(args['--threshold'])
 
     if args['ner']:
         ner(subset)
     elif args['ned']:
         ned(subset)
     elif args['count_entities']:
+        wer_threshold = float(args['--threshold'])
         count_entities(subset, wer_threshold=wer_threshold)
     elif args['generate']:
         if args['mentions']:
+            wer_threshold = float(args['--threshold'])
             generate_mentions(subset, wer_threshold=wer_threshold)
         elif args['vq']:
             exclude_categories = set(args['<categories_to_exclude>'])
@@ -603,4 +619,8 @@ if __name__ == '__main__':
         alternative_images = int(args['--alternative_images'])
         image_width = int(args['--image_width']) if args['--image_width'] is not None else None
         labelstudio(subset, exclude_categories=exclude_categories, alternative_images=alternative_images, image_width=image_width)
+    elif args['download']:
+        image_width = int(args['--image_width']) if args['--image_width'] is not None else None
+        image_key = args['--image_key']
+        download_images(subset, image_key=image_key, image_width=image_width)
 
