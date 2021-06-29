@@ -31,13 +31,14 @@ def detect_face(url, model, save_root_path=None):
         save_path = (save_root_path/image_path.stem).with_suffix('.jpg')
     else:
         save_path = None
-    model(image, save_path=save_path)
-    return image
+    face, prob = model(image, save_path=save_path, return_prob=True)
+    return face, prob
 
 
 def dataset_detect_face(item, image_key='image', **kwargs):
-    face = detect_face(item[image_key], **kwargs)
+    face, prob = detect_face(item[image_key], **kwargs)
     item['face'] = face
+    item['face_prob'] = prob
     return item
 
 
