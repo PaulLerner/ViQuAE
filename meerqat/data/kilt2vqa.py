@@ -1,12 +1,12 @@
 # coding: utf-8
 """Usage:
 kilt2vqa.py ner <subset>
-kilt2vqa.py ned <subset>
+kilt2vqa.py ned <subset> [--map_kwargs=<path>]
 kilt2vqa.py generate mentions <subset> [--threshold=<threshold>]
-kilt2vqa.py generate vq <subset> [--image_width=<n> <categories_to_exclude>...]
-kilt2vqa.py count_entities <subset> [--threshold=<threshold>]
+kilt2vqa.py generate vq <subset> [--image_width=<n> --map_kwargs=<path> <categories_to_exclude>...]
+kilt2vqa.py count_entities <subset> [--threshold=<threshold> --map_kwargs=<path>]
 kilt2vqa.py labelstudio <subset> [--image_width=<n> --alternative_images=<n> <categories_to_exclude>...]
-kilt2vqa.py download <subset> [--image_width=<n> --image_key=<image_key>]
+kilt2vqa.py download <subset> [--image_width=<n> --image_key=<image_key> --map_kwargs=<path>]
 
 Options:
 --threshold=<threshold>         Threshold for Word Error Rate (WER, i.e. word-level Levenshtein distance)
@@ -14,6 +14,7 @@ Options:
 --alternative_images=<n>        Number of alternative images to provide [default: 8].
 --image_width=<n>               Desired thumbnail width in pixels for the image url. Defaults to full-size
 --image_key=<image_key>         Used to index the dataset item [default: image]
+--map_kwargs=<path>             Path towards a JSON file containing key-words arguments for the dataset.map function (e.g. batch size)
 """
 import json
 import numpy as np
@@ -237,7 +238,7 @@ def disambiguate(item, wikipedia, wikipedia_ids, pedia_index):
     return item
 
 
-def ned(subset):
+def ned(subset, **map_kwargs):
     """
     2nd step: Named Entity Disambiguation (NED) using TriviaQA provided list
     Assumes that you already ran NER and loads dataset from f"{DATA_ROOT_PATH}/meerqat_{subset}"
@@ -251,7 +252,7 @@ def ned(subset):
     fn_kwargs = {"wikipedia": wikipedia, "wikipedia_ids": wikipedia_ids, "pedia_index": pedia_index}
 
     # go through dataset
-    dataset = dataset.map(disambiguate, fn_kwargs=fn_kwargs)
+    dataset = dataset.map(disambiguate, fn_kwargs=fn_kwargs, **map_kwargs)
 
     # save data
     output_path = DATA_ROOT_PATH / f"meerqat_{subset}"
@@ -371,7 +372,7 @@ def generate_mention(item, entities, wer_threshold=0.5, feminine_labels={}):
     return item
 
 
-def generate_mentions(subset, wer_threshold=0.5):
+def generate_mentions(subset, wer_threshold=0.5, **map_kwargs):
     """3rd step: generate ambiguous mentions given entities attributes (run `wiki.py data` first)"""
     # load data
     dataset_path = DATA_ROOT_PATH / f"meerqat_{subset}"
@@ -391,7 +392,7 @@ def generate_mentions(subset, wer_threshold=0.5):
     }
 
     # go through dataset
-    dataset = dataset.map(generate_mention, fn_kwargs=fn_kwargs)
+    dataset = dataset.map(generate_mention, fn_kwargs=fn_kwargs, **map_kwargs)
 
     # save data
     dataset.save_to_disk(dataset_path)
@@ -466,7 +467,7 @@ def generate_vq(item, entities, image_width=512):
     return item
 
 
-def generate_vqs(subset, exclude_categories=set(), image_width=512):
+def generate_vqs(subset, exclude_categories=set(), image_width=512, **map_kwargs):
     """
     Parameters
     ----------
@@ -519,7 +520,7 @@ def generate_vqs(subset, exclude_categories=set(), image_width=512):
         entity["titles"] = sorted(images, key=lambda title: len(images[title]['heuristics']))
 
     # go through dataset
-    dataset = dataset.map(generate_vq, fn_kwargs=dict(entities=entities, image_width=image_width))
+    dataset = dataset.map(generate_vq, fn_kwargs=dict(entities=entities, image_width=image_width), **map_kwargs)
 
     # save data
     dataset.save_to_disk(dataset_path)
@@ -586,34 +587,40 @@ def download_image(item, image_key='image', image_width=512):
     save_image(url)
 
 
-def download_images(subset, **kwargs):
+def download_images(subset, fn_kwargs, **map_kwargs):
     print("loading data...")
     dataset_path = DATA_ROOT_PATH / f"meerqat_{subset}"
     dataset = load_from_disk(dataset_path)
     # do not save image in the dataset
-    dataset.map(download_image, fn_kwargs=kwargs)
+    dataset.map(download_image, fn_kwargs=fn_kwargs, **map_kwargs)
 
 
 if __name__ == '__main__':
     # parse arguments
     args = docopt(__doc__)
     subset = args['<subset>']
+    map_kwargs_path = args['--map_kwargs']
+    if map_kwargs_path:
+        with open(map_kwargs_path, 'r') as file:
+            map_kwargs = json.load(file)
+    else:
+        map_kwargs = {}
 
     if args['ner']:
         ner(subset)
     elif args['ned']:
-        ned(subset)
+        ned(subset, **map_kwargs)
     elif args['count_entities']:
         wer_threshold = float(args['--threshold'])
         count_entities(subset, wer_threshold=wer_threshold)
     elif args['generate']:
         if args['mentions']:
             wer_threshold = float(args['--threshold'])
-            generate_mentions(subset, wer_threshold=wer_threshold)
+            generate_mentions(subset, wer_threshold=wer_threshold, **map_kwargs)
         elif args['vq']:
             exclude_categories = set(args['<categories_to_exclude>'])
             image_width = int(args['--image_width']) if args['--image_width'] is not None else None
-            generate_vqs(subset, exclude_categories, image_width=image_width)
+            generate_vqs(subset, exclude_categories, image_width=image_width, **map_kwargs)
     elif args['labelstudio']:
         exclude_categories = set(args['<categories_to_exclude>'])
         alternative_images = int(args['--alternative_images'])
@@ -622,5 +629,5 @@ if __name__ == '__main__':
     elif args['download']:
         image_width = int(args['--image_width']) if args['--image_width'] is not None else None
         image_key = args['--image_key']
-        download_images(subset, image_key=image_key, image_width=image_width)
+        download_images(subset, fn_kwargs=dict(image_key=image_key, image_width=image_width), **map_kwargs)
 
