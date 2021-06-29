@@ -12,6 +12,16 @@ Please refer to [`ANNOTATION.md`](./ANNOTATION.md) for the annotation instructio
 # `meerqat`
 This should contain all the source code and act as a python package (e.g. `import meerqat`)
 
+## Installation
+
+Install PyTorch following [the official document wrt to your distribution](https://pytorch.org/get-started/locally/) (preferably in a virtual environment)
+
+```sh
+git clone https://github.com/PaulLerner/meerqat.git
+pip install -e meerqat
+```
+
+
 ## `meerqat.data`
 
 This should contain scripts to load the data, annotate it...
