@@ -1,9 +1,10 @@
-"""Usage: face_detection.py <dataset> [<model_config> --image_key=<image_key> --save=<root_path>]
+"""Usage: face_detection.py <dataset> [<model_config> --image_key=<image_key> --save=<root_path> --disable_caching]
 
 Options:
 --image_key=<image_key>                 Used to index the dataset item [default: image]
 --save=<root_path>                      Root path to save the detected face(s).
                                         The face will actually be saved with the same file stem as the original image.
+--disable_caching                       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
 """
 
 from docopt import docopt
@@ -11,7 +12,7 @@ import json
 from pathlib import Path
 
 from PIL import Image
-from datasets import load_from_disk
+from datasets import load_from_disk, set_caching_enabled
 
 from facenet_pytorch import MTCNN
 
@@ -63,6 +64,7 @@ if __name__ == '__main__':
     dataset_path = args['<dataset>']
     dataset = load_from_disk(dataset_path)
     model_config_path = args['<model_config>']
+    set_caching_enabled(not args['--disable_caching'])
 
     # default config
     model_config = dict(

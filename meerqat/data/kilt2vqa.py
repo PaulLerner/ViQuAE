@@ -1,12 +1,12 @@
 # coding: utf-8
 """Usage:
-kilt2vqa.py ner <subset>
-kilt2vqa.py ned <subset> [--map_kwargs=<path>]
-kilt2vqa.py generate mentions <subset> [--threshold=<threshold>]
-kilt2vqa.py generate vq <subset> [--image_width=<n> --map_kwargs=<path> <categories_to_exclude>...]
-kilt2vqa.py count_entities <subset> [--threshold=<threshold> --map_kwargs=<path>]
-kilt2vqa.py labelstudio <subset> [--image_width=<n> --alternative_images=<n> <categories_to_exclude>...]
-kilt2vqa.py download <subset> [--image_width=<n> --image_key=<image_key> --map_kwargs=<path>]
+kilt2vqa.py ner <subset> [--disable_caching]
+kilt2vqa.py ned <subset> [--map_kwargs=<path> --disable_caching]
+kilt2vqa.py generate mentions <subset> [--threshold=<threshold> --disable_caching]
+kilt2vqa.py generate vq <subset> [--image_width=<n> --map_kwargs=<path> --disable_caching <categories_to_exclude>...]
+kilt2vqa.py count_entities <subset> [--threshold=<threshold> --map_kwargs=<path> --disable_caching]
+kilt2vqa.py labelstudio <subset> [--image_width=<n> --alternative_images=<n> --disable_caching <categories_to_exclude>...]
+kilt2vqa.py download <subset> [--image_width=<n> --image_key=<image_key> --map_kwargs=<path> --disable_caching]
 
 Options:
 --threshold=<threshold>         Threshold for Word Error Rate (WER, i.e. word-level Levenshtein distance)
@@ -15,6 +15,7 @@ Options:
 --image_width=<n>               Desired thumbnail width in pixels for the image url. Defaults to full-size
 --image_key=<image_key>         Used to index the dataset item [default: image]
 --map_kwargs=<path>             Path towards a JSON file containing key-words arguments for the dataset.map function (e.g. batch size)
+--disable_caching               Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
 """
 import json
 import numpy as np
@@ -32,7 +33,7 @@ import warnings
 
 import requests
 
-from datasets import load_dataset, load_from_disk
+from datasets import load_dataset, load_from_disk, set_caching_enabled
 from meerqat.data.loading import map_kilt_triviaqa, DATA_ROOT_PATH
 from meerqat.data.wiki import HUMAN, RESERVED_IMAGES, special_path_to_file_name, file_name_to_thumbnail, thumbnail_to_file_name, save_image
 from meerqat.data.utils import md5
@@ -610,6 +611,7 @@ if __name__ == '__main__':
             map_kwargs = json.load(file)
     else:
         map_kwargs = {}
+    set_caching_enabled(not args['--disable_caching'])
 
     if args['ner']:
         ner(subset)

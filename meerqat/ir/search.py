@@ -1,15 +1,16 @@
 """Both dense and sparse information retrieval is done via HF-Datasets, using FAISS and ElasticSearch, respectively
 
-Usage: search.py <dataset> <es_kb> <faiss_kb> <config> [--k=<k>]
+Usage: search.py <dataset> <es_kb> <faiss_kb> <config> [--k=<k> --disable_caching]
 
 Options:
 --k                     Hyperparameter to search for the k nearest neighbors [default: 100].
+--disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
 """
 
 from docopt import docopt
 import json
 
-from datasets import load_from_disk
+from datasets import load_from_disk, set_caching_enabled
 
 
 def scores2dict(scores_batch, indices_batch):
@@ -127,6 +128,7 @@ if __name__ == '__main__':
     dataset = load_from_disk(dataset_path)
     es_kb = load_from_disk(args['<es_kb>'])
     faiss_kb = load_from_disk(args['<faiss_kb>'])
+    set_caching_enabled(not args['--disable_caching'])
     config_path = args['<config>']
     with open(config_path, 'r') as file:
         config = json.load(file)
