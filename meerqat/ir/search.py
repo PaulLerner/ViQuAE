@@ -130,6 +130,9 @@ if __name__ == '__main__':
     config_path = args['<config>']
     with open(config_path, 'r') as file:
         config = json.load(file)
+    format_kwargs = config.pop('format', {})
+    dataset.set_format(**format_kwargs)
+
     k = int(args['--k'])
 
     dataset = dataset_search(dataset, k, es_kb, faiss_kb, **config)
