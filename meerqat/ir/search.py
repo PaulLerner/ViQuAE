@@ -76,8 +76,9 @@ def search(batch, k=100,
         faiss_scores, faiss_indices = None, None
 
     # 3. fuse the results of the 2 searches
-    scores, indices = fuse(es_scores, es_indices, faiss_scores, faiss_indices, k=k, **fusion_kwargs)
-    batch['scores'], batch['indices'] = scores, indices
+    if es_kb is not None and faiss_kb is not None:
+        scores, indices = fuse(es_scores, es_indices, faiss_scores, faiss_indices, k=k, **fusion_kwargs)
+        batch['scores'], batch['indices'] = scores, indices
 
     return batch
 
