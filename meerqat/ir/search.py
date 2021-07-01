@@ -39,7 +39,7 @@ def linear_fusion(es_scores, es_indices, faiss_scores, faiss_indices, k=100, alp
     return scores_batch, indices_batch
 
 
-def fuse(es_scores, es_indices, faiss_scores, faiss_indices, **kwargs):
+def fuse(es_scores, es_indices, faiss_scores, faiss_indices, method='linear', **kwargs):
     """Should return a (scores, indices) tuples the same way as Dataset.search_batch"""
 
     # easy to fuse when there is only one input
@@ -50,7 +50,6 @@ def fuse(es_scores, es_indices, faiss_scores, faiss_indices, **kwargs):
 
     # TODO align es_indices and faiss_indices
 
-    method = kwargs.pop('method', 'linear')
     fusions = dict(linear=linear_fusion)
 
     return fusions[method](es_scores, es_indices, faiss_scores, faiss_indices, **kwargs)
@@ -59,7 +58,7 @@ def fuse(es_scores, es_indices, faiss_scores, faiss_indices, **kwargs):
 def search(batch, k=100,
            es_kb=None, faiss_kb=None,
            es_index_name=None, faiss_index_name=None,
-           es_key=None, faiss_key=None, **fusion_kwargs):
+           es_key=None, faiss_key=None, fusion_method='linear', **fusion_kwargs):
     # TODO compute metrics
 
     # 1. search using ElasticSearch
@@ -78,7 +77,7 @@ def search(batch, k=100,
 
     # 3. fuse the results of the 2 searches
     if es_kb is not None and faiss_kb is not None:
-        scores, indices = fuse(es_scores, es_indices, faiss_scores, faiss_indices, k=k, **fusion_kwargs)
+        scores, indices = fuse(es_scores, es_indices, faiss_scores, faiss_indices, k=k, method=fusion_method, **fusion_kwargs)
         batch['scores'], batch['indices'] = scores, indices
 
     return batch
