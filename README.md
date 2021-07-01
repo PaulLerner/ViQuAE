@@ -16,6 +16,9 @@ This should contain all the source code and act as a python package (e.g. `impor
 
 Install PyTorch following [the official document wrt to your distribution](https://pytorch.org/get-started/locally/) (preferably in a virtual environment)
 
+Also install [ElasticSearch](https://www.elastic.co/guide/en/elastic-stack-get-started/current/get-started-elastic-stack.html#install-elasticsearch) 
+(and run it) if you want to do sparse retrieval.
+
 ```sh
 git clone https://github.com/PaulLerner/meerqat.git
 pip install -e meerqat
