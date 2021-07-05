@@ -149,7 +149,7 @@ def make_passage_dataset(input_path, output_path, **kwargs):
     dataset = load_from_disk(input_path)
     passage_dict = dict(passage=[], index=[])
 
-    dataset.map(with_indices=True, fn_kwargs=dict(passage_dict=passage_dict, **kwargs))
+    dataset.map(make_passage_item, with_indices=True, fn_kwargs=dict(passage_dict=passage_dict, **kwargs))
 
     passage_dataset = Dataset.from_dict(passage_dict)
     print(passage_dataset)
