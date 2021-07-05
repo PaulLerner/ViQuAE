@@ -19,10 +19,10 @@ OKVQA_PATH = DATA_ROOT_PATH/"OK-VQA"
 MSCOCO_PATH = DATA_ROOT_PATH/"MS-COCO"
 
 
-def get_tokenizer(class_name, pretrained_model_name_or_path, **kwargs):
-    TokenizerClass = getattr(transformers, class_name)
-    tokenizer = TokenizerClass.from_pretrained(pretrained_model_name_or_path, **kwargs)
-    return tokenizer
+def get_pretrained(class_name, pretrained_model_name_or_path, **kwargs):
+    Class = getattr(transformers, class_name)
+    model = Class.from_pretrained(pretrained_model_name_or_path, **kwargs)
+    return model
 
 
 def map_kilt_triviaqa():
@@ -109,7 +109,7 @@ def uniform_passages(paragraphs, tokenizer, n=100):
         (e.g. lower-cased, added space between punctuation marks, etc.)
     """
     text = ''.join(paragraphs)
-    tokenizer = get_tokenizer(**tokenizer)
+    tokenizer = get_pretrained(**tokenizer)
     tokens = tokenizer.tokenize(text)
     passages = []
     for i in range(0, len(tokens), n):
