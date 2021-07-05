@@ -1,6 +1,14 @@
 # coding: utf-8
-from datasets import load_dataset
+"""Usage:
+loading.py passages <input> <output> [<config> --disable_caching]
+
+
+--disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
+"""
+from datasets import load_dataset, Dataset, load_from_disk, set_caching_enabled
 from pathlib import Path
+from docopt import docopt
+import json
 
 from meerqat import __file__ as ROOT_PATH
 
@@ -83,13 +91,22 @@ def uniform_passages(paragraphs, tokenizer, n=100):
     ----------
     paragraphs: List[str]
         List of pre-processed paragraphs to split into passages
+    tokenizer: PreTrainedTokenizer
+    n: int, optional
+        Number of tokens in each passage
 
     Returns
     -------
     passages: List[str]
+        Each passage is pre-processed by the tokenizer
+        (e.g. lower-cased, added space between punctuation marks, etc.)
     """
     text = ''.join(paragraphs)
-    raise NotImplementedError
+    tokens = tokenizer.tokenize(text)
+    passages = []
+    for i in range(0, len(tokens), n):
+        passages.append(tokenizer.convert_tokens_to_string(tokens[i: i + n]))
+    return passages
 
 
 def make_passages(paragraphs, method=None, preprocessing_method=None, preprocessing_kwargs={}, **kwargs):
@@ -107,3 +124,42 @@ def make_passages(paragraphs, method=None, preprocessing_method=None, preprocess
         "uniform": uniform_passages
     }
     return methods[method](paragraphs, **kwargs)
+
+
+def make_passage_item(item, index, passage_dict, **kwargs):
+    passages = make_passages(item['text']['paragraph'], **kwargs)
+    total_passages = len(passage_dict['passage'])
+    item['passage_index'] = list(range(total_passages, total_passages+len(passages)))
+    passage_dict['passage'].extend(passages)
+    passage_dict['index'].extend([index]*len(passages))
+    return item
+
+
+def make_passage_dataset(input_path, output_path, **kwargs):
+    """Runs through dataset and create a new passage dataset from the paragraphs,
+    saving index and reversed-index in both respectively"""
+    dataset = load_from_disk(input_path)
+    passage_dict = dict(passage=[], index=[])
+
+    dataset.map(with_indices=True, fn_kwargs=dict(passage_dict=passage_dict, **kwargs))
+
+    passage_dataset = Dataset.from_dict(passage_dict)
+    print(passage_dataset)
+    passage_dataset.save_to_disk(output_path)
+    dataset.save_to_disk(input_path)
+
+
+if __name__ == '__main__':
+    args = docopt(__doc__)
+    set_caching_enabled(not args['--disable_caching'])
+    if args['passages']:
+        config_path = args['<config>']
+        # load specified config
+        if config_path is not None:
+            with open(config_path, 'r') as file:
+                config = json.load(file)
+        else:
+            config = {}
+
+        make_passage_dataset(args['<input>'], args['<output>'], **config)
+
