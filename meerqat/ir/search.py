@@ -46,7 +46,7 @@ def fuse(es_scores, es_indices, faiss_scores, faiss_indices, method='linear', **
     if es_scores is None and es_indices is None:
         return faiss_scores, faiss_indices
     elif faiss_scores is None and faiss_indices is None:
-        return faiss_scores, faiss_indices
+        return es_scores, es_indices
 
     # TODO align es_indices and faiss_indices
 
