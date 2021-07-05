@@ -9,6 +9,7 @@ from datasets import load_dataset, Dataset, load_from_disk, set_caching_enabled
 from pathlib import Path
 from docopt import docopt
 import json
+import transformers
 
 from meerqat import __file__ as ROOT_PATH
 
@@ -16,6 +17,12 @@ DATA_ROOT_PATH = (Path(ROOT_PATH).parent.parent/"data").resolve()
 KVQA_PATH = DATA_ROOT_PATH/"KVQA"
 OKVQA_PATH = DATA_ROOT_PATH/"OK-VQA"
 MSCOCO_PATH = DATA_ROOT_PATH/"MS-COCO"
+
+
+def get_tokenizer(class_name, pretrained_model_name_or_path, **kwargs):
+    TokenizerClass = getattr(transformers, class_name)
+    tokenizer = TokenizerClass.from_pretrained(pretrained_model_name_or_path, **kwargs)
+    return tokenizer
 
 
 def map_kilt_triviaqa():
@@ -102,6 +109,7 @@ def uniform_passages(paragraphs, tokenizer, n=100):
         (e.g. lower-cased, added space between punctuation marks, etc.)
     """
     text = ''.join(paragraphs)
+    tokenizer = get_tokenizer(**tokenizer)
     tokens = tokenizer.tokenize(text)
     passages = []
     for i in range(0, len(tokens), n):
