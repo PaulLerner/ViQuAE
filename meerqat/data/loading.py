@@ -109,7 +109,6 @@ def uniform_passages(paragraphs, tokenizer, n=100):
         (e.g. lower-cased, added space between punctuation marks, etc.)
     """
     text = ''.join(paragraphs)
-    tokenizer = get_pretrained(**tokenizer)
     tokens = tokenizer.tokenize(text)
     passages = []
     for i in range(0, len(tokens), n):
@@ -157,6 +156,19 @@ def make_passage_dataset(input_path, output_path, **kwargs):
     dataset.save_to_disk(input_path)
 
 
+def load_pretrained_in_kwargs(kwargs):
+    """Recursively loads pre-trained models/tokenizer in kwargs using get_pretrained"""
+    for k, v in kwargs.items():
+        # base case: load pre-trained model
+        if k == 'pretrained_model_name_or_path':
+            return get_pretrained(**kwargs)
+        # recursively look in the child arguments
+        elif isinstance(v, dict):
+            kwargs[k] = load_pretrained_in_kwargs(v)
+        # else keep as is
+    return kwargs
+
+
 if __name__ == '__main__':
     args = docopt(__doc__)
     set_caching_enabled(not args['--disable_caching'])
@@ -168,6 +180,6 @@ if __name__ == '__main__':
                 config = json.load(file)
         else:
             config = {}
-
+        config = load_pretrained_in_kwargs(config)
         make_passage_dataset(args['<input>'], args['<output>'], **config)
 
