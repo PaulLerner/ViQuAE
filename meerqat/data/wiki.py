@@ -59,8 +59,16 @@ SPECIAL_FILE_PATH_URI_PREFIX = SPECIAL_PATH_URI_PREFIX + "File:"
 UPLOAD_URI_PREFIX = "http://upload.wikimedia.org/wikipedia/commons/"
 VALID_DATE_TYPE = 'http://www.w3.org/2001/XMLSchema#dateTime'
 
-# restrict media to be images handleable by PIL.Image
-VALID_ENCODING = {"png", "jpg", "jpeg", "tiff", "gif"}
+# restrict media to be images handleable by PIL.Image (or convertible with Wikimedia thumbnails)
+VALID_ENCODING = {"png", "jpg", "jpeg", "tiff", "gif", "svg", "tif"}
+
+# used to make thumbnails in file_name_to_thumbnail
+EXTENSIONS_PRE_AND_SUFFIXES = {
+    "svg": ("", ".png"),
+    "tif": ("lossy-page1-", ".jpg"),
+    "tiff": ("lossy-page1-", ".jpg")
+}
+
 # rules of preferences over licenses, the higher the better (0 is reserved for missing values or other licenses)
 LICENSES = {
     "CC0": 8,
@@ -201,14 +209,27 @@ def file_name_to_thumbnail(file_name, image_width=None):
         thumb, sized_name = "", ""
     else:
         thumb = "thumb/"
-        sized_name = f"/{image_width:d}px-{file_name}"
+        extension = file_name.split('.')[-1].lower()
+        prefix, suffix = EXTENSIONS_PRE_AND_SUFFIXES.get(extension, ("", ""))
+        sized_name = f"/{prefix}{image_width:d}px-{file_name}{suffix}"
     url = f"{UPLOAD_URI_PREFIX}{thumb}{file_hash[0]}/{file_hash[:2]}/{file_name}{sized_name}"
 
     return url
 
 
-def thumbnail_to_file_name(url):
-    """Handles thumbnails and special file paths"""
+def thumbnail_to_file_name(url, original=True):
+    """
+    Handles thumbnails and special file paths
+
+    If original (default), Returns the original file-name, i.e. with the original extension and without any size specification introduced in file_name_to_thumbnail
+
+    e.g. "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/foo.tif/lossy-page1-469px-foo.tif.jpg" -> "foo.tif"
+
+    else, the file name is returned as processed in file_name_to_thumbnail, i.e. with size specification etc.
+    e.g. "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/foo.tif/lossy-page1-469px-foo.tif.jpg" -> "lossy-page1-469px-foo.tif.jpg"
+
+    This is irrelevant of course if the url is not a thumbnail
+    """
     if url.startswith(SPECIAL_FILE_PATH_URI_PREFIX):
         return url[len(SPECIAL_FILE_PATH_URI_PREFIX):]
     elif url.startswith(SPECIAL_PATH_URI_PREFIX):
@@ -216,7 +237,11 @@ def thumbnail_to_file_name(url):
     elif url.startswith(UPLOAD_URI_PREFIX):
         file_name = url[len(UPLOAD_URI_PREFIX):]
         if file_name.startswith('thumb/'):
-            return file_name[len('thumb/a/a8/'):].split('/')[0]
+            file_name = file_name[len('thumb/a/a8/'):].split('/')
+            if original:
+                return file_name[0]
+            else:
+                return file_name[-1]
         else:
             return file_name[len('a/a8/'):]
     else:
@@ -557,7 +582,7 @@ def query_image(title, session):
 
 
 def save_image(url, session):
-    image_path = COMMONS_PATH / thumbnail_to_file_name(url)
+    image_path = COMMONS_PATH / thumbnail_to_file_name(url, original=False)
     if not image_path.exists():
         # request image
         response = request(url, session)
