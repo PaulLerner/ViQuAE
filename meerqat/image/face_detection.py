@@ -22,7 +22,7 @@ from meerqat.data.wiki import thumbnail_to_file_name, COMMONS_PATH as IMAGE_PATH
 
 def detect_face(url, model, save_root_path=None):
     """TODO group images w.r.t. their size to allow MTCNN batch processing"""
-    file_name = thumbnail_to_file_name(url)
+    file_name = thumbnail_to_file_name(url, original=False)
 
     # TODO: find new image or filter out question/article
     encoding = file_name.split('.')[-1].lower()
