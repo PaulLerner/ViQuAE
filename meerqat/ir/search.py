@@ -1,6 +1,6 @@
 """Both dense and sparse information retrieval is done via HF-Datasets, using FAISS and ElasticSearch, respectively
 
-Usage: search.py <dataset> <es_kb> <faiss_kb> <config> [--k=<k> --disable_caching]
+Usage: search.py <dataset> <config> [--k=<k> --disable_caching]
 
 Options:
 --k                     Hyperparameter to search for the k nearest neighbors [default: 100].
@@ -20,7 +20,100 @@ def scores2dict(scores_batch, indices_batch):
     return scores_dicts
 
 
-def linear_fusion(es_scores, es_indices, faiss_scores, faiss_indices, k=100, alpha=1.1):
+def dict2scores(scores_dict, k=100):
+    """sort in desc. order and keep top-k"""
+    indices = sorted(scores_dict, key=scores_dict.get, reverse=True)[:k]
+    scores = [scores_dict[index] for index in indices]
+    return scores, indices
+
+
+def dict_batch2scores(scores_dicts, k=100):
+    scores_batch, indices_batch = [], []
+    for scores_dict in scores_dicts:
+        scores, indices = dict2scores(scores_dict, k=k)
+        scores_batch.append(scores)
+        indices_batch.append(indices)
+    return scores_batch, indices_batch
+
+
+def split_es_and_faiss_kbs(kbs):
+    es_kbs, faiss_kbs = [], []
+    for kb in kbs:
+        if kb['es']:
+            es_kbs.append(kb)
+        else:
+            faiss_kbs.append(kb)
+    return es_kbs, faiss_kbs
+
+
+def set_interpolation_weights(kbs):
+    """See interpolation_fusion"""
+    total, not_set = 0, 0
+    for kb in kbs:
+        weight = kb.get('weight')
+        if weight is None:
+            not_set += 1
+        else:
+            total += weight
+    # all weights are already set
+    if not_set == 0:
+        return kbs
+    assert total <= 1, f"All weights should sum to 1 but you've not set {not_set} weights and the other sum to {total}"
+
+    # set uniform weight such that they all sum to 1
+    uniform_weight = (1-total)/not_set
+    for kb in kbs:
+        kb.setdefault('weight', uniform_weight)
+    return kbs
+
+
+def interpolation_fusion(batch, kbs, k=100):
+    """
+    Simple weighted sum, e.g. : fusion = w_1*score_1 + w_2*score_2 + w_3*score_3
+
+    If the weight are partially provided or not provided at all they default to a uniform weight such that they all sum to 1.
+    """
+    batch_size = len(batch)
+    # init scores
+    # N. B. [{}]*n creates n pointers to the SAME dict
+    scores_dicts = [{} for _ in range(batch_size)]
+    kbs = set_interpolation_weights(kbs)
+    for kb in kbs:
+        weight = kb['weight']
+        index_name = kb['index_name']
+
+        kb_scores_dicts = scores2dict(batch[f'{index_name}_scores'], batch[f'{index_name}_indices'])
+        for scores_dict, kb_scores_dict in zip(scores_dicts, kb_scores_dicts):
+            for index, score in kb_scores_dict.items():
+                scores_dict.setdefault(index, 0.)
+                scores_dict[index] += weight * score
+
+    scores_batch, indices_batch = dict_batch2scores(scores_dicts, k=k)
+    return scores_batch, indices_batch
+
+
+def linear_fusion(batch, kbs, k=100, alpha=1.1):
+    """
+    fuses sparse and dense search following Karpukhin et. al : fusion = es + alpha * faiss
+
+    If there are multiple ES KBs or FAISS KBs, they are first fused separately using a simple interpolation
+    """
+
+    # If there are multiple ES KBs or FAISS KBs, they are first fused separately using a simple interpolation
+    es_kbs, faiss_kbs = split_es_and_faiss_kbs(kbs)
+
+    if len(es_kbs) > 1:
+        es_scores, es_indices = fuse(batch, es_kbs, k=k, method='interpolation')
+    else:
+        index_name = es_kbs[0]['index_name']
+        es_scores, es_indices = batch[f'{index_name}_scores'], batch[f'{index_name}_indices']
+    if len(faiss_kbs) > 1:
+        faiss_scores, faiss_indices = fuse(batch, faiss_kbs, k=k, method='interpolation')
+    else:
+        index_name = faiss_kbs[0]['index_name']
+        faiss_scores, faiss_indices = batch[f'{index_name}_scores'], batch[f'{index_name}_indices']
+
+    # once there is only one ES and one FAISS retrieval left, proceed to the linear fusion
     scores_batch, indices_batch = [], []
     es_dicts = scores2dict(es_scores, es_indices)
     faiss_dicts = scores2dict(faiss_scores, faiss_indices)
@@ -31,91 +124,125 @@ def linear_fusion(es_scores, es_indices, faiss_scores, faiss_indices, k=100, alp
             es_dict.setdefault(index, 0.)
             es_dict[index] += alpha * score
         # sort in desc. order and keep top-k
-        indices = sorted(es_dict, key=es_dict.get, reverse=True)[:k]
-        scores = [es_dict[index] for index in indices]
+        scores, indices = dict2scores(es_dict, k=k)
         scores_batch.append(scores)
         indices_batch.append(indices)
 
     return scores_batch, indices_batch
 
 
-def fuse(es_scores, es_indices, faiss_scores, faiss_indices, method='linear', **kwargs):
+def fuse(batch, kbs, k=100, method='linear', **kwargs):
     """Should return a (scores, indices) tuples the same way as Dataset.search_batch"""
 
     # easy to fuse when there is only one input
-    if es_scores is None and es_indices is None:
-        return faiss_scores, faiss_indices
-    elif faiss_scores is None and faiss_indices is None:
-        return es_scores, es_indices
+    if len(kbs) == 1:
+        index_name = kbs[0]['index_name']
+        return batch[f'{index_name}_scores'], batch[f'{index_name}_indices']
 
-    # TODO align es_indices and faiss_indices
+    fusions = dict(linear=linear_fusion, interpolation=interpolation_fusion)
 
-    fusions = dict(linear=linear_fusion)
-
-    return fusions[method](es_scores, es_indices, faiss_scores, faiss_indices, **kwargs)
+    return fusions[method](batch, kbs, k=k, **kwargs)
 
 
-def search(batch, k=100,
-           es_kb=None, faiss_kb=None,
-           es_index_name=None, faiss_index_name=None,
-           es_key=None, faiss_key=None, fusion_method='linear', **fusion_kwargs):
+def map_indices(scores_batch, indices_batch, mapping, k=None):
+    """
+    Also takes scores as argument to align scores and indices in case of 1-many mapping
+
+    If k is not None, keep only the top-k (might have exceeded in case of 1-many mapping)
+    """
+    new_scores_batch, new_indices_batch = [], []
+    for scores, indices in zip(scores_batch, indices_batch):
+        new_scores, new_indices = [], []
+        for score, index in zip(scores, indices):
+            # extend because it can be a 1-many mapping (e.g. document/image to passage)
+            new_indices.extend(mapping[index])
+            new_scores.extend([score]*len(mapping[index]))
+            if k is not None and len(new_indices) >= k:
+                break
+        new_scores_batch.append(new_scores)
+        new_indices_batch.append(new_indices)
+    return new_indices_batch
+
+
+def search(batch, kbs, k=100, fusion_method='linear', **fusion_kwargs):
     # TODO compute metrics
 
-    # 1. search using ElasticSearch
-    if es_kb is not None:
-        es_scores, es_indices = es_kb.search_batch(es_index_name, batch[es_key], k)
-        batch['es_scores'], batch['es_indices'] = es_scores, es_indices
-    else:
-        es_scores, es_indices = None, None
+    # search with the KBs
+    for kb in kbs:
+        index_name = kb['index_name']
+        scores_batch, indices_batch = kb['kb'].search_batch(index_name, batch[kb['key']], k=k)
 
-    # 2. search using FAISS
-    if faiss_kb is not None:
-        faiss_scores, faiss_indices = faiss_kb.search_batch(faiss_index_name, batch[faiss_key], k)
-        batch['faiss_scores'], batch['faiss_indices'] = faiss_scores, faiss_indices
-    else:
-        faiss_scores, faiss_indices = None, None
+        # indices might need to be mapped so that all KBs refer to the same semantic index
+        index_mapping = kb.get('index_mapping')
+        if index_mapping:
+            scores_batch, indices_batch = map_indices(scores_batch, indices_batch, index_mapping, k=k)
 
-    # 3. fuse the results of the 2 searches
-    if es_kb is not None and faiss_kb is not None:
-        scores, indices = fuse(es_scores, es_indices, faiss_scores, faiss_indices, k=k, method=fusion_method, **fusion_kwargs)
+        # store result in the dataset
+        batch[f'{index_name}_scores'] = scores_batch
+        batch[f'{index_name}_indices'] = indices_batch
+
+    # fuse the results of the searches
+    if len(kbs) > 1:
+        scores, indices = fuse(batch, kbs, k=k, method=fusion_method, **fusion_kwargs)
         batch['scores'], batch['indices'] = scores, indices
 
     return batch
 
 
-def dataset_search(dataset, k=100, es_kb=None, faiss_kb=None,
-                   es_kwargs={}, faiss_kwargs={}, map_kwargs={}, fusion_kwargs={}):
-    assert (es_kb is not None or faiss_kb is not None), 'Expected at least one KB'
+def index_es_kb(path, column, index_name=None, **kwargs):
+    """Loads KB from path then applies Dataset.add_elasticsearch_index method (identical parameters)"""
+    if index_name is None:
+        index_name = column
+    kb = load_from_disk(path)
+    kb.add_elasticsearch_index(column=column, index_name=index_name, **kwargs)
+    return kb, index_name
 
-    # add ElasticSearch index
-    if es_kb is not None:
-        es_key = es_kwargs.pop('key')
-        es_kb.add_elasticsearch_index(**es_kwargs)
-        es_index_name = es_kwargs.get('index_name', es_kwargs['column'])
+
+def index_faiss_kb(path, column, index_name=None, load=False, save_path=None, **kwargs):
+    """Loads KB from path then either:
+    - loads it (if load)
+    - default: applies Dataset.add_faiss_index method (identical parameters), and save it if save_path is not None
+    """
+    if index_name is None:
+        index_name = column
+    kb = load_from_disk(path)
+    if load:
+        kb.load_faiss_index(**kwargs)
     else:
-        es_key, es_index_name = None, None
-    # add FAISS index
-    if faiss_kb is not None:
-        faiss_key = faiss_kwargs.pop('key')
-        # either load FAISS index or build it
-        load = faiss_kwargs.pop('load', False)
-        faiss_index_name = faiss_kwargs.get('index_name', faiss_kwargs['column'])
-        if load:
-            faiss_kb.load_faiss_index(**faiss_kwargs)
+        kb.add_faiss_index(column=column, index_name=index_name, **kwargs)
+        # save FAISS index (so it can be loaded later)
+        if save_path is not None:
+            kb.save_faiss_index(index_name, save_path)
+    return kb, index_name
+
+
+def dataset_search(dataset, k=100, kb_kwargs=[], map_kwargs={}, fusion_kwargs={}):
+    kbs = []
+    index_names = set()
+    # load KB, index it and load index-mapping, if relevant
+    for kb_kwarg in kb_kwargs:
+        # load and index KB
+        es = kb_kwarg.pop('es', False)
+        index_kwargs = kb_kwarg.pop('index_kwargs', {})
+        if es:
+            kb, index_name = index_es_kb(**index_kwargs)
         else:
-            save_path = faiss_kwargs.pop('file', None)
-            faiss_kb.add_faiss_index(**faiss_kwargs)
-            # save FAISS index (so it can be loaded later)
-            if save_path is not None:
-                faiss_kb.save_faiss_index(faiss_index_name, save_path)
-    else:
-        faiss_index_name, faiss_key = None, None
+            kb, index_name = index_faiss_kb(**index_kwargs)
+
+        # index mapping are used so that multiple KBs are aligned to the same semantic indices
+        # e.g. text is processed at the passage level but images are processed at the document/entity level
+        index_mapping = kb_kwarg.get('index_mapping')
+        if index_mapping is not None:
+            with open(index_mapping, 'r') as file:
+                kb_kwarg['index_mapping'] = json.load(file)
+
+        kbs.append(dict(kb=kb, index_name=index_name, es=es, **kb_kwarg))
+        assert index_name not in index_names, "All KBs should have unique index names"
+        index_names.add(index_name)
+    assert len(index_names) >= 1, 'Expected at least one KB'
 
     # search expects a batch as input
-    fn_kwargs = dict(k=k,
-                     es_kb=es_kb, faiss_kb=faiss_kb,
-                     es_index_name=es_index_name, faiss_index_name=faiss_index_name,
-                     es_key=es_key, faiss_key=faiss_key, **fusion_kwargs)
+    fn_kwargs = dict(kbs=kbs, k=k, **fusion_kwargs)
     dataset = dataset.map(search, fn_kwargs=fn_kwargs, batched=True, **map_kwargs)
 
     return dataset
@@ -125,8 +252,6 @@ if __name__ == '__main__':
     args = docopt(__doc__)
     dataset_path = args['<dataset>']
     dataset = load_from_disk(dataset_path)
-    es_kb = load_from_disk(args['<es_kb>'])
-    faiss_kb = load_from_disk(args['<faiss_kb>'])
     set_caching_enabled(not args['--disable_caching'])
     config_path = args['<config>']
     with open(config_path, 'r') as file:
@@ -136,6 +261,6 @@ if __name__ == '__main__':
 
     k = int(args['--k'])
 
-    dataset = dataset_search(dataset, k, es_kb, faiss_kb, **config)
+    dataset = dataset_search(dataset, k, **config)
 
     dataset.save_to_disk(dataset_path)
