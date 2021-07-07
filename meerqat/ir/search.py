@@ -12,6 +12,9 @@ import json
 
 from datasets import load_from_disk, set_caching_enabled
 
+from meerqat.ir.metrics import compute_metrics, reduce_metrics, stringify_metrics, find_relevant_batch
+from meerqat.data.utils import json_integer_keys
+
 
 def scores2dict(scores_batch, indices_batch):
     scores_dicts = []
@@ -234,7 +237,8 @@ def dataset_search(dataset, k=100, kb_kwargs=[], map_kwargs={}, fusion_kwargs={}
         index_mapping = kb_kwarg.get('index_mapping')
         if index_mapping is not None:
             with open(index_mapping, 'r') as file:
-                kb_kwarg['index_mapping'] = json.load(file)
+                # convert all keys to int (JSON unfortunately does not support integer keys)
+                kb_kwarg['index_mapping'] = json.load(file, object_hook=json_integer_keys)
 
         kbs.append(dict(kb=kb, index_name=index_name, es=es, **kb_kwarg))
         assert index_name not in index_names, "All KBs should have unique index names"
