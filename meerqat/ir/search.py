@@ -6,9 +6,11 @@ Options:
 --k                     Hyperparameter to search for the k nearest neighbors [default: 100].
 --disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
 """
+import warnings
 
 from docopt import docopt
 import json
+from collections import Counter
 
 from datasets import load_from_disk, set_caching_enabled
 
@@ -167,9 +169,17 @@ def map_indices(scores_batch, indices_batch, mapping, k=None):
     return new_indices_batch
 
 
-def search(batch, kbs, k=100, fusion_method='linear', **fusion_kwargs):
-    # TODO compute metrics
-
+def search(batch, kbs, k=100, metrics={}, metrics_kwargs={}, reference_key='passage', fusion_method='linear', **fusion_kwargs):
+    # find the kb with reference indices
+    reference_kb = None
+    for kb in kbs:
+        if kb.get("reference", False):
+            reference_kb = kb['kb']
+            break
+    if reference_kb is None:
+        warnings.warn("Didn't find a reference KB "
+                      "-> will not be able to extend the annotation coverage so results should be interpreted carefully.\n"
+                      "Did you forget to add a 'reference' flag to your config file?")
     # search with the KBs
     for kb in kbs:
         index_name = kb['index_name']
@@ -184,10 +194,34 @@ def search(batch, kbs, k=100, fusion_method='linear', **fusion_kwargs):
         batch[f'{index_name}_scores'] = scores_batch
         batch[f'{index_name}_indices'] = indices_batch
 
+        # are the retrieved documents relevant ?
+        if reference_kb is not None:
+            relevant_batch = find_relevant_batch(indices_batch, batch['output'], reference_kb,
+                                                 relevant_batch=batch['provenance_index'], reference_key=reference_key)
+        else:
+            relevant_batch = batch['provenance_index']
+
+        # compute metrics
+        compute_metrics(metrics[index_name],
+                        retrieved_batch=indices_batch, relevant_batch=relevant_batch,
+                        K=k, scores_batch=scores_batch, **metrics_kwargs)
+
     # fuse the results of the searches
     if len(kbs) > 1:
-        scores, indices = fuse(batch, kbs, k=k, method=fusion_method, **fusion_kwargs)
-        batch['scores'], batch['indices'] = scores, indices
+        scores_batch, indices_batch = fuse(batch, kbs, k=k, method=fusion_method, **fusion_kwargs)
+        batch['scores'], batch['indices'] = scores_batch, indices_batch
+
+        # are the retrieved documents relevant ?
+        if reference_kb is not None:
+            relevant_batch = find_relevant_batch(indices_batch, batch['output'], reference_kb,
+                                                 relevant_batch=batch['provenance_index'], reference_key=reference_key)
+        else:
+            relevant_batch = batch['provenance_index']
+
+        # compute metrics
+        compute_metrics(metrics["fusion"],
+                        retrieved_batch=indices_batch, relevant_batch=relevant_batch,
+                        K=k, scores_batch=scores_batch, **metrics_kwargs)
 
     return batch
 
@@ -219,9 +253,10 @@ def index_faiss_kb(path, column, index_name=None, load=False, save_path=None, **
     return kb, index_name
 
 
-def dataset_search(dataset, k=100, kb_kwargs=[], map_kwargs={}, fusion_kwargs={}):
+def dataset_search(dataset, k=100, kb_kwargs=[], map_kwargs={}, fusion_kwargs={}, metrics_kwargs={}):
     kbs = []
     index_names = set()
+    metrics = {}
     # load KB, index it and load index-mapping, if relevant
     for kb_kwarg in kb_kwargs:
         # load and index KB
@@ -243,11 +278,23 @@ def dataset_search(dataset, k=100, kb_kwargs=[], map_kwargs={}, fusion_kwargs={}
         kbs.append(dict(kb=kb, index_name=index_name, es=es, **kb_kwarg))
         assert index_name not in index_names, "All KBs should have unique index names"
         index_names.add(index_name)
-    assert len(index_names) >= 1, 'Expected at least one KB'
 
+        # initialize the metrics for this KB
+        metrics[index_name] = Counter()
+
+    assert len(index_names) >= 1, 'Expected at least one KB'
+    if len(index_names) > 1:
+        metrics["fusion"] = Counter()
+    metric_save_path = metrics_kwargs.pop('save_path', None)
     # search expects a batch as input
-    fn_kwargs = dict(kbs=kbs, k=k, **fusion_kwargs)
+    fn_kwargs = dict(kbs=kbs, k=k, metrics=metrics, metrics_kwargs=metrics_kwargs, **fusion_kwargs)
     dataset = dataset.map(search, fn_kwargs=fn_kwargs, batched=True, **map_kwargs)
+
+    reduce_metrics(metrics, K=k)
+    print(stringify_metrics(metrics))
+    if metric_save_path is not None:
+        with open(metric_save_path, 'w') as file:
+            json.dump(metrics, file)
 
     return dataset
 

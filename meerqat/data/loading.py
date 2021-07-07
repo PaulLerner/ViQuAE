@@ -19,6 +19,10 @@ OKVQA_PATH = DATA_ROOT_PATH/"OK-VQA"
 MSCOCO_PATH = DATA_ROOT_PATH/"MS-COCO"
 
 
+def answer_preprocess(answer):
+    raise NotImplementedError
+
+
 def get_pretrained(class_name, pretrained_model_name_or_path, **kwargs):
     Class = getattr(transformers, class_name)
     model = Class.from_pretrained(pretrained_model_name_or_path, **kwargs)

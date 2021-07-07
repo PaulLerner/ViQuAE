@@ -1,11 +1,48 @@
 from tabulate import tabulate
 
-def find_relevant(retrieved_passages, answers):
-    """"""
-    raise NotImplementedError
+from meerqat.data.loading import answer_preprocess
 
 
-def compute_metrics(metrics, retrieved_batch, relevant_batch, K=100, ks=[1, 5, 10, 20, 100], scores=None):
+def find_relevant(retrieved, answers, kb, reference_key='passage'):
+    """
+    Parameters
+    ----------
+    retrieved: List[int]
+    answers: List[str]
+    kb: Dataset
+    reference_key: str, optional
+        Used to get the reference field in kb
+        Defaults to 'passage'
+
+    Returns
+    -------
+    relevant: List[int]
+        Included in retrieved
+    """
+    relevant = []
+    for i in retrieved:
+        passage = kb[i][reference_key]
+        for answer in answers:
+            answer = answer_preprocess(answer)
+            if answer in passage:
+                relevant.append(i)
+                break
+    return relevant
+
+
+def find_relevant_batch(retrieved_batch, ground_truth_output_batch, kb, relevant_batch=None, reference_key='passage'):
+    if relevant_batch is None:
+        batch_size = len(ground_truth_output_batch)
+        relevant_batch = [[] for _ in range(batch_size)]
+
+    for retrieved, relevant, ground_truth_output in zip(retrieved_batch, relevant_batch, ground_truth_output_batch):
+        answers = ground_truth_output['answer']
+        relevant.extend(find_relevant(retrieved, answers, kb, reference_key=reference_key))
+
+    return relevant_batch
+
+
+def compute_metrics(metrics, retrieved_batch, relevant_batch, K=100, ks=[1, 5, 10, 20, 100], scores_batch=None):
     """
     Parameters
     ----------
@@ -17,20 +54,23 @@ def compute_metrics(metrics, retrieved_batch, relevant_batch, K=100, ks=[1, 5, 1
         Indices of the ground-truth documents for all queries in the batch
     K: int, optional
         Number of documents queried to the system (default: 100)
+        Maximum threshold for the R in R-Precision and the k in, e.g. precision@k
     ks: List[int], optional
         Used for, e.g. precision@k
         Cannot be greater than K
         Defaults to [1, 5, 10, 20, 100]
-    scores: List[List[float], optional
+    scores_batch: List[List[float]], optional
         scores of retrieved documents for all queries in the batch
         (not used in any metric for now)
     """
     for retrieved, relevant in zip(retrieved_batch, relevant_batch):
+        assert len(relevant) > 0, "Empty ground-truth"
+
         metrics["total_queries"] += 1
         relevant_set = set(relevant)
 
         # R-Precision
-        R = len(relevant)
+        R = min(len(relevant_set), K)
         metrics[f"r-precision@{K}"] += len(set(retrieved[:R]) & relevant_set)/R
 
         # Reciprocal Rank
@@ -45,7 +85,7 @@ def compute_metrics(metrics, retrieved_batch, relevant_batch, K=100, ks=[1, 5, 1
             if k > K:
                 continue
             retrieved_at_k = retrieved[:k]
-            retrieved_set = set(retrieved)
+            retrieved_set = set(retrieved_at_k)
             relret_at_k = len(retrieved_set & relevant_set)
             metrics[f"hits@{k}"] += min(1, relret_at_k)
             metrics[f"precision@{k}"] += relret_at_k/k
