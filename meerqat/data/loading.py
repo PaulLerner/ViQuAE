@@ -5,10 +5,14 @@ loading.py passages <input> <output> [<config> --disable_caching]
 
 --disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
 """
-from datasets import load_dataset, Dataset, load_from_disk, set_caching_enabled
 from pathlib import Path
 from docopt import docopt
 import json
+
+import re
+import string
+
+from datasets import load_dataset, Dataset, load_from_disk, set_caching_enabled
 import transformers
 
 from meerqat import __file__ as ROOT_PATH
@@ -19,8 +23,19 @@ OKVQA_PATH = DATA_ROOT_PATH/"OK-VQA"
 MSCOCO_PATH = DATA_ROOT_PATH/"MS-COCO"
 
 
+def remove_articles(text):
+    return re.sub(r"\b(a|an|the)\b", " ", text)
+
+def white_space_fix(text):
+    return " ".join(text.split())
+
+def remove_punc(text):
+    exclude = set(string.punctuation)
+    return "".join(ch for ch in text if ch not in exclude)
+
 def answer_preprocess(answer):
-    raise NotImplementedError
+    """Adapted from datasets squad metric. Lower text and remove punctuation, articles and extra whitespace."""
+    return white_space_fix(remove_articles(remove_punc(answer.lower())))
 
 
 def get_pretrained(class_name, pretrained_model_name_or_path, **kwargs):
