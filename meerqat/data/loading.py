@@ -1,7 +1,7 @@
 # coding: utf-8
 """Usage:
 loading.py passages <input> <output> [<config> --disable_caching]
-
+loading.py relevant <dataset> <passages> <title2index> <article2passage>
 
 --disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
 """
@@ -15,6 +15,7 @@ import string
 from datasets import load_dataset, Dataset, load_from_disk, set_caching_enabled
 import transformers
 
+from meerqat.ir.metrics import find_relevant
 from meerqat import __file__ as ROOT_PATH
 
 DATA_ROOT_PATH = (Path(ROOT_PATH).parent.parent/"data").resolve()
@@ -42,6 +43,27 @@ def get_pretrained(class_name, pretrained_model_name_or_path, **kwargs):
     Class = getattr(transformers, class_name)
     model = Class.from_pretrained(pretrained_model_name_or_path, **kwargs)
     return model
+
+
+def find_relevant_item(item, passages, title2index, article2passage):
+    # ignore from which paragraph the answer comes from
+    # (might have been quicker to do this mapping in make_passage)
+    titles = set(provenance['title'][0] for provenance in item['output']['provenance'])
+    relevant = []
+    for title in titles:
+        if title not in title2index:
+            continue
+        article_index = title2index[title]
+        passage_indices = article2passage.get(article_index, [])
+        relevant.extend(find_relevant(passage_indices, item['output']['answer'], passages))
+    item['provenance_index'] = relevant
+    return item
+
+
+def find_relevant_dataset(dataset_path, **kwargs):
+    dataset = load_from_disk(dataset_path)
+    dataset = dataset.map(find_relevant_item, fn_kwargs=kwargs)
+    dataset.save_to_disk(dataset_path)
 
 
 def map_kilt_triviaqa():
@@ -201,4 +223,11 @@ if __name__ == '__main__':
             config = {}
         config = load_pretrained_in_kwargs(config)
         make_passage_dataset(args['<input>'], args['<output>'], **config)
+    elif args['relevant']:
+        passages = load_from_disk(args['<passages>'])
+        with open(args['<title2index>'], 'r') as file:
+            title2index = json.load(file)
+        with open(args['<article2passage>'], 'r') as file:
+            article2passage = json.load(file)
+        find_relevant_dataset(args['<dataset>'], passages=passages, title2index=title2index, article2passage=article2passage)
 
