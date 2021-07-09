@@ -1,6 +1,15 @@
+"""
+Usage:
+metrics.py relevant <dataset> <passages> <title2index> <article2passage> [--disable_caching]
+"""
+from docopt import docopt
+import json
 from tabulate import tabulate
 
+from datasets import load_from_disk
+
 from meerqat.data.loading import answer_preprocess
+from meerqat.data.utils import json_integer_keys
 
 
 def find_relevant(retrieved, answers, kb, reference_key='passage'):
@@ -40,6 +49,27 @@ def find_relevant_batch(retrieved_batch, ground_truth_output_batch, kb, relevant
         relevant.extend(find_relevant(retrieved, answers, kb, reference_key=reference_key))
 
     return relevant_batch
+
+
+def find_relevant_item(item, passages, title2index, article2passage):
+    # ignore from which paragraph the answer comes from
+    # (might have been quicker to do this mapping in make_passage)
+    titles = set(provenance['title'][0] for provenance in item['output']['provenance'])
+    relevant = []
+    for title in titles:
+        if title not in title2index:
+            continue
+        article_index = title2index[title]
+        passage_indices = article2passage.get(article_index, [])
+        relevant.extend(find_relevant(passage_indices, item['output']['answer'], passages))
+    item['provenance_index'] = relevant
+    return item
+
+
+def find_relevant_dataset(dataset_path, **kwargs):
+    dataset = load_from_disk(dataset_path)
+    dataset = dataset.map(find_relevant_item, fn_kwargs=kwargs)
+    dataset.save_to_disk(dataset_path)
 
 
 def compute_metrics(metrics, retrieved_batch, relevant_batch, K=100, ks=[1, 5, 10, 20, 100], scores_batch=None):
@@ -111,3 +141,15 @@ def stringify_metrics(metrics_dict, **kwargs):
         string_list.append(tabulate([metrics], headers='keys', **kwargs))
         string_list.append('\n\n')
     return '\n'.join(string_list)
+
+
+if __name__ == '__main__':
+    args = docopt(__doc__)
+    if args['relevant']:
+        passages = load_from_disk(args['<passages>'])
+        with open(args['<title2index>'], 'r') as file:
+            title2index = json.load(file)
+        with open(args['<article2passage>'], 'r') as file:
+            article2passage = json.load(file, object_hook=json_integer_keys)
+        find_relevant_dataset(args['<dataset>'], passages=passages, title2index=title2index, article2passage=article2passage)
+
