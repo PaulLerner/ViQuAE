@@ -5,6 +5,7 @@ metrics.py relevant <dataset> <passages> <title2index> <article2passage> [--disa
 from docopt import docopt
 import json
 from tabulate import tabulate
+import warnings
 
 from datasets import load_from_disk
 
@@ -30,7 +31,7 @@ def find_relevant(retrieved, answers, kb, reference_key='passage'):
     """
     relevant = []
     for i in retrieved:
-        passage = kb[i][reference_key]
+        passage = answer_preprocess(kb[i][reference_key])
         for answer in answers:
             answer = answer_preprocess(answer)
             if answer in passage:
@@ -94,7 +95,9 @@ def compute_metrics(metrics, retrieved_batch, relevant_batch, K=100, ks=[1, 5, 1
         (not used in any metric for now)
     """
     for retrieved, relevant in zip(retrieved_batch, relevant_batch):
-        assert len(relevant) > 0, "Empty ground-truth"
+        if len(relevant) == 0:
+            metrics["no_ground_truth"] += 1
+            return metrics
 
         metrics["total_queries"] += 1
         relevant_set = set(relevant)
@@ -124,6 +127,13 @@ def compute_metrics(metrics, retrieved_batch, relevant_batch, K=100, ks=[1, 5, 1
 
 def reduce_metrics(metrics_dict, K=100, ks=[1, 5, 10, 20, 100]):
     for key, metrics in metrics_dict.items():
+        no_ground_truth = metrics.pop("no_ground_truth", 0)
+        if no_ground_truth > 0:
+            warnings.warn(f"{no_ground_truth} queries out of {metrics['total_queries']} had no-ground truth and therefore will not be taken into account")
+            metrics["total_queries"] -= no_ground_truth
+            if metrics["total_queries"] <= 0:
+                continue
+
         # average MRR, r-precision, hits, precision and recall over the whole dataset over the whole dataset
         for metric in [f"r-precision@{K}", f"MRR@{K}"]:
             metrics[metric] /= metrics["total_queries"]

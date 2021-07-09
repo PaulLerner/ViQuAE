@@ -3,7 +3,7 @@
 Usage: search.py <dataset> <config> [--k=<k> --disable_caching]
 
 Options:
---k                     Hyperparameter to search for the k nearest neighbors [default: 100].
+--k=<k>                 Hyperparameter to search for the k nearest neighbors [default: 100].
 --disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
 """
 import warnings
