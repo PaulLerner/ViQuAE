@@ -1,10 +1,14 @@
 # coding: utf-8
-"""Usage:
+"""
+Usage:
 loading.py passages <input> <output> [<config> --disable_caching]
 loading.py relevant <dataset> <passages> <title2index> <article2passage>
+loading.py map <dataset> <key> <output> [--inverse --one2many]
 
+Options:
 --disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
 """
+
 from pathlib import Path
 from docopt import docopt
 import json
@@ -92,6 +96,26 @@ def map_kilt_triviaqa():
         )
 
     return kilt_tasks
+
+
+def make_mapping(value, index, mapping, inverse=False, one2many=False):
+    # default to map index to value
+    if inverse:
+        value, index = index, value
+
+    if one2many:
+        mapping.setdefault(index, [])
+        mapping[index].append(value)
+    else:
+        mapping[index] = value
+
+
+def make_mapping_dataset(dataset_path, key, save_name, **kwargs):
+    dataset = load_from_disk(dataset_path)
+    mapping = {}
+    dataset.map(make_mapping, input_columns=key, with_indices=True, fn_kwargs=dict(mapping=mapping, **kwargs))
+    with open(dataset_path/save_name, 'w') as file:
+        json.dump(mapping, file)
 
 
 def remove_special_fields(paragraphs):
@@ -230,4 +254,7 @@ if __name__ == '__main__':
         with open(args['<article2passage>'], 'r') as file:
             article2passage = json.load(file)
         find_relevant_dataset(args['<dataset>'], passages=passages, title2index=title2index, article2passage=article2passage)
+    elif args['mapping']:
+        make_mapping_dataset(Path(args['<dataset>']), args['<key>'], args['<output>'],
+                             inverse=args['--inverse'], one2many=args['--one2many'])
 
