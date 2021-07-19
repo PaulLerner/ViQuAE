@@ -4,6 +4,7 @@ from typing import Optional, Tuple
 import torch.nn as nn
 import torch
 from transformers.models.dpr.modeling_dpr import DPRReaderOutput
+from transformers import BertForQuestionAnswering
 
 from meerqat.train.losses import _calc_mml
 
@@ -88,3 +89,93 @@ class DPRReaderForQuestionAnswering(Trainee):
 
         return DPRReaderForQuestionAnsweringOutput(loss=total_loss, **outputs)
 
+
+class MultiPassageBERT(BertForQuestionAnswering):
+    """
+    PyTorch/Transformers implementation of Multi-passage BERT by Wang et. al (based on the global normalization by Clark et. al)
+    i.e. groups passages per question before computing the softmax (and the NLL loss)
+    so that spans scores are comparable across passages
+
+    Code based on transformers.BertForQuestionAnswering, dpr.models.Reader
+    and https://github.com/allenai/document-qa/blob/master/docqa/nn/span_prediction.py
+
+    N. B. differences with DPRReaderForQuestionAnswering:
+    * no projection layer between BERT and QA-extraction
+    * no re-ranking (TODO implement MultiPassageDPRReader?)
+    * global normalization
+
+    References
+    ----------
+    @inproceedings{wang_multi-passage_2019,
+        address = {Hong Kong, China},
+        title = {Multi-passage {BERT}: {A} {Globally} {Normalized} {BERT} {Model} for {Open}-domain {Question} {Answering}},
+        shorttitle = {Multi-passage {BERT}},
+        url = {https://www.aclweb.org/anthology/D19-1599},
+        doi = {10.18653/v1/D19-1599},
+        urldate = {2021-06-14},
+        booktitle = {Proceedings of the 2019 {Conference} on {Empirical} {Methods} in {Natural} {Language} {Processing} and the 9th {International} {Joint} {Conference} on {Natural} {Language} {Processing} ({EMNLP}-{IJCNLP})},
+        publisher = {Association for Computational Linguistics},
+        author = {Wang, Zhiguo and Ng, Patrick and Ma, Xiaofei and Nallapati, Ramesh and Xiang, Bing},
+        month = nov,
+        year = {2019},
+        pages = {5878--5882}
+    }
+
+    @inproceedings{clark_simple_2018,
+        address = {Melbourne, Australia},
+        title = {Simple and {Effective} {Multi}-{Paragraph} {Reading} {Comprehension}},
+        url = {https://aclanthology.org/P18-1078},
+        doi = {10.18653/v1/P18-1078},
+        urldate = {2021-07-08},
+        booktitle = {Proceedings of the 56th {Annual} {Meeting} of the {Association} for {Computational} {Linguistics} ({Volume} 1: {Long} {Papers})},
+        publisher = {Association for Computational Linguistics},
+        author = {Clark, Christopher and Gardner, Matt},
+        month = jul,
+        year = {2018},
+        pages = {845--855},
+    }
+    """
+    def forward(self,
+                input_ids, attention_mask,
+                start_positions=None, end_positions=None, answer_mask=None,
+                return_dict=None, **kwargs):
+        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        # notations: N - number of questions in a batch, M - number of passages per questions, L - sequence length
+        N, M, L = input_ids.size()
+        outputs = self.bert(input_ids, attention_mask, return_dict=True, **kwargs)
+        sequence_output = outputs[0]
+        logits = self.qa_outputs(sequence_output)
+        start_logits, end_logits = logits.split(1, dim=-1)
+        start_logits = start_logits.squeeze(-1).contiguous()
+        end_logits = end_logits.squeeze(-1).contiguous()
+
+        # compute loss
+        total_loss = None
+        if start_positions is not None and end_positions is not None:
+            answer_mask = answer_mask.to(device=input_ids.device, dtype=torch.float32)
+
+            # sometimes the start/end positions are outside our model inputs, we ignore these terms
+            ignored_index = L
+            start_positions = start_positions.clamp(0, ignored_index)
+            end_positions = end_positions.clamp(0, ignored_index)
+            loss_fct = nn.CrossEntropyLoss(reduce=False, ignore_index=ignored_index)
+
+            # compute span loss
+            start_losses = [(loss_fct(start_logits.view(M, -1), _start_positions) * _span_mask)
+                            for (_start_positions, _span_mask)
+                            in zip(torch.unbind(start_positions, dim=1), torch.unbind(answer_mask, dim=1))]
+
+            end_losses = [(loss_fct(end_logits.view(M, -1), _end_positions) * _span_mask)
+                          for (_end_positions, _span_mask)
+                          in zip(torch.unbind(end_positions, dim=1), torch.unbind(answer_mask, dim=1))]
+            loss_tensor = torch.cat([t.unsqueeze(1) for t in start_losses], dim=1) + \
+                          torch.cat([t.unsqueeze(1) for t in end_losses], dim=1)
+
+            loss_tensor = loss_tensor.view(N, M, -1).max(dim=1)[0]
+            total_loss = _calc_mml(loss_tensor)
+
+        if not return_dict:
+            outputs = outputs.to_tuple()
+            return ((total_loss,) + outputs) if total_loss is not None else outputs
+
+        return DPRReaderForQuestionAnsweringOutput(loss=total_loss, **outputs)
