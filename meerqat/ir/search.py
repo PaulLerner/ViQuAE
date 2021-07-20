@@ -226,17 +226,26 @@ def search(batch, kbs, k=100, metrics={}, metrics_kwargs={}, reference_key='pass
     return batch
 
 
-def index_es_kb(path, column, index_name=None, **kwargs):
-    """Loads KB from path then applies Dataset.add_elasticsearch_index method (identical parameters)"""
+def index_es_kb(path, column, index_name=None, load=False, **kwargs):
+    """
+    Loads KB from path then either:
+    - loads it (if load)
+    - default: applies Dataset.add_elasticsearch_index method (identical parameters),
+      the index is then saved by the ElasticSearch server
+    """
     if index_name is None:
         index_name = column
     kb = load_from_disk(path)
-    kb.add_elasticsearch_index(column=column, index_name=index_name, **kwargs)
+    if load:
+        kb.load_elasticsearch_index(index_name=index_name, **kwargs)
+    else:
+        kb.add_elasticsearch_index(column=column, index_name=index_name, **kwargs)
     return kb, index_name
 
 
 def index_faiss_kb(path, column, index_name=None, load=False, save_path=None, **kwargs):
-    """Loads KB from path then either:
+    """
+    Loads KB from path then either:
     - loads it (if load)
     - default: applies Dataset.add_faiss_index method (identical parameters), and save it if save_path is not None
     """
