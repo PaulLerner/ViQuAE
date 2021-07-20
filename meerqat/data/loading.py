@@ -134,7 +134,7 @@ def paragraphs_preprocess(paragraphs, method=None, **kwargs):
     return methods[method](paragraphs, **kwargs)
 
 
-def uniform_passages(paragraphs, tokenizer, n=100):
+def uniform_passages(paragraphs, tokenizer, n=100, title=None):
     """
     Parameters
     ----------
@@ -142,7 +142,10 @@ def uniform_passages(paragraphs, tokenizer, n=100):
         List of pre-processed paragraphs to split into passages
     tokenizer: PreTrainedTokenizer
     n: int, optional
-        Number of tokens in each passage
+        Number of tokens in each passage (excluding title)
+    title: str, optional
+        To prepend at the beginning of each passage like "<title> [SEP] <passage>"
+        Defaults to None (only "<passage>")
 
     Returns
     -------
@@ -152,9 +155,16 @@ def uniform_passages(paragraphs, tokenizer, n=100):
     """
     text = ''.join(paragraphs)
     tokens = tokenizer.tokenize(text)
+    if title is not None:
+        title = tokenizer.convert_tokens_to_string(tokenizer.tokenize(title))
+        title = f"{title} {tokenizer.sep_token} "
+
     passages = []
     for i in range(0, len(tokens), n):
-        passages.append(tokenizer.convert_tokens_to_string(tokens[i: i + n]))
+        passage = tokenizer.convert_tokens_to_string(tokens[i: i + n])
+        if title is not None:
+            passage = title + passage
+        passages.append(passage)
     return passages
 
 
@@ -175,8 +185,12 @@ def make_passages(paragraphs, method=None, preprocessing_method=None, preprocess
     return methods[method](paragraphs, **kwargs)
 
 
-def make_passage_item(item, index, passage_dict, **kwargs):
-    passages = make_passages(item['text']['paragraph'], **kwargs)
+def make_passage_item(item, index, passage_dict, prepend_title=False, **kwargs):
+    if prepend_title:
+        title = item['wikipedia_title']
+    else:
+        title = None
+    passages = make_passages(item['text']['paragraph'], title=title, **kwargs)
     total_passages = len(passage_dict['passage'])
     item['passage_index'] = list(range(total_passages, total_passages+len(passages)))
     passage_dict['passage'].extend(passages)
