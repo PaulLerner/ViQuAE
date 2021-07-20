@@ -2,7 +2,7 @@ import unittest
 
 from collections import Counter
 
-from meerqat.ir.metrics import compute_metrics
+from meerqat.ir.metrics import compute_metrics, reduce_metrics
 
 
 class HitsAtKTester(unittest.TestCase):
@@ -35,6 +35,15 @@ class HitsAtKTester(unittest.TestCase):
         compute_metrics(metrics, retrieved_batch, relevant_batch, K=K, ks=ks)
         for k in ks:
             self.assertEqual(metrics[f'hits@{k}'], 2)
+
+
+class ReduceMetricsTester(unittest.TestCase):
+    def test_hits_at_k(self):
+        metrics = Counter({'hits@1': 0, 'hits@10': 2, 'total_queries': 2})
+        metrics_dict = dict(test=metrics)
+        reduce_metrics(metrics_dict)
+        self.assertEqual(metrics['hits@1'], 0)
+        self.assertEqual(metrics['hits@10'], 1)
 
 
 if __name__ == '__main__':
