@@ -169,6 +169,31 @@ def map_indices(scores_batch, indices_batch, mapping, k=None):
     return new_indices_batch
 
 
+def search_batch_if_not_None(kb, index_name, queries, k=100):
+    # 1. filter out queries that are None
+    scores_batch, indices_batch = [], []
+    not_None_queries, not_None_queries_indices = [], []
+    for i, query in enumerate(queries):
+        # default to empty (i.e. no result with None query)
+        # will be overwritten for not_None_queries
+        scores_batch.append([])
+        indices_batch.append([])
+        if query is not None:
+            not_None_queries.append(query)
+            not_None_queries_indices.append(i)
+    if not not_None_queries:
+        return scores_batch, indices_batch
+        
+    # 2. search as usual for queries that are not None
+    not_None_scores_batch, not_None_indices_batch = kb.search_batch(index_name, not_None_queries, k=k)
+
+    # 3. return the results in a list of list with proper indices
+    for j, i in enumerate(not_None_queries_indices):
+        scores_batch[i] = not_None_scores_batch[j]
+        indices_batch[i] = not_None_indices_batch[j]
+    return scores_batch, indices_batch
+
+
 def search(batch, kbs, k=100, metrics={}, metrics_kwargs={}, reference_key='passage', fusion_method='linear', **fusion_kwargs):
     # find the kb with reference indices
     reference_kb = None
@@ -183,7 +208,13 @@ def search(batch, kbs, k=100, metrics={}, metrics_kwargs={}, reference_key='pass
     # search with the KBs
     for kb in kbs:
         index_name = kb['index_name']
-        scores_batch, indices_batch = kb['kb'].search_batch(index_name, batch[kb['key']], k=k)
+        queries = batch[kb['key']]
+        # N. B. cannot use `None in queries` because 
+        # "The truth value of an array with more than one element is ambiguous."
+        if any(query is None for query in queries):
+            scores_batch, indices_batch = search_batch_if_not_None(kb['kb'], index_name, queries, k=k)
+        else:
+            scores_batch, indices_batch = kb['kb'].search_batch(index_name, queries, k=k)
 
         # indices might need to be mapped so that all KBs refer to the same semantic index
         index_mapping = kb.get('index_mapping')
