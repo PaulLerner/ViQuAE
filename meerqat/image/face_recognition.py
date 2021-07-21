@@ -4,7 +4,7 @@ from torchvision.transforms import Compose, ToTensor, Normalize
 from datasets import load_from_disk
 
 from meerqat.data.loading import DATA_ROOT_PATH
-from meerqat.models.utils import device
+from meerqat.models.utils import device, map_if_not_None
 
 
 ARCFACE_PATH = DATA_ROOT_PATH/"arcface"
@@ -41,10 +41,13 @@ def preprocess_array(image):
     return image
 
 
+def preprocess_and_embed(faces, model):
+    """Utility function to enable the use of map_if_not_None"""
+    return model(preprocess_array(faces))
+
+
 def compute_face_embedding(batch, model):
-    faces = preprocess_array(batch['face'])
-    embeddings = model(faces)
-    batch['face_embedding'] = embeddings
+    batch['face_embedding'] = map_if_not_None(batch['face'], preprocess_and_embed, model=model)
     return batch
 
 
