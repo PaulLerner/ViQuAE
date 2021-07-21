@@ -1,3 +1,12 @@
+"""Usage: face_recognition.py <dataset> [<config> --disable_caching]
+
+Options:
+--disable_caching                       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
+"""
+
+from docopt import docopt
+import json
+
 import torch
 from arcface_torch.backbones import get_model
 from torchvision.transforms import Compose, ToTensor, Normalize
@@ -58,4 +67,14 @@ def dataset_compute_face_embedding(dataset_path, map_kwargs={}, pretrained_kwarg
     dataset.save_to_disk(dataset_path)
 
 
+if __name__ == '__main__':
+    args = docopt(__doc__)
+    set_caching_enabled(not args['--disable_caching'])
+    config_path = args['<config>']
+    if config_path is not None:
+        with open(config_path, 'rt') as file:
+            config = json.load(file)
+    else:
+        config = {}
 
+    dataset_compute_face_embedding(args['<dataset>'], **config)
