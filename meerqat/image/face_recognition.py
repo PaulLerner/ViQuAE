@@ -10,7 +10,7 @@ import json
 import torch
 from arcface_torch.backbones import get_model
 from torchvision.transforms import Compose, ToTensor, Normalize
-from datasets import load_from_disk
+from datasets import load_from_disk, set_caching_enabled
 
 from meerqat.data.loading import DATA_ROOT_PATH
 from meerqat.models.utils import device, map_if_not_None
