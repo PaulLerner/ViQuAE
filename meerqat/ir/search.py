@@ -11,7 +11,9 @@ import warnings
 from docopt import docopt
 import json
 from collections import Counter
+import time
 
+import numpy as np
 from datasets import load_from_disk, set_caching_enabled
 
 from meerqat.ir.metrics import compute_metrics, reduce_metrics, stringify_metrics, find_relevant_batch
@@ -166,7 +168,7 @@ def map_indices(scores_batch, indices_batch, mapping, k=None):
                 break
         new_scores_batch.append(new_scores)
         new_indices_batch.append(new_indices)
-    return new_indices_batch
+    return new_scores_batch, new_indices_batch
 
 
 def search_batch_if_not_None(kb, index_name, queries, k=100):
@@ -183,8 +185,9 @@ def search_batch_if_not_None(kb, index_name, queries, k=100):
             not_None_queries_indices.append(i)
     if not not_None_queries:
         return scores_batch, indices_batch
-        
+            
     # 2. search as usual for queries that are not None
+    not_None_queries = np.array(not_None_queries, dtype=np.float32)
     not_None_scores_batch, not_None_indices_batch = kb.search_batch(index_name, not_None_queries, k=k)
 
     # 3. return the results in a list of list with proper indices
@@ -328,10 +331,14 @@ def dataset_search(dataset, k=100, kb_kwargs=[], map_kwargs={}, fusion_kwargs={}
     metric_save_path = metrics_kwargs.pop('save_path', None)
     # search expects a batch as input
     fn_kwargs = dict(kbs=kbs, k=k, metrics=metrics, metrics_kwargs=metrics_kwargs, **fusion_kwargs)
+
+    # HACK: sleep until elasticsearch is good to go
+    time.sleep(60)
+
     dataset = dataset.map(search, fn_kwargs=fn_kwargs, batched=True, **map_kwargs)
 
     reduce_metrics(metrics, K=k)
-    print(stringify_metrics(metrics))
+    print(stringify_metrics(metrics, tablefmt='latex', floatfmt=".2f"))
     if metric_save_path is not None:
         with open(metric_save_path, 'w') as file:
             json.dump(metrics, file)
