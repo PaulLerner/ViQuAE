@@ -4,6 +4,7 @@ from typing import Optional, Tuple
 import torch.nn as nn
 import torch
 from transformers.models.dpr.modeling_dpr import DPRReaderOutput
+from transformers.modeling_outputs import QuestionAnsweringModelOutput
 from transformers import BertForQuestionAnswering
 
 from meerqat.train.losses import _calc_mml
@@ -140,8 +141,8 @@ class MultiPassageBERT(BertForQuestionAnswering):
                 start_positions=None, end_positions=None, answer_mask=None,
                 return_dict=None, **kwargs):
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
-        # notations: N - number of questions in a batch, M - number of passages per questions, L - sequence length
-        N, M, L = input_ids.size()
+        # notations: N - number of questions + passages in a batch, L - sequence length
+        N, L = input_ids.size()
         outputs = self.bert(input_ids, attention_mask, return_dict=True, **kwargs)
         sequence_output = outputs[0]
         logits = self.qa_outputs(sequence_output)
@@ -158,7 +159,7 @@ class MultiPassageBERT(BertForQuestionAnswering):
             ignored_index = L
             start_positions = start_positions.clamp(0, ignored_index)
             end_positions = end_positions.clamp(0, ignored_index)
-            loss_fct = nn.CrossEntropyLoss(reduce=False, ignore_index=ignored_index)
+            loss_fct = nn.CrossEntropyLoss(reduction='none', ignore_index=ignored_index)
 
             # compute span loss
             start_losses = [(loss_fct(start_logits.view(M, -1), _start_positions) * _span_mask)
@@ -178,4 +179,4 @@ class MultiPassageBERT(BertForQuestionAnswering):
             outputs = outputs.to_tuple()
             return ((total_loss,) + outputs) if total_loss is not None else outputs
 
-        return DPRReaderForQuestionAnsweringOutput(loss=total_loss, **outputs)
+        return QuestionAnsweringModelOutput(loss=total_loss, **outputs)
