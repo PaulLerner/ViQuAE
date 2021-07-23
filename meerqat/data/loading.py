@@ -15,6 +15,8 @@ import json
 import re
 import string
 
+import spacy
+from spacy.lang.en import English
 from datasets import load_dataset, Dataset, load_from_disk, set_caching_enabled
 import transformers
 
@@ -143,6 +145,7 @@ def uniform_passages(paragraphs, tokenizer, n=100, title=None):
     tokenizer: PreTrainedTokenizer
     n: int, optional
         Number of tokens in each passage (excluding title)
+        Defaults to 100
     title: str, optional
         To prepend at the beginning of each passage like "<title> [SEP] <passage>"
         Defaults to None (only "<passage>")
@@ -168,6 +171,70 @@ def uniform_passages(paragraphs, tokenizer, n=100, title=None):
     return passages
 
 
+def uniform_passages_of_sentences(paragraphs, model, n=100, title=None, sep_token='[SEP]'):
+    """
+    N. B. unlike uniform_passages which is based on transformers PreTrainedTokenizer
+    here we're able to get back the un-processed text corresponding to the tokens
+    so the output text is not changed (e.g. not lower-cased), 
+    only the whitespace between sentences is lost (it is always set to ' ')
+
+    Parameters
+    ----------
+    paragraphs: List[str]
+        List of pre-processed paragraphs to split into passages
+    model: spacy model
+    n: int, optional
+        Maximum number of tokens in each passage (excluding title)
+        There can actually be more tokens than this if the passage is a single sentence (with more tokens than n)
+        Defaults to 100
+    title: str, optional
+        To prepend at the beginning of each passage like "<title> [SEP] <passage>"
+        Defaults to None (only "<passage>")
+    sep_token: str, optional
+        To separate title and passages (no effect if title is None)
+        Defaults to '[SEP]'
+
+    Returns
+    -------
+    passages: List[str]
+    """
+    text = ''.join(paragraphs)
+    if title is not None:
+        title = f"{title} {sep_token} "
+
+    # 1. segment into sentences
+    sentences = model(text).sents
+
+    # 2. group sentences together so that there is maximum n tokens in each passage
+    passages = []
+    passage = []
+    tokens_in_passage = 0
+    for sent in sentences:
+        # passage would be too long
+        if tokens_in_passage + len(sent) > n:
+            # so we append the existing passage and start a new one
+            if len(passage) > 0:
+                passages.append(' '.join(passage))
+                passage = [sent.text]
+                tokens_in_passage = len(sent)
+            # corner case where a single sentence has more tokens than n
+            else:
+                passages.append(sent.text)
+        # add the sentence to the passage
+        else:
+            passage.append(sent.text)
+            tokens_in_passage += len(sent)
+
+    # leftovers        
+    if len(passage) > 0:
+        passages.append(' '.join(passage))
+    
+    if title is not None:
+        passages = [title + passage for passage in passages]
+
+    return passages
+
+
 def make_passages(paragraphs, method=None, preprocessing_method=None, preprocessing_kwargs={}, **kwargs):
     """
     Parameters
@@ -180,7 +247,8 @@ def make_passages(paragraphs, method=None, preprocessing_method=None, preprocess
     paragraphs = paragraphs_preprocess(paragraphs, method=preprocessing_method, **preprocessing_kwargs)
     methods = {
         None: lambda paragraphs: paragraphs,
-        "uniform": uniform_passages
+        "uniform": uniform_passages,
+        "uniform_sents": uniform_passages_of_sentences
     }
     return methods[method](paragraphs, **kwargs)
 
@@ -198,11 +266,17 @@ def make_passage_item(item, index, passage_dict, prepend_title=False, **kwargs):
     return item
 
 
-def make_passage_dataset(input_path, output_path, **kwargs):
+def make_passage_dataset(input_path, output_path, sentencizer=False, **kwargs):
     """Runs through dataset and create a new passage dataset from the paragraphs,
     saving index and reversed-index in both respectively"""
     dataset = load_from_disk(input_path)
     passage_dict = dict(passage=[], index=[])
+
+    # spacy sentence segmentation
+    if sentencizer:
+        model = English()
+        model.add_pipe("sentencizer")
+        kwargs["model"] = model
 
     dataset = dataset.map(make_passage_item, with_indices=True, fn_kwargs=dict(passage_dict=passage_dict, **kwargs))
 
