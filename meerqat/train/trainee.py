@@ -137,13 +137,35 @@ class MultiPassageBERT(BertForQuestionAnswering):
     }
     """
     def forward(self,
-                input_ids, attention_mask,
+                input_ids,
                 start_positions=None, end_positions=None, answer_mask=None,
                 return_dict=None, **kwargs):
+        """
+        notations: 
+            N - number of distinct questions
+            M - number of passages per question in a batch
+            L - sequence length
+
+        Parameters
+        ----------
+        input_ids: Tensor[int]
+            shape (N * M, L)
+            There should always be a constant number of passages (relevant or not) per question
+        start_positions, end_positions: Tensor[int], optional
+            shape (N, M, max_n_answers)
+            The answer might be found several time in the same passage, maximum `max_n_answers` times
+            Defaults to None (i.e. don’t compute the loss)
+        answer_mask: Tensor[int], optional
+            shape (N, M, max_n_answers)
+            Used to mask the loss for answers that are not `max_n_answers` times in the passage
+            Required if start_positions and end_positions are specified
+        **kwargs: additional arguments are passed to BERT after being reshape like 
+        """
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
-        # notations: N - number of questions + passages in a batch, L - sequence length
-        N, L = input_ids.size()
-        outputs = self.bert(input_ids, attention_mask, return_dict=True, **kwargs)
+        n_times_m, L = input_ids.size()
+        assert n_times_m % M == 0
+        N = n_times_m//M
+        outputs = self.bert(input_ids, return_dict=True, **kwargs)
         sequence_output = outputs[0]
         logits = self.qa_outputs(sequence_output)
         start_logits, end_logits = logits.split(1, dim=-1)
@@ -153,25 +175,31 @@ class MultiPassageBERT(BertForQuestionAnswering):
         # compute loss
         total_loss = None
         if start_positions is not None and end_positions is not None:
-            answer_mask = answer_mask.to(device=input_ids.device, dtype=torch.float32)
-
             # sometimes the start/end positions are outside our model inputs, we ignore these terms
             ignored_index = L
             start_positions = start_positions.clamp(0, ignored_index)
             end_positions = end_positions.clamp(0, ignored_index)
             loss_fct = nn.CrossEntropyLoss(reduction='none', ignore_index=ignored_index)
 
-            # compute span loss
-            start_losses = [(loss_fct(start_logits.view(M, -1), _start_positions) * _span_mask)
+            # reshape from (N * M, L) to (N, M * L) so that all M passages related to the same question
+            # will share the same softmax normalization
+            start_logits, end_logits = start_logits.view(N, M*L), end_logits.view(N, M*L)
+            # reshape to match start_logits, end_logits
+            start_positions, end_positions = start_positions.view(N, -1), end_positions.view(N, -1)
+            answer_mask = answer_mask.to(device=input_ids.device, dtype=torch.float32).view(N, -1)
+
+            # compute span loss for each answer position in passage (in range `max_n_answers`)
+            start_losses = [(loss_fct(start_logits, _start_positions) * _span_mask)
                             for (_start_positions, _span_mask)
                             in zip(torch.unbind(start_positions, dim=1), torch.unbind(answer_mask, dim=1))]
 
-            end_losses = [(loss_fct(end_logits.view(M, -1), _end_positions) * _span_mask)
+            end_losses = [(loss_fct(end_logits, _end_positions) * _span_mask)
                           for (_end_positions, _span_mask)
                           in zip(torch.unbind(end_positions, dim=1), torch.unbind(answer_mask, dim=1))]
             loss_tensor = torch.cat([t.unsqueeze(1) for t in start_losses], dim=1) + \
                           torch.cat([t.unsqueeze(1) for t in end_losses], dim=1)
 
+            # keep the maximum per passage for each question
             loss_tensor = loss_tensor.view(N, M, -1).max(dim=1)[0]
             total_loss = _calc_mml(loss_tensor)
 
@@ -179,4 +207,10 @@ class MultiPassageBERT(BertForQuestionAnswering):
             outputs = outputs.to_tuple()
             return ((total_loss,) + outputs) if total_loss is not None else outputs
 
-        return QuestionAnsweringModelOutput(loss=total_loss, **outputs)
+        return QuestionAnsweringModelOutput(
+            loss=total_loss,
+            start_logits=start_logits,
+            end_logits=end_logits,
+            hidden_states=outputs.hidden_states,
+            attentions=outputs.attentions,
+        )
