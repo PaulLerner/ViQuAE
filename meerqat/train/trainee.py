@@ -162,9 +162,6 @@ class MultiPassageBERT(BertForQuestionAnswering):
         **kwargs: additional arguments are passed to BERT after being reshape like 
         """
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
-        n_times_m, L = input_ids.size()
-        assert n_times_m % M == 0
-        N = n_times_m//M
         outputs = self.bert(input_ids, return_dict=True, **kwargs)
         sequence_output = outputs[0]
         logits = self.qa_outputs(sequence_output)
@@ -175,6 +172,10 @@ class MultiPassageBERT(BertForQuestionAnswering):
         # compute loss
         total_loss = None
         if start_positions is not None and end_positions is not None:
+            n_times_m, L = input_ids.size()
+            M = start_positions.size(1)
+            assert n_times_m % M == 0
+            N = n_times_m//M
             # sometimes the start/end positions are outside our model inputs, we ignore these terms
             ignored_index = L
             start_positions = start_positions.clamp(0, ignored_index)
