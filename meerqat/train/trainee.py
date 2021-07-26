@@ -34,6 +34,17 @@ class DPRReaderForQuestionAnsweringOutput(DPRReaderOutput):
     attentions: Optional[Tuple[torch.FloatTensor]] = None
 
 
+@dataclass
+class MultiPassageBERTOutput(QuestionAnsweringModelOutput):
+    """
+    Same as QuestionAnsweringModelOutput but with start and end log-probabilities
+
+    (equivalent to softmax(start_logits) when there is only one passage per question)
+    """
+    start_log_probs: torch.FloatTensor = None
+    end_log_probs: torch.FloatTensor = None
+
+
 class DPRReaderForQuestionAnswering(Trainee):
     def forward(self,
                 input_ids, attention_mask,
@@ -136,6 +147,11 @@ class MultiPassageBERT(BertForQuestionAnswering):
         pages = {845--855},
     }
     """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.log_softmax = nn.LogSoftmax(1)
+
     def forward(self,
                 input_ids,
                 start_positions=None, end_positions=None, answer_mask=None,
@@ -170,7 +186,7 @@ class MultiPassageBERT(BertForQuestionAnswering):
         end_logits = end_logits.squeeze(-1).contiguous()
 
         # compute loss
-        total_loss = None
+        total_loss, start_log_probs, end_log_probs = None, None, None
         if start_positions is not None and end_positions is not None:
             n_times_m, L = input_ids.size()
             M = start_positions.size(1)
@@ -180,21 +196,27 @@ class MultiPassageBERT(BertForQuestionAnswering):
             ignored_index = L
             start_positions = start_positions.clamp(0, ignored_index)
             end_positions = end_positions.clamp(0, ignored_index)
-            loss_fct = nn.CrossEntropyLoss(reduction='none', ignore_index=ignored_index)
+            loss_fct = nn.NLLLoss(reduction='none', ignore_index=ignored_index)
 
             # reshape from (N * M, L) to (N, M * L) so that all M passages related to the same question
             # will share the same softmax normalization
             start_logits, end_logits = start_logits.view(N, M*L), end_logits.view(N, M*L)
-            # reshape to match start_logits, end_logits
-            start_positions, end_positions = start_positions.view(N, -1), end_positions.view(N, -1)
-            answer_mask = answer_mask.to(device=input_ids.device, dtype=torch.float32).view(N, -1)
+            start_log_probs, end_log_probs = self.log_softmax(start_logits), self.log_softmax(end_logits)
+            # after computing the softmax, reshape back to (N * M, L)
+            # because the last dimension, L, must match the position indices (i.e. class label) in start_positions, end_positions
+            start_log_probs, end_log_probs = start_log_probs.view(N*M, L), end_log_probs.view(N*M, L)
+            start_logits, end_logits = start_logits.view(N*M, L), end_logits.view(N*M, L)
+
+            # reshape to match model output
+            start_positions, end_positions = start_positions.view(N*M, -1), end_positions.view(N*M, -1)
+            answer_mask = answer_mask.to(device=input_ids.device, dtype=torch.float32).view(N*M, -1)
 
             # compute span loss for each answer position in passage (in range `max_n_answers`)
-            start_losses = [(loss_fct(start_logits, _start_positions) * _span_mask)
+            start_losses = [(loss_fct(start_log_probs, _start_positions) * _span_mask)
                             for (_start_positions, _span_mask)
                             in zip(torch.unbind(start_positions, dim=1), torch.unbind(answer_mask, dim=1))]
 
-            end_losses = [(loss_fct(end_logits, _end_positions) * _span_mask)
+            end_losses = [(loss_fct(end_log_probs, _end_positions) * _span_mask)
                           for (_end_positions, _span_mask)
                           in zip(torch.unbind(end_positions, dim=1), torch.unbind(answer_mask, dim=1))]
             loss_tensor = torch.cat([t.unsqueeze(1) for t in start_losses], dim=1) + \
@@ -205,13 +227,15 @@ class MultiPassageBERT(BertForQuestionAnswering):
             total_loss = _calc_mml(loss_tensor)
 
         if not return_dict:
-            outputs = outputs.to_tuple()
-            return ((total_loss,) + outputs) if total_loss is not None else outputs
+            output = (start_logits, end_logits, start_log_probs, end_log_probs) + outputs[2:]
+            return ((total_loss,) + output) if total_loss is not None else output
 
-        return QuestionAnsweringModelOutput(
+        return MultiPassageBERTOutput(
             loss=total_loss,
             start_logits=start_logits,
             end_logits=end_logits,
+            start_log_probs=start_log_probs,
+            end_log_probs=end_log_probs,
             hidden_states=outputs.hidden_states,
             attentions=outputs.attentions,
         )
