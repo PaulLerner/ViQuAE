@@ -6,17 +6,17 @@ kilt2vqa.py generate mentions <subset> [--threshold=<threshold> --disable_cachin
 kilt2vqa.py generate vq <subset> [--image_width=<n> --map_kwargs=<path> --disable_caching <categories_to_exclude>...]
 kilt2vqa.py count_entities <subset> [--threshold=<threshold> --map_kwargs=<path> --disable_caching]
 kilt2vqa.py labelstudio <subset> [--image_width=<n> --alternative_images=<n> --disable_caching <categories_to_exclude>...]
-kilt2vqa.py download <subset> [--image_width=<n> --image_key=<image_key> --map_kwargs=<path> --disable_caching]
+kilt2vqa.py download <subset> [--image_width=<n> --map_kwargs=<path> --disable_caching --num_shards=<n> --shard_index=<n>]
 
 Options:
 --threshold=<threshold>         Threshold for Word Error Rate (WER, i.e. word-level Levenshtein distance)
                                 to consider the entity disambiguated [default: 0.5].
 --alternative_images=<n>        Number of alternative images to provide [default: 8].
 --image_width=<n>               Desired thumbnail width in pixels for the image url. Defaults to full-size
---image_key=<image_key>         Used to index the dataset item [default: image]
 --map_kwargs=<path>             Path towards a JSON file containing key-words arguments for the dataset.map function (e.g. batch size)
 --disable_caching               Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
 """
+
 import json
 import numpy as np
 import random
@@ -584,21 +584,29 @@ def labelstudio(*args, image_width=512, alternative_images=8, **kwargs):
     print(f"Successfully saved output to '{out_path}'")
 
 
-def download_image(item, session, image_key='image', image_width=512):
-    file_name = thumbnail_to_file_name(item[image_key])
-    url = file_name_to_thumbnail(file_name, image_width=image_width)
-    save_image(url, session)
+def download_image(item, index, session, image_width=512, pointers={}):
+    file_name = thumbnail_to_file_name(item['url'])
+    thumbnail = file_name_to_thumbnail(file_name, image_width=image_width)
+    file_path = save_image(thumbnail, session, pointers=pointers)
+    file_name = file_path.name if file_path is not None else None
+    item['image'] = file_name
+    return item
 
 
-def download_images(subset, fn_kwargs, **map_kwargs):
+def download_images(subset, fn_kwargs, num_shards=None, shard_index=None, **map_kwargs):
     print("loading data...")
     dataset_path = DATA_ROOT_PATH / f"meerqat_{subset}"
     dataset = load_from_disk(dataset_path)
+    if num_shards is not None:
+        dataset = dataset.shard(num_shards, shard_index)
 
     fn_kwargs.update(session=requests.Session())
 
-    # do not save image in the dataset
-    dataset.map(download_image, fn_kwargs=fn_kwargs, **map_kwargs)
+    dataset = dataset.map(download_image, fn_kwargs=fn_kwargs, with_indices=True, **map_kwargs)
+    if num_shards is None:
+        dataset.save_to_disk(dataset_path)
+    else:
+        dataset.save_to_disk(dataset_path/f"shard_{shard_index}_of_{num_shards}")
 
 
 if __name__ == '__main__':
@@ -635,6 +643,10 @@ if __name__ == '__main__':
         labelstudio(subset, exclude_categories=exclude_categories, alternative_images=alternative_images, image_width=image_width)
     elif args['download']:
         image_width = int(args['--image_width']) if args['--image_width'] is not None else None
-        image_key = args['--image_key']
-        download_images(subset, fn_kwargs=dict(image_key=image_key, image_width=image_width), **map_kwargs)
+        num_shards = int(args['--num_shards']) if args['--num_shards'] is not None else None
+        shard_index = int(args['--shard_index']) if args['--shard_index'] is not None else None
+        download_images(subset, fn_kwargs=dict(
+                                                  image_width=image_width, 
+                                                  pointers=dict()
+                                              ), num_shards=num_shards, shard_index=shard_index, **map_kwargs)
 
