@@ -22,7 +22,7 @@ from meerqat.data.wiki import COMMONS_PATH as IMAGE_PATH
 class ImageEncoder(nn.Module):
     """Simply encode and pool the features"""
     def __init__(self, encoder, pool):
-        super().__init__(self)
+        super().__init__()
         self.encoder = encoder
         self.pool = pool
 
@@ -73,7 +73,9 @@ def embed(batch, model, transform):
     images = load_image_batch(batch['image'])
     images = [transform(image).unsqueeze(0) for image in images]
     images = torch.cat(images).to(device)
-    batch['image_embedding'] = model(images)
+    with torch.no_grad():
+        image_embeddings = model(images)
+    batch['image_embedding'] = image_embeddings.cpu().numpy()
     return batch
 
 
