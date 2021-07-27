@@ -64,18 +64,20 @@ class MultiPassageBERTTrainer(Trainer):
             self.args.remove_unused_columns = False
 
     def get_training_passages(self, item):
+        relevant_passages = []
         n_relevant = min(len(item['provenance_index']), self.n_relevant_passages)
-        relevant_indices = np.random.choice(item['provenance_index'], n_relevant, replace=False)
-        if len(relevant_indices) > 0:
-            relevant_passages = self.kb.select(relevant_indices)['passage']
-        else:
-            relevant_passages = []
+        if n_relevant > 0:
+            relevant_indices = np.random.choice(item['provenance_index'], n_relevant, replace=False)
+            if len(relevant_indices) > 0:
+                relevant_passages = self.kb.select(relevant_indices)['passage']
+        irrelevant_passages = []
         n_irrelevant = min(len(item['irrelevant_index']), self.M-self.n_relevant_passages)
-        irrelevant_indices = np.random.choice(item['irrelevant_index'], n_irrelevant, replace=False)
-        if len(irrelevant_indices) > 0:
-            irrelevant_passages = self.kb.select(irrelevant_indices)['passage']
-        else:
-            irrelevant_passages = []
+        if n_irrelevant > 0:
+            irrelevant_indices = np.random.choice(item['irrelevant_index'], n_irrelevant, replace=False)
+            if len(irrelevant_indices) > 0:
+                irrelevant_passages = self.kb.select(irrelevant_indices)['passage']
+        elif n_relevant <= 0:
+            warnings.warn(f"Didn't find any passage for question {item['id']}")
         return relevant_passages+irrelevant_passages
 
     def get_passages(self, *args, **kwargs):
