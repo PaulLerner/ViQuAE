@@ -12,6 +12,8 @@ from pathlib import Path
 from docopt import docopt
 import json
 
+from PIL import Image
+
 import re
 import string
 
@@ -27,6 +29,10 @@ COMMONS_PATH = DATA_ROOT_PATH / "Commons"
 KVQA_PATH = DATA_ROOT_PATH/"KVQA"
 OKVQA_PATH = DATA_ROOT_PATH/"OK-VQA"
 MSCOCO_PATH = DATA_ROOT_PATH/"MS-COCO"
+
+
+def load_image_batch(file_names):
+    return [Image.open(IMAGE_PATH / file_name).convert('RGB') for file_name in file_names]
 
 
 def remove_articles(text):

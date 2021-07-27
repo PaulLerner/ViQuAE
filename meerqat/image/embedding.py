@@ -7,7 +7,6 @@ Options:
 from docopt import docopt
 import json
 from collections import OrderedDict
-from PIL import Image
 
 import torch
 from torch import nn
@@ -16,7 +15,7 @@ from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normal
 from datasets import load_from_disk, set_caching_enabled
 
 from meerqat.models.utils import device
-from meerqat.data.loading import COMMONS_PATH as IMAGE_PATH
+from meerqat.data.loading import COMMONS_PATH as IMAGE_PATH, load_image_batch
 
 
 class ImageEncoder(nn.Module):
@@ -63,10 +62,6 @@ def get_transform(resize_kwargs=dict(size=224), crop_size=224, mean=[0.485, 0.45
         ToTensor(),
         Normalize(mean=mean, std=std)
     ])
-
-
-def load_image_batch(file_names):
-    return [Image.open(IMAGE_PATH / file_name).convert('RGB') for file_name in file_names]
 
 
 def embed(batch, model, transform):
