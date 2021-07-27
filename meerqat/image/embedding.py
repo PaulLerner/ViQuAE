@@ -16,7 +16,7 @@ from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normal
 from datasets import load_from_disk, set_caching_enabled
 
 from meerqat.models.utils import device
-from meerqat.data.wiki import COMMONS_PATH as IMAGE_PATH
+from meerqat.data.loading import COMMONS_PATH as IMAGE_PATH
 
 
 class ImageEncoder(nn.Module):

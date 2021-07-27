@@ -23,6 +23,7 @@ import transformers
 from meerqat import __file__ as ROOT_PATH
 
 DATA_ROOT_PATH = (Path(ROOT_PATH).parent.parent/"data").resolve()
+COMMONS_PATH = DATA_ROOT_PATH / "Commons"
 KVQA_PATH = DATA_ROOT_PATH/"KVQA"
 OKVQA_PATH = DATA_ROOT_PATH/"OK-VQA"
 MSCOCO_PATH = DATA_ROOT_PATH/"MS-COCO"

@@ -18,7 +18,8 @@ import shutil
 from tabulate import tabulate
 import requests
 
-from meerqat.data.wiki import COMMONS_PATH, save_image
+from meerqat.data.loading import COMMONS_PATH
+from meerqat.data.wiki import save_image
 
 
 def load_completions(completions_path):

@@ -17,12 +17,12 @@ from datasets import load_from_disk, set_caching_enabled
 from facenet_pytorch import MTCNN
 
 from meerqat.models.utils import device
-from meerqat.data.wiki import thumbnail_to_file_name, COMMONS_PATH as IMAGE_PATH, VALID_ENCODING
+from meerqat.data.loading import COMMONS_PATH as IMAGE_PATH
+from meerqat.data.wiki import VALID_ENCODING
 
 
-def detect_face(url, model, save_root_path=None):
+def detect_face(file_name, model, save_root_path=None):
     """TODO group images w.r.t. their size to allow MTCNN batch processing"""
-    file_name = thumbnail_to_file_name(url, original=False)
 
     # TODO: find new image or filter out question/article
     encoding = file_name.split('.')[-1].lower()
