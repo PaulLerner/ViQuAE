@@ -73,6 +73,14 @@ def find_relevant_dataset(dataset_path, **kwargs):
     dataset.save_to_disk(dataset_path)
 
 
+def get_irrelevant_batch(retrieved_batch, relevant_batch):
+    irrelevant_batch = []
+    for retrieved, relevant in zip(retrieved_batch, relevant_batch):
+        # N. B. list because sets are not allowed in datasets
+        irrelevant_batch.append(list(set(retrieved) - set(relevant)))
+    return irrelevant_batch
+
+
 def compute_metrics(metrics, retrieved_batch, relevant_batch, K=100, ks=[1, 5, 10, 20, 100], scores_batch=None):
     """
     Parameters

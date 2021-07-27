@@ -16,7 +16,7 @@ import time
 import numpy as np
 from datasets import load_from_disk, set_caching_enabled
 
-from meerqat.ir.metrics import compute_metrics, reduce_metrics, stringify_metrics, find_relevant_batch
+from meerqat.ir.metrics import compute_metrics, reduce_metrics, stringify_metrics, find_relevant_batch, get_irrelevant_batch
 from meerqat.data.utils import json_integer_keys
 
 
@@ -197,7 +197,7 @@ def search_batch_if_not_None(kb, index_name, queries, k=100):
     return scores_batch, indices_batch
 
 
-def search(batch, kbs, k=100, metrics={}, metrics_kwargs={}, reference_key='passage', fusion_method='linear', **fusion_kwargs):
+def search(batch, kbs, k=100, metrics={}, metrics_kwargs={}, reference_key='passage', fusion_method='linear', save_irrelevant=False, **fusion_kwargs):
     # find the kb with reference indices
     reference_kb = None
     for kb in kbs:
@@ -239,6 +239,10 @@ def search(batch, kbs, k=100, metrics={}, metrics_kwargs={}, reference_key='pass
         compute_metrics(metrics[index_name],
                         retrieved_batch=indices_batch, relevant_batch=relevant_batch,
                         K=k, scores_batch=scores_batch, **metrics_kwargs)
+        
+        if save_irrelevant:
+            irrelevant_batch = get_irrelevant_batch(retrieved_batch=indices_batch, relevant_batch=relevant_batch)
+            batch[f'{index_name}_irrelevant_indices'] = irrelevant_batch
 
     # fuse the results of the searches
     if len(kbs) > 1:
