@@ -22,6 +22,7 @@ from spacy.lang.en import English
 from datasets import load_dataset, Dataset, load_from_disk, set_caching_enabled
 import transformers
 
+from meerqat.train import trainee
 from meerqat import __file__ as ROOT_PATH
 
 DATA_ROOT_PATH = (Path(ROOT_PATH).parent.parent/"data").resolve()
@@ -50,9 +51,24 @@ def answer_preprocess(answer):
     return white_space_fix(remove_articles(remove_punc(answer.lower())))
 
 
-def get_pretrained(class_name, pretrained_model_name_or_path, **kwargs):
-    Class = getattr(transformers, class_name)
-    model = Class.from_pretrained(pretrained_model_name_or_path, **kwargs)
+def get_pretrained(class_name, pretrained_model_name_or_path, trainee_class=None, trainee_kwargs={}, **kwargs):
+    Class = None
+    modules = [trainee, transformers]
+    for module in modules:
+        Class = getattr(module, class_name, None)
+        if Class is not None:
+            break
+    if Class is not None:
+        if issubclass(Class, trainee.Trainee):
+            # first get the wrapped pre-trained model in Trainee
+            trainee_model = get_pretrained(trainee_class, pretrained_model_name_or_path, **kwargs)
+            # then init the Trainee
+            model = Class(trainee_model, **trainee_kwargs)
+        # simply use PreTrainedModel.from_pretrained method
+        else:
+            model = Class.from_pretrained(pretrained_model_name_or_path, **kwargs)
+    else:
+        raise ValueError(f"Could not find {class_name} in {modules}")
     return model
 
 
