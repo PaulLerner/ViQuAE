@@ -17,7 +17,17 @@ from datasets import load_from_disk
 from meerqat.data.loading import load_pretrained_in_kwargs
 
 
-class MultiPassageBERTTrainer(Trainer):
+class MeerqatTrainer(Trainer):
+    """Base class for all trainers. Should be very similar to Trainer"""
+    def log(self, logs: Dict[str, float]) -> None:
+        """Adds memory usage to the logs"""
+        for i in range(torch.cuda.device_count()):
+            device = f"cuda:{i}"
+            logs[f"max_memory_{device}"] = torch.cuda.max_memory_allocated(device)
+        return super().log(logs)
+
+        
+class MultiPassageBERTTrainer(MeerqatTrainer):
     """
     Overrides some methods because we need to create the batch of questions and passages on-the-fly
 
@@ -51,7 +61,7 @@ class MultiPassageBERTTrainer(Trainer):
         assert n_relevant_passages <= M
         self.n_relevant_passages = n_relevant_passages
         self.max_n_answers = max_n_answers
-        default_tokenization_kwargs = dict(return_tensors='pt', padding=True, truncation=True, max_length=100)
+        default_tokenization_kwargs = dict(return_tensors='pt', padding=True, truncation=True)
         if tokenization_kwargs is None:
             tokenization_kwargs = {}
         default_tokenization_kwargs.update(tokenization_kwargs)
