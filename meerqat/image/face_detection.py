@@ -1,11 +1,11 @@
-"""Usage: face_detection.py <dataset> [<model_config> --image_key=<image_key> --save=<root_path> --disable_caching]
+"""Usage: face_detection.py <dataset> [<model_config> --image_key=<image_key> --save=<root_path> --disable_caching --batch_size=<n>]
 
 Options:
 --image_key=<image_key>                 Used to index the dataset item [default: image]
 --save=<root_path>                      Root path to save the detected face(s).
                                         The face will actually be saved with the same file stem as the original image.
 --disable_caching                       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
---batch_size                            Batch size for Dataset.map. The actual batches processed by the model are first grouped by image size. [default: 64]
+--batch_size=<n>                        Batch size for Dataset.map. The actual batches processed by the model are first grouped by image size. [default: 64]
 """
 
 from docopt import docopt
