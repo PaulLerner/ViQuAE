@@ -101,18 +101,21 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
         for j, (input_ids, answer) in enumerate(zip(batch['input_ids'], answers)):
             L = input_ids.size(-1)
             answer_starts, answer_ends = [], []
-            answer_len = answer.size(0)
-            for i in range(L-answer_len+1):
-                if (answer == input_ids[i: i+answer_len]).all():
-                    answer_starts.append(i)
-                    answer_ends.append(i+answer_len-1)
-                    if len(answer_starts) >= self.max_n_answers:
-                        break
-            for i, (start, end) in enumerate(zip(answer_starts, answer_ends)):
-                start_positions[j, i] = start
-                end_positions[j, i] = end
-                # un-mask answer
-                answer_mask[j, i] = 1
+            for a in answer:
+                answer_len = a.size(0)
+                for i in range(L-answer_len+1):
+                    if (a == input_ids[i: i+answer_len]).all():
+                        start, end = i, i+answer_len-1
+                        if start not in answer_starts and end not in answer_ends:
+                            answer_starts.append(start)
+                            answer_ends.append(end)
+                            if len(answer_starts) >= self.max_n_answers:
+                                break
+                for i, (start, end) in enumerate(zip(answer_starts, answer_ends)):
+                    start_positions[j, i] = start
+                    end_positions[j, i] = end
+                    # un-mask answer
+                    answer_mask[j, i] = 1
         start_positions = start_positions.view(-1, self.M, self.max_n_answers)
         end_positions = end_positions.view(-1, self.M, self.max_n_answers)
         answer_mask = answer_mask.view(-1, self.M, self.max_n_answers)
@@ -149,11 +152,18 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
             if len(passage) < self.M:
                 passages.extend(['']*(self.M-len(passage)))
 
-            answer = self.tokenizer(item['output']['original_answer'],
+            original_answer = item['output']['original_answer']
+            # avoid processing the same answer twice
+            answer = item['output']['answer']
+            if self.tokenizer.do_lower_case:
+                answer = list({a.lower() for a in answer} - {original_answer})
+            # but ensure the original answer is still the first to be processed
+            answer = original_answer + answer
+            answer = self.tokenizer(answer,
                                     add_special_tokens=False,
                                     return_token_type_ids=False,
-                                    return_attention_mask=False,
-                                    return_tensors='pt')['input_ids'].squeeze(0)
+                                    return_attention_mask=False)['input_ids']
+            answer = [torch.tensor(a, dtype=torch.long) for a in answer]
             answers.extend([answer]*self.M)
         batch = self.tokenizer(*(questions, passages), **self.tokenization_kwargs)
         batch = self.get_answer_position(batch, answers, answer_mask)
