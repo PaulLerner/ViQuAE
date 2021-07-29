@@ -1,10 +1,11 @@
 """Both dense and sparse information retrieval is done via HF-Datasets, using FAISS and ElasticSearch, respectively
 
-Usage: search.py <dataset> <config> [--k=<k> --disable_caching]
+Usage: search.py <dataset> <config> [--k=<k> --disable_caching --save_irrelevant]
 
 Options:
 --k=<k>                 Hyperparameter to search for the k nearest neighbors [default: 100].
 --disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
+--save_irrelevant       Save irrelevant results from the search in the dataset
 """
 import warnings
 
@@ -300,7 +301,7 @@ def index_faiss_kb(path, column, index_name=None, load=False, save_path=None, **
     return kb, index_name
 
 
-def dataset_search(dataset, k=100, kb_kwargs=[], map_kwargs={}, fusion_kwargs={}, metrics_kwargs={}):
+def dataset_search(dataset, k=100, save_irrelevant=False, kb_kwargs=[], map_kwargs={}, fusion_kwargs={}, metrics_kwargs={}):
     kbs = []
     index_names = set()
     metrics = {}
@@ -334,7 +335,7 @@ def dataset_search(dataset, k=100, kb_kwargs=[], map_kwargs={}, fusion_kwargs={}
         metrics["fusion"] = Counter()
     metric_save_path = metrics_kwargs.pop('save_path', None)
     # search expects a batch as input
-    fn_kwargs = dict(kbs=kbs, k=k, metrics=metrics, metrics_kwargs=metrics_kwargs, **fusion_kwargs)
+    fn_kwargs = dict(kbs=kbs, k=k, save_irrelevant=save_irrelevant, metrics=metrics, metrics_kwargs=metrics_kwargs, **fusion_kwargs)
 
     # HACK: sleep until elasticsearch is good to go
     time.sleep(60)
@@ -363,6 +364,6 @@ if __name__ == '__main__':
 
     k = int(args['--k'])
 
-    dataset = dataset_search(dataset, k, **config)
+    dataset = dataset_search(dataset, k, save_irrelevant=args['--save_irrelevant'], **config)
 
     dataset.save_to_disk(dataset_path)
