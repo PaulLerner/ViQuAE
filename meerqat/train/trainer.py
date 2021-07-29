@@ -19,7 +19,7 @@ from meerqat.data.loading import load_pretrained_in_kwargs
 
 class MeerqatTrainer(Trainer):
     """Base class for all trainers. Should be very similar to Trainer"""
-    def log(self, logs: Dict[str, float]) -> None:
+    def log(self, logs: dict) -> None:
         """Adds memory usage to the logs"""
         for i in range(torch.cuda.device_count()):
             device = f"cuda:{i}"
@@ -112,6 +112,7 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
             answer_starts, answer_ends = [], []
             for a in answer:
                 answer_len = a.size(0)
+                enough = False
                 for i in range(L-answer_len+1):
                     if (a == input_ids[i: i+answer_len]).all():
                         start, end = i, i+answer_len-1
@@ -119,12 +120,15 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
                             answer_starts.append(start)
                             answer_ends.append(end)
                             if len(answer_starts) >= self.max_n_answers:
+                                enough = True
                                 break
-                for i, (start, end) in enumerate(zip(answer_starts, answer_ends)):
-                    start_positions[j, i] = start
-                    end_positions[j, i] = end
-                    # un-mask answer
-                    answer_mask[j, i] = 1
+                if enough:
+                    break
+            for i, (start, end) in enumerate(zip(answer_starts, answer_ends)):
+                start_positions[j, i] = start
+                end_positions[j, i] = end
+                # un-mask answer
+                answer_mask[j, i] = 1
         start_positions = start_positions.view(-1, self.M, self.max_n_answers)
         end_positions = end_positions.view(-1, self.M, self.max_n_answers)
         answer_mask = answer_mask.view(-1, self.M, self.max_n_answers)
@@ -167,7 +171,7 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
             if self.tokenizer.do_lower_case:
                 answer = list({a.lower() for a in answer} - {original_answer})
             # but ensure the original answer is still the first to be processed
-            answer = original_answer + answer
+            answer = [original_answer] + answer
             answer = self.tokenizer(answer,
                                     add_special_tokens=False,
                                     return_token_type_ids=False,
@@ -200,7 +204,10 @@ def instantiate_trainer(trainee, debug=False, train_dataset=None, eval_dataset=N
         eval_dataset = load_from_disk(eval_dataset)
 
     # training
+    # revert the post-init that overrides do_eval
+    do_eval = training_kwargs.pop('do_eval', False)
     training_args = TrainingArguments(**training_kwargs)
+    training_args.do_eval = do_eval
     trainer = MultiPassageBERTTrainer(model=trainee, args=training_args,
                                       train_dataset=train_dataset, eval_dataset=eval_dataset,
                                       **kwargs)
@@ -229,7 +236,7 @@ if __name__ == "__main__":
     with open(config_path, "r") as file:
         config = load_pretrained_in_kwargs(json.load(file))
 
-    verbosity = config.get("verbosity")
+    verbosity = config.pop("verbosity", None)
     if verbosity is not None:
         logging.set_verbosity(verbosity)
 
