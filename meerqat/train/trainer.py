@@ -49,10 +49,14 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
     max_n_answers: int, optional
         The answer might be found several time in the same passage, this is a threshold to enable batching
         Defaults to 10.
+    eval_search_key: str, optional
+        This column in the dataset should hold the result of information retrieval (e.g. the output of ir.search)
+        It is not used during training.
+        Defaults to 'search_indices'
     tokenization_kwargs: dict, optional
         To be passed to self.tokenizer
     """
-    def __init__(self, *args, kb, M=24, n_relevant_passages=1, max_n_answers=10,
+    def __init__(self, *args, kb, M=24, n_relevant_passages=1, max_n_answers=10, eval_search_key='search_indices',
                  tokenization_kwargs=None, **kwargs):
         super().__init__(*args, **kwargs)
         assert self.tokenizer is not None
@@ -61,6 +65,7 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
         assert n_relevant_passages <= M
         self.n_relevant_passages = n_relevant_passages
         self.max_n_answers = max_n_answers
+        self.eval_search_key = eval_search_key
         default_tokenization_kwargs = dict(return_tensors='pt', padding=True, truncation=True)
         if tokenization_kwargs is None:
             tokenization_kwargs = {}
@@ -90,9 +95,13 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
             warnings.warn(f"Didn't find any passage for question {item['id']}")
         return relevant_passages+irrelevant_passages
 
+    def get_eval_passages(self, item):
+        """Keep the top-M passages retrieved by the IR"""
+        return item[self.eval_search_key][: self.M]
+
     def get_passages(self, *args, **kwargs):
         if self.args.do_eval or self.args.do_predict:
-            raise NotImplementedError
+            return self.get_eval_passages(*args, **kwargs)
         return self.get_training_passages(*args, **kwargs)
 
     def get_answer_position(self, batch, answers, answer_mask):
