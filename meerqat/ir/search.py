@@ -172,6 +172,17 @@ def map_indices(scores_batch, indices_batch, mapping, k=None):
     return new_scores_batch, new_indices_batch
 
 
+def norm_mean_std(scores_batch, mean, std):
+    return (np.array(scores_batch)-mean)/std
+
+
+def normalize(scores_batch, method, **kwargs):
+    methods = {
+        "normalize": norm_mean_std
+    }
+    return methods[method](scores_batch, **kwargs)
+
+
 def search_batch_if_not_None(kb, index_name, queries, k=100):
     # 1. filter out queries that are None
     scores_batch, indices_batch = [], []
@@ -224,6 +235,11 @@ def search(batch, kbs, k=100, metrics={}, metrics_kwargs={}, reference_key='pass
         index_mapping = kb.get('index_mapping')
         if index_mapping:
             scores_batch, indices_batch = map_indices(scores_batch, indices_batch, index_mapping, k=k)
+
+        # eventually normalize the scores before fusing
+        normalization = kb.get('normalization')
+        if normalization is not None:
+            scores_batch = normalize(scores_batch, **normalization)
 
         # store result in the dataset
         batch[f'{index_name}_scores'] = scores_batch
