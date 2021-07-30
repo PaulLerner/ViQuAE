@@ -6,7 +6,6 @@ import warnings
 from tqdm import tqdm
 import collections
 
-
 import numpy as np
 import torch
 from torch.autograd import set_detect_anomaly
@@ -14,7 +13,7 @@ from torch.utils.data.dataset import Dataset, IterableDataset
 
 from transformers import Trainer, TrainingArguments, trainer_callback, logging
 from transformers.trainer_callback import TrainerState
-from datasets import load_from_disk
+from datasets import load_from_disk, load_metric
 from transformers.deepspeed import deepspeed_init
 from transformers.file_utils import WEIGHTS_NAME, is_torch_tpu_available
 from transformers.trainer_pt_utils import (
@@ -23,15 +22,12 @@ from transformers.trainer_pt_utils import (
     nested_concat,
     nested_numpify
 )
-from transformers.trainer_utils import (
-    EvalLoopOutput,
-    EvalPrediction,
-    denumpify_detensorize
-)
+from transformers.trainer_utils import EvalLoopOutput, denumpify_detensorize
 if is_torch_tpu_available():
     import torch_xla.distributed.parallel_loader as pl
 
 from meerqat.data.loading import load_pretrained_in_kwargs
+from meerqat.models.qa import get_best_spans, format_predictions_for_squad
 
 
 class MeerqatTrainer(Trainer):
@@ -74,7 +70,7 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
         To be passed to self.tokenizer
     """
     def __init__(self, *args, kb, M=24, n_relevant_passages=1, max_n_answers=10, eval_search_key='search_indices',
-                 tokenization_kwargs=None, **kwargs):
+                 tokenization_kwargs=None, ignore_keys=['answer_strings'], **kwargs):
         super().__init__(*args, **kwargs)
         assert self.tokenizer is not None
         self.kb = load_from_disk(kb)
@@ -89,6 +85,7 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
         default_tokenization_kwargs.update(tokenization_kwargs)
         self.tokenization_kwargs = default_tokenization_kwargs
         self.data_collator = self.collate_fn
+        self.ignore_keys = ignore_keys
 
         # we need those ‘un-used’ columns to actually create the batch the model will use
         if self.args.remove_unused_columns:
@@ -168,7 +165,7 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
         **kwargs: more tensors depending on the tokenizer, e.g. attention_mask
         """
         questions, passages = [], []
-        answers = []
+        answers, answer_strings = [], []
         N = len(items)
         answer_mask = torch.zeros((N*self.M, self.max_n_answers), dtype=torch.long)
         for i, item in enumerate(items):
@@ -185,6 +182,7 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
             original_answer = item['output']['original_answer']
             # avoid processing the same answer twice
             answer = item['output']['answer']
+            answer_strings.append([[answer]*self.M])
             if self.tokenizer.do_lower_case:
                 answer = list({a.lower() for a in answer} - {original_answer})
             # but ensure the original answer is still the first to be processed
@@ -197,7 +195,30 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
             answers.extend([answer]*self.M)
         batch = self.tokenizer(*(questions, passages), **self.tokenization_kwargs)
         batch = self.get_answer_position(batch, answers, answer_mask)
+        batch['answer_strings'] = answer_strings
         return batch
+
+    def _prepare_inputs(self, inputs: dict) -> dict:
+        """remove all keys not used by the model but necessary for evaluation before returning Trainer._prepare_inputs"""
+        for k in self.ignore_keys:
+            if k not in inputs:
+                warnings.warn(f"Didn't find {k} in inputs")
+                continue
+            inputs.pop(k)
+        return super()._prepare_inputs(inputs)
+
+    def log_probs_to_answers(self, predictions, input_ids):
+        """""
+        1. get span start and end positions from log-probabilities
+        2. extract actual tokens (answer) from input_ids
+        """
+        _, _, start_log_probs, end_log_probs = predictions
+        passage_indices, start_indices, end_indices = get_best_spans(start_probs=np.exp(start_log_probs),
+                                                                     end_probs=np.exp(end_log_probs))
+        answers = []
+        for i, (passage_index, start, end) in enumerate(zip(passage_indices, start_indices, end_indices)):
+            answers.append(input_ids[i, passage_index, start: end])
+        return self.tokenizer.batch_decode(answers, skip_special_tokens=True)
 
     def evaluation_loop(
         self,
@@ -210,6 +231,8 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
         """
         Same as Trainer.evaluation_loop but does not truncate output to the size of the dataset because
         there is M passages per question so the output is M times the size of the dataset
+
+        Also gather input_ids instead of labels in order to recover the tokens from the model's span start and end probabilities
         """
         prediction_loss_only = (
             prediction_loss_only if prediction_loss_only is not None else self.args.prediction_loss_only
@@ -259,26 +282,32 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
             self._past = None
 
         # Initialize containers
-        # losses/preds/labels on GPU/TPU (accumulated for eval_accumulation_steps)
+        # losses/preds/input_ids on GPU/TPU (accumulated for eval_accumulation_steps)
         losses_host = None
         preds_host = None
-        labels_host = None
-        # losses/preds/labels on CPU (final containers)
+        input_ids_host = None
+        # losses/preds/input_ids on CPU (final containers)
         all_losses = None
         all_preds = None
-        all_labels = None
-        # Will be useful when we have an iterable dataset so don't know its length.
+        all_input_ids = None
+        all_answers = []
 
+        # Will be useful when we have an iterable dataset so don't know its length.
         observed_num_examples = 0
+
         # Main evaluation loop
         for step, inputs in enumerate(dataloader):
+            answer_strings = inputs.get('answer_strings')
+            if answer_strings is not None:
+                all_answers.extend(answer_strings)
+
             # Update the observed num examples
             observed_batch_size = find_batch_size(inputs)
             if observed_batch_size is not None:
                 observed_num_examples += observed_batch_size
 
             # Prediction step
-            loss, logits, labels = self.prediction_step(model, inputs, prediction_loss_only, ignore_keys=ignore_keys)
+            loss, logits, _ = self.prediction_step(model, inputs, prediction_loss_only, ignore_keys=ignore_keys)
 
             # Update containers on host
             if loss is not None:
@@ -288,10 +317,9 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
                 logits = self._pad_across_processes(logits)
                 logits = self._nested_gather(logits)
                 preds_host = logits if preds_host is None else nested_concat(preds_host, logits, padding_index=-100)
-            if labels is not None:
-                labels = self._pad_across_processes(labels)
-                labels = self._nested_gather(labels)
-                labels_host = labels if labels_host is None else nested_concat(labels_host, labels, padding_index=-100)
+            input_ids = self._pad_across_processes(inputs['input_ids'])
+            input_ids = self._nested_gather(input_ids)
+            input_ids_host = input_ids if input_ids_host is None else nested_concat(input_ids_host, input_ids, padding_index=-100)
             self.control = self.callback_handler.on_prediction_step(self.args, self.state, self.control)
 
             # Gather all tensors and put them back on the CPU if we have done enough accumulation steps.
@@ -302,29 +330,17 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
                 if preds_host is not None:
                     logits = nested_numpify(preds_host)
                     all_preds = logits if all_preds is None else nested_concat(all_preds, logits, padding_index=-100)
-                if labels_host is not None:
-                    labels = nested_numpify(labels_host)
-                    all_labels = (
-                        labels if all_labels is None else nested_concat(all_labels, labels, padding_index=-100)
-                    )
+                input_ids = nested_numpify(input_ids_host)
+                all_input_ids = (
+                    input_ids if all_input_ids is None else nested_concat(all_input_ids, input_ids, padding_index=-100)
+                )
 
                 # Set back to None to begin a new accumulation
-                losses_host, preds_host, labels_host = None, None, None
+                losses_host, preds_host, input_ids_host = None, None, None
 
         if self.args.past_index and hasattr(self, "_past"):
             # Clean the state at the end of the evaluation loop
             delattr(self, "_past")
-
-        # Gather all remaining tensors and put them back on the CPU
-        if losses_host is not None:
-            losses = nested_numpify(losses_host)
-            all_losses = losses if all_losses is None else np.concatenate((all_losses, losses), axis=0)
-        if preds_host is not None:
-            logits = nested_numpify(preds_host)
-            all_preds = logits if all_preds is None else nested_concat(all_preds, logits, padding_index=-100)
-        if labels_host is not None:
-            labels = nested_numpify(labels_host)
-            all_labels = labels if all_labels is None else nested_concat(all_labels, labels, padding_index=-100)
 
         # Number of samples
         if not isinstance(eval_dataset, IterableDataset):
@@ -334,9 +350,29 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
         else:
             num_samples = observed_num_examples
 
+        # Gather all remaining tensors and put them back on the CPU
+        if losses_host is not None:
+            losses = nested_numpify(losses_host)
+            all_losses = losses if all_losses is None else np.concatenate((all_losses, losses), axis=0)
+        if preds_host is not None:
+            logits = nested_numpify(preds_host)
+            all_preds = logits if all_preds is None else nested_concat(all_preds, logits, padding_index=-100)
+            # reshape like (N, M, L) to ease further processing
+            all_preds = tuple(pred.reshape(num_samples, self.M, -1) for pred in all_preds)
+        if input_ids_host is not None:
+            input_ids = nested_numpify(input_ids_host)
+            all_input_ids = input_ids if all_input_ids is None else nested_concat(all_input_ids, input_ids, padding_index=-100)
+            # reshape like (N, M, L) to ease further processing
+            all_input_ids = all_input_ids.reshape(num_samples, self.M, -1)
+        if all_answers:
+            all_answers = [all_answers[i] for i in range(0, len(all_answers), self.M)]
+            assert len(all_answers) == num_samples
+
         # Metrics!
-        if self.compute_metrics is not None and all_preds is not None and all_labels is not None:
-            metrics = self.compute_metrics(EvalPrediction(predictions=all_preds, label_ids=all_labels))
+        if self.compute_metrics is not None and all_preds is not None and all_input_ids is not None and all_answers:
+            predictions = self.log_probs_to_answers(all_preds, all_input_ids)
+            predictions, references = format_predictions_for_squad(predictions, all_answers)
+            metrics = self.compute_metrics(predictions=predictions, references=references)
         else:
             metrics = {}
 
@@ -351,7 +387,7 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
             if not key.startswith(f"{metric_key_prefix}_"):
                 metrics[f"{metric_key_prefix}_{key}"] = metrics.pop(key)
 
-        return EvalLoopOutput(predictions=all_preds, label_ids=all_labels, metrics=metrics, num_samples=num_samples)
+        return EvalLoopOutput(predictions=all_preds, label_ids=None, metrics=metrics, num_samples=num_samples)
 
 
 def get_checkpoint(resume_from_checkpoint: str, *args, **kwargs):
@@ -363,7 +399,7 @@ def get_checkpoint(resume_from_checkpoint: str, *args, **kwargs):
     return resume_from_checkpoints
 
 
-def instantiate_trainer(trainee, debug=False, train_dataset=None, eval_dataset=None, training_kwargs={}, callbacks_args=[], **kwargs):
+def instantiate_trainer(trainee, debug=False, train_dataset=None, eval_dataset=None, metric='squad', training_kwargs={}, callbacks_args=[], **kwargs):
     """Additional arguments are passed to Trainer"""
     # debug (see torch.autograd.detect_anomaly)
     set_detect_anomaly(debug)
@@ -379,8 +415,11 @@ def instantiate_trainer(trainee, debug=False, train_dataset=None, eval_dataset=N
     do_eval = training_kwargs.pop('do_eval', False)
     training_args = TrainingArguments(**training_kwargs)
     training_args.do_eval = do_eval
+    metric = load_metric(metric)
+    compute_metrics = metric.compute
     trainer = MultiPassageBERTTrainer(model=trainee, args=training_args,
                                       train_dataset=train_dataset, eval_dataset=eval_dataset,
+                                      compute_metrics=compute_metrics,
                                       **kwargs)
     # training callbacks
     for callback in callbacks_args:
