@@ -68,6 +68,10 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
         Defaults to 'search_indices'
     tokenization_kwargs: dict, optional
         To be passed to self.tokenizer
+    ignore_keys: List[str], optional
+        List of keys to remove from the batch before feeding it to the model
+        (data not used by the model but necessary for evaluation)
+        Defaults to ['answer_strings']
     """
     def __init__(self, *args, kb, M=24, n_relevant_passages=1, max_n_answers=10, eval_search_key='search_indices',
                  tokenization_kwargs=None, ignore_keys=['answer_strings'], **kwargs):
@@ -182,7 +186,7 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
             original_answer = item['output']['original_answer']
             # avoid processing the same answer twice
             answer = item['output']['answer']
-            answer_strings.append([[answer]*self.M])
+            answer_strings.extend([answer]*self.M)
             if self.tokenizer.do_lower_case:
                 answer = list({a.lower() for a in answer} - {original_answer})
             # but ensure the original answer is still the first to be processed
@@ -357,12 +361,14 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
         if preds_host is not None:
             logits = nested_numpify(preds_host)
             all_preds = logits if all_preds is None else nested_concat(all_preds, logits, padding_index=-100)
-            # reshape like (N, M, L) to ease further processing
-            all_preds = tuple(pred.reshape(num_samples, self.M, -1) for pred in all_preds)
         if input_ids_host is not None:
             input_ids = nested_numpify(input_ids_host)
             all_input_ids = input_ids if all_input_ids is None else nested_concat(all_input_ids, input_ids, padding_index=-100)
-            # reshape like (N, M, L) to ease further processing
+
+        # reshape like (N, M, L) to ease further processing
+        if all_preds is not None:
+            all_preds = tuple(pred.reshape(num_samples, self.M, -1) for pred in all_preds)
+        if all_input_ids is not None:
             all_input_ids = all_input_ids.reshape(num_samples, self.M, -1)
         if all_answers:
             all_answers = [all_answers[i] for i in range(0, len(all_answers), self.M)]
