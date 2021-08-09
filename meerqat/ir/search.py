@@ -82,7 +82,7 @@ def interpolation_fusion(batch, kbs, k=100):
 
     If the weight are partially provided or not provided at all they default to a uniform weight such that they all sum to 1.
     """
-    batch_size = len(batch)
+    batch_size = len(next(iter(batch.values())))
     # init scores
     # N. B. [{}]*n creates n pointers to the SAME dict
     scores_dicts = [{} for _ in range(batch_size)]
