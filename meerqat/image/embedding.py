@@ -70,7 +70,7 @@ def embed(batch, model, transform):
     images = torch.cat(images).to(device)
     with torch.no_grad():
         image_embeddings = model(images)
-    batch['image_embedding'] = image_embeddings.cpu().numpy()
+    batch['image_embedding'] = image_embeddings.squeeze().cpu().numpy()
     return batch
 
 
