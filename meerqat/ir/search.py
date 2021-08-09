@@ -184,6 +184,20 @@ def normalize(scores_batch, method, **kwargs):
     return methods[method](scores_batch, **kwargs)
 
 
+def L2norm(queries):
+    """Normalize each query to have a unit-norm. Expects a batch of vectors of the same dimension"""
+    norms = np.linalg.norm(queries, axis=1, keepdims=True)
+    return queries/norms
+
+
+def search_batch(kb, index_name, queries, k=100):
+    if not kb['es']:
+        queries = np.array(queries, dtype=np.float32)
+        if kb.get('L2norm', False):
+            queries = L2norm(queries)
+    return kb['kb'].search_batch(index_name, queries, k=k)
+
+
 def search_batch_if_not_None(kb, index_name, queries, k=100):
     # 1. filter out queries that are None
     scores_batch, indices_batch = [], []
@@ -201,7 +215,7 @@ def search_batch_if_not_None(kb, index_name, queries, k=100):
             
     # 2. search as usual for queries that are not None
     not_None_queries = np.array(not_None_queries, dtype=np.float32)
-    not_None_scores_batch, not_None_indices_batch = kb.search_batch(index_name, not_None_queries, k=k)
+    not_None_scores_batch, not_None_indices_batch = search_batch(kb, index_name, not_None_queries, k=k)
 
     # 3. return the results in a list of list with proper indices
     for j, i in enumerate(not_None_queries_indices):
@@ -228,9 +242,9 @@ def search(batch, kbs, k=100, metrics={}, metrics_kwargs={}, reference_key='pass
         # N. B. cannot use `None in queries` because 
         # "The truth value of an array with more than one element is ambiguous."
         if any(query is None for query in queries):
-            scores_batch, indices_batch = search_batch_if_not_None(kb['kb'], index_name, queries, k=k)
+            scores_batch, indices_batch = search_batch_if_not_None(kb, index_name, queries, k=k)
         else:
-            scores_batch, indices_batch = kb['kb'].search_batch(index_name, queries, k=k)
+            scores_batch, indices_batch = search_batch(kb, index_name, queries, k=k)
 
         # indices might need to be mapped so that all KBs refer to the same semantic index
         index_mapping = kb.get('index_mapping')
@@ -331,6 +345,9 @@ def dataset_search(dataset, k=100, save_irrelevant=False, metric_save_path=None,
         if es:
             kb, index_name = index_es_kb(**index_kwargs)
         else:
+            string_factory = index_kwargs.get('string_factory')
+            if string_factory is not None and 'L2norm' in string_factory:
+                kb_kwarg['L2norm'] = True
             kb, index_name = index_faiss_kb(**index_kwargs)
 
         # index mapping are used so that multiple KBs are aligned to the same semantic indices
