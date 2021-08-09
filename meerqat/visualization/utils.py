@@ -3,13 +3,16 @@ from tabulate import tabulate
 import numpy as np
 
 
-def simple_stats(values, tablefmt="simple"):
+def simple_stats(values, tablefmt="simple", headers=["sum", "mean", "std"]):
     """Computes
 
     Parameters
     ----------
     values: 1D array-like
     tablefmt: table format used in tabulate
+    headers: List[str], optional
+        List of ndarray methods
+        Defaults to ["sum", "mean", "std"]
 
     Returns
     -------
@@ -18,9 +21,11 @@ def simple_stats(values, tablefmt="simple"):
     """
     if not isinstance(values, np.ndarray):
         values = np.array(values)
-    value_stats = [values.sum(), np.mean(values)]
+    value_stats = []
+    for attr in headers:
+        value_stats.append(getattr(values, attr)())
     value_stats += np.quantile(values, [0., 0.25, 0.5, 0.75, 1.0]).tolist()
-    headers = ["sum", "mean", "min", "1st quartile", "median", "3rd quartile", "max"]
+    headers += ["min", "1st quartile", "median", "3rd quartile", "max"]
     return tabulate([value_stats], headers=headers, tablefmt=tablefmt)
 
 
