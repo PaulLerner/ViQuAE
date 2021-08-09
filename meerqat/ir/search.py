@@ -174,7 +174,7 @@ def map_indices(scores_batch, indices_batch, mapping, k=None):
 
 
 def norm_mean_std(scores_batch, mean, std):
-    return (np.array(scores_batch)-mean)/std
+    return [(np.array(scores)-mean)/std for scores in scores_batch]
 
 
 def normalize(scores_batch, method, **kwargs):
