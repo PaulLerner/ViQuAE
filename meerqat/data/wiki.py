@@ -451,7 +451,7 @@ def request(query, session, tries=0, max_tries=2):
         warnings.warn(f"{base_msg}Maximum number of tries ({max_tries}) exceeded: {tries}")
         return response
     try:
-        response = session.get(query)
+        response = session.get(query, headers={'User-Agent':'meerqat bot 0.1'})
     except requests.exceptions.ConnectionError as e:
         warnings.warn(f"{base_msg}requests.exceptions.ConnectionError: {e}")
     except MaxRetryError as e:
@@ -580,7 +580,11 @@ def query_image(title, session):
 
 
 def save_image(url, session):
-    image_path = COMMONS_PATH / thumbnail_to_file_name(url, original=False)
+    file_name = thumbnail_to_file_name(url, original=False)
+    image_path = COMMONS_PATH / file_name
+    if len(file_name) > len("Dr._Paul_R._Heyl,_Scientists_for_Uncle_Sam_awarded_Magellan_Gold_Medal._Dr._L.J._Briggs,_left,_Assistant_Director_and_Dr._Paul_R._Heyl,_Chief_of_the_Sound_Section_of_the_United_States_Bureau_of_Standards,_LCCN2016888398_(cropped).tiff"):
+        return None
+
     if not image_path.exists():
         # request image
         response = request(url, session)
