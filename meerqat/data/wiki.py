@@ -587,7 +587,7 @@ def save_image(url, session):
 
     if not image_path.exists():
         # request image
-        response = request(url, session)
+        response = request(requests.utils.quote(url), session)
         if not response:
             return None
         # save if request went OK
