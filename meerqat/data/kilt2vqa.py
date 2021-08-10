@@ -584,10 +584,10 @@ def labelstudio(*args, image_width=512, alternative_images=8, **kwargs):
     print(f"Successfully saved output to '{out_path}'")
 
 
-def download_image(item, index, session, image_width=512, pointers={}):
+def download_image(item, session, image_width=512):
     file_name = thumbnail_to_file_name(item['url'])
     thumbnail = file_name_to_thumbnail(file_name, image_width=image_width)
-    file_path = save_image(thumbnail, session, pointers=pointers)
+    file_path = save_image(thumbnail, session)
     file_name = file_path.name if file_path is not None else None
     item['image'] = file_name
     return item
@@ -602,7 +602,7 @@ def download_images(subset, fn_kwargs, num_shards=None, shard_index=None, **map_
 
     fn_kwargs.update(session=requests.Session())
 
-    dataset = dataset.map(download_image, fn_kwargs=fn_kwargs, with_indices=True, **map_kwargs)
+    dataset = dataset.map(download_image, fn_kwargs=fn_kwargs, **map_kwargs)
     if num_shards is None:
         dataset.save_to_disk(dataset_path)
     else:
@@ -645,8 +645,5 @@ if __name__ == '__main__':
         image_width = int(args['--image_width']) if args['--image_width'] is not None else None
         num_shards = int(args['--num_shards']) if args['--num_shards'] is not None else None
         shard_index = int(args['--shard_index']) if args['--shard_index'] is not None else None
-        download_images(subset, fn_kwargs=dict(
-                                                  image_width=image_width, 
-                                                  pointers=dict()
-                                              ), num_shards=num_shards, shard_index=shard_index, **map_kwargs)
+        download_images(subset, fn_kwargs=dict(image_width=image_width), num_shards=num_shards, shard_index=shard_index, **map_kwargs)
 
