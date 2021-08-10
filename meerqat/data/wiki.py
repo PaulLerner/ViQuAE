@@ -58,13 +58,15 @@ UPLOAD_URI_PREFIX = "http://upload.wikimedia.org/wikipedia/commons/"
 VALID_DATE_TYPE = 'http://www.w3.org/2001/XMLSchema#dateTime'
 
 # restrict media to be images handleable by PIL.Image (or convertible with Wikimedia thumbnails)
-VALID_ENCODING = {"png", "jpg", "jpeg", "tiff", "gif", "svg", "tif"}
+VALID_ENCODING = {"png", "jpg", "jpeg", "tiff", "gif", "svg", "tif", "pdf", "djvu"}
 
 # used to make thumbnails in file_name_to_thumbnail
 EXTENSIONS_PRE_AND_SUFFIXES = {
     "svg": ("", ".png"),
     "tif": ("lossy-page1-", ".jpg"),
-    "tiff": ("lossy-page1-", ".jpg")
+    "tiff": ("lossy-page1-", ".jpg"),
+    "pdf": ("page1-", ".jpg"),
+    "djvu": ("page1-", ".jpg")
 }
 
 # rules of preferences over licenses, the higher the better (0 is reserved for missing values or other licenses)
