@@ -382,6 +382,7 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
             metrics = self.compute_metrics(predictions=predictions, references=references)
         else:
             metrics = {}
+            predictions = all_preds
 
         # To be JSON-serializable, we need to remove numpy types or zero-d tensors
         metrics = denumpify_detensorize(metrics)
@@ -394,7 +395,7 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
             if not key.startswith(f"{metric_key_prefix}_"):
                 metrics[f"{metric_key_prefix}_{key}"] = metrics.pop(key)
 
-        return EvalLoopOutput(predictions=all_preds, label_ids=None, metrics=metrics, num_samples=num_samples)
+        return EvalLoopOutput(predictions=predictions, label_ids=None, metrics=metrics, num_samples=num_samples)
 
 
 def get_checkpoint(resume_from_checkpoint: str, *args, **kwargs):
@@ -437,7 +438,11 @@ def instantiate_trainer(trainee, debug=False, train_dataset=None, eval_dataset=N
 
 
 def write_predictions(predictions, resume_from_checkpoint):
-    raise NotImplementedError()
+    if isinstance(predictions, (list, dict)):
+        with open(resume_from_checkpoint / "predictions.json", "w") as file:
+            json.dump(predictions, file)
+    else:
+        raise NotImplementedError()
 
 
 def write_metrics(metrics, resume_from_checkpoint):
@@ -488,12 +493,12 @@ if __name__ == "__main__":
             if not state_dict_path.exists():
                 continue
             state_dict = torch.load(state_dict_path)
-            trainer.model.load_state_dict(state_dict)
+            trainer._load_state_dict_in_model(state_dict)
 
             # run model on evaluation dataset
-            eval_dataloader = trainer.get_eval_dataloader()
-            predictions = trainer.predict(eval_dataloader)
-            write_predictions(predictions, resume_from_checkpoint)
+            prediction_output = trainer.predict(trainer.eval_dataset)
+            write_metrics(prediction_output.metrics, resume_from_checkpoint)
+            write_predictions(prediction_output.predictions, resume_from_checkpoint)
     else:
         warnings.warn("Did nothing except instantiate the trainer, "
                       "you probably want to set do_train, do_eval or do_predict to True"
