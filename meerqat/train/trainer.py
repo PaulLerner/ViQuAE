@@ -115,7 +115,8 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
 
     def get_eval_passages(self, item):
         """Keep the top-M passages retrieved by the IR"""
-        return item[self.eval_search_key][: self.M]
+        indices = item[self.eval_search_key][: self.M]
+        return self.kb.select(indices)['passage']
 
     def get_passages(self, *args, **kwargs):
         if self.args.do_eval or self.args.do_predict:
