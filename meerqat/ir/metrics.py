@@ -138,8 +138,7 @@ def reduce_metrics(metrics_dict, K=100, ks=[1, 5, 10, 20, 100]):
     for key, metrics in metrics_dict.items():
         no_ground_truth = metrics.pop("no_ground_truth", 0)
         if no_ground_truth > 0:
-            warnings.warn(f"{no_ground_truth} queries out of {metrics['total_queries']} had no-ground truth and therefore will not be taken into account")
-            metrics["total_queries"] -= no_ground_truth
+            warnings.warn(f"{no_ground_truth} queries out of {no_ground_truth+metrics['total_queries']} had no-ground truth and therefore will not be taken into account")
             if metrics["total_queries"] <= 0:
                 continue
 
