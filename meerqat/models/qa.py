@@ -20,9 +20,11 @@ def get_best_spans(start_probs, end_probs, cannot_be_first_token=True):
 
     Returns
     -------
-    passage_indices, start_indices, end_indices: ndarray
+    passage_indices: ndarray
         shape (N, )
-        start (inclusive) and end (inclusive) index of each span
+    start_indices, end_indices: ndarray
+        shape (N, )
+        start (inclusive) and end (exclusive) index of each span
     """
     N, M, L = start_probs.shape
 
@@ -53,8 +55,6 @@ def get_best_spans(start_probs, end_probs, cannot_be_first_token=True):
 
 
 def format_predictions_for_squad(predictions, references):
-    # predictions_squad = [{'prediction_text': '1976', 'id': '56e10a3be3433e1400422b22'}]
-    # references_squad = [{'answers': {'answer_start': [97], 'text': ['1976']}, 'id': '56e10a3be3433e1400422b22'}]
     predictions_squad, references_squad = [], []
     for i, (prediction, reference) in enumerate(zip(predictions, references)):
         i = str(i)
