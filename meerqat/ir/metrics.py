@@ -6,6 +6,7 @@ from docopt import docopt
 import json
 from tabulate import tabulate
 import warnings
+import re
 
 from datasets import load_from_disk
 
@@ -34,7 +35,7 @@ def find_relevant(retrieved, answers, kb, reference_key='passage'):
         passage = answer_preprocess(kb[i][reference_key])
         for answer in answers:
             answer = answer_preprocess(answer)
-            if answer in passage:
+            if re.search(rf'\b{answer}\b', passage) is not None:
                 relevant.append(i)
                 break
     return relevant
