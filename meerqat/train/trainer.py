@@ -63,9 +63,10 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
         The answer might be found several time in the same passage, this is a threshold to enable batching
         Defaults to 10.
     eval_search_key: str, optional
-        This column in the dataset should hold the result of information retrieval (e.g. the output of ir.search)
+        This column in the dataset suffixed by '_indices' and '_scores' should hold the result of information retrieval
+        (e.g. the output of ir.search)
         It is not used during training.
-        Defaults to 'search_indices'
+        Defaults to 'search'
     tokenization_kwargs: dict, optional
         To be passed to self.tokenizer
     ignore_keys: List[str], optional
@@ -73,7 +74,7 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
         (data not used by the model but necessary for evaluation)
         Defaults to ['answer_strings']
     """
-    def __init__(self, *args, kb, M=24, n_relevant_passages=1, max_n_answers=10, eval_search_key='search_indices',
+    def __init__(self, *args, kb, M=24, n_relevant_passages=1, max_n_answers=10, eval_search_key='search',
                  tokenization_kwargs=None, ignore_keys=['answer_strings'], **kwargs):
         super().__init__(*args, **kwargs)
         assert self.tokenizer is not None
@@ -115,13 +116,9 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
 
     def get_eval_passages(self, item):
         """Keep the top-M passages retrieved by the IR"""
-        indices = item[self.eval_search_key][: self.M]
-        return self.kb.select(indices)['passage']
-
-    def get_passages(self, *args, **kwargs):
-        if self.args.do_eval or self.args.do_predict:
-            return self.get_eval_passages(*args, **kwargs)
-        return self.get_training_passages(*args, **kwargs)
+        indices = item[self.eval_search_key+"_indices"][: self.M]
+        scores = item[self.eval_search_key+"_scores"][: self.M]
+        return self.kb.select(indices)['passage'], scores
 
     def get_answer_position(self, batch, answers, answer_mask):
         """Adapted from DPR"""
@@ -167,16 +164,28 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
             shape (N, M, max_n_answers)
         answer_mask: Tensor[int]
             shape (N, M, max_n_answers)
+        passage_scores: Tensor[float], optional
+            shape (N * M)
+            only in evaluation mode
         **kwargs: more tensors depending on the tokenizer, e.g. attention_mask
         """
         questions, passages = [], []
         answers, answer_strings = [], []
+        passage_scores = []
         N = len(items)
         answer_mask = torch.zeros((N*self.M, self.max_n_answers), dtype=torch.long)
         for i, item in enumerate(items):
             # N. B. seed is set in Trainer
             questions.extend([item['input']]*self.M)
-            passage = self.get_passages(item)
+
+            if self.args.do_eval or self.args.do_predict:
+                passage, score = self.get_eval_passages(item)
+                passage_scores.extend(score)
+                if len(score) < self.M:
+                    passage_scores.extend([0]*(self.M-len(score)))
+            else:
+                passage = self.get_training_passages(item)
+
             passages.extend(passage)
             # all passages have at least 1 non-masked answer (set to 0 for irrelevant passages)
             answer_mask[i*self.M: i*self.M+len(passage), 0] = 1
@@ -201,6 +210,9 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
         batch = self.tokenizer(*(questions, passages), **self.tokenization_kwargs)
         batch = self.get_answer_position(batch, answers, answer_mask)
         batch['answer_strings'] = answer_strings
+        if passage_scores:
+            batch['passage_scores'] = torch.tensor(passage_scores)
+
         return batch
 
     def _prepare_inputs(self, inputs: dict) -> dict:
@@ -212,14 +224,15 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
             inputs.pop(k)
         return super()._prepare_inputs(inputs)
 
-    def log_probs_to_answers(self, predictions, input_ids):
+    def log_probs_to_answers(self, predictions, input_ids, **kwargs):
         """""
         1. get span start and end positions from log-probabilities
         2. extract actual tokens (answer) from input_ids
         """
         _, _, start_log_probs, end_log_probs = predictions
         passage_indices, start_indices, end_indices = get_best_spans(start_probs=np.exp(start_log_probs),
-                                                                     end_probs=np.exp(end_log_probs))
+                                                                     end_probs=np.exp(end_log_probs),
+                                                                     **kwargs)
         answers = []
         for i, (passage_index, start, end) in enumerate(zip(passage_indices, start_indices, end_indices)):
             answers.append(input_ids[i, passage_index, start: end])
@@ -291,10 +304,12 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
         losses_host = None
         preds_host = None
         input_ids_host = None
+        passage_scores_host = None
         # losses/preds/input_ids on CPU (final containers)
         all_losses = None
         all_preds = None
         all_input_ids = None
+        all_passage_scores = None
         all_answers = []
 
         # Will be useful when we have an iterable dataset so don't know its length.
@@ -305,6 +320,7 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
             answer_strings = inputs.get('answer_strings')
             if answer_strings is not None:
                 all_answers.extend(answer_strings)
+            passage_scores_host = inputs['passage_scores'] if passage_scores_host is None else torch.cat((passage_scores_host, inputs['passage_scores']), dim=0)
 
             # Update the observed num examples
             observed_batch_size = find_batch_size(inputs)
@@ -339,9 +355,12 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
                 all_input_ids = (
                     input_ids if all_input_ids is None else nested_concat(all_input_ids, input_ids, padding_index=-100)
                 )
+                if passage_scores_host is not None:
+                    passage_scores = nested_numpify(passage_scores_host)
+                    all_passage_scores = passage_scores if all_passage_scores is None else nested_concat(all_passage_scores, passage_scores, padding_index=0)
 
                 # Set back to None to begin a new accumulation
-                losses_host, preds_host, input_ids_host = None, None, None
+                losses_host, preds_host, input_ids_host, passage_scores_host = None, None, None, None
 
         if self.args.past_index and hasattr(self, "_past"):
             # Clean the state at the end of the evaluation loop
@@ -365,21 +384,32 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
         if input_ids_host is not None:
             input_ids = nested_numpify(input_ids_host)
             all_input_ids = input_ids if all_input_ids is None else nested_concat(all_input_ids, input_ids, padding_index=-100)
+        if passage_scores_host is not None:
+            passage_scores = nested_numpify(passage_scores_host)
+            all_passage_scores = passage_scores if all_passage_scores is None else nested_concat(all_passage_scores, passage_scores, padding_index=0)
 
         # reshape like (N, M, L) to ease further processing
         if all_preds is not None:
             all_preds = tuple(pred.reshape(num_samples, self.M, -1) for pred in all_preds)
         if all_input_ids is not None:
             all_input_ids = all_input_ids.reshape(num_samples, self.M, -1)
+        if all_passage_scores is not None:
+            all_passage_scores = all_passage_scores.reshape(num_samples, self.M)
         if all_answers:
             all_answers = [all_answers[i] for i in range(0, len(all_answers), self.M)]
             assert len(all_answers) == num_samples
 
         # Metrics!
         if self.compute_metrics is not None and all_preds is not None and all_input_ids is not None and all_answers:
+            # 1. raw predictions from scores spans
             predictions = self.log_probs_to_answers(all_preds, all_input_ids)
             predictions, references = format_predictions_for_squad(predictions, all_answers)
             metrics = self.compute_metrics(predictions=predictions, references=references)
+            # 2. weighted predictions
+            weighted_predictions = self.log_probs_to_answers(all_preds, all_input_ids, weights=all_passage_scores)
+            weighted_predictions, references = format_predictions_for_squad(weighted_predictions, all_answers)
+            for k, v in self.compute_metrics(predictions=weighted_predictions, references=references).items():
+                metrics['weighted_'+k] = v
         else:
             metrics = {}
             predictions = all_preds

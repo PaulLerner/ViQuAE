@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def get_best_spans(start_probs, end_probs, cannot_be_first_token=True):
+def get_best_spans(start_probs, end_probs, weights=None, cannot_be_first_token=True):
     """
     Get the best scoring spans from start and end probabilities
 
@@ -14,6 +14,9 @@ def get_best_spans(start_probs, end_probs, cannot_be_first_token=True):
     ----------
     start_probs, end_probs: ndarray
         shape (N, M, L)
+    weights: ndarray, optional
+        shape (N, M)
+        Used to weigh the spans scores, e.g. might be BM25 scores from the retriever
     cannot_be_first_token: bool, optional
         (Default) null out the scores of start/end in the first token
         (e.g. "[CLS]", used during training for irrelevant passages)
@@ -36,6 +39,9 @@ def get_best_spans(start_probs, end_probs, cannot_be_first_token=True):
     # (e.g. [CLS], used during training for irrelevant passages)
     if cannot_be_first_token:
         pairwise[:, :, 0, :] = 0
+    # eventually weigh the scores
+    if weights is not None:
+        pairwise *= np.expand_dims(weights, (2, 3))
 
     # 2. find the passages with the maximum score
     pairwise = pairwise.reshape(N, M, L * L)
