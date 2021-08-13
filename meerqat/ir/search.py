@@ -16,6 +16,7 @@ from docopt import docopt
 import json
 from collections import Counter
 import time
+from copy import deepcopy
 
 import numpy as np
 from datasets import load_from_disk, set_caching_enabled
@@ -235,7 +236,7 @@ def fuse_and_compute_metrics(batch, kbs, metrics, metrics_kwargs={}, reference_k
     # are the retrieved documents relevant ?
     if reference_kb is not None:
         relevant_batch = find_relevant_batch(indices_batch, batch['output'], reference_kb,
-                                             relevant_batch=batch['provenance_index'], reference_key=reference_key)
+                                             relevant_batch=deepcopy(batch['provenance_index']), reference_key=reference_key)
     else:
         relevant_batch = batch['provenance_index']
 
@@ -275,7 +276,7 @@ def search(batch, kbs, reference_kb=None, k=100, metrics={}, metrics_kwargs={}, 
         # are the retrieved documents relevant ?
         if reference_kb is not None:
             relevant_batch = find_relevant_batch(indices_batch, batch['output'], reference_kb,
-                                                 relevant_batch=batch['provenance_index'], reference_key=reference_key)
+                                                 relevant_batch=deepcopy(batch['provenance_index']), reference_key=reference_key)
         else:
             relevant_batch = batch['provenance_index']
 
