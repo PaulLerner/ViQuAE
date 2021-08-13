@@ -17,6 +17,7 @@ import json
 from collections import Counter
 import time
 from copy import deepcopy
+import re
 
 import numpy as np
 from datasets import load_from_disk, set_caching_enabled
@@ -314,7 +315,7 @@ def index_es_kb(path, column, index_name=None, load=False, **kwargs):
     return kb, index_name
 
 
-def index_faiss_kb(path, column, index_name=None, load=False, save_path=None, **kwargs):
+def index_faiss_kb(path, column, index_name=None, load=False, save_path=None, string_factory=None, device=None, **kwargs):
     """
     Loads KB from path then either:
     - loads it (if load)
@@ -323,14 +324,26 @@ def index_faiss_kb(path, column, index_name=None, load=False, save_path=None, **
     if index_name is None:
         index_name = column
     kb = load_from_disk(path)
+    if string_factory is not None and 'L2norm' in string_factory:
+        do_L2norm = True
+    else:
+        do_L2norm = False
     if load:
         kb.load_faiss_index(**kwargs)
     else:
-        kb.add_faiss_index(column=column, index_name=index_name, **kwargs)
+        # HACK: fix L2-normalisation on GPU https://github.com/facebookresearch/faiss/issues/2010
+        if do_L2norm and device is not None:
+            # normalize the vectors
+            kb = kb.map(lambda batch: {column: L2norm(batch[column])}, batched=True)
+            # remove "L2norm" from string_factory
+            string_factory = re.sub(r"(,L2norm|L2norm[,]?)", "", string_factory)
+            if not string_factory:
+                string_factory = None
+        kb.add_faiss_index(column=column, index_name=index_name, string_factory=string_factory, device=device, **kwargs)
         # save FAISS index (so it can be loaded later)
         if save_path is not None:
             kb.save_faiss_index(index_name, save_path)
-    return kb, index_name
+    return kb, index_name, do_L2norm
 
 
 def dataset_search(dataset, k=100, save_irrelevant=False, metric_save_path=None,
@@ -348,10 +361,8 @@ def dataset_search(dataset, k=100, save_irrelevant=False, metric_save_path=None,
         if es:
             kb, index_name = index_es_kb(**index_kwargs)
         else:
-            string_factory = index_kwargs.get('string_factory')
-            if string_factory is not None and 'L2norm' in string_factory:
-                kb_kwarg['L2norm'] = True
-            kb, index_name = index_faiss_kb(**index_kwargs)
+            kb, index_name, do_L2norm = index_faiss_kb(**index_kwargs)
+            kb_kwarg['L2norm'] = do_L2norm
 
         # index mapping are used so that multiple KBs are aligned to the same semantic indices
         # e.g. text is processed at the passage level but images are processed at the document/entity level
