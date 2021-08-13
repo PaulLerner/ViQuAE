@@ -108,7 +108,7 @@ def compute_metrics(metrics, retrieved_batch, relevant_batch, K=100, ks=[1, 5, 1
     for retrieved, relevant in zip(retrieved_batch, relevant_batch):
         if len(relevant) == 0:
             metrics["no_ground_truth"] += 1
-            return metrics
+            continue
 
         metrics["total_queries"] += 1
         relevant_set = set(relevant)
