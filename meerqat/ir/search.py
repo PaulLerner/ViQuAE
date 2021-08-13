@@ -1,6 +1,8 @@
 """Both dense and sparse information retrieval is done via HF-Datasets, using FAISS and ElasticSearch, respectively
 
-Usage: search.py <dataset> <config> [--k=<k> --disable_caching --save_irrelevant --metrics=<path>]
+Usage:
+search.py <dataset> <config> [--k=<k> --disable_caching --save_irrelevant --metrics=<path>]
+search.py hp <dataset> <config> [--k=<k> --disable_caching --metrics=<path>]
 
 Options:
 --k=<k>                 Hyperparameter to search for the k nearest neighbors [default: 100].
@@ -17,6 +19,8 @@ import time
 
 import numpy as np
 from datasets import load_from_disk, set_caching_enabled
+
+import optuna
 
 from meerqat.ir.metrics import compute_metrics, reduce_metrics, stringify_metrics, find_relevant_batch, get_irrelevant_batch
 from meerqat.data.utils import json_integer_keys
@@ -224,17 +228,25 @@ def search_batch_if_not_None(kb, index_name, queries, k=100):
     return scores_batch, indices_batch
 
 
-def search(batch, kbs, k=100, metrics={}, metrics_kwargs={}, reference_key='passage', fusion_method='linear', save_irrelevant=False, **fusion_kwargs):
-    # find the kb with reference indices
-    reference_kb = None
-    for kb in kbs:
-        if kb.get("reference", False):
-            reference_kb = kb['kb']
-            break
-    if reference_kb is None:
-        warnings.warn("Didn't find a reference KB "
-                      "-> will not be able to extend the annotation coverage so results should be interpreted carefully.\n"
-                      "Did you forget to add a 'reference' flag to your config file?")
+def fuse_and_compute_metrics(batch, kbs, metrics, metrics_kwargs={}, reference_kb=None, reference_key='passage', k=100, fusion_method='linear', **fusion_kwargs):
+    scores_batch, indices_batch = fuse(batch, kbs, k=k, method=fusion_method, **fusion_kwargs)
+    batch['scores'], batch['indices'] = scores_batch, indices_batch
+
+    # are the retrieved documents relevant ?
+    if reference_kb is not None:
+        relevant_batch = find_relevant_batch(indices_batch, batch['output'], reference_kb,
+                                             relevant_batch=batch['provenance_index'], reference_key=reference_key)
+    else:
+        relevant_batch = batch['provenance_index']
+
+    # compute metrics
+    compute_metrics(metrics["fusion"],
+                    retrieved_batch=indices_batch, relevant_batch=relevant_batch,
+                    K=k, scores_batch=scores_batch, **metrics_kwargs)
+    return batch
+
+
+def search(batch, kbs, reference_kb=None, k=100, metrics={}, metrics_kwargs={}, reference_key='passage', fusion_method='linear', save_irrelevant=False, **fusion_kwargs):
     # search with the KBs
     for kb in kbs:
         index_name = kb['index_name']
@@ -278,21 +290,9 @@ def search(batch, kbs, k=100, metrics={}, metrics_kwargs={}, reference_key='pass
 
     # fuse the results of the searches
     if len(kbs) > 1:
-        scores_batch, indices_batch = fuse(batch, kbs, k=k, method=fusion_method, **fusion_kwargs)
-        batch['scores'], batch['indices'] = scores_batch, indices_batch
-
-        # are the retrieved documents relevant ?
-        if reference_kb is not None:
-            relevant_batch = find_relevant_batch(indices_batch, batch['output'], reference_kb,
-                                                 relevant_batch=batch['provenance_index'], reference_key=reference_key)
-        else:
-            relevant_batch = batch['provenance_index']
-
-        # compute metrics
-        compute_metrics(metrics["fusion"],
-                        retrieved_batch=indices_batch, relevant_batch=relevant_batch,
-                        K=k, scores_batch=scores_batch, **metrics_kwargs)
-
+        fuse_and_compute_metrics(batch, kbs, metrics,
+                                 metrics_kwargs=metrics_kwargs, reference_key=reference_key,
+                                 reference_kb=reference_kb, k=k, fusion_method=fusion_method, **fusion_kwargs)
     return batch
 
 
@@ -337,6 +337,8 @@ def dataset_search(dataset, k=100, save_irrelevant=False, metric_save_path=None,
     kbs = []
     index_names = set()
     metrics = {}
+    # find the kb with reference indices
+    reference_kb = None
     # load KB, index it and load index-mapping, if relevant
     for kb_kwarg in kb_kwargs:
         # load and index KB
@@ -358,6 +360,9 @@ def dataset_search(dataset, k=100, save_irrelevant=False, metric_save_path=None,
                 # convert all keys to int (JSON unfortunately does not support integer keys)
                 kb_kwarg['index_mapping'] = json.load(file, object_hook=json_integer_keys)
 
+        if reference_kb is None and kb_kwarg.get("reference", False):
+            reference_kb = kb
+
         kbs.append(dict(kb=kb, index_name=index_name, es=es, **kb_kwarg))
         assert index_name not in index_names, "All KBs should have unique index names"
         index_names.add(index_name)
@@ -368,8 +373,14 @@ def dataset_search(dataset, k=100, save_irrelevant=False, metric_save_path=None,
     assert len(index_names) >= 1, 'Expected at least one KB'
     if len(index_names) > 1:
         metrics["fusion"] = Counter()
+
+    if reference_kb is None:
+        warnings.warn("Didn't find a reference KB "
+                      "-> will not be able to extend the annotation coverage so results should be interpreted carefully.\n"
+                      "Did you forget to add a 'reference' flag to your config file?")
+
     # search expects a batch as input
-    fn_kwargs = dict(kbs=kbs, k=k, save_irrelevant=save_irrelevant, metrics=metrics, metrics_kwargs=metrics_kwargs, **fusion_kwargs)
+    fn_kwargs = dict(kbs=kbs, reference_kb=reference_kb, k=k, save_irrelevant=save_irrelevant, metrics=metrics, metrics_kwargs=metrics_kwargs, **fusion_kwargs)
 
     # HACK: sleep until elasticsearch is good to go
     time.sleep(60)
@@ -385,6 +396,82 @@ def dataset_search(dataset, k=100, save_irrelevant=False, metric_save_path=None,
     return dataset
 
 
+class FusionObjective:
+    """Callable objective compatible with optuna. Holds data necessary to run fuse_and_compute_metrics"""
+    def __init__(self, dataset, k=100, kbs=None, fusion_method='linear', hyp_hyp=None, metric_for_best_model=None,
+                 fn_kwargs={}, fusion_kwargs={}, map_kwargs={}):
+        self.dataset = dataset
+        self.k = k
+        self.fusion_method = fusion_method
+        self.fusion_kwargs = fusion_kwargs
+        self.map_kwargs = map_kwargs
+
+        # default parameters
+        if hyp_hyp is None:
+            self.hyp_hyp = {
+                'linear': {
+                    "alpha": {
+                        "bounds": (0, 2),
+                        "step": 0.1
+                    }
+                }
+            }
+        if metric_for_best_model is None:
+            self.metric_for_best_model = f"MRR@{self.k}"
+        reference_kb = None
+        for kb in kbs:
+            if kb.get("reference", False):
+                reference_kb = load_from_disk(kb.pop('path'))
+                break
+        if reference_kb is None:
+            warnings.warn("Didn't find a reference KB "
+                          "-> will not be able to extend the annotation coverage so results should be interpreted carefully.\n"
+                          "Did you forget to add a 'reference' flag to your config file?")
+
+        fn_kwargs.update(dict(kbs=kbs, reference_kb=reference_kb, k=self.k, fusion_method=self.fusion_method))
+        self.fn_kwargs = fn_kwargs
+
+    def __call__(self, trial):
+        fusion_kwargs = self.fusion_kwargs
+        fn_kwargs = self.fn_kwargs
+        if self.fusion_method == 'linear':
+            alpha = trial.suggest_float("alpha", *self.hyp_hyp[self.fusion_method]["alpha"]["bounds"])
+            fusion_kwargs['alpha'] = alpha
+        else:
+            raise NotImplementedError()
+        fn_kwargs.update(fusion_kwargs)
+
+        metrics = {"fusion": Counter()}
+        fn_kwargs['metrics'] = metrics
+        self.dataset.map(fuse_and_compute_metrics, fn_kwargs=fn_kwargs, batched=True, **self.map_kwargs)
+        reduce_metrics(metrics, K=self.k)
+        trial.set_user_attr('metrics', metrics)
+        return metrics['fusion'][self.metric_for_best_model]
+
+
+def hyperparameter_search(dataset, k=100, metric_save_path=None, optimize_kwargs={}, study_kwargs={}, **objective_kwargs):
+    objective = FusionObjective(dataset, k=k, **objective_kwargs)
+    if objective.fusion_method == 'linear':
+        alpha_hyp = objective.hyp_hyp[objective.fusion_method]['alpha']
+        search_space = np.arange(*alpha_hyp["bounds"], alpha_hyp["step"])
+        default_study_kwargs = dict(direction='maximize', sampler=optuna.samplers.GridSampler(search_space))
+    else:
+        default_study_kwargs = {}
+    default_study_kwargs.update(study_kwargs)
+    study = optuna.create_study(**default_study_kwargs)
+    # actual optimisation
+    study.optimize(objective, **optimize_kwargs)
+    print(f"Best value: {study.best_value} (should match {objective.metric_for_best_model})")
+    print(f"Best hyperparameters: {study.best_params}")
+    best_trial = study.best_trial
+    metrics = best_trial.user_attrs.get('metrics')
+    if metrics is not None:
+        print(stringify_metrics(metrics, tablefmt='latex', floatfmt=".2f"))
+        if metric_save_path is not None:
+            with open(metric_save_path, 'w') as file:
+                json.dump(metrics, file)
+
+
 if __name__ == '__main__':
     args = docopt(__doc__)
     dataset_path = args['<dataset>']
@@ -398,9 +485,12 @@ if __name__ == '__main__':
 
     k = int(args['--k'])
 
-    dataset = dataset_search(dataset, k,
-                             save_irrelevant=args['--save_irrelevant'],
-                             metric_save_path=args['--metrics'],
-                             **config)
+    if args['hp']:
+        hyperparameter_search(dataset, k, metric_save_path=args['--metrics'], **config)
+    else:
+        dataset = dataset_search(dataset, k,
+                                 save_irrelevant=args['--save_irrelevant'],
+                                 metric_save_path=args['--metrics'],
+                                 **config)
 
-    dataset.save_to_disk(dataset_path)
+        dataset.save_to_disk(dataset_path)
