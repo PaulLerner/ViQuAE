@@ -48,7 +48,9 @@ def find_relevant_batch(retrieved_batch, ground_truth_output_batch, kb, relevant
 
     for retrieved, relevant, ground_truth_output in zip(retrieved_batch, relevant_batch, ground_truth_output_batch):
         answers = ground_truth_output['answer']
-        relevant.extend(find_relevant(retrieved, answers, kb, reference_key=reference_key))
+        # we already know that relevant indices are relevant, no need to compute it twice
+        retrieved_todo = set(retrieved) - set(relevant)
+        relevant.extend(find_relevant(retrieved_todo, answers, kb, reference_key=reference_key))
 
     return relevant_batch
 
