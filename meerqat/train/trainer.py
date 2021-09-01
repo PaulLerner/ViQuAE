@@ -62,10 +62,13 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
     max_n_answers: int, optional
         The answer might be found several time in the same passage, this is a threshold to enable batching
         Defaults to 10.
-    eval_search_key: str, optional
+    search_key: str, optional
         This column in the dataset suffixed by '_indices' and '_scores' should hold the result of information retrieval
-        (e.g. the output of ir.search)
-        It is not used during training.
+        used during evaluation (e.g. the output of ir.search)
+        Suffixed by "_provenance_indices" and "_irrelevant_indices" it should hold:
+            1. the union of relevant search and provenance_indices
+            2. irrelevant results from the search
+        used during training (according to M and n_relevant_passages)
         Defaults to 'search'
     tokenization_kwargs: dict, optional
         To be passed to self.tokenizer
@@ -74,7 +77,7 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
         (data not used by the model but necessary for evaluation)
         Defaults to ['answer_strings']
     """
-    def __init__(self, *args, kb, M=24, n_relevant_passages=1, max_n_answers=10, eval_search_key='search',
+    def __init__(self, *args, kb, M=24, n_relevant_passages=1, max_n_answers=10, search_key='search',
                  tokenization_kwargs=None, ignore_keys=['answer_strings'], **kwargs):
         super().__init__(*args, **kwargs)
         assert self.tokenizer is not None
@@ -83,7 +86,7 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
         assert n_relevant_passages <= M
         self.n_relevant_passages = n_relevant_passages
         self.max_n_answers = max_n_answers
-        self.eval_search_key = eval_search_key
+        self.search_key = search_key
         default_tokenization_kwargs = dict(return_tensors='pt', padding='max_length', truncation=True)
         if tokenization_kwargs is None:
             tokenization_kwargs = {}
@@ -99,15 +102,17 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
 
     def get_training_passages(self, item):
         relevant_passages = []
-        n_relevant = min(len(item['provenance_index']), self.n_relevant_passages)
+        all_relevant_indices = item[self.search_key+"_provenance_indices"]
+        n_relevant = min(len(all_relevant_indices), self.n_relevant_passages)
         if n_relevant > 0:
-            relevant_indices = np.random.choice(item['provenance_index'], n_relevant, replace=False)
+            relevant_indices = np.random.choice(all_relevant_indices, n_relevant, replace=False)
             if len(relevant_indices) > 0:
                 relevant_passages = self.kb.select(relevant_indices)['passage']
         irrelevant_passages = []
-        n_irrelevant = min(len(item['irrelevant_index']), self.M-self.n_relevant_passages)
+        all_irrelevant_indices = item[self.search_key+"_irrelevant_indices"]
+        n_irrelevant = min(len(all_irrelevant_indices), self.M-self.n_relevant_passages)
         if n_irrelevant > 0:
-            irrelevant_indices = np.random.choice(item['irrelevant_index'], n_irrelevant, replace=False)
+            irrelevant_indices = np.random.choice(all_irrelevant_indices, n_irrelevant, replace=False)
             if len(irrelevant_indices) > 0:
                 irrelevant_passages = self.kb.select(irrelevant_indices)['passage']
         elif n_relevant <= 0:
@@ -116,8 +121,8 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
 
     def get_eval_passages(self, item):
         """Keep the top-M passages retrieved by the IR"""
-        indices = item[self.eval_search_key+"_indices"][: self.M]
-        scores = item[self.eval_search_key+"_scores"][: self.M]
+        indices = item[self.search_key+"_indices"][: self.M]
+        scores = item[self.search_key+"_scores"][: self.M]
         return self.kb.select(indices)['passage'], scores
 
     def get_answer_position(self, batch, answers, answer_mask):

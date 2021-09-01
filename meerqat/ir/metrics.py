@@ -66,7 +66,7 @@ def find_relevant_item(item, passages, title2index, article2passage):
         article_index = title2index[title]
         passage_indices = article2passage.get(article_index, [])
         relevant.extend(find_relevant(passage_indices, item['output']['answer'], passages))
-    item['provenance_index'] = relevant
+    item['provenance_indices'] = relevant
     return item
 
 

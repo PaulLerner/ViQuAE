@@ -7,7 +7,7 @@ search.py hp <dataset> <config> [--k=<k> --disable_caching --metrics=<path>]
 Options:
 --k=<k>                 Hyperparameter to search for the k nearest neighbors [default: 100].
 --disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
---save_irrelevant       Save irrelevant results from the search in the dataset
+--save_irrelevant       Save 1. irrelevant results from the search, 2. the union of relevant search and provenance_indices
 --metrics=<path>        Path to save the results in JSON format
 """
 import warnings
@@ -230,21 +230,26 @@ def search_batch_if_not_None(kb, index_name, queries, k=100):
     return scores_batch, indices_batch
 
 
-def fuse_and_compute_metrics(batch, kbs, metrics, metrics_kwargs={}, reference_kb=None, reference_key='passage', k=100, fusion_method='linear', **fusion_kwargs):
+def fuse_and_compute_metrics(batch, kbs, metrics, metrics_kwargs={}, reference_kb=None, reference_key='passage', k=100, fusion_method='linear', save_irrelevant=False, **fusion_kwargs):
     scores_batch, indices_batch = fuse(batch, kbs, k=k, method=fusion_method, **fusion_kwargs)
-    batch['scores'], batch['indices'] = scores_batch, indices_batch
+    batch['search_scores'], batch['search_indices'] = scores_batch, indices_batch
 
     # are the retrieved documents relevant ?
     if reference_kb is not None:
         relevant_batch = find_relevant_batch(indices_batch, batch['output'], reference_kb,
-                                             relevant_batch=deepcopy(batch['provenance_index']), reference_key=reference_key)
+                                             relevant_batch=deepcopy(batch['provenance_indices']), reference_key=reference_key)
     else:
-        relevant_batch = batch['provenance_index']
+        relevant_batch = batch['provenance_indices']
 
     # compute metrics
     compute_metrics(metrics["fusion"],
                     retrieved_batch=indices_batch, relevant_batch=relevant_batch,
                     K=k, scores_batch=scores_batch, **metrics_kwargs)
+
+    if save_irrelevant:
+        irrelevant_batch = get_irrelevant_batch(retrieved_batch=indices_batch, relevant_batch=relevant_batch)
+        batch[f'search_irrelevant_indices'] = irrelevant_batch
+        batch[f'search_provenance_indices'] = relevant_batch
     return batch
 
 
@@ -277,9 +282,9 @@ def search(batch, kbs, reference_kb=None, k=100, metrics={}, metrics_kwargs={}, 
         # are the retrieved documents relevant ?
         if reference_kb is not None:
             relevant_batch = find_relevant_batch(indices_batch, batch['output'], reference_kb,
-                                                 relevant_batch=deepcopy(batch['provenance_index']), reference_key=reference_key)
+                                                 relevant_batch=deepcopy(batch['provenance_indices']), reference_key=reference_key)
         else:
-            relevant_batch = batch['provenance_index']
+            relevant_batch = batch['provenance_indices']
 
         # compute metrics
         compute_metrics(metrics[index_name],
@@ -289,6 +294,7 @@ def search(batch, kbs, reference_kb=None, k=100, metrics={}, metrics_kwargs={}, 
         if save_irrelevant:
             irrelevant_batch = get_irrelevant_batch(retrieved_batch=indices_batch, relevant_batch=relevant_batch)
             batch[f'{index_name}_irrelevant_indices'] = irrelevant_batch
+            batch[f'{index_name}_provenance_indices'] = relevant_batch
 
     # fuse the results of the searches
     if len(kbs) > 1:
@@ -377,6 +383,7 @@ def dataset_search(dataset, k=100, save_irrelevant=False, metric_save_path=None,
 
         kbs.append(dict(kb=kb, index_name=index_name, es=es, **kb_kwarg))
         assert index_name not in index_names, "All KBs should have unique index names"
+        assert index_name not in {'search', 'fusion'}, "'search', 'fusion' are reserved names"
         index_names.add(index_name)
 
         # initialize the metrics for this KB
