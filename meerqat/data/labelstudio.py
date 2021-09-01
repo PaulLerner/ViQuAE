@@ -91,7 +91,7 @@ def annotator_agreement(dataset):
         for category, values in categories.items():
             all_agree = len(values) == 1
             counter[category] += int(all_agree)
-            if not all_agree:
+            if not all_agree and category == 'binary_discard':
                 disagreements[meerqat_id] = {'vqas': vqas, 'annotator_agreement': categories}
 
     print(f"found {counter['multiple_annotators']} questions with at least 2 annotators over {counter['total']} questions")
@@ -109,7 +109,19 @@ def retrieve_vqa(completion):
     # note that "vq" is present in results even if the user didn't modify it (only absent if skipped)
     for result in results:
         key = result["from_name"]
-        vqa[key] = next(iter(result["value"].values()))[0]
+        values = next(iter(result["value"].values()))
+        # HACK: fix the bug where label-studio saves the original question when updating the annotation
+        # see also ANNOTATION.md
+        if len(values) != 1 and key == 'vq':
+            values = set(values)
+            if len(values) != 1:
+                values.discard(data['vq'])
+            value = next(iter(values))
+            if len(values) != 1:
+                warnings.warn(f"Found several values for '{key}': {values}")
+        else:
+            value = values[0]
+        vqa[key] = value
 
     # update image if necessary
     change_image = vqa.pop("change_image", None)
