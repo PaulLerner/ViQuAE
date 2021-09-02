@@ -14,11 +14,72 @@ from pathlib import Path
 
 from datasets import load_from_disk, set_caching_enabled
 
-from facenet_pytorch import MTCNN
+from facenet_pytorch import MTCNN as facenet_MTCNN
 
 from meerqat.models.utils import device
 from meerqat.data.loading import COMMONS_PATH as IMAGE_PATH, load_image_batch
 from meerqat.data.wiki import VALID_ENCODING
+
+
+class MTCNN(facenet_MTCNN):
+    """Simply override forward to allow to return bounding boxes and landmarks"""
+    def forward(self, img, save_path=None, return_prob=False, return_box=False, return_landmarks=False):
+        """Run MTCNN face detection on a PIL image or numpy array. This method performs both
+        detection and extraction of faces.
+
+        Arguments:
+            img {PIL.Image, np.ndarray, or list} -- A PIL image, np.ndarray, torch.Tensor, or list.
+
+        Keyword Arguments:
+            save_path {str} -- An optional save path for the cropped image. Note that when
+                self.post_process=True, although the returned tensor is post processed, the saved
+                face image is not, so it is a true representation of the face in the input image.
+                If `img` is a list of images, `save_path` should be a list of equal length.
+                (default: {None})
+            return_prob {bool} -- Whether or not to return the detection probability.
+                (default: {False})
+            return_box {bool} -- Whether or not to return the bounding box.
+                (default: {False})
+            return_landmarks {bool} -- Whether or not to return the facial landmarks.
+                (default: {False})
+
+        Returns:
+            Union[torch.Tensor, tuple(torch.tensor, float)] -- If detected, cropped image of a face
+                with dimensions 3 x image_size x image_size. Optionally, the probability that a
+                face was detected, the bounding box coordinates and facial landmarks associated.
+                If self.keep_all is True, n detected faces are returned in an
+                n x 3 x image_size x image_size tensor with an optional list of detection
+                probabilities. If `img` is a list of images, the item(s) returned have an extra
+                dimension (batch) as the first dimension.
+        Example:
+        >>> mtcnn = MTCNN()
+        >>> face_tensor, prob, box, landmarks = mtcnn(img, save_path='face.png',
+                                                      return_prob=True,
+                                                      return_box=True,
+                                                      return_landmarks=True)
+        """
+
+        # Detect faces
+        batch_boxes, batch_probs, batch_points = self.detect(img, landmarks=True)
+        # Select faces
+        if not self.keep_all:
+            batch_boxes, batch_probs, batch_points = self.select_boxes(
+                batch_boxes, batch_probs, batch_points, img, method=self.selection_method
+            )
+        # Extract faces
+        faces = self.extract(img, batch_boxes, save_path)
+
+        outputs = (faces, )
+        if return_prob:
+            outputs += (batch_probs, )
+        if return_box:
+            outputs += (batch_boxes, )
+        if return_landmarks:
+            outputs += (batch_points, )
+        # unpack the tuple if only the face was asked
+        if len(outputs) == 1:
+            return outputs[0]
+        return outputs
 
 
 def detect_face(file_names, model, save_root_path=None):
@@ -42,20 +103,28 @@ def detect_face(file_names, model, save_root_path=None):
         images_by_size[image.size]['save_paths'].append(save_path)
         images_by_size[image.size]['indices'].append(i)
 
-    face_batch, prob_batch = [None for _ in range(len(file_names))], [None for _ in range(len(file_names))]
+    face_batch = [None for _ in range(len(file_names))]
+    prob_batch, box_batch, landmarks_batch = face_batch.copy(), face_batch.copy(), face_batch.copy()
     for batch in images_by_size.values(): 
-        faces, probs = model(batch['images'], save_path=batch['save_paths'], return_prob=True)
-        for face, prob, i in zip(faces, probs, batch['indices']):
+        faces, probs, boxes, landmarks = model(batch['images'], save_path=batch['save_paths'],
+                                               return_prob=True,
+                                               return_box=True,
+                                               return_landmarks=True)
+        for face, prob, box, landmark, i in zip(faces, probs, boxes, landmarks, batch['indices']):
             face_batch[i] = face
             prob_batch[i] = prob
+            box_batch[i] = box
+            landmarks_batch[i] = landmark
 
-    return face_batch, prob_batch
+    return face_batch, prob_batch, box_batch, landmarks_batch
 
 
 def dataset_detect_face(item, image_key='image', **kwargs):
-    face, prob = detect_face(item[image_key], **kwargs)
+    face, prob, box, landmarks = detect_face(item[image_key], **kwargs)
     item['face'] = face
     item['face_prob'] = prob
+    item['face_box'] = box
+    item['face_landmarks'] = landmarks
     return item
 
 
