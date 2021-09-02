@@ -101,10 +101,12 @@ def annotator_agreement(dataset):
 
 def retrieve_vqa(completion):
     # "completions" was renamed to "annotations" in labelstudio 1.0
-    results = completion.get("completions", completion.get("annotations"))[0]["result"]
+    completions = completion.get("completions", completion.get("annotations"))
+    results = completions[0]["result"]
     data = completion["data"]
     vqa = dict(question=data["question"], wikidata_id=data["wikidata_id"], answer=data['answer'],
                image=data['image'], meerqat_id=data['meerqat_id'], old_vq=data['vq'], old_image=data['image'])
+
     # make a proper dict out of the results
     # note that "vq" is present in results even if the user didn't modify it (only absent if skipped)
     for result in results:
@@ -128,6 +130,11 @@ def retrieve_vqa(completion):
     if change_image is not None:
         # e.g. "$altimage1caption" -> "altimage1"
         vqa['image'] = data[change_image[1: -7]]
+
+    # HACK: fix users were not supposed to cancel task (skip button) without selecting a discard reason
+    # see also ANNOTATION.md
+    if completions[0].get('was_cancelled', False) and vqa.get('discard') is None:
+        vqa['discard'] = 'cancelled'
 
     return vqa
 
