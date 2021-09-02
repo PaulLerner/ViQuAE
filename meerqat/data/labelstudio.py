@@ -3,6 +3,7 @@
 labelstudio.py save images <path>...
 labelstudio.py merge <output> <path>...
 labelstudio.py assign <output> <todo> <start> <end> [--overlap=<n> --zip <config>...]
+labelstudio.py agree <dataset> <agreements>
 
 Options:
 --overlap=<n>           Number of questions to leave in todo [default: 0].
@@ -211,6 +212,30 @@ def assign(output_path, todo_path, start, end, overlap=0, zip=False, configs=[])
         json.dump(todo, file)
 
 
+def agree(dataset_path, agreements_path):
+    dataset = {}
+    with open(dataset_path, 'r') as file:
+        old_dataset = json.load(file)
+
+    with open(agreements_path, 'r') as file:
+        agreements = json.load(file)
+
+    for meerqat_id, old_vqas in old_dataset.items():
+        # handle multiple annotators
+        if meerqat_id in agreements:
+            vqa = agreements[meerqat_id]["vqas"][0]
+        # annotator(s) agreed
+        else:
+            vqa = old_vqas[0]
+        if vqa.get('discard'):
+            continue
+        dataset[meerqat_id] = vqa
+    output_path = dataset_path.parent/f"{dataset_path.stem}-agreed.json"
+    print(f"Saving a dataset of {len(dataset)} questions to '{output_path}'")
+    with open(output_path, 'wt') as file:
+        json.dump(dataset, file)
+
+
 def main():
     args = docopt(__doc__)
     completions = args['<path>']
@@ -227,6 +252,9 @@ def main():
         zip = args['--zip']
         configs = args['<config>']
         assign(output_path, todo_path, start, end, overlap=overlap, zip=zip, configs=configs)
+    elif args['agree']:
+        dataset_path, agreements_path = Path(args['<dataset>']), Path(args['<agreements>'])
+        agree(dataset_path, agreements_path)
 
 
 if __name__ == '__main__':
