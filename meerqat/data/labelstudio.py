@@ -10,6 +10,8 @@ Options:
 """
 
 import json
+import warnings
+
 from docopt import docopt
 from tqdm import tqdm
 from collections import Counter
@@ -70,13 +72,33 @@ def merge(output_path, completions_paths):
 
 
 def annotator_agreement(dataset):
-    # TODO Fleiss' Kappa
+    """
+
+    Parameters
+    ----------
+    dataset : dict[str, list]
+        output of merge
+
+    Returns
+    -------
+    disagreements : dict
+        questions of dataset where the annotators disagree on whether discarding the question or not
+    """
     disagreements = {}
     counter = Counter()
+    # store binary discard predictions
+    # n[i] stores the number of annotators who discard the question or not
+    n, P = [], []
+    do_kappa = True
+    num_annotators_per_annotation = None
     for meerqat_id, vqas in dataset.items():
         counter['total'] += 1
         if len(vqas) <= 1:
             continue
+        if num_annotators_per_annotation is not None and len(vqas) != num_annotators_per_annotation:
+            warnings.warn(f"Expected max. number of annotations to be {num_annotators_per_annotation}, got {len(vqas)} -> cannot compute Fleiss' Kappa")
+            do_kappa = False
+        num_annotators_per_annotation = len(vqas)
         counter['multiple_annotators'] += 1
         categories = dict(binary_discard=Counter(), binary_change_question=Counter(), binary_change_image=Counter())
         for vqa in vqas:
@@ -88,6 +110,10 @@ def annotator_agreement(dataset):
             categories['binary_discard'][False] += 1
             categories['binary_change_question'][vqa.get('vq', '').lower() != vqa['old_vq'].lower()] += 1
             categories['binary_change_image'][vqa['image'] != vqa['old_image']] += 1
+        n_i = categories['binary_discard']
+        n.append(n_i)
+        total_pairs = num_annotators_per_annotation*(num_annotators_per_annotation-1)
+        P.append((sum(n_ij**2 for n_ij in n_i.values())-num_annotators_per_annotation)/total_pairs)
         for category, values in categories.items():
             all_agree = len(values) == 1
             counter[category] += int(all_agree)
@@ -96,6 +122,23 @@ def annotator_agreement(dataset):
 
     print(f"found {counter['multiple_annotators']} questions with at least 2 annotators over {counter['total']} questions")
     print(tabulate([counter], headers='keys'))
+    if not do_kappa:
+        return disagreements
+
+    # compute Fleiss' Kappa computation
+    # number of annotations with multiple annotators
+    N = counter['multiple_annotators']
+    # proportion of all discards and keeps
+    p = sum(n, Counter())
+    for k, v in p.items():
+        p[k] /= (N*num_annotators_per_annotation)
+    print(f'Proportion of discards (should sum to 1): {p[True]}, and keeps: {p[False]}')
+    P_bar = sum(P)/N
+    print(f'Average of P : {P_bar}')
+    P_bar_e = sum(p_j**2 for p_j in p.values())
+    print(f'Sum of squares of p: {P_bar_e}')
+    kappa = (P_bar - P_bar_e)/(1 - P_bar_e)
+    print(f"Fleiss' Kappa: {kappa}")
     return disagreements
 
 
