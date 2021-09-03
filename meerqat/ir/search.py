@@ -134,12 +134,24 @@ def linear_fusion(batch, kbs, k=100, alpha=1.1):
     faiss_dicts = scores2dict(faiss_scores, faiss_indices)
 
     for es_dict, faiss_dict in zip(es_dicts, faiss_dicts):
-        # fusion = es + alpha * faiss
-        for index, score in faiss_dict.items():
-            es_dict.setdefault(index, 0.)
-            es_dict[index] += alpha * score
+        # FIXME this is not consistent with interpolation_fusion
+        # follow Ma et al. (2021, arXiv:2104.05740) by using minimal score when the document was retrieved only by one system
+        min_es_score = min(es_dict.values())
+        min_faiss_score = min(faiss_dict.values())
+        fusion_dict = {}
+        for index in set(es_dict.keys()) | set(faiss_dict.keys()):
+            if index not in faiss_dict:
+                es_score = es_dict[index]
+                faiss_score = min_faiss_score
+            elif index not in es_dict:
+                es_score = min_es_score
+                faiss_score = faiss_dict[index]
+            else:
+                es_score = es_dict[index]
+                faiss_score = faiss_dict[index]
+            fusion_dict[index] = es_score + alpha * faiss_score
         # sort in desc. order and keep top-k
-        scores, indices = dict2scores(es_dict, k=k)
+        scores, indices = dict2scores(fusion_dict, k=k)
         scores_batch.append(scores)
         indices_batch.append(indices)
 
