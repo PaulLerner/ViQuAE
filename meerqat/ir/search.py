@@ -140,15 +140,8 @@ def linear_fusion(batch, kbs, k=100, alpha=1.1):
         min_faiss_score = min(faiss_dict.values())
         fusion_dict = {}
         for index in set(es_dict.keys()) | set(faiss_dict.keys()):
-            if index not in faiss_dict:
-                es_score = es_dict[index]
-                faiss_score = min_faiss_score
-            elif index not in es_dict:
-                es_score = min_es_score
-                faiss_score = faiss_dict[index]
-            else:
-                es_score = es_dict[index]
-                faiss_score = faiss_dict[index]
+            es_score = es_dict.get(index, min_es_score)
+            faiss_score = faiss_dict.get(index, min_faiss_score)
             fusion_dict[index] = es_score + alpha * faiss_score
         # sort in desc. order and keep top-k
         scores, indices = dict2scores(fusion_dict, k=k)
