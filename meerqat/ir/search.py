@@ -440,8 +440,14 @@ class FusionObjective:
                     }
                 }
             }
+        else:
+            self.hyp_hyp = hyp_hyp
+
         if metric_for_best_model is None:
             self.metric_for_best_model = f"MRR@{self.k}"
+        else:
+            self.metric_for_best_model = metric_for_best_model
+
         reference_kb = None
         for kb in kbs:
             if kb.get("reference", False):
@@ -477,7 +483,7 @@ def hyperparameter_search(dataset, k=100, metric_save_path=None, optimize_kwargs
     objective = FusionObjective(dataset, k=k, **objective_kwargs)
     if objective.fusion_method == 'linear':
         alpha_hyp = objective.hyp_hyp[objective.fusion_method]['alpha']
-        search_space = dict(alpha=np.arange(*alpha_hyp["bounds"], alpha_hyp["step"]))
+        search_space = dict(alpha=np.arange(*alpha_hyp["bounds"], alpha_hyp["step"]).tolist())
         default_study_kwargs = dict(direction='maximize', sampler=optuna.samplers.GridSampler(search_space))
     else:
         default_study_kwargs = {}
