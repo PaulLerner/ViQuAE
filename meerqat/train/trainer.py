@@ -325,7 +325,9 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
             answer_strings = inputs.get('answer_strings')
             if answer_strings is not None:
                 all_answers.extend(answer_strings)
-            passage_scores_host = inputs['passage_scores'] if passage_scores_host is None else torch.cat((passage_scores_host, inputs['passage_scores']), dim=0)
+            passage_score = inputs.get('passage_scores')
+            if passage_scores is not None:
+                passage_scores_host = passage_score if passage_scores_host is None else torch.cat((passage_scores_host, passage_score), dim=0)
 
             # Update the observed num examples
             observed_batch_size = find_batch_size(inputs)
@@ -411,10 +413,11 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
             predictions, references = format_predictions_for_squad(predictions, all_answers)
             metrics = self.compute_metrics(predictions=predictions, references=references)
             # 2. weighted predictions
-            weighted_predictions = self.log_probs_to_answers(all_preds, all_input_ids, weights=all_passage_scores)
-            weighted_predictions, references = format_predictions_for_squad(weighted_predictions, all_answers)
-            for k, v in self.compute_metrics(predictions=weighted_predictions, references=references).items():
-                metrics['weighted_'+k] = v
+            if all_passage_scores is not None:
+                weighted_predictions = self.log_probs_to_answers(all_preds, all_input_ids, weights=all_passage_scores)
+                weighted_predictions, references = format_predictions_for_squad(weighted_predictions, all_answers)
+                for k, v in self.compute_metrics(predictions=weighted_predictions, references=references).items():
+                    metrics['weighted_'+k] = v
         else:
             metrics = {}
             predictions = all_preds
