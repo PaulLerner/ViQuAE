@@ -2,13 +2,14 @@
 
 Usage:
 search.py <dataset> <config> [--k=<k> --disable_caching --save_irrelevant --metrics=<path>]
-search.py hp <dataset> <config> [--k=<k> --disable_caching --metrics=<path>]
+search.py hp <dataset> <config> [--k=<k> --disable_caching --metrics=<path> --test=<dataset>]
 
 Options:
 --k=<k>                 Hyperparameter to search for the k nearest neighbors [default: 100].
 --disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
 --save_irrelevant       Save 1. irrelevant results from the search, 2. the union of relevant search and provenance_indices
 --metrics=<path>        Path to save the results in JSON format
+--test=<dataset>        Name of the test dataset
 """
 import warnings
 
@@ -479,8 +480,9 @@ class FusionObjective:
         return metrics['fusion'][self.metric_for_best_model]
 
 
-def hyperparameter_search(dataset, k=100, metric_save_path=None, optimize_kwargs={}, study_kwargs={}, **objective_kwargs):
-    objective = FusionObjective(dataset, k=k, **objective_kwargs)
+def hyperparameter_search(train_dataset, k=100, metric_save_path=None, eval_dataset=None,
+                          optimize_kwargs={}, study_kwargs={}, **objective_kwargs):
+    objective = FusionObjective(train_dataset, k=k, **objective_kwargs)
     if objective.fusion_method == 'linear':
         alpha_hyp = objective.hyp_hyp[objective.fusion_method]['alpha']
         search_space = dict(alpha=np.arange(*alpha_hyp["bounds"], alpha_hyp["step"]).tolist())
@@ -495,6 +497,17 @@ def hyperparameter_search(dataset, k=100, metric_save_path=None, optimize_kwargs
     print(f"Best hyperparameters: {study.best_params}")
     best_trial = study.best_trial
     metrics = best_trial.user_attrs.get('metrics')
+
+    # apply hyperparameters on test set
+    if eval_dataset is not None:
+        fn_kwargs = objective.fn_kwargs
+        fn_kwargs.update(study.best_params)
+        eval_metrics = {"eval_fusion": Counter()}
+        fn_kwargs['metrics'] = eval_metrics
+        eval_dataset.map(fuse_and_compute_metrics, fn_kwargs=fn_kwargs, batched=True, **objective.map_kwargs)
+        reduce_metrics(eval_metrics, K=k)
+        metrics.update(eval_metrics)
+
     if metrics is not None:
         print(stringify_metrics(metrics, tablefmt='latex', floatfmt=".2f"))
         if metric_save_path is not None:
@@ -518,9 +531,14 @@ if __name__ == '__main__':
     if args['hp']:
         hyperparameter_search(dataset, k, metric_save_path=args['--metrics'], **config)
     else:
+        if args['--test']:
+            eval_dataset = load_from_disk(args['--test'])
+        else:
+            eval_dataset = None
         dataset = dataset_search(dataset, k,
                                  save_irrelevant=args['--save_irrelevant'],
                                  metric_save_path=args['--metrics'],
+                                 eval_dataset=eval_dataset,
                                  **config)
 
         dataset.save_to_disk(dataset_path)
