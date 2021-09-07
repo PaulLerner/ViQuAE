@@ -326,7 +326,7 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
             if answer_strings is not None:
                 all_answers.extend(answer_strings)
             passage_score = inputs.get('passage_scores')
-            if passage_scores is not None:
+            if passage_score is not None:
                 passage_scores_host = passage_score if passage_scores_host is None else torch.cat((passage_scores_host, passage_score), dim=0)
 
             # Update the observed num examples
