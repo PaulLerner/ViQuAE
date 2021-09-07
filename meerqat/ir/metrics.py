@@ -14,12 +14,13 @@ from meerqat.data.loading import answer_preprocess
 from meerqat.data.utils import json_integer_keys
 
 
-def find_relevant(retrieved, answers, kb, reference_key='passage'):
+def find_relevant(retrieved, original_answer, alternative_answers, kb, reference_key='passage'):
     """
     Parameters
     ----------
     retrieved: List[int]
-    answers: List[str]
+    original_answer: str
+    alternative_answers: List[str]
     kb: Dataset
     reference_key: str, optional
         Used to get the reference field in kb
@@ -27,30 +28,41 @@ def find_relevant(retrieved, answers, kb, reference_key='passage'):
 
     Returns
     -------
-    relevant: List[int]
+    original_relevant, relevant: List[int]
         Included in retrieved
     """
-    relevant = []
+    original_relevant, relevant = [], []
     for i in retrieved:
         passage = answer_preprocess(kb[i][reference_key])
-        for answer in answers:
+
+        answer = answer_preprocess(original_answer)
+        if re.search(rf'\b{answer}\b', passage) is not None:
+            original_relevant.append(i)
+            relevant.append(i)
+            continue
+
+        for answer in alternative_answers:
             answer = answer_preprocess(answer)
             if re.search(rf'\b{answer}\b', passage) is not None:
                 relevant.append(i)
                 break
-    return relevant
+    return original_relevant, relevant
 
 
-def find_relevant_batch(retrieved_batch, ground_truth_output_batch, kb, relevant_batch=None, reference_key='passage'):
+def find_relevant_batch(retrieved_batch, ground_truth_output_batch, kb, relevant_batch=None, reference_key='passage', original_answer_only=False):
     if relevant_batch is None:
         batch_size = len(ground_truth_output_batch)
         relevant_batch = [[] for _ in range(batch_size)]
 
     for retrieved, relevant, ground_truth_output in zip(retrieved_batch, relevant_batch, ground_truth_output_batch):
-        answers = ground_truth_output['answer']
         # we already know that relevant indices are relevant, no need to compute it twice
         retrieved_todo = set(retrieved) - set(relevant)
-        relevant.extend(find_relevant(retrieved_todo, answers, kb, reference_key=reference_key))
+        if original_answer_only:
+            alternative_answers = []
+        else:
+            alternative_answers = ground_truth_output['answer']
+        _, r = find_relevant(retrieved_todo, ground_truth_output['original_answer'], alternative_answers, kb, reference_key=reference_key)
+        relevant.extend(r)
 
     return relevant_batch
 
@@ -59,13 +71,16 @@ def find_relevant_item(item, passages, title2index, article2passage):
     # ignore from which paragraph the answer comes from
     # (might have been quicker to do this mapping in make_passage)
     titles = set(provenance['title'][0] for provenance in item['output']['provenance'])
-    relevant = []
+    original_relevant, relevant = [], []
     for title in titles:
         if title not in title2index:
             continue
         article_index = title2index[title]
         passage_indices = article2passage.get(article_index, [])
-        relevant.extend(find_relevant(passage_indices, item['output']['answer'], passages))
+        o, r = find_relevant(passage_indices, item['output']['original_answer'], item['output']['answer'], passages)
+        original_relevant.extend(o)
+        relevant.extend(r)
+    item['original_answer_provenance_indices'] = original_relevant
     item['provenance_indices'] = relevant
     return item
 
