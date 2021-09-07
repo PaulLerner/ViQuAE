@@ -105,7 +105,11 @@ def detect_face(file_names, model, save_root_path=None):
 
     face_batch = [None for _ in range(len(file_names))]
     prob_batch, box_batch, landmarks_batch = face_batch.copy(), face_batch.copy(), face_batch.copy()
-    for batch in images_by_size.values(): 
+    for size, batch in images_by_size.items():
+        # avoid exception when image size is smaller than model.min_face_size (keep the None default value)
+        # see https://github.com/timesler/facenet-pytorch/issues/176
+        if min(size) < model.min_face_size:
+            continue
         faces, probs, boxes, landmarks = model(batch['images'], save_path=batch['save_paths'],
                                                return_prob=True,
                                                return_box=True,
