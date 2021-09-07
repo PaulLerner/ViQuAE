@@ -76,9 +76,13 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
         List of keys to remove from the batch before feeding it to the model
         (data not used by the model but necessary for evaluation)
         Defaults to ['answer_strings']
+    train_original_answer_only: bool, optional
+        Whether the model should be trained to predict only the original answer (default)
+        or all alternative answers (with the only limit of max_n_answers)
+        This has no effect on the evaluation (where all alternative answers are always considered)
     """
     def __init__(self, *args, kb, M=24, n_relevant_passages=1, max_n_answers=10, search_key='search',
-                 tokenization_kwargs=None, ignore_keys=['answer_strings'], **kwargs):
+                 tokenization_kwargs=None, ignore_keys=['answer_strings'], train_original_answer_only=True, **kwargs):
         super().__init__(*args, **kwargs)
         assert self.tokenizer is not None
         self.kb = load_from_disk(kb)
@@ -94,6 +98,7 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
         self.tokenization_kwargs = default_tokenization_kwargs
         self.data_collator = self.collate_fn
         self.ignore_keys = ignore_keys
+        self.train_original_answer_only = train_original_answer_only
 
         # we need those ‘un-used’ columns to actually create the batch the model will use
         if self.args.remove_unused_columns:
@@ -202,10 +207,16 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
             # avoid processing the same answer twice
             answer = item['output']['answer']
             answer_strings.extend([answer]*self.M)
-            if self.tokenizer.do_lower_case:
-                answer = list({a.lower() for a in answer} - {original_answer})
-            # but ensure the original answer is still the first to be processed
-            answer = [original_answer] + answer
+            # beware this create a discrepancy between answer_strings and answers (tokens)
+            # evaluation should always be done using answer_strings
+            if self.train_original_answer_only:
+                answer = [original_answer]
+            else:
+                if self.tokenizer.do_lower_case:
+                    original_answer = original_answer.lower()
+                    answer = list({a.lower() for a in answer} - {original_answer})
+                # but ensure the original answer is still the first to be processed
+                answer = [original_answer] + answer
             answer = self.tokenizer(answer,
                                     add_special_tokens=False,
                                     return_token_type_ids=False,
