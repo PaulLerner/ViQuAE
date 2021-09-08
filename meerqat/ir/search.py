@@ -2,7 +2,7 @@
 
 Usage:
 search.py <dataset> <config> [--k=<k> --disable_caching --save_irrelevant --metrics=<path>]
-search.py hp <dataset> <config> [--k=<k> --disable_caching --metrics=<path> --test=<dataset>]
+search.py hp <type> <dataset> <config> [--k=<k> --disable_caching --metrics=<path> --test=<dataset>]
 
 Options:
 --k=<k>                 Hyperparameter to search for the k nearest neighbors [default: 100].
@@ -358,8 +358,7 @@ def index_faiss_kb(path, column, index_name=None, load=False, save_path=None, st
     return kb, index_name, do_L2norm
 
 
-def dataset_search(dataset, k=100, save_irrelevant=False, metric_save_path=None,
-                   kb_kwargs=[], map_kwargs={}, fusion_kwargs={}, metrics_kwargs={}):
+def load_kbs(kb_kwargs):
     kbs = []
     index_names = set()
     metrics = {}
@@ -404,14 +403,22 @@ def dataset_search(dataset, k=100, save_irrelevant=False, metric_save_path=None,
                       "-> will not be able to extend the annotation coverage so results should be interpreted carefully.\n"
                       "Did you forget to add a 'reference' flag to your config file?")
 
-    # search expects a batch as input
-    fn_kwargs = dict(kbs=kbs, reference_kb=reference_kb, k=k, save_irrelevant=save_irrelevant, metrics=metrics, metrics_kwargs=metrics_kwargs, **fusion_kwargs)
+    return dict(kbs=kbs, reference_kb=reference_kb, metrics=metrics)
+
+
+def dataset_search(dataset, k=100, save_irrelevant=False, metric_save_path=None,
+                   kb_kwargs=[], map_kwargs={}, fusion_kwargs={}, metrics_kwargs={}):
+    fn_kwargs = dict(k=k, save_irrelevant=save_irrelevant, metrics_kwargs=metrics_kwargs, **fusion_kwargs)
+    kbs = load_kbs(kb_kwargs)
+    fn_kwargs.update(kbs)
 
     # HACK: sleep until elasticsearch is good to go
     time.sleep(60)
 
+    # search expects a batch as input
     dataset = dataset.map(search, fn_kwargs=fn_kwargs, batched=True, **map_kwargs)
 
+    metrics = fn_kwargs['metrics']
     reduce_metrics(metrics, K=k)
     print(stringify_metrics(metrics, tablefmt='latex', floatfmt=".2f"))
     if metric_save_path is not None:
@@ -421,12 +428,44 @@ def dataset_search(dataset, k=100, save_irrelevant=False, metric_save_path=None,
     return dataset
 
 
-class FusionObjective:
-    """Callable objective compatible with optuna. Holds data necessary to run fuse_and_compute_metrics"""
-    def __init__(self, dataset, k=100, kbs=None, fusion_method='linear', hyp_hyp=None, metric_for_best_model=None,
-                 fn_kwargs={}, fusion_kwargs={}, map_kwargs={}):
+class Objective:
+    """Callable objective compatible with optuna."""
+    def __init__(self, dataset, k=100, metric_for_best_model=None, eval_dataset=None):
         self.dataset = dataset
         self.k = k
+        if metric_for_best_model is None:
+            self.metric_for_best_model = f"MRR@{self.k}"
+        else:
+            self.metric_for_best_model = metric_for_best_model
+        self.eval_dataset = eval_dataset
+
+    def __call__(self, trial):
+        pass
+
+    def evaluate(self, best_params):
+        """
+        Should evaluate self.eval_dataset with best_params
+
+        Parameters
+        ----------
+        best_params: dict
+
+        Returns
+        -------
+        metrics: dict
+        """
+        pass
+
+    def prefix_eval(self, eval_metrics):
+        for k in list(eval_metrics.keys()):
+            eval_metrics['eval_'+k] = eval_metrics.pop(k)
+        return eval_metrics
+
+
+class FusionObjective(Objective):
+    def __init__(self, kbs=None, fusion_method='linear', hyp_hyp=None,
+                 fn_kwargs={}, fusion_kwargs={}, map_kwargs={}, **kwargs):
+        super().__init__(*args, **kwargs)
         self.fusion_method = fusion_method
         self.fusion_kwargs = fusion_kwargs
         self.map_kwargs = map_kwargs
@@ -443,11 +482,6 @@ class FusionObjective:
             }
         else:
             self.hyp_hyp = hyp_hyp
-
-        if metric_for_best_model is None:
-            self.metric_for_best_model = f"MRR@{self.k}"
-        else:
-            self.metric_for_best_model = metric_for_best_model
 
         reference_kb = None
         for kb in kbs:
@@ -479,16 +513,129 @@ class FusionObjective:
         trial.set_user_attr('metrics', metrics)
         return metrics['fusion'][self.metric_for_best_model]
 
+    def evaluate(self, best_params):
+        fn_kwargs = self.fn_kwargs
+        fn_kwargs.update(best_params)
+        eval_metrics = {"fusion": Counter()}
+        fn_kwargs['metrics'] = eval_metrics
+        self.eval_dataset = self.eval_dataset.map(fuse_and_compute_metrics, fn_kwargs=fn_kwargs, batched=True, **self.map_kwargs)
+        reduce_metrics(eval_metrics, K=k)
+        return self.prefix_eval(eval_metrics)
 
-def hyperparameter_search(train_dataset, k=100, metric_save_path=None, eval_dataset=None,
-                          optimize_kwargs={}, study_kwargs={}, **objective_kwargs):
-    objective = FusionObjective(train_dataset, k=k, **objective_kwargs)
-    if objective.fusion_method == 'linear':
-        alpha_hyp = objective.hyp_hyp[objective.fusion_method]['alpha']
-        search_space = dict(alpha=np.arange(*alpha_hyp["bounds"], alpha_hyp["step"]).tolist())
+
+class BM25Objective(Objective):
+    def __init__(self, *args, kb_kwargs=None, hyp_hyp=None, settings=None,
+                 fn_kwargs={}, fusion_kwargs={}, map_kwargs={}, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fusion_kwargs = fusion_kwargs
+        self.map_kwargs = map_kwargs
+
+        # default parameters
+        if hyp_hyp is None:
+            self.hyp_hyp = {
+                "b": {
+                    "bounds": (0, 1),
+                    "step": 0.1
+                },
+                "k1": {
+                    "bounds": (0, 3),
+                    "step": 0.1
+                }
+            }
+        else:
+            self.hyp_hyp = hyp_hyp
+        if settings is None:
+            self.settings = {'similarity': {'karpukhin': {'b': 0.75, 'k1': 1.2}}}
+        else:
+            self.settings = settings
+
+        fn_kwargs['k'] = self.k
+        kbs = load_kbs(kb_kwargs)
+        es_kbs, _ = split_es_and_faiss_kbs(kbs)
+        if len(es_kbs) != 1:
+            raise ValueError(f"Expected exactly 1 ES KB, got {len(es_kbs)}")
+        self.es_kb = es_kbs[0]
+        self.index_name = self.es_kb['index_name']
+        es_index = self.es_kb._indexes[self.index_name]
+        self.es_client = es_index.es_client
+        self.es_index_name = es_index.es_index_name
+        fn_kwargs.update(kbs)
+        self.fn_kwargs = fn_kwargs
+
+    def __call__(self, trial):
+        fn_kwargs = self.fn_kwargs
+        kbs = self.fn_kwargs['kbs']
+        settings = self.settings
+
+        # suggest hyperparameters
+        b = trial.suggest_float("b", *self.hyp_hyp["b"]["bounds"])
+        k1 = trial.suggest_float("k1", *self.hyp_hyp["k1"]["bounds"])
+        for parameters in settings['similarity'].values():
+            parameters['b'] = b
+            parameters['k1'] = k1
+        # close index, update its settings then open it
+        self.es_client.indices.close(self.es_index_name)
+        self.es_client.put_settings(settings, self.es_index_name)
+        self.es_client.indices.open(self.es_index_name)
+
+        metrics = {kb['index_name']: Counter() for kb in kbs}
+        if len(kbs) > 1:
+            metrics["fusion"] = Counter()
+        fn_kwargs['metrics'] = metrics
+
+        self.dataset.map(search, fn_kwargs=fn_kwargs, batched=True, **self.map_kwargs)
+        reduce_metrics(metrics, K=self.k)
+
+        trial.set_user_attr('metrics', metrics)
+        metric = metrics.get('fusion', metrics[self.index_name])
+        return metric[self.metric_for_best_model]
+
+    def evaluate(self, best_params):
+        fn_kwargs = self.fn_kwargs
+        kbs = self.fn_kwargs['kbs']
+        settings = self.settings
+
+        for parameters in settings['similarity'].values():
+            parameters.update(best_params)
+        # close index, update its settings then open it
+        self.es_client.indices.close(self.es_index_name)
+        self.es_client.put_settings(settings, self.es_index_name)
+        self.es_client.indices.open(self.es_index_name)
+
+        metrics = {kb['index_name']: Counter() for kb in kbs}
+        if len(kbs) > 1:
+            metrics["fusion"] = Counter()
+        fn_kwargs['metrics'] = metrics
+
+        self.eval_dataset = self.eval_dataset.map(search, fn_kwargs=fn_kwargs, batched=True, **self.map_kwargs)
+        reduce_metrics(metrics, K=self.k)
+
+        return self.prefix_eval(metrics)
+
+
+def get_objective(objective_type, train_dataset, k=100, **objective_kwargs):
+    if objective_type == 'fusion':
+        objective = FusionObjective(train_dataset, k=k, **objective_kwargs)
+        if objective.fusion_method == 'linear':
+            alpha_hyp = objective.hyp_hyp[objective.fusion_method]['alpha']
+            search_space = dict(alpha=np.arange(*alpha_hyp["bounds"], alpha_hyp["step"]).tolist())
+            default_study_kwargs = dict(direction='maximize', sampler=optuna.samplers.GridSampler(search_space))
+        else:
+            default_study_kwargs = {}
+    elif objective_type == 'bm25':
+        objective = BM25Objective(train_dataset, k=k, **objective_kwargs)
+        hyp_hyp = objective.hyp_hyp
+        search_space = dict(b=np.arange(*hyp_hyp['b']["bounds"], hyp_hyp['b']["step"]).tolist(),
+                            k1=np.arange(*hyp_hyp['k1']["bounds"], hyp_hyp['k1']["step"]).tolist())
         default_study_kwargs = dict(direction='maximize', sampler=optuna.samplers.GridSampler(search_space))
     else:
-        default_study_kwargs = {}
+        raise ValueError(f"Invalid objective type: {objective_type}")
+    return objective, default_study_kwargs
+
+
+def hyperparameter_search(metric_save_path=None,
+                          optimize_kwargs={}, study_kwargs={}, **objective_kwargs):
+    objective, default_study_kwargs = get_objective(**objective_kwargs)
     default_study_kwargs.update(study_kwargs)
     study = optuna.create_study(**default_study_kwargs)
     # actual optimisation
@@ -500,12 +647,7 @@ def hyperparameter_search(train_dataset, k=100, metric_save_path=None, eval_data
 
     # apply hyperparameters on test set
     if eval_dataset is not None:
-        fn_kwargs = objective.fn_kwargs
-        fn_kwargs.update(study.best_params)
-        eval_metrics = {"eval_fusion": Counter()}
-        fn_kwargs['metrics'] = eval_metrics
-        eval_dataset = eval_dataset.map(fuse_and_compute_metrics, fn_kwargs=fn_kwargs, batched=True, **objective.map_kwargs)
-        reduce_metrics(eval_metrics, K=k)
+        eval_metrics = objective.evaluate(study.best_params)
         metrics.update(eval_metrics)
 
     if metrics is not None:
@@ -514,7 +656,7 @@ def hyperparameter_search(train_dataset, k=100, metric_save_path=None, eval_data
             with open(metric_save_path, 'w') as file:
                 json.dump(metrics, file)
 
-    return eval_dataset
+    return objective.eval_dataset
 
 
 if __name__ == '__main__':
@@ -537,7 +679,8 @@ if __name__ == '__main__':
             eval_dataset = load_from_disk(eval_dataset_path)
         else:
             eval_dataset = None
-        eval_dataset = hyperparameter_search(dataset, k, metric_save_path=args['--metrics'], eval_dataset=eval_dataset, **config)
+        eval_dataset = hyperparameter_search(objective_type=args['<type>'], train_dataset=dataset, k=k,
+                                             metric_save_path=args['--metrics'], eval_dataset=eval_dataset, **config)
         if eval_dataset is not None:
             eval_dataset.save_to_disk(eval_dataset_path)
     else:
