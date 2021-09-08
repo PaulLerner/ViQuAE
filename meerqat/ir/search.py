@@ -504,7 +504,7 @@ def hyperparameter_search(train_dataset, k=100, metric_save_path=None, eval_data
         fn_kwargs.update(study.best_params)
         eval_metrics = {"eval_fusion": Counter()}
         fn_kwargs['metrics'] = eval_metrics
-        eval_dataset.map(fuse_and_compute_metrics, fn_kwargs=fn_kwargs, batched=True, **objective.map_kwargs)
+        eval_dataset = eval_dataset.map(fuse_and_compute_metrics, fn_kwargs=fn_kwargs, batched=True, **objective.map_kwargs)
         reduce_metrics(eval_metrics, K=k)
         metrics.update(eval_metrics)
 
@@ -513,6 +513,8 @@ def hyperparameter_search(train_dataset, k=100, metric_save_path=None, eval_data
         if metric_save_path is not None:
             with open(metric_save_path, 'w') as file:
                 json.dump(metrics, file)
+
+    return eval_dataset
 
 
 if __name__ == '__main__':
@@ -529,16 +531,19 @@ if __name__ == '__main__':
     k = int(args['--k'])
 
     if args['hp']:
-        hyperparameter_search(dataset, k, metric_save_path=args['--metrics'], **config)
-    else:
-        if args['--test']:
-            eval_dataset = load_from_disk(args['--test'])
+        # TODO optimize BM25
+        eval_dataset_path = args['--test']
+        if eval_dataset_path:
+            eval_dataset = load_from_disk(eval_dataset_path)
         else:
             eval_dataset = None
+        eval_dataset = hyperparameter_search(dataset, k, metric_save_path=args['--metrics'], eval_dataset=eval_dataset, **config)
+        if eval_dataset is not None:
+            eval_dataset.save_to_disk(eval_dataset_path)
+    else:
         dataset = dataset_search(dataset, k,
                                  save_irrelevant=args['--save_irrelevant'],
                                  metric_save_path=args['--metrics'],
-                                 eval_dataset=eval_dataset,
                                  **config)
 
         dataset.save_to_disk(dataset_path)
