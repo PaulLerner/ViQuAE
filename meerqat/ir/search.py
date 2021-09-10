@@ -551,12 +551,12 @@ class BM25Objective(Objective):
 
         fn_kwargs['k'] = self.k
         kbs = load_kbs(kb_kwargs)
-        es_kbs, _ = split_es_and_faiss_kbs(kbs)
+        es_kbs, _ = split_es_and_faiss_kbs(kbs['kbs'])
         if len(es_kbs) != 1:
             raise ValueError(f"Expected exactly 1 ES KB, got {len(es_kbs)}")
         self.es_kb = es_kbs[0]
         self.index_name = self.es_kb['index_name']
-        es_index = self.es_kb._indexes[self.index_name]
+        es_index = self.es_kb['kb']._indexes[self.index_name]
         self.es_client = es_index.es_client
         self.es_index_name = es_index.es_index_name
         fn_kwargs.update(kbs)
@@ -575,7 +575,7 @@ class BM25Objective(Objective):
             parameters['k1'] = k1
         # close index, update its settings then open it
         self.es_client.indices.close(self.es_index_name)
-        self.es_client.put_settings(settings, self.es_index_name)
+        self.es_client.indices.put_settings(settings, self.es_index_name)
         self.es_client.indices.open(self.es_index_name)
 
         metrics = {kb['index_name']: Counter() for kb in kbs}
@@ -599,7 +599,7 @@ class BM25Objective(Objective):
             parameters.update(best_params)
         # close index, update its settings then open it
         self.es_client.indices.close(self.es_index_name)
-        self.es_client.put_settings(settings, self.es_index_name)
+        self.es_client.indices.put_settings(settings, self.es_index_name)
         self.es_client.indices.open(self.es_index_name)
 
         metrics = {kb['index_name']: Counter() for kb in kbs}
