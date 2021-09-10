@@ -633,11 +633,12 @@ def get_objective(objective_type, train_dataset, k=100, **objective_kwargs):
     return objective, default_study_kwargs
 
 
-def hyperparameter_search(metric_save_path=None,
+def hyperparameter_search(study_name=None, metric_save_path=None,
                           optimize_kwargs={}, study_kwargs={}, **objective_kwargs):
     objective, default_study_kwargs = get_objective(**objective_kwargs)
     default_study_kwargs.update(study_kwargs)
-    study = optuna.create_study(**default_study_kwargs)
+    storage = f"sqlite:///{study_name}.db"
+    study = optuna.create_study(storage=storage, study_name=study_name, load_if_exists=True, **default_study_kwargs)
     # actual optimisation
     study.optimize(objective, **optimize_kwargs)
     print(f"Best value: {study.best_value} (should match {objective.metric_for_best_model})")
@@ -673,7 +674,6 @@ if __name__ == '__main__':
     k = int(args['--k'])
 
     if args['hp']:
-        # TODO optimize BM25
         eval_dataset_path = args['--test']
         if eval_dataset_path:
             eval_dataset = load_from_disk(eval_dataset_path)
