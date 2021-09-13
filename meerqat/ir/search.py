@@ -322,6 +322,16 @@ def index_es_kb(path, column, index_name=None, load=False, **kwargs):
     kb = load_from_disk(path)
     if load:
         kb.load_elasticsearch_index(index_name=index_name, **kwargs)
+        # fix: settings are not actually used when loading an existing ES index
+        # TODO open an issue on HF to fix it upstream
+        settings = kwargs.get('es_index_config', {}).get('settings')
+        if settings is not None:
+            es_index = kb._indexes[index_name]
+            es_client = es_index.es_client
+            es_index_name = es_index.es_index_name
+            es_client.indices.close(es_index_name)
+            es_client.indices.put_settings(settings, es_index_name)
+            es_client.indices.open(es_index_name)
     else:
         kb.add_elasticsearch_index(column=column, index_name=index_name, **kwargs)
     return kb, index_name
