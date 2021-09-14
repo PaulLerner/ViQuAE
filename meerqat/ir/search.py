@@ -473,7 +473,7 @@ class Objective:
 
 
 class FusionObjective(Objective):
-    def __init__(self, kbs=None, fusion_method='linear', hyp_hyp=None,
+    def __init__(self, *args, kbs=None, fusion_method='linear', hyp_hyp=None,
                  fn_kwargs={}, fusion_kwargs={}, map_kwargs={}, **kwargs):
         super().__init__(*args, **kwargs)
         self.fusion_method = fusion_method
@@ -643,11 +643,12 @@ def get_objective(objective_type, train_dataset, k=100, **objective_kwargs):
     return objective, default_study_kwargs
 
 
-def hyperparameter_search(study_name=None, metric_save_path=None,
+def hyperparameter_search(study_name=None, storage=None, metric_save_path=None,
                           optimize_kwargs={}, study_kwargs={}, **objective_kwargs):
     objective, default_study_kwargs = get_objective(**objective_kwargs)
     default_study_kwargs.update(study_kwargs)
-    storage = f"sqlite:///{study_name}.db"
+    if storage is None and study_name is not None:
+        storage = f"sqlite:///{study_name}.db"
     study = optuna.create_study(storage=storage, study_name=study_name, load_if_exists=True, **default_study_kwargs)
     # actual optimisation
     study.optimize(objective, **optimize_kwargs)
