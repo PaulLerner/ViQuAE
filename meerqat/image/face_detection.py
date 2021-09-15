@@ -1,4 +1,4 @@
-"""Usage: face_detection.py <dataset> [<model_config> --image_key=<image_key> --save=<root_path> --disable_caching --batch_size=<n>]
+"""Usage: face_detection.py <dataset> --save=<root_path> [<model_config> --image_key=<image_key> --disable_caching --batch_size=<n>]
 
 Options:
 --image_key=<image_key>                 Used to index the dataset item [default: image]
@@ -115,7 +115,6 @@ def detect_face(file_names, model, save_root_path=None):
                                                return_box=True,
                                                return_landmarks=True)
         for face, prob, box, landmark, i in zip(faces, probs, boxes, landmarks, batch['indices']):
-            face_batch[i] = face
             prob_batch[i] = prob
             box_batch[i] = box
             landmarks_batch[i] = landmark
@@ -125,7 +124,6 @@ def detect_face(file_names, model, save_root_path=None):
 
 def dataset_detect_face(item, image_key='image', **kwargs):
     face, prob, box, landmarks = detect_face(item[image_key], **kwargs)
-    item['face'] = face
     item['face_prob'] = prob
     item['face_box'] = box
     item['face_landmarks'] = landmarks
@@ -161,10 +159,8 @@ if __name__ == '__main__':
     model = MTCNN(**model_config)
 
     image_key = args['--image_key']
-    save_root_path = args['--save']
-    if save_root_path:
-        save_root_path = Path(save_root_path)
-        save_root_path.mkdir(exist_ok=True, parents=True)
+    save_root_path = Path(args['--save'])
+    save_root_path.mkdir(exist_ok=True, parents=True)
 
     dataset = dataset_detect_faces(dataset, model=model, image_key=image_key, save_root_path=save_root_path)
     dataset.save_to_disk(dataset_path)

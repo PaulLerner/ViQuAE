@@ -37,6 +37,31 @@ def load_image_batch(file_names):
     return [Image.open(IMAGE_PATH / file_name).convert('RGB') for file_name in file_names]
 
 
+def load_faces(image, root_face_path, max_n_faces=None):
+    image = Path(image.with_suffix('.jpg'))
+    face_path = root_face_path/image
+    if face_path.exists():
+        face = Image.open(face_path).convert('RGB')
+    else:
+        face = None
+    if max_n_faces == 1 or face is None:
+        return face
+    # at this point we have at least one detected face
+    # follow https://github.com/timesler/facenet-pytorch/blob/54c869c51e0e3e12f7f92f551cdd2ecd164e2443/models/mtcnn.py#L488
+    faces = [face]
+    i = 2
+    image_stem, image_suffix = image.stem, image.suffix
+    while (max_n_faces is None) or (i <= max_n_faces):
+        face_path = (root_face_path/f"{image_stem}_{i}").with_suffix(image_suffix)
+        if face_path.exists():
+            faces.append(Image.open(face_path).convert('RGB'))
+        else:
+            break
+        i += 1
+
+    return faces
+
+
 def remove_articles(text):
     return re.sub(r"\b(a|an|the)\b", " ", text)
 

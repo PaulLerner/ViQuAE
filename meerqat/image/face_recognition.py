@@ -1,4 +1,4 @@
-"""Usage: face_recognition.py <dataset> [<config> --disable_caching]
+"""Usage: face_recognition.py <dataset> <face_path> [<config> --disable_caching]
 
 Options:
 --disable_caching                       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
@@ -6,14 +6,15 @@ Options:
 
 from docopt import docopt
 import json
+from pathlib import Path
 
 import torch
 from arcface_torch.backbones import get_model
 from torchvision.transforms import Compose, ToTensor, Normalize
 from datasets import load_from_disk, set_caching_enabled
 
-from meerqat.data.loading import DATA_ROOT_PATH
-from meerqat.models.utils import device, map_if_not_None
+from meerqat.data.loading import DATA_ROOT_PATH, load_faces
+from meerqat.models.utils import device
 
 
 ARCFACE_PATH = DATA_ROOT_PATH/"arcface"
@@ -39,31 +40,45 @@ def get_pil_preprocessor():
     ])
 
 
-def preprocess_array(image):
-    """
-    Used to pre-process an array-like image of shape (C x H x W)
+def compute_face_embedding(batch, model, preprocessor, face_path, max_n_faces=1):
+    if max_n_faces != 1:
+        raise NotImplementedError()
 
-    so basically like the preprocessing of get_pil_preprocessor but without the reshaping
-    """
-    image = torch.tensor(image, dtype=torch.float32, device=device)
-    image.div_(255).sub_(0.5).div_(0.5)
-    return image
+    # 1. filter out images without any detected faces
+    output = []
+    not_None_values, not_None_values_indices = [], []
+    for i, image in enumerate(batch['image']):
+        # did we detect a face on this image?
+        face = load_faces(image, face_path, max_n_faces=max_n_faces)
+        # will be overwritten for not_None_values
+        output.append(None)
+        # if yes then preprocess it
+        if face is not None:
+            not_None_values.append(preprocessor(face).unsqueeze(0))
+            not_None_values_indices.append(i)
+    # None of the image had a face detected
+    if not not_None_values:
+        batch['face_embedding'] = output
+        return batch
 
+    # 2. compute face embedding
+    not_None_values = torch.cat(not_None_values, axis=0)
+    not_None_output = model(not_None_values)
 
-def preprocess_and_embed(faces, model):
-    """Utility function to enable the use of map_if_not_None"""
-    return model(preprocess_array(faces))
+    # 3. return the results in a list of list with proper indices
+    for j, i in enumerate(not_None_values_indices):
+        output[i] = not_None_output[j]
 
-
-def compute_face_embedding(batch, model):
-    batch['face_embedding'] = map_if_not_None(batch['face'], preprocess_and_embed, model=model)
+    batch['face_embedding'] = output
     return batch
 
 
-def dataset_compute_face_embedding(dataset_path, map_kwargs={}, pretrained_kwargs={}):
+def dataset_compute_face_embedding(dataset_path, face_path, map_kwargs={}, pretrained_kwargs={}):
     dataset = load_from_disk(dataset_path)
     model = from_pretrained(**pretrained_kwargs)
-    dataset = dataset.map(compute_face_embedding, batched=True, fn_kwargs=dict(model=model), **map_kwargs)
+    preprocessor = get_pil_preprocessor()
+    fn_kwargs = dict(model=model, preprocessor=preprocessor, face_path=face_path)
+    dataset = dataset.map(compute_face_embedding, batched=True, fn_kwargs=fn_kwargs, **map_kwargs)
     dataset.save_to_disk(dataset_path)
 
 
@@ -77,4 +92,4 @@ if __name__ == '__main__':
     else:
         config = {}
 
-    dataset_compute_face_embedding(args['<dataset>'], **config)
+    dataset_compute_face_embedding(args['<dataset>'], face_path=Path(args['<face_path>']), **config)
