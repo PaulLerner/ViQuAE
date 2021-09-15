@@ -15,6 +15,8 @@ Options:
 --image_width=<n>               Desired thumbnail width in pixels for the image url. Defaults to full-size
 --map_kwargs=<path>             Path towards a JSON file containing key-words arguments for the dataset.map function (e.g. batch size)
 --disable_caching               Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
+--num_shards=<n>                Shard the dataset in n parts when downloading images
+--shard_index=<n>               Index of the desired shard when downloading images (use along with --num_shards)
 """
 
 import json

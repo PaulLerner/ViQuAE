@@ -19,6 +19,7 @@ Install PyTorch following [the official document wrt to your distribution](https
 Also install [ElasticSearch](https://www.elastic.co/guide/en/elastic-stack-get-started/current/get-started-elastic-stack.html#install-elasticsearch) 
 (and run it) if you want to do sparse retrieval.
 
+The rest should be installed using `pip`:
 ```sh
 git clone https://github.com/PaulLerner/meerqat.git
 pip install -e meerqat
@@ -29,6 +30,22 @@ pip install -e meerqat
 
 This should contain scripts to load the data, annotate it...
 
+### `loading`
+This is probably the only file in `data` interesting for the users of the dataset.
+
+#### `passages` 
+Segments Wikipedia articles (from the `kilt_wikipedia` dataset) into passages (e.g. paragraphs)
+Current options (passed in a JSON file) are:
+ - `prepend_title`: whether to prepend the title at the beginning of each passage like `"<title> [SEP] <passage>"`
+ - `special_fields`: removes the title, sections titles ("Section::::") and bullet-points ("BULLET::::")
+ - `uniform`: each passage is `n` tokens, without overlap. Tokenized with a `transformers` tokenizer
+ - `uniform_sents`: each article is first segmented into sentences using `spacy`. 
+                    Then sentences are grouped into passage s.t. each passage holds a maximum of `n` tokens 
+                    (`spacy` tokens here, not `transformers` like above)
+
+#### `map`
+Make a JSON file out of a `dataset` column for quick (and string) indexing.
+ 
 ### `kilt2vqa.py`
 
 The goal is to generate questions suitable for VQA by replacing explicit entity mentions in existing textual QA datasets
@@ -63,6 +80,9 @@ The goal is to generate questions suitable for VQA by replacing explicit entity 
 
 `labelstudio` first calls `generate vq` i.e. no need to call both!  
 The dataset is then converted to the Label Studio JSON format so you can annotate and convert the errors of the automatic pipeline (see [`ANNOTATION.md`](./ANNOTATION.md)).
+
+`download` downloads images (set in `meerqat.data.wiki data entities`) from Wikimedia Commons using `meerqat.data.wiki.save_image`.  
+This might take a while (thus the sharding options), any help/advice is appreciated :)
 
 ### `wiki.py`
 
@@ -130,6 +150,14 @@ Compute heuristics for the image (control with `<heuristic>`, default to all):
 Usage: `wikidump.py <subset>`  
 Parses the dump (should be downloaded first, TODO add instructions), gathers images and assign them to the relevant entity given its common categories (retrieved in `wiki.py commons rest`)  
 Note that the wikicode is parsed very lazily and might need a second run depending on your application, e.g. templates are not expanded...
+
+### `labelstudio`
+Used to manipulate the output of [Label Studio](https://labelstud.io/), see also [ANNOTATION.md](./ANNOTATION.md)  
+- `assign` takes annotations out of the TODO list in a `tasks.json` file (input to LS)
+- `save images` similar to `kilt2vqa download`, not used for the final dataset
+- `merge` merges several LS outputs, also compute inter-annotator agreement and saves disagreements
+- `agree` merges the output of `merge` along with the corrected disagreements
+
 
 ## `meerqat.visualization`
 
