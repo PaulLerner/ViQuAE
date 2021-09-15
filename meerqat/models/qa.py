@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 
 
@@ -41,6 +43,10 @@ def get_best_spans(start_probs, end_probs, weights=None, cannot_be_first_token=T
         pairwise[:, :, 0, :] = 0
     # eventually weigh the scores
     if weights is not None:
+        minimum = weights.min()
+        if minimum < 1:
+            warnings.warn("weights should be > 1, adding 1-minimum")
+            weights += 1-minimum
         pairwise *= np.expand_dims(weights, (2, 3))
 
     # 2. find the passages with the maximum score
