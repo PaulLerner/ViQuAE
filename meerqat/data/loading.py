@@ -38,7 +38,7 @@ def load_image_batch(file_names):
 
 
 def load_faces(image, root_face_path, max_n_faces=None):
-    image = Path(image.with_suffix('.jpg'))
+    image = Path(image).with_suffix('.jpg')
     face_path = root_face_path/image
     if face_path.exists():
         face = Image.open(face_path).convert('RGB')
