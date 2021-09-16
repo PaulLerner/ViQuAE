@@ -26,7 +26,7 @@ PRETRAINED_MODELS = {
 def from_pretrained(model_name='r50', fp16=True, train=False):
     model = get_model(model_name, fp16=fp16)
     weight_path = PRETRAINED_MODELS[model_name]
-    state_dict = torch.load(weight_path)
+    state_dict = torch.load(weight_path, map_location=device)
     model.load_state_dict(state_dict)
     model.train(train)
     return model.to(device=device)

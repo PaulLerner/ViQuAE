@@ -513,7 +513,7 @@ if __name__ == "__main__":
 
     checkpoint = config.pop("checkpoint", {})
     trainer, training_args = instantiate_trainer(**config)
-
+    device = trainer.args.device
     if training_args.do_train:
         trainer.train(**checkpoint)
     elif training_args.do_eval:
@@ -523,7 +523,7 @@ if __name__ == "__main__":
             state_dict_path = resume_from_checkpoint / WEIGHTS_NAME
             if not state_dict_path.exists():
                 continue
-            state_dict = torch.load(state_dict_path)
+            state_dict = torch.load(state_dict_path, map_location=device)
             trainer._load_state_dict_in_model(state_dict)
 
             # optionally load trainer state for better logging
@@ -541,7 +541,7 @@ if __name__ == "__main__":
             state_dict_path = resume_from_checkpoint / WEIGHTS_NAME
             if not state_dict_path.exists():
                 continue
-            state_dict = torch.load(state_dict_path)
+            state_dict = torch.load(state_dict_path, map_location=device)
             trainer._load_state_dict_in_model(state_dict)
 
             # run model on evaluation dataset
