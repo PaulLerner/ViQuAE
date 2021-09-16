@@ -1,0 +1,14 @@
+{
+  "map_kwargs":
+  {
+    "batch_size": 256
+  },
+  "model_kwargs":
+  {
+    "pool_kwargs":
+    {
+      "Class_name": "AdaptiveMaxPool2d",
+      "output_size": 1
+    }
+  }
+}

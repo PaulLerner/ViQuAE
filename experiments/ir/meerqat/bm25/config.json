@@ -1,0 +1,51 @@
+{
+  "study_name": "ir_meerqat_bm25_hp",
+  "storage": "sqlite:///experiments/ir/meerqat/bm25/hp.db",
+  "kb_kwargs": [
+    {
+      "es": true,
+      "reference": true,
+      "key": "input",
+      "index_kwargs": {
+        "path": "data/meerqat_passages",
+        "column": "passage",
+        "index_name": "BM25",
+        "load": true,
+        "es_index_name": "ir_meerqat_bm25",
+        "es_index_config": {
+        "settings": {
+          "number_of_shards": 1,
+          "analysis": {
+            "analyzer": {
+              "stop_standard": {
+                "type": "standard",
+                " stopwords": "_english_"
+              }
+            }
+          },
+          "similarity": {
+            "karpukhin": {
+              "type": "BM25",
+              "b": 0.3,
+              "k1": 0.5
+            }
+          }
+        },
+        "mappings": {
+          "properties": {
+            "text": {
+              "type": "text",
+              "analyzer": "standard",
+              "similarity": "karpukhin"
+            }
+          }
+        }
+        }
+      }
+    }
+  ],
+  "map_kwargs": {
+    "batch_size": 1
+  },
+  "fusion_kwargs": {}
+}

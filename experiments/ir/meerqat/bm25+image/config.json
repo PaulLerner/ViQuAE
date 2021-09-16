@@ -1,0 +1,89 @@
+{
+  "kb_kwargs": [
+    {
+      "es": true,
+      "reference": true,
+      "key": "input",
+      "normalization": {
+        "method": "normalize",
+        "mean": 20.1111,
+        "std": 5.85003
+      },
+      "index_kwargs": {
+        "path": "data/meerqat_passages",
+        "column": "passage",
+        "index_name": "BM25",
+        "load": true,
+        "es_index_name": "ir_meerqat_bm25",
+        "es_index_config": {
+          "settings": {
+            "similarity": {
+              "karpukhin": {
+                "b": 0.3,
+                "k1": 0.5
+              }
+            }
+          },
+          "mappings": {
+            "properties": {
+              "text": {
+                "type": "text",
+                "analyzer": "standard",
+                "similarity": "karpukhin"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "es": false,
+      "key": "image_embedding",
+      "weight": 1,
+      "normalization": {
+        "method": "normalize",
+        "mean": 0.875486,
+        "std": 0.0285142
+      },
+      "index_mapping": "data/meerqat_wikipedia/non_humans/article2passage.json",
+      "index_kwargs": {
+        "path": "data/meerqat_wikipedia/non_humans",
+        "column": "image_embedding",
+        "index_name": "resnet",
+        "string_factory": "L2norm,Flat",
+        "load": false,
+        "device": 0,
+        "metric_type": 0
+      }
+    },
+    {
+      "es": false,
+      "key": "face_embedding",
+      "weight": 1,
+      "normalization": {
+        "method": "normalize",
+        "mean": 0.476773,
+        "std": 0.0957142
+      },
+      "index_mapping": "data/meerqat_wikipedia/humans_with_faces/article2passage.json",
+      "index_kwargs": {
+        "path": "data/meerqat_wikipedia/humans_with_faces",
+        "column": "face_embedding",
+        "index_name": "arcface",
+        "string_factory": "L2norm,Flat",
+        "load": false,
+        "device": 0,
+        "metric_type": 0
+      }
+    }
+  ],
+  "map_kwargs": {
+    "batch_size": 256,
+    "desc": "searching"
+  },
+  "fusion_kwargs": {
+    "alpha": 1
+  },
+  "format": {
+  }
+}

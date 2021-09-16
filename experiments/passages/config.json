@@ -1,0 +1,7 @@
+{
+        "method": "uniform_sents",
+        "preprocessing_method": "special_fields",
+        "n": 100,
+        "prepend_title": true,
+        "sentencizer": true
+}

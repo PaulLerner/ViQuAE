@@ -1,5 +1,5 @@
 # MEERQAT
-Source code and data used in my PhD/MEERQAT project.
+Source code and data used in my PhD/[MEERQAT project](https://www.meerqat.fr/).
 
 # `data`
 
@@ -8,6 +8,17 @@ All the data should be stored there, although it will probably not be hosted on 
 ## Annotation of the data
 
 Please refer to [`ANNOTATION.md`](./ANNOTATION.md) for the annotation instructions
+
+# Experiments
+
+Please refer to [EXPERIMENTS.md](./EXPERIMENTS.md) for instructions to reproduce our experiments
+
+# Reference
+
+If you use this code or the MEERQAT dataset, please cite our paper:
+```
+TODO
+```
 
 # `meerqat`
 This should contain all the source code and act as a python package (e.g. `import meerqat`)
@@ -25,6 +36,8 @@ git clone https://github.com/PaulLerner/meerqat.git
 pip install -e meerqat
 ```
 
+## `image`, `ir`, `models`, `train`
+Those modules are best described along with the experiments, see [EXPERIMENTS.md](./EXPERIMENTS.md).
 
 ## `meerqat.data`
 
