@@ -1,4 +1,4 @@
-"""Usage: face_detection.py <dataset> --save=<root_path> [<model_config> --image_key=<image_key> --disable_caching --batch_size=<n>]
+"""Usage: face_detection.py <dataset> [--save=<root_path> <model_config> --image_key=<image_key> --disable_caching --batch_size=<n>]
 
 Options:
 --image_key=<image_key>                 Used to index the dataset item [default: image]
@@ -103,27 +103,38 @@ def detect_face(file_names, model, save_root_path=None):
         images_by_size[image.size]['save_paths'].append(save_path)
         images_by_size[image.size]['indices'].append(i)
 
-    face_batch = [None for _ in range(len(file_names))]
-    prob_batch, box_batch, landmarks_batch = face_batch.copy(), face_batch.copy(), face_batch.copy()
+    prob_batch = [None for _ in range(len(file_names))]
+    box_batch, landmarks_batch = prob_batch.copy(), prob_batch.copy()
     for size, batch in images_by_size.items():
         # avoid exception when image size is smaller than model.min_face_size (keep the None default value)
         # see https://github.com/timesler/facenet-pytorch/issues/176
         if min(size) < model.min_face_size:
             continue
-        faces, probs, boxes, landmarks = model(batch['images'], save_path=batch['save_paths'],
-                                               return_prob=True,
-                                               return_box=True,
-                                               return_landmarks=True)
-        for face, prob, box, landmark, i in zip(faces, probs, boxes, landmarks, batch['indices']):
+        # extract the face and save them using facenet_pytorch
+        if save_root_path is not None:
+            faces, probs, boxes, landmarks = model(batch['images'], save_path=batch['save_paths'],
+                                                   return_prob=True,
+                                                   return_box=True,
+                                                   return_landmarks=True)
+        # no need to extract the faces
+        else:
+            boxes, probs, landmarks = model.detect(batch['images'], landmarks=True)
+            # Select faces
+            if not model.keep_all:
+                boxes, probs, landmarks = model.select_boxes(
+                    boxes, probs, landmarks, batch['images'], method=model.selection_method
+                )
+        # save the faces at the right index
+        for prob, box, landmark, i in zip(probs, boxes, landmarks, batch['indices']):
             prob_batch[i] = prob
             box_batch[i] = box
             landmarks_batch[i] = landmark
 
-    return face_batch, prob_batch, box_batch, landmarks_batch
+    return prob_batch, box_batch, landmarks_batch
 
 
 def dataset_detect_face(item, image_key='image', **kwargs):
-    face, prob, box, landmarks = detect_face(item[image_key], **kwargs)
+    prob, box, landmarks = detect_face(item[image_key], **kwargs)
     item['face_prob'] = prob
     item['face_box'] = box
     item['face_landmarks'] = landmarks
@@ -159,8 +170,10 @@ if __name__ == '__main__':
     model = MTCNN(**model_config)
 
     image_key = args['--image_key']
-    save_root_path = Path(args['--save'])
-    save_root_path.mkdir(exist_ok=True, parents=True)
+    save_root_path = args['--save']
+    if save_root_path is not None:
+        save_root_path = Path(save_root_path)
+        save_root_path.mkdir(exist_ok=True, parents=True)
 
     dataset = dataset_detect_faces(dataset, model=model, image_key=image_key, save_root_path=save_root_path)
     dataset.save_to_disk(dataset_path)

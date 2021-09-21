@@ -1,4 +1,4 @@
-"""Usage: face_recognition.py <dataset> <face_path> [<config> --disable_caching]
+"""Usage: face_recognition.py <dataset> [<config> --disable_caching]
 
 Options:
 --disable_caching                       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
@@ -8,12 +8,18 @@ from docopt import docopt
 import json
 from pathlib import Path
 
+import numpy as np
+
 import torch
 from arcface_torch.backbones import get_model
-from torchvision.transforms import Compose, ToTensor, Normalize
 from datasets import load_from_disk, set_caching_enabled
 
-from meerqat.data.loading import DATA_ROOT_PATH, load_faces
+from torchvision.transforms import Compose, ToTensor, Normalize
+import cv2
+import skimage
+from PIL import Image
+
+from meerqat.data.loading import DATA_ROOT_PATH, load_image_batch
 from meerqat.models.utils import device
 
 
@@ -21,6 +27,25 @@ ARCFACE_PATH = DATA_ROOT_PATH/"arcface"
 PRETRAINED_MODELS = {
     "r50": ARCFACE_PATH/"ms1mv3_arcface_r50_fp16"/"backbone.pth"
 }
+# taken from https://github.com/deepinsight/insightface/blob/master/recognition/arcface_torch/eval_ijbc.py
+SRC = np.array([
+    [30.2946, 51.6963],
+    [65.5318, 51.5014],
+    [48.0252, 71.7366],
+    [33.5493, 92.3655],
+    [62.7299, 92.2041]], dtype=np.float32)
+SRC[:, 0] += 8.0
+
+
+def similarity_transform(image, landmarks, src, tform, image_size=112):
+    """Adapted from https://github.com/deepinsight/insightface/blob/master/recognition/arcface_torch/eval_ijbc.py"""
+    # FIXME is there a way to do this without going from Image to ndarray to Image?
+    tform.estimate(landmarks, src)
+    M = tform.params[0:2, :]
+    transformed_face = cv2.warpAffine(np.array(image, dtype=np.uint8),
+                                      M, (image_size, image_size),
+                                      borderValue=0.0)
+    return Image.fromarray(transformed_face)
 
 
 def from_pretrained(model_name='r50', fp16=True, train=False):
@@ -40,20 +65,20 @@ def get_pil_preprocessor():
     ])
 
 
-def compute_face_embedding(batch, model, preprocessor, face_path, max_n_faces=1):
+def compute_face_embedding(batch, model, preprocessor, tform, max_n_faces=1):
     if max_n_faces != 1:
         raise NotImplementedError()
 
     # 1. filter out images without any detected faces
     output = []
     not_None_values, not_None_values_indices = [], []
-    for i, image in enumerate(batch['image']):
-        # did we detect a face on this image?
-        face = load_faces(image, face_path, max_n_faces=max_n_faces)
+    for i, (image, landmarks) in enumerate(zip(batch['image'], batch['face_landmarks'])):
         # will be overwritten for not_None_values
         output.append(None)
-        # if yes then preprocess it
-        if face is not None:
+        if landmarks is not None:
+            image = load_image_batch([image])[0]
+            landmarks = np.array(landmarks[0], dtype=np.float32)
+            face = similarity_transform(image, landmarks, SRC, tform)
             not_None_values.append(preprocessor(face).unsqueeze(0))
             not_None_values_indices.append(i)
     # None of the image had a face detected
@@ -73,11 +98,12 @@ def compute_face_embedding(batch, model, preprocessor, face_path, max_n_faces=1)
     return batch
 
 
-def dataset_compute_face_embedding(dataset_path, face_path, map_kwargs={}, pretrained_kwargs={}):
+def dataset_compute_face_embedding(dataset_path, map_kwargs={}, pretrained_kwargs={}):
     dataset = load_from_disk(dataset_path)
     model = from_pretrained(**pretrained_kwargs)
     preprocessor = get_pil_preprocessor()
-    fn_kwargs = dict(model=model, preprocessor=preprocessor, face_path=face_path)
+    tform = skimage.transform.SimilarityTransform()
+    fn_kwargs = dict(model=model, preprocessor=preprocessor, tform=tform)
     dataset = dataset.map(compute_face_embedding, batched=True, fn_kwargs=fn_kwargs, **map_kwargs)
     dataset.save_to_disk(dataset_path)
 
@@ -92,4 +118,4 @@ if __name__ == '__main__':
     else:
         config = {}
 
-    dataset_compute_face_embedding(args['<dataset>'], face_path=Path(args['<face_path>']), **config)
+    dataset_compute_face_embedding(args['<dataset>'], **config)
