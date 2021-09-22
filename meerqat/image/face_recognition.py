@@ -16,7 +16,7 @@ from datasets import load_from_disk, set_caching_enabled
 
 from torchvision.transforms import Compose, ToTensor, Normalize
 import cv2
-import skimage
+from skimage import transform
 from PIL import Image
 
 from meerqat.data.loading import DATA_ROOT_PATH, load_image_batch
@@ -87,7 +87,7 @@ def compute_face_embedding(batch, model, preprocessor, tform, max_n_faces=1):
         return batch
 
     # 2. compute face embedding
-    not_None_values = torch.cat(not_None_values, axis=0)
+    not_None_values = torch.cat(not_None_values, axis=0).to(device=device)
     not_None_output = model(not_None_values)
 
     # 3. return the results in a list of list with proper indices
@@ -102,7 +102,7 @@ def dataset_compute_face_embedding(dataset_path, map_kwargs={}, pretrained_kwarg
     dataset = load_from_disk(dataset_path)
     model = from_pretrained(**pretrained_kwargs)
     preprocessor = get_pil_preprocessor()
-    tform = skimage.transform.SimilarityTransform()
+    tform = transform.SimilarityTransform()
     fn_kwargs = dict(model=model, preprocessor=preprocessor, tform=tform)
     dataset = dataset.map(compute_face_embedding, batched=True, fn_kwargs=fn_kwargs, **map_kwargs)
     dataset.save_to_disk(dataset_path)
