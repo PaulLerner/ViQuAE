@@ -25,7 +25,7 @@ This should contain all the source code and act as a python package (e.g. `impor
 
 ## Installation
 
-Install PyTorch following [the official document wrt to your distribution](https://pytorch.org/get-started/locally/) (preferably in a virtual environment)
+Install PyTorch 1.9.0 following [the official document wrt to your distribution](https://pytorch.org/get-started/locally/) (preferably in a virtual environment)
 
 Also install [ElasticSearch](https://www.elastic.co/guide/en/elastic-stack-get-started/current/get-started-elastic-stack.html#install-elasticsearch) 
 (and run it) if you want to do sparse retrieval.
@@ -107,6 +107,13 @@ You should run all of these in this order to get the whole cake:
 **input/output**: `entities.json` (output of `kilt2vqa.py count_entities`)  
 queries many different attributes for all entities in the questions 
 
+Also sets a 'reference image' to the entity using Wikidata properties in the following order of preference:
+- P18 ‘image’ (it is roughly equivalent to the infobox image in Wikipedia articles)
+- P154 ‘logo image’
+- P41 ‘flag image’
+- P94 ‘coat of arms image’
+- P2425 ‘service ribbon image’
+
 #### `wiki.py data feminine <subset>` 
 **input**: `entities.json`  
 **output**: `feminine_labels.json`  
@@ -138,6 +145,7 @@ Note this heuristic is not used in `commons heuristics`
 #### `wiki.py filter <subset> [--superclass=<level> --positive --negative --deceased=<year> <classes_to_exclude>...]`
 **input/output**: `entities.json`  
 Filters entities w.r.t. to their class/nature/"instance of" and date of death, see `wiki.py` docstring for option usage (TODO share concrete_entities/abstract_entities)
+Also entities with a ‘sex or gender’ (P21) or ‘occupation’ (P106) are kept by default.
 
 Note this deletes data so maybe save it if you're unsure about the filter.
 
