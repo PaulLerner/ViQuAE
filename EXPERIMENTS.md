@@ -38,6 +38,7 @@ python -m meerqat.image.embedding data/meerqat_wikipedia experiments/image_embed
 ```
 
 ### Face detection
+
 Things get a little more complicated here, first, you will want to split your KB in humans and non-humans,
 since we assume that faces are not relevant for non-human entities.
 I guess there’s no need to provide code for that since it’s quite trivial and we will provide KB already split in humans and non-humans.
@@ -46,15 +47,12 @@ Face detection uses MTCNN (Zhang et al., 2016) via the `facenet_pytorch` library
 Feel free to tweak the hyperparameters (we haven’t), you can also set:
 - the size of the output face crop (we use 112 for ArcFace compatibility)
 - whether to order faces by size or probability (we do the latter)
-
-You will need to provide an output directory where to save the detected faces. 
-Probabilities, bounding boxes and landmarks will be saved directly in the dataset.
+ 
+Probabilities, bounding boxes and landmarks are saved directly in the dataset, face croping happens as a pre-processing of Face recognition (next section).
 
 ```sh
-mkdir -p experiments/face_detection/meerqat_dataset
-python -m meerqat.image.face_detection data/meerqat_dataset --save=experiments/face_detection/meerqat_dataset --disable_caching --batch_size=256
-mkdir -p experiments/face_detection/meerqat_wikipedia
-python -m meerqat.image.face_detection data/meerqat_wikipedia/humans --save=experiments/face_detection/meerqat_wikipedia --disable_caching --batch_size=256
+python -m meerqat.image.face_detection data/meerqat_dataset --disable_caching --batch_size=256
+python -m meerqat.image.face_detection data/meerqat_wikipedia/humans --disable_caching --batch_size=256
 ```
 
 After this you will also want to split the humans KB into humans with detected faces and without.
@@ -76,6 +74,10 @@ pip install -e .
 The pretrained ResNet-50 can be downloaded [from here](https://onedrive.live.com/?authkey=%21AFZjr283nwZHqbA&id=4A83B6B633B029CC%215583&cid=4A83B6B633B029CC)
 and the path to the backbone should be `data/arcface/ms1mv3_arcface_r50_fp16/backbone.pth` 
 
+The 5 face landmarks (two eyes, nose and two mouth corners) are adopted to perform similarity transformation 
+so that they are always at the same position in the image, regardless of the original pose of the person.
+This is done with the `similarity_transform` function using `skimage` and `cv2`.
+
 You can tweak the backbone and the batch size, we only tried with ResNet-50 
 (note there’s an extra layer compared to the ImageNet one which pools the embedding dimension down to 512).
 
@@ -94,8 +96,10 @@ We’ll use IR on both TriviaQA along with the complete Wikipedia (BM25 only) an
 ### Preprocessing passages
 You can probably skip this step as we will provide passages dataset along with provenance.
 
-As explained in the README we use passages of 100 words without overlapping but with whole sentences 
-(we first segment into sentences so that no sentence is split in 2). 
+Articles are stripped of semi-structured data, such as tables and lists. 
+Each article is then split into disjoint passages of 100 words for text retrieval, while preserving sentence boundaries, 
+and the title of the article is appended to the beginning of each passage.
+
 ```sh
 python -m meerqat.data.loading passages data/meerqat_wikipedia data/meerqat_passages experiments/passages/config.json --disable_caching
 ```
@@ -135,6 +139,16 @@ We trust the face detector, if it detects a face then:
 
 else:
 - the search is done on the non-human global images KB (`data/meerqat_wikipedia/non_humans`)
+
+To implement that we simply set the global image embedding to None when a face was detected:
+```py
+from datasets import load_from_disk, set_caching_enabled
+set_caching_enabled(False)
+dataset = load_from_disk('data/meerqat_dataset/')
+dataset = dataset.rename_column('image_embedding', 'keep_image_embedding')
+dataset = dataset.map(lambda item: {'image_embedding': item['keep_image_embedding'] if item['face_embedding'] is None else None})
+dataset.save_to_disk('data/meerqat_dataset/')
+```
 
 Search is done using cosine distance, hence the `"L2norm,Flat"` for `string_factory` and `metric_type=0`
 (this does first L2-normalization then dot product).
@@ -270,12 +284,18 @@ mv scheduler.pt .keep
 mv trainer_state.pt .keep
 mv training_args.pt .keep
 ```
+Then you can fine-tune the model:
+```sh
+python -m meerqat.train.trainer experiments/rc/meerqat/train/config.json
+```
+
+Note that the validation is done using the same ratio of relevant and irrelevant passages (8:16) as training
+while test is done using the top-24 IR results. That is why you should expect a performance gap between validation and test.
 
 The test is configured to save the prediction (without IR weighing) along with the metrics,
 if you don’t want this, set `do_eval=True` and `do_predict=False`.
 
 ```sh
-python -m meerqat.train.trainer experiments/rc/meerqat/train/config.json
 python -m meerqat.train.trainer experiments/rc/meerqat/test/config.json
 ```
 

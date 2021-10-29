@@ -20,7 +20,7 @@
         "padding": "max_length"
     },
     "checkpoint": {
-        "resume_from_checkpoint": "experiments/rc/meerqat/train/checkpoint-4800"
+        "resume_from_checkpoint": "experiments/rc/meerqat/train/checkpoint-3600"
     },
     "callbacks_args": [
         {
