@@ -44,9 +44,7 @@ since we assume that faces are not relevant for non-human entities.
 I guess there’s no need to provide code for that since it’s quite trivial and we will provide KB already split in humans and non-humans.
 
 Face detection uses MTCNN (Zhang et al., 2016) via the `facenet_pytorch` library.
-Feel free to tweak the hyperparameters (we haven’t), you can also set:
-- the size of the output face crop (we use 112 for ArcFace compatibility)
-- whether to order faces by size or probability (we do the latter)
+Feel free to tweak the hyperparameters (we haven’t), you can also set whether to order faces by size or probability (we do the latter)
  
 Probabilities, bounding boxes and landmarks are saved directly in the dataset, face croping happens as a pre-processing of Face recognition (next section).
 
