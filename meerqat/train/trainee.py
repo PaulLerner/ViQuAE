@@ -73,7 +73,7 @@ class DPRReaderForQuestionAnswering(Trainee):
             ignored_index = start_logits.size(1)
             start_positions = start_positions.clamp(0, ignored_index)
             end_positions = end_positions.clamp(0, ignored_index)
-            loss_fct = nn.CrossEntropyLoss(reduce=False, ignore_index=ignored_index)
+            loss_fct = nn.CrossEntropyLoss(reduction='none', ignore_index=ignored_index)
 
             # compute switch loss
             relevance_logits = relevance_logits.view(N, M)
