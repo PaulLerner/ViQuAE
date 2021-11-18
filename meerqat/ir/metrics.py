@@ -163,6 +163,8 @@ def reduce_metrics(metrics_dict, K=100, ks=[1, 5, 10, 20, 100]):
         for metric in [f"r-precision@{K}", f"MRR@{K}"]:
             metrics[metric] /= metrics["total_queries"]
         for k in ks:
+            if k > K:
+                continue
             for metric in [f"hits@{k}", f"precision@{k}", f"recall@{k}"]:
                 metrics[metric] /= metrics["total_queries"]
         metrics_dict[key] = metrics
