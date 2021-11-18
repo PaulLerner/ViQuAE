@@ -112,7 +112,6 @@ class MultiPassageBERT(BertForQuestionAnswering):
     and https://github.com/allenai/document-qa/blob/master/docqa/nn/span_prediction.py
 
     N. B. differences with DPRReaderForQuestionAnswering:
-    * no projection layer between BERT and QA-extraction
     * no re-ranking (TODO implement MultiPassageDPRReader?)
     * global normalization
 
