@@ -140,3 +140,7 @@ drafts/
 
 # visual studio code
 .vscode/
+
+# rsync stuff
+push_jz.sh
+sync_jz.sh
