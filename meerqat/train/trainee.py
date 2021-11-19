@@ -4,7 +4,7 @@ from typing import Optional, Tuple
 import torch.nn as nn
 import torch
 from transformers.models.dpr.modeling_dpr import DPRReaderOutput
-from transformers.modeling_outputs import QuestionAnsweringModelOutput
+from transformers.modeling_outputs import QuestionAnsweringModelOutput, ModelOutput
 from transformers import BertForQuestionAnswering
 
 from meerqat.train.losses import _calc_mml
@@ -43,6 +43,88 @@ class MultiPassageBERTOutput(QuestionAnsweringModelOutput):
     """
     start_log_probs: torch.FloatTensor = None
     end_log_probs: torch.FloatTensor = None
+
+
+@dataclass 
+class DPRBiEncoderOutput(ModelOutput):
+    """
+    Loss and outputs from the question and context encoders 
+    (same as DPRQuestionEncoderOutput, DPRContextEncoderOutput with prefixes)
+    """
+    loss: Optional[torch.FloatTensor] = None
+    question_pooler_output: Optional[torch.FloatTensor] = None
+    question_hidden_states: Optional[Tuple[torch.FloatTensor]] = None
+    question_attentions: Optional[Tuple[torch.FloatTensor]] = None
+    context_pooler_output: Optional[torch.FloatTensor] = None
+    context_hidden_states: Optional[Tuple[torch.FloatTensor]] = None
+    context_attentions: Optional[Tuple[torch.FloatTensor]] = None
+
+
+class DPRBiEncoder(nn.Module):
+    """Adapted from https://github.com/facebookresearch/DPR/blob/main/dpr/models/biencoder.py"""
+    def __init__(self, question_model, context_model):
+        """
+        Parameters
+        ----------
+
+        question_model: transformers.DPRQuestionEncoder
+            Encoder based on BERT used to encode the question/query
+        context_model: transformers.DPRContextEncoder  
+            Encoder based on BERT used to encode the context/evidence/passage 
+            ('context' is confusing IMO but I keep it for consistency with DPR and transformers)
+        """
+        super().__init__()
+        self.question_model = question_model
+        self.context_model = context_model
+        self.log_softmax = nn.LogSoftmax(1)
+        self.loss_fct = nn.NLLLoss(reduction='mean')
+    
+    def forward(self, question_inputs, context_inputs, return_dict=None):
+        """
+        Embeds questions and contexts with their respective model, computes similarity (dot product) and cross-entropy loss.
+        Questions are expected to be aligned with the relevant context.
+        
+        N - number of questions in a batch
+        M - number of passages per questions
+        d - dimension of the model/embeddings
+        
+        Parameters
+        ----------
+        question_inputs: torch.FloatTensor
+            shape (N, d)
+        context_inputs: torch.FloatTensor
+            shape (N*M, d)
+            The first N rows should correspond to the relevant contexts for the N questions
+            The rest N*(M-1) rows are used as irrelevant contexts (i.e. in-batch negatives) for all questions.
+        return_dict: bool, optional
+        """
+        return_dict = return_dict if return_dict is not None else self.question_model.config.use_return_dict
+
+        # embed questions and contexts
+        question_outputs = self.question_model(**question_inputs)
+        context_outputs = self.context_model(**context_inputs)
+        question_pooler_output = question_outputs.pooler_output  # (N, d)
+        context_pooler_output = context_outputs.pooler_output  # (N*M, d)
+
+        # compute similarity
+        similarities = question_pooler_output @ context_pooler_output.T  # (N, N*M)
+        log_probs = self.log_softmax(similarities)
+
+        # assumes that question are aligned with their relevant passage
+        target = torch.arange(question_pooler_output.shape[0], device=question_pooler_output.device)
+        loss = self.loss_fct(log_probs, target)
+
+        if not return_dict:
+            return ((loss,) + question_outputs + context_outputs)
+
+        return DPRBiEncoderOutput(
+            loss=loss, 
+            question_pooler_output=question_outputs.pooler_output,
+            question_hidden_states=question_outputs.hidden_states,
+            question_attentions=question_outputs.attentions,
+            context_pooler_output=context_outputs.pooler_output,
+            context_hidden_states=context_outputs.hidden_states,
+            context_attentions=context_outputs.attentions)
 
 
 class DPRReaderForQuestionAnswering(Trainee):
