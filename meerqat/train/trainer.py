@@ -100,7 +100,6 @@ class QuestionAnsweringTrainer(MeerqatTrainer):
         all_relevant_indices = item[self.search_key+"_provenance_indices"]
         n_relevant = min(len(all_relevant_indices), self.n_relevant_passages)
         if n_relevant > 0:
-            # TODO: is this random choice well fixed thanks to transformers Trainer?
             relevant_indices = np.random.choice(all_relevant_indices, n_relevant, replace=False)
             if len(relevant_indices) > 0:
                 relevant_passages = self.kb.select(relevant_indices)['passage']
