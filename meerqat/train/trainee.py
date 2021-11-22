@@ -48,16 +48,10 @@ class MultiPassageBERTOutput(QuestionAnsweringModelOutput):
 @dataclass 
 class DPRBiEncoderOutput(ModelOutput):
     """
-    Loss and outputs from the question and context encoders 
-    (same as DPRQuestionEncoderOutput, DPRContextEncoderOutput with prefixes)
+    Loss and log-probs
     """
     loss: Optional[torch.FloatTensor] = None
-    question_pooler_output: Optional[torch.FloatTensor] = None
-    question_hidden_states: Optional[Tuple[torch.FloatTensor]] = None
-    question_attentions: Optional[Tuple[torch.FloatTensor]] = None
-    context_pooler_output: Optional[torch.FloatTensor] = None
-    context_hidden_states: Optional[Tuple[torch.FloatTensor]] = None
-    context_attentions: Optional[Tuple[torch.FloatTensor]] = None
+    log_probs: Optional[torch.FloatTensor] = None
 
 
 class DPRBiEncoder(nn.Module):
@@ -86,16 +80,21 @@ class DPRBiEncoder(nn.Module):
         
         N - number of questions in a batch
         M - number of passages per questions
+        L - sequence length
         d - dimension of the model/embeddings
         
         Parameters
         ----------
-        question_inputs: torch.FloatTensor
-            shape (N, d)
-        context_inputs: torch.FloatTensor
-            shape (N*M, d)
-            The first N rows should correspond to the relevant contexts for the N questions
-            The rest N*(M-1) rows are used as irrelevant contexts (i.e. in-batch negatives) for all questions.
+        question_inputs: dict[torch.LongTensor]
+            input_ids: torch.LongTensor
+                shape (N, L)
+            usual BERT inputs, see transformers.DPRQuestionEncoder
+        context_inputs: dict[torch.LongTensor]
+            input_ids: torch.LongTensor
+                shape (N*M, L)
+                The first N rows should correspond to the relevant contexts for the N questions
+                The rest N*(M-1) rows are used as irrelevant contexts (i.e. in-batch negatives) for all questions.
+            usual BERT inputs, see transformers.DPRContextEncoder
         return_dict: bool, optional
         """
         return_dict = return_dict if return_dict is not None else self.question_model.config.use_return_dict
@@ -115,16 +114,9 @@ class DPRBiEncoder(nn.Module):
         loss = self.loss_fct(log_probs, target)
 
         if not return_dict:
-            return ((loss,) + question_outputs + context_outputs)
+            return (loss, log_probs)
 
-        return DPRBiEncoderOutput(
-            loss=loss, 
-            question_pooler_output=question_outputs.pooler_output,
-            question_hidden_states=question_outputs.hidden_states,
-            question_attentions=question_outputs.attentions,
-            context_pooler_output=context_outputs.pooler_output,
-            context_hidden_states=context_outputs.hidden_states,
-            context_attentions=context_outputs.attentions)
+        return DPRBiEncoderOutput(loss=loss, log_probs=log_probs)
 
 
 class DPRReaderForQuestionAnswering(Trainee):

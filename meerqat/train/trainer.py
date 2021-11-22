@@ -5,11 +5,12 @@ from pathlib import Path
 import warnings
 from tqdm import tqdm
 import collections
+import sys
 
 import numpy as np
 import torch
 from torch.autograd import set_detect_anomaly
-from torch.utils.data.dataset import Dataset, IterableDataset
+from torch.utils.data.dataset import IterableDataset
 
 from transformers import Trainer, TrainingArguments, trainer_callback, logging
 from transformers.trainer_callback import TrainerState
@@ -20,7 +21,8 @@ from transformers.trainer_pt_utils import (
     IterableDatasetShard,
     find_batch_size,
     nested_concat,
-    nested_numpify
+    nested_numpify,
+    nested_detach
 )
 from transformers.trainer_utils import EvalLoopOutput, denumpify_detensorize
 if is_torch_tpu_available():
@@ -28,6 +30,7 @@ if is_torch_tpu_available():
 
 from meerqat.data.loading import load_pretrained_in_kwargs
 from meerqat.models.qa import get_best_spans, format_predictions_for_squad
+from meerqat.train import metrics as metric_functions
 
 
 class MeerqatTrainer(Trainer):
@@ -39,10 +42,12 @@ class MeerqatTrainer(Trainer):
             logs[f"max_memory_{device}"] = torch.cuda.max_memory_allocated(device)
         return super().log(logs)
 
-        
-class MultiPassageBERTTrainer(MeerqatTrainer):
+
+class QuestionAnsweringTrainer(MeerqatTrainer):
     """
-    Overrides some methods because we need to create the batch of questions and passages on-the-fly
+    Base class for Question Answering trainers. Should work for both IR and RC.
+
+        Overrides some methods because we need to create the batch of questions and passages on-the-fly
 
     Because the inputs should be shaped like (N * M, L), where:
             N - number of distinct questions
@@ -51,7 +56,7 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
 
     Parameters
     ----------
-    *args, **kwargs: additional arguments are passed to Trainer
+    *args, **kwargs: additional arguments are passed to MeerqatTrainer
     kb: str
         path towards the knowledge base (Dataset) used to get the passages
     M: int, optional
@@ -59,9 +64,6 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
         Defaults to 24
     n_relevant_passages: int, optional
         Defaults to 1
-    max_n_answers: int, optional
-        The answer might be found several time in the same passage, this is a threshold to enable batching
-        Defaults to 10.
     search_key: str, optional
         This column in the dataset suffixed by '_indices' and '_scores' should hold the result of information retrieval
         used during evaluation (e.g. the output of ir.search)
@@ -72,24 +74,14 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
         Defaults to 'search'
     tokenization_kwargs: dict, optional
         To be passed to self.tokenizer
-    ignore_keys: List[str], optional
-        List of keys to remove from the batch before feeding it to the model
-        (data not used by the model but necessary for evaluation)
-        Defaults to ['answer_strings']
-    train_original_answer_only: bool, optional
-        Whether the model should be trained to predict only the original answer (default)
-        or all alternative answers (with the only limit of max_n_answers)
-        This has no effect on the evaluation (where all alternative answers are always considered)
     """
-    def __init__(self, *args, kb, M=24, n_relevant_passages=1, max_n_answers=10, search_key='search',
-                 tokenization_kwargs=None, ignore_keys=['answer_strings'], train_original_answer_only=True, **kwargs):
+    def __init__(self, *args, kb, M=24, n_relevant_passages=1, search_key='search', tokenization_kwargs=None, **kwargs):
         super().__init__(*args, **kwargs)
         assert self.tokenizer is not None
         self.kb = load_from_disk(kb)
         self.M = M
         assert n_relevant_passages <= M
         self.n_relevant_passages = n_relevant_passages
-        self.max_n_answers = max_n_answers
         self.search_key = search_key
         default_tokenization_kwargs = dict(return_tensors='pt', padding='max_length', truncation=True)
         if tokenization_kwargs is None:
@@ -97,8 +89,6 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
         default_tokenization_kwargs.update(tokenization_kwargs)
         self.tokenization_kwargs = default_tokenization_kwargs
         self.data_collator = self.collate_fn
-        self.ignore_keys = ignore_keys
-        self.train_original_answer_only = train_original_answer_only
 
         # we need those ‘un-used’ columns to actually create the batch the model will use
         if self.args.remove_unused_columns:
@@ -110,6 +100,7 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
         all_relevant_indices = item[self.search_key+"_provenance_indices"]
         n_relevant = min(len(all_relevant_indices), self.n_relevant_passages)
         if n_relevant > 0:
+            # TODO: is this random choice well fixed thanks to transformers Trainer?
             relevant_indices = np.random.choice(all_relevant_indices, n_relevant, replace=False)
             if len(relevant_indices) > 0:
                 relevant_passages = self.kb.select(relevant_indices)['passage']
@@ -122,7 +113,131 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
                 irrelevant_passages = self.kb.select(irrelevant_indices)['passage']
         elif n_relevant <= 0:
             warnings.warn(f"Didn't find any passage for question {item['id']}")
-        return relevant_passages+irrelevant_passages
+        return relevant_passages, irrelevant_passages
+
+    def collate_fn(self, items):
+        """
+        Collate batch so that each question is associate with n_relevant_passages and M-n irrelevant ones.
+        Also tokenizes input strings
+
+        N - number of questions in a batch
+        M - number of passages per questions
+        d - dimension of the model/embeddings
+
+        Returns (a dict of)
+        -------------------
+        question_inputs: dict[torch.LongTensor]
+            input_ids: torch.LongTensor
+                shape (N, L)
+            **kwargs: more tensors depending on the tokenizer, e.g. attention_mask
+        context_inputs: dict[torch.LongTensor]
+            input_ids: torch.LongTensor
+                shape (N*M, L)
+                The first N rows correspond to the relevant contexts for the N questions
+                The rest N*(M-1) rows are irrelevant contexts for all questions.
+            **kwargs: idem
+        """
+        questions, relevant_passages, irrelevant_passages = [], [], []
+        for i, item in enumerate(items):
+            relevant_passage, irrelevant_passage = self.get_training_passages(item)
+            if len(relevant_passage) < 1:
+                continue
+            questions.append(item['input'])
+            relevant_passages.extend(relevant_passage)
+            irrelevant_passages.extend(irrelevant_passage)
+
+        question_inputs = self.tokenizer(questions, **self.tokenization_kwargs)
+        context_inputs = self.tokenizer(relevant_passages + irrelevant_passages, **self.tokenization_kwargs)
+        return dict(question_inputs=question_inputs, context_inputs=context_inputs)
+
+    def prediction_step(
+        self,
+        model,
+        inputs,
+        prediction_loss_only,
+        ignore_keys = None,
+    ):
+        """
+        Perform an evaluation step on :obj:`model` using obj:`inputs`.
+
+        Computes the loss without asking about label names (unlike Trainer)
+        No support for sagemaker.
+
+        Args:
+            model (:obj:`nn.Module`):
+                The model to evaluate.
+            inputs (:obj:`Dict[str, Union[torch.Tensor, Any]]`):
+                The inputs and targets of the model.
+
+                The dictionary will be unpacked before being fed to the model. Most models expect the targets under the
+                argument :obj:`labels`. Check your model's documentation for all accepted arguments.
+            prediction_loss_only (:obj:`bool`):
+                Whether or not to return the loss only.
+            ignore_keys (:obj:`Lst[str]`, `optional`):
+                A list of keys in the output of your model (if it is a dictionary) that should be ignored when
+                gathering predictions.
+
+        Return:
+            Tuple[Optional[torch.Tensor], Optional[torch.Tensor], Optional[torch.Tensor]]: A tuple with the loss,
+            logits and labels (each being optional).
+        """
+        inputs = self._prepare_inputs(inputs)
+        if ignore_keys is None:
+            if hasattr(self.model, "config"):
+                ignore_keys = getattr(self.model.config, "keys_to_ignore_at_inference", [])
+            else:
+                ignore_keys = []
+
+        # labels may be popped when computing the loss (label smoothing for instance) so we grab them first.
+        labels = None
+
+        with torch.no_grad():
+            if self.use_amp:
+                with autocast():
+                    loss, outputs = self.compute_loss(model, inputs, return_outputs=True)
+            else:
+                loss, outputs = self.compute_loss(model, inputs, return_outputs=True)
+            loss = loss.mean().detach()
+            if isinstance(outputs, dict):
+                logits = tuple(v for k, v in outputs.items() if k not in ignore_keys + ["loss"])
+            else:
+                logits = outputs[1:]
+
+        if prediction_loss_only:
+            return (loss, None, None)
+
+        logits = nested_detach(logits)
+        if len(logits) == 1:
+            logits = logits[0]
+
+        return (loss, logits, labels)
+
+
+class MultiPassageBERTTrainer(QuestionAnsweringTrainer):
+    """
+    Specific for RC, more precisely MultiPassageBERT
+    (will I manage to code an extra-level of abstraction, e.g. ReadingComprehensionTrainer?)
+
+    Parameters
+    ----------
+    *args, **kwargs: additional arguments are passed to QuestionAnsweringTrainer
+    max_n_answers: int, optional
+        The answer might be found several time in the same passage, this is a threshold to enable batching
+        Defaults to 10.
+    ignore_keys: List[str], optional
+        List of keys to remove from the batch before feeding it to the model
+        (data not used by the model but necessary for evaluation)
+        Defaults to ['answer_strings']
+    train_original_answer_only: bool, optional
+        Whether the model should be trained to predict only the original answer (default)
+        or all alternative answers (with the only limit of max_n_answers)
+        This has no effect on the evaluation (where all alternative answers are always considered)
+    """
+    def __init__(self, *args, max_n_answers=10, ignore_keys=['answer_strings'], train_original_answer_only=True, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.max_n_answers = max_n_answers
+        self.ignore_keys = ignore_keys
+        self.train_original_answer_only = train_original_answer_only
 
     def get_eval_passages(self, item):
         """Keep the top-M passages retrieved by the IR"""
@@ -194,7 +309,8 @@ class MultiPassageBERTTrainer(MeerqatTrainer):
                 if len(score) < self.M:
                     passage_scores.extend([0]*(self.M-len(score)))
             else:
-                passage = self.get_training_passages(item)
+                relevant_passage, irrelevant_passage = self.get_training_passages(item)
+                passage = relevant_passage + irrelevant_passage
 
             passages.extend(passage)
             # all passages have at least 1 non-masked answer (set to 0 for irrelevant passages)
@@ -456,7 +572,9 @@ def get_checkpoint(resume_from_checkpoint: str, *args, **kwargs):
     return resume_from_checkpoints
 
 
-def instantiate_trainer(trainee, debug=False, train_dataset=None, eval_dataset=None, metric='squad', training_kwargs={}, callbacks_args=[], **kwargs):
+def instantiate_trainer(trainee, trainer_class="MultiPassageBERTTrainer", debug=False, 
+                        train_dataset=None, eval_dataset=None, metric='squad', 
+                        training_kwargs={}, callbacks_args=[], **kwargs):
     """Additional arguments are passed to Trainer"""
     # debug (see torch.autograd.detect_anomaly)
     set_detect_anomaly(debug)
@@ -472,12 +590,21 @@ def instantiate_trainer(trainee, debug=False, train_dataset=None, eval_dataset=N
     do_eval = training_kwargs.pop('do_eval', False)
     training_args = TrainingArguments(**training_kwargs)
     training_args.do_eval = do_eval
-    metric = load_metric(metric)
-    compute_metrics = metric.compute
-    trainer = MultiPassageBERTTrainer(model=trainee, args=training_args,
-                                      train_dataset=train_dataset, eval_dataset=eval_dataset,
-                                      compute_metrics=compute_metrics,
-                                      **kwargs)
+
+    # metrics come in priority from meerqat.train.metrics
+    if metric is not None:
+        compute_metrics = getattr(metric_functions, metric, None)
+        # or from HF's datasets
+        if compute_metrics is None:
+            metric = load_metric(metric)
+            compute_metrics = metric.compute
+    else:
+        compute_metrics = None
+
+    TrainerClass = getattr(sys.modules[__name__], trainer_class)
+    trainer = TrainerClass(model=trainee, args=training_args,
+                           train_dataset=train_dataset, eval_dataset=eval_dataset,
+                           compute_metrics=compute_metrics, **kwargs)
     # training callbacks
     for callback in callbacks_args:
         CallbackClass = getattr(trainer_callback, callback.pop("Class"))

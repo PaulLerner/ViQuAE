@@ -77,6 +77,21 @@ def answer_preprocess(answer):
     return white_space_fix(remove_articles(remove_punc(answer.lower())))
 
 
+def DPR_from_BERT(Class, pretrained_model_name_or_path, question_config={}, context_config={}):
+    """Initializes the weights of DPR encoders with BERT pre-training"""
+    # DPR (and maybe future inhereting classes) consists of two BERT (todo generalize?) encoders
+
+    # one for the question/query
+    question_model = transformers.DPRQuestionEncoder(transformers.DPRConfig(**question_config))
+    # FIXME set add_pooling_layer=False, see https://github.com/huggingface/transformers/issues/14486
+    question_model.question_encoder.bert_model = transformers.BertModel.from_pretrained(pretrained_model_name_or_path, add_pooling_layer=True)
+    # one for the context/evidence/passage
+    context_model = transformers.DPRContextEncoder(transformers.DPRConfig(**context_config))
+    context_model.ctx_encoder.bert_model = transformers.BertModel.from_pretrained(pretrained_model_name_or_path, add_pooling_layer=True)
+
+    return Class(question_model, context_model)
+
+
 def get_pretrained(class_name, pretrained_model_name_or_path, trainee_class=None, trainee_kwargs={}, **kwargs):
     Class = None
     modules = [trainee, transformers]
@@ -85,7 +100,9 @@ def get_pretrained(class_name, pretrained_model_name_or_path, trainee_class=None
         if Class is not None:
             break
     if Class is not None:
-        if issubclass(Class, trainee.Trainee):
+        if issubclass(Class, trainee.DPRBiEncoder):
+            return DPR_from_BERT(Class, pretrained_model_name_or_path, **kwargs)
+        elif issubclass(Class, trainee.Trainee):
             # first get the wrapped pre-trained model in Trainee
             trainee_model = get_pretrained(trainee_class, pretrained_model_name_or_path, **kwargs)
             # then init the Trainee
