@@ -6,13 +6,15 @@ import warnings
 from tqdm import tqdm
 import collections
 import sys
+import logging
+import humanize
 
 import numpy as np
 import torch
 from torch.autograd import set_detect_anomaly
 from torch.utils.data.dataset import IterableDataset
 
-from transformers import Trainer, TrainingArguments, trainer_callback, logging
+from transformers import Trainer, TrainingArguments, trainer_callback, logging as t_logging
 from transformers.trainer_callback import TrainerState
 from datasets import load_from_disk, load_metric
 from transformers.deepspeed import deepspeed_init
@@ -33,13 +35,26 @@ from meerqat.models.qa import get_best_spans, format_predictions_for_squad
 from meerqat.train import metrics as metric_functions
 
 
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+
+
+def max_memory_usage(human=False):
+    logs = {}
+    for i in range(torch.cuda.device_count()):
+        device = f"cuda:{i}"
+        value = torch.cuda.max_memory_allocated(device)
+        if human:
+            value = humanize.naturalsize(value, gnu=True)
+        logs[f"max_memory_{device}"] = value
+    return logs
+
+
 class MeerqatTrainer(Trainer):
     """Base class for all trainers. Should be very similar to Trainer"""
     def log(self, logs: dict) -> None:
         """Adds memory usage to the logs"""
-        for i in range(torch.cuda.device_count()):
-            device = f"cuda:{i}"
-            logs[f"max_memory_{device}"] = torch.cuda.max_memory_allocated(device)
+        logs.update(max_memory_usage())
         return super().log(logs)
 
 
@@ -627,19 +642,24 @@ def write_metrics(metrics, resume_from_checkpoint):
 
 
 if __name__ == "__main__":
+    logger.debug(f"entering main {max_memory_usage(human=True)}")
     # load and parse arguments
     args = docopt(__doc__)
     config_path = Path(args['<config>'])
     with open(config_path, "r") as file:
         config = load_pretrained_in_kwargs(json.load(file))
 
+    logger.debug(f"after loading pre-trained models {max_memory_usage(human=True)}")
+
     verbosity = config.pop("verbosity", None)
     if verbosity is not None:
-        logging.set_verbosity(verbosity)
+        t_logging.set_verbosity(verbosity)
+        logger.setLevel(verbosity)
 
     checkpoint = config.pop("checkpoint", {})
     trainer, training_args = instantiate_trainer(**config)
     device = trainer.args.device
+    logger.debug(f"after instantiating trainer {max_memory_usage(human=True)}")
     if training_args.do_train:
         trainer.train(**checkpoint)
     elif training_args.do_eval:
