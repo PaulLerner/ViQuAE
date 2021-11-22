@@ -73,7 +73,7 @@ class DPRBiEncoder(nn.Module):
         self.log_softmax = nn.LogSoftmax(1)
         self.loss_fct = nn.NLLLoss(reduction='mean')
     
-    def forward(self, question_inputs, context_inputs, return_dict=None):
+    def forward(self, question_inputs, context_inputs, labels=None, return_dict=None):
         """
         Embeds questions and contexts with their respective model, computes similarity (dot product) and cross-entropy loss.
         Questions are expected to be aligned with the relevant context.
@@ -95,6 +95,9 @@ class DPRBiEncoder(nn.Module):
                 The first N rows should correspond to the relevant contexts for the N questions
                 The rest N*(M-1) rows are used as irrelevant contexts (i.e. in-batch negatives) for all questions.
             usual BERT inputs, see transformers.DPRContextEncoder
+        labels: torch.LongTensor, optional
+            shape (N, )
+            Question i targets context i. Therefore it defaults to torch.arange(N)
         return_dict: bool, optional
         """
         return_dict = return_dict if return_dict is not None else self.question_model.config.use_return_dict
@@ -110,8 +113,9 @@ class DPRBiEncoder(nn.Module):
         log_probs = self.log_softmax(similarities)
 
         # assumes that question are aligned with their relevant passage
-        target = torch.arange(question_pooler_output.shape[0], device=question_pooler_output.device)
-        loss = self.loss_fct(log_probs, target)
+        if labels is None:
+            labels = torch.arange(question_pooler_output.shape[0], device=question_pooler_output.device)
+        loss = self.loss_fct(log_probs, labels)
 
         if not return_dict:
             return (loss, log_probs)

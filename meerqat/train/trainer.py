@@ -162,69 +162,8 @@ class QuestionAnsweringTrainer(MeerqatTrainer):
 
         question_inputs = self.tokenizer(questions, **self.tokenization_kwargs)
         context_inputs = self.tokenizer(relevant_passages + irrelevant_passages, **self.tokenization_kwargs)
-        return dict(question_inputs=question_inputs, context_inputs=context_inputs)
-
-    def prediction_step(
-        self,
-        model,
-        inputs,
-        prediction_loss_only,
-        ignore_keys = None,
-    ):
-        """
-        Perform an evaluation step on :obj:`model` using obj:`inputs`.
-
-        Computes the loss without asking about label names (unlike Trainer)
-        No support for sagemaker.
-
-        Args:
-            model (:obj:`nn.Module`):
-                The model to evaluate.
-            inputs (:obj:`Dict[str, Union[torch.Tensor, Any]]`):
-                The inputs and targets of the model.
-
-                The dictionary will be unpacked before being fed to the model. Most models expect the targets under the
-                argument :obj:`labels`. Check your model's documentation for all accepted arguments.
-            prediction_loss_only (:obj:`bool`):
-                Whether or not to return the loss only.
-            ignore_keys (:obj:`Lst[str]`, `optional`):
-                A list of keys in the output of your model (if it is a dictionary) that should be ignored when
-                gathering predictions.
-
-        Return:
-            Tuple[Optional[torch.Tensor], Optional[torch.Tensor], Optional[torch.Tensor]]: A tuple with the loss,
-            logits and labels (each being optional).
-        """
-        inputs = self._prepare_inputs(inputs)
-        if ignore_keys is None:
-            if hasattr(self.model, "config"):
-                ignore_keys = getattr(self.model.config, "keys_to_ignore_at_inference", [])
-            else:
-                ignore_keys = []
-
-        # labels may be popped when computing the loss (label smoothing for instance) so we grab them first.
-        labels = None
-
-        with torch.no_grad():
-            if self.use_amp:
-                with autocast():
-                    loss, outputs = self.compute_loss(model, inputs, return_outputs=True)
-            else:
-                loss, outputs = self.compute_loss(model, inputs, return_outputs=True)
-            loss = loss.mean().detach()
-            if isinstance(outputs, dict):
-                logits = tuple(v for k, v in outputs.items() if k not in ignore_keys + ["loss"])
-            else:
-                logits = outputs[1:]
-
-        if prediction_loss_only:
-            return (loss, None, None)
-
-        logits = nested_detach(logits)
-        if len(logits) == 1:
-            logits = logits[0]
-
-        return (loss, logits, labels)
+        labels = torch.arange(len(questions))
+        return dict(question_inputs=question_inputs, context_inputs=context_inputs, labels=labels)
 
 
 class MultiPassageBERTTrainer(QuestionAnsweringTrainer):
