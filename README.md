@@ -1,9 +1,89 @@
 # MEERQAT
 Source code and data used in my PhD/[MEERQAT project](https://www.meerqat.fr/).
 
+In the paper [ViQuAE, a Dataset for Knowledge-based Visual Question Answering about Named Entities](https://openreview.net/forum?id=4YjpGcrcGy_), 
+under **double-blind** review at ACL RR, the dataset has been renamed *ViQuAE*.
+Until the paper is accepted, the name of the dataset will be *MEERQAT* here.
+
 # `data`
 
-All the data should be stored there, although it will probably not be hosted on github (depending on the dataset size)
+All the data should be stored in the same folder, at the root of this repo.
+
+The data is provided in two formats: HF's `datasets` (based on Apache Arrow) and plain-text JSONL files (one JSON object per line). 
+Both formats can be used in the same way as `datasets` parses objects into python `dict` (see below), however our code only supports (and is heavily based upon) `datasets`.
+Images are distributed separately, in standard formats (e.g. jpg).
+
+Both dataset formats are distributed in two versions, with and without pre-computed features.
+The pre-computed feature version allows you to skip one or several step described in [EXPERIMENTS.md](./EXPERIMENTS.md) (e.g. face detection).
+
+Download the version you're interested in:
+
+|           | with precomputed features                                               | without precomputed features                                            |  
+|---------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+|`datasets` | https://cea.talkspirit.com/#/l/permalink/drive/619d08e1eebc593c1716c623 | https://cea.talkspirit.com/#/l/permalink/drive/619d08e18989336a26769f8d |
+|`JSONL`    | https://cea.talkspirit.com/#/l/permalink/drive/619d08e147c0e207220663af | https://cea.talkspirit.com/#/l/permalink/drive/619d08e1ded5af4ac84368ac |
+
+Download the images from https://cea.talkspirit.com/#/l/permalink/drive/619d08a10a52e83dbe5ace7c
+```sh
+mkdir data
+tar -xvzf /path/to/dataset.tar.gz --directory data
+tar -xvzf /path/to/meerqat_dataset_Commons.tar.gz --directory data
+# some part of the code expect that all of the images are stored in `data/Commons`
+mv data/meerqat_dataset_Commons data/Commons
+```
+
+Instructions for the Knowledge Base (KB), coming soon!
+
+The dataset format largely follows [KILT](https://huggingface.co/datasets/kilt_tasks). 
+Here I’ll describe the dataset without pre-computed features. Pre-computed features are basically the output of each step described in [EXPERIMENTS.md](./EXPERIMENTS.md).
+
+```py
+In [1]: from datasets import load_from_disk
+   ...: dataset = load_from_disk('meerqat_dataset_without_features')
+In [2]: dataset
+Out[2]: 
+DatasetDict({
+    train: Dataset({
+        features: ['image', 'input', 'kilt_id', 'id', 'meta', 'original_question', 'output', 'url', 'wikidata_id'],
+        num_rows: 1190
+    })
+    validation: Dataset({
+        features: ['image', 'input', 'kilt_id', 'id', 'meta', 'original_question', 'output', 'url', 'wikidata_id'],
+        num_rows: 1250
+    })
+    test: Dataset({
+        features: ['image', 'input', 'kilt_id', 'id', 'meta', 'original_question', 'output', 'url', 'wikidata_id'],
+        num_rows: 1257
+    })
+})
+In [3]: item = dataset['test'][0]
+
+# this is now a dict, like the JSON object loaded from the JSONL files
+In [4]: type(item)
+Out[4]: dict
+
+# url of the grounding image
+In [5]: item['url']
+Out[5]: 'http://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Jackie_Wilson.png/512px-Jackie_Wilson.png'
+
+# file name of the grounding image as stored in `data/Commons`
+In [6]: item['image']
+Out[6]: '512px-Jackie_Wilson.png'
+
+# question string
+In [7]: item['input']
+Out[7]: "this singer's re-issued song became the UK Christmas number one after helping to advertise what brand?"
+
+# answer string
+In [8]: item['output']['original_answer']
+Out[8]: "Levi's"
+
+# processing the data:
+In [9]: dataset.map(my_function)
+# this is almost the same as (see how can you adapt the code if you don’t want to use the `datasets` library)
+In [10]: for item in dataset:
+    ...:     my_function(item)
+```
 
 ## Annotation of the data
 
