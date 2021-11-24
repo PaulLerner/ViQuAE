@@ -192,6 +192,9 @@ class MultiPassageBERTTrainer(QuestionAnsweringTrainer):
         self.ignore_keys = ignore_keys
         self.train_original_answer_only = train_original_answer_only
 
+        # FIXME isn't there a more robust way of defining data_collator as the method collate_fn ?
+        self.data_collator = self.collate_fn
+
     def get_eval_passages(self, item):
         """Keep the top-M passages retrieved by the IR"""
         indices = item[self.search_key+"_indices"][: self.M]
