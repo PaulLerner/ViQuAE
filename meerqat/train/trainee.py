@@ -48,10 +48,15 @@ class MultiPassageBERTOutput(QuestionAnsweringModelOutput):
 @dataclass 
 class DPRBiEncoderOutput(ModelOutput):
     """
-    Loss and log-probs
+    Outputs from the question and context encoders 
+    (same as DPRQuestionEncoderOutput, DPRContextEncoderOutput with prefixes)
     """
-    loss: Optional[torch.FloatTensor] = None
-    log_probs: Optional[torch.FloatTensor] = None
+    question_pooler_output: Optional[torch.FloatTensor] = None
+    question_hidden_states: Optional[Tuple[torch.FloatTensor]] = None
+    question_attentions: Optional[Tuple[torch.FloatTensor]] = None
+    context_pooler_output: Optional[torch.FloatTensor] = None
+    context_hidden_states: Optional[Tuple[torch.FloatTensor]] = None
+    context_attentions: Optional[Tuple[torch.FloatTensor]] = None
 
 
 class DPRBiEncoder(nn.Module):
@@ -70,13 +75,10 @@ class DPRBiEncoder(nn.Module):
         super().__init__()
         self.question_model = question_model
         self.context_model = context_model
-        self.log_softmax = nn.LogSoftmax(1)
-        self.loss_fct = nn.NLLLoss(reduction='mean')
     
-    def forward(self, question_inputs, context_inputs, labels=None, return_dict=None):
+    def forward(self, question_inputs, context_inputs, return_dict=None):
         """
-        Embeds questions and contexts with their respective model, computes similarity (dot product) and cross-entropy loss.
-        Questions are expected to be aligned with the relevant context.
+        Embeds questions and contexts with their respective model and returns the embeddings.
         
         N - number of questions in a batch
         M - number of passages per questions
@@ -92,12 +94,7 @@ class DPRBiEncoder(nn.Module):
         context_inputs: dict[torch.LongTensor]
             input_ids: torch.LongTensor
                 shape (N*M, L)
-                The first N rows should correspond to the relevant contexts for the N questions
-                The rest N*(M-1) rows are used as irrelevant contexts (i.e. in-batch negatives) for all questions.
             usual BERT inputs, see transformers.DPRContextEncoder
-        labels: torch.LongTensor, optional
-            shape (N, )
-            Question i targets context i. Therefore it defaults to torch.arange(N)
         return_dict: bool, optional
         """
         return_dict = return_dict if return_dict is not None else self.question_model.config.use_return_dict
@@ -105,22 +102,14 @@ class DPRBiEncoder(nn.Module):
         # embed questions and contexts
         question_outputs = self.question_model(**question_inputs)
         context_outputs = self.context_model(**context_inputs)
-        question_pooler_output = question_outputs.pooler_output  # (N, d)
-        context_pooler_output = context_outputs.pooler_output  # (N*M, d)
 
-        # compute similarity
-        similarities = question_pooler_output @ context_pooler_output.T  # (N, N*M)
-        log_probs = self.log_softmax(similarities)
-
-        # assumes that question are aligned with their relevant passage
-        if labels is None:
-            labels = torch.arange(question_pooler_output.shape[0], device=question_pooler_output.device)
-        loss = self.loss_fct(log_probs, labels)
-
-        if not return_dict:
-            return (loss, log_probs)
-
-        return DPRBiEncoderOutput(loss=loss, log_probs=log_probs)
+        return DPRBiEncoderOutput(
+            question_pooler_output=question_outputs.pooler_output,
+            question_hidden_states=question_outputs.hidden_states,
+            question_attentions=question_outputs.attentions,
+            context_pooler_output=context_outputs.pooler_output,
+            context_hidden_states=context_outputs.hidden_states,
+            context_attentions=context_outputs.attentions)
 
 
 class DPRReaderForQuestionAnswering(Trainee):

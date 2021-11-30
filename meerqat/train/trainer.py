@@ -11,8 +11,10 @@ import humanize
 
 import numpy as np
 import torch
+from torch import nn
 from torch.autograd import set_detect_anomaly
 from torch.utils.data.dataset import IterableDataset
+import torch.distributed as dist
 
 from transformers import Trainer, TrainingArguments, trainer_callback, logging as t_logging
 from transformers.trainer_callback import TrainerState
@@ -129,6 +131,14 @@ class QuestionAnsweringTrainer(MeerqatTrainer):
             warnings.warn(f"Didn't find any passage for question {item['id']}")
         return relevant_passages, irrelevant_passages
 
+
+class DPRBiEncoderTrainer(QuestionAnsweringTrainer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.log_softmax = nn.LogSoftmax(1)
+        self.loss_fct = nn.NLLLoss(reduction='mean')
+        assert self.n_relevant_passages == 1
+
     def collate_fn(self, items):
         """
         Collate batch so that each question is associate with n_relevant_passages and M-n irrelevant ones.
@@ -151,19 +161,109 @@ class QuestionAnsweringTrainer(MeerqatTrainer):
                 The rest N*(M-1) rows are irrelevant contexts for all questions.
             **kwargs: idem
         """
-        questions, relevant_passages, irrelevant_passages = [], [], []
+        # OK (device_ids == local_rank)
+        # logger.debug(f"local_rank: {self.args.local_rank}, device_ids: {self.model_wrapped.device_ids}")
+        n_irrelevant_passages = self.M-self.n_relevant_passages
+        questions, relevant_passages, irrelevant_passages, labels = [], [], [], []
         for i, item in enumerate(items):
             relevant_passage, irrelevant_passage = self.get_training_passages(item)
             if len(relevant_passage) < 1:
-                continue
+                relevant_passage = ['']
+                labels.append(self.loss_fct.ignore_index)
+            else:
+                labels.append(i)
+            if len(irrelevant_passage) < n_irrelevant_passages:
+                irrelevant_passage.extend(['']*(n_irrelevant_passages-len(irrelevant_passage)))
             questions.append(item['input'])
             relevant_passages.extend(relevant_passage)
             irrelevant_passages.extend(irrelevant_passage)
 
         question_inputs = self.tokenizer(questions, **self.tokenization_kwargs)
         context_inputs = self.tokenizer(relevant_passages + irrelevant_passages, **self.tokenization_kwargs)
-        labels = torch.arange(len(questions))
-        return dict(question_inputs=question_inputs, context_inputs=context_inputs, labels=labels)
+        labels = torch.tensor(labels)
+        batch = dict(question_inputs=question_inputs, context_inputs=context_inputs, labels=labels)
+        # print(f"collate_fn - local_rank: {self.args.local_rank}\n{batch}")
+        return batch
+
+    def compute_loss(self, model, inputs, return_outputs=False):
+        """
+        Calculates In-batch negatives schema loss and supports to run it in DDP mode by exchanging the representations across all the nodes.
+        Adapted from https://github.com/facebookresearch/DPR/blob/main/train_dense_encoder.py
+
+        N. B. this means that the whole representations of questions and contexts, and their similarity matrix, must fit on a single GPU.
+        """
+        if self.label_smoother is not None:
+            raise NotImplementedError()
+
+        local_labels = inputs.pop('labels', None)  # (N, )
+
+        # print(f"compute_loss - local_rank: {self.args.local_rank}, local_labels: \n{local_labels}")
+
+        outputs = model(**inputs)
+
+        # Save past state if it exists
+        # TODO: this needs to be fixed and made cleaner later.
+        if self.args.past_index >= 0:
+            self._past = outputs[self.args.past_index]
+
+        if local_labels is None:
+            # FIXME: this returns representations and not similarities
+            return (None, outputs) if return_outputs else None
+
+        local_question_representations = outputs.question_pooler_output  # (N, d)
+        local_context_representations = outputs.context_pooler_output  # (N*M, d)
+        if self.args.world_size > 1:
+            # copies local representations (in DPR they are moved to CPU but I got a RuntimeError: "Tensors must be CUDA")
+            question_representations_to_send = torch.empty_like(local_question_representations).copy_(local_question_representations).detach_()
+            context_representations_to_send = torch.empty_like(local_context_representations).copy_(local_context_representations).detach_()
+            labels_to_send = torch.empty_like(local_labels).copy_(local_labels)
+
+            # gathers representations from other GPUs
+            question_representations_gatherer = [torch.empty_like(question_representations_to_send) for _ in range(self.args.world_size)]
+            context_representations_gatherer = [torch.empty_like(context_representations_to_send) for _ in range(self.args.world_size)]
+            labels_gatherer = [torch.empty_like(labels_to_send) for _ in range(self.args.world_size)]
+            dist.all_gather(question_representations_gatherer, question_representations_to_send)
+            dist.all_gather(context_representations_gatherer, context_representations_to_send)
+            dist.all_gather(labels_gatherer, labels_to_send)
+            
+            # keep local vector in the local_rank index (taken from DPR, to not loose the gradients?)
+            label_shift = 0
+            global_question_representations, global_context_representations, global_labels = [], [], []
+            gatherers = zip(question_representations_gatherer, context_representations_gatherer, labels_gatherer)
+            for i, (received_question_representations, received_context_representations, received_labels) in enumerate(gatherers):
+                # receiving representations from other GPUs
+                if i != self.args.local_rank:
+                    global_question_representations.append(received_question_representations.to(local_question_representations.device))
+                    global_context_representations.append(received_context_representations.to(local_context_representations.device))
+                    # labels are defined at the batch-level so we need to shift them when concatening batches
+                    received_labels[received_labels!=self.loss_fct.ignore_index] += label_shift
+                    label_shift += received_context_representations.shape[0]  # N*M
+                    global_labels.append(received_labels.to(local_labels.device))
+                # keep local representation
+                else:
+                    global_question_representations.append(local_question_representations)
+                    global_context_representations.append(local_context_representations)
+                    # labels are defined at the batch-level so we need to shift them when concatening batches
+                    local_labels[local_labels!=self.loss_fct.ignore_index] += label_shift
+                    label_shift += local_context_representations.shape[0]  # N*M
+                    global_labels.append(local_labels)
+            global_question_representations = torch.cat(global_question_representations, dim=0)
+            global_context_representations = torch.cat(global_context_representations, dim=0)
+            global_labels = torch.cat(global_labels, dim=0)
+        else:
+            global_question_representations = local_question_representations  # (N, d)
+            global_context_representations = local_context_representations  # (N*M, d)
+            global_labels = local_labels  # (N, )
+
+        # compute similarity
+        similarities = global_question_representations @ global_context_representations.T  # (N, N*M)
+        log_probs = self.log_softmax(similarities)
+
+        loss = self.loss_fct(log_probs, global_labels)
+
+        # print(f"compute_loss - local_rank: {self.args.local_rank}, loss: {loss}, global_labels: \n{global_labels}")
+
+        return (loss, log_probs) if return_outputs else loss
 
 
 class MultiPassageBERTTrainer(QuestionAnsweringTrainer):
