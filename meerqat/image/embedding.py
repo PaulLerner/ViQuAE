@@ -14,8 +14,10 @@ import torchvision
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize
 from datasets import load_from_disk, set_caching_enabled
 
+import clip
+
 from meerqat.models.utils import device
-from meerqat.data.loading import COMMONS_PATH as IMAGE_PATH, load_image_batch
+from meerqat.data.loading import load_image_batch
 
 
 class ImageEncoder(nn.Module):
@@ -48,11 +50,12 @@ def get_encoder(torchvision_model):
     return nn.Sequential(OrderedDict(list(torchvision_model.named_children())[:cutoff]))
 
 
-def get_model(pretrained_kwargs={}, pool_kwargs={}, training=False):
+def get_torchvision_model(pretrained_kwargs={}, pool_kwargs={}):
+    """Get model pre-trained on ImageNet"""
     torchvision_model = from_pretrained(**pretrained_kwargs)
     encoder = get_encoder(torchvision_model)
     pool = get_nn_module(**pool_kwargs)
-    return ImageEncoder(encoder, pool).to(device).train(training)
+    return ImageEncoder(encoder, pool)
 
 
 def get_transform(resize_kwargs=dict(size=224), crop_size=224, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
@@ -64,21 +67,40 @@ def get_transform(resize_kwargs=dict(size=224), crop_size=224, mean=[0.485, 0.45
     ])
 
 
-def embed(batch, model, transform):
+def get_model_and_transform(model_kwargs={}, transform_kwargs={}):
+    training = model_kwargs.pop("training", False)
+    model_type = model_kwargs.pop("type", "torchvision")
+    if model_type == "torchvision":
+        model = get_torchvision_model(**model_kwargs)
+        transform = get_transform(**transform_kwargs)
+    elif model_type == "clip":
+        clip_model, transform = clip.load(**model_kwargs, device=device)
+        # only interested in the visual bottleneck here (for content-based image retrieval)
+        model = clip_model.visual
+    else:
+        raise ValueError(f"Unexpected model type '{model_type}'")
+
+    model = model.to(device).train(training)
+    if torch.cuda.device_count() > 1:
+        model = torch.nn.DataParallel(model)
+
+    return dict(model=model, transform=transform)
+
+
+def embed(batch, model, transform, save_as='image_embedding'):
     images = load_image_batch(batch['image'])
     images = [transform(image).unsqueeze(0) for image in images]
     images = torch.cat(images).to(device)
     with torch.no_grad():
         image_embeddings = model(images)
-    batch['image_embedding'] = image_embeddings.squeeze().cpu().numpy()
+    batch[save_as] = image_embeddings.squeeze().cpu().numpy()
     return batch
 
 
-def dataset_embed(dataset_path, map_kwargs={}, model_kwargs={}, transform_kwargs={}):
+def dataset_embed(dataset_path, map_kwargs={}, model_kwargs={}, transform_kwargs={}, **fn_kwargs):
     dataset = load_from_disk(dataset_path)
-    model = get_model(**model_kwargs)
-    transform = get_transform(**transform_kwargs)
-    dataset = dataset.map(embed, batched=True, fn_kwargs=dict(model=model, transform=transform), **map_kwargs)
+    fn_kwargs.update(get_model_and_transform(model_kwargs=model_kwargs, transform_kwargs=transform_kwargs))
+    dataset = dataset.map(embed, batched=True, fn_kwargs=fn_kwargs, **map_kwargs)
     dataset.save_to_disk(dataset_path)
 
 
