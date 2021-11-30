@@ -1,4 +1,7 @@
 import torch
+import numpy as np
+
+from transformers.tokenization_utils_base import BatchEncoding
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -42,3 +45,30 @@ def map_if_not_None(values, function, *args, default_value=None, **kwargs):
     for j, i in enumerate(not_None_values_indices):
         output[i] = not_None_output[j]
     return output
+
+
+def debug_shape(batch, prefix=""):
+    for key, data in batch.items():
+        if isinstance(data, dict):
+            debug_shape(data, prefix=f"{prefix}.{key}")
+        elif isinstance(data, (tuple, list)):
+            print(f"{prefix}.{key} ({type(data)}): {len(data)}")
+        elif isinstance(data, (torch.Tensor, np.ndarray)):
+            print(f"{prefix}.{key} ({type(data)}): {data.shape}")
+
+
+def prepare_inputs(data):
+    """
+    Moves tensors in data to `device`, be it a tensor or a nested list/dictionary of tensors.
+    Adapted from transformers.Trainer
+    """
+    if isinstance(data, (dict, BatchEncoding)):
+        # N. B. BatchEncoding does not accept kwargs, not sure what happens in Trainer
+        return dict(**{k: prepare_inputs(v) for k, v in data.items()})
+    elif isinstance(data, (tuple, list)):
+        return type(data)(prepare_inputs(v) for v in data)
+    elif isinstance(data, torch.Tensor):
+        return data.to(device=device)
+    else:
+        raise TypeError(f"Unexpected type '{type(data)}' for data:\n{data}")
+    return data
