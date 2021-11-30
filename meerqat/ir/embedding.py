@@ -51,5 +51,8 @@ if __name__ == '__main__':
     default_tokenization_kwargs = dict(return_tensors='pt', padding='max_length', truncation=True)
     default_tokenization_kwargs.update(config['tokenization_kwargs'])
     config['tokenization_kwargs'] = default_tokenization_kwargs
-    config['model'] = config['model'].to(device).eval()
-    dataset_embed(args['<dataset>'], **config)
+    model = config.pop('model')
+    model = model.to(device).eval()
+    if torch.cuda.device_count() > 1:
+        model = torch.nn.DataParallel(model)
+    dataset_embed(args['<dataset>'], model=model, **config)
