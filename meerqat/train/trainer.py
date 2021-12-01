@@ -197,8 +197,6 @@ class DPRBiEncoderTrainer(QuestionAnsweringTrainer):
 
         local_labels = inputs.pop('labels', None)  # (N, )
 
-        # print(f"compute_loss - local_rank: {self.args.local_rank}, local_labels: \n{local_labels}")
-
         outputs = model(**inputs)
 
         # Save past state if it exists
@@ -261,9 +259,9 @@ class DPRBiEncoderTrainer(QuestionAnsweringTrainer):
 
         loss = self.loss_fct(log_probs, global_labels)
 
-        # print(f"compute_loss - local_rank: {self.args.local_rank}, loss: {loss}, global_labels: \n{global_labels}")
-
-        return (loss, log_probs) if return_outputs else loss
+        # beware of https://github.com/huggingface/transformers/blob/master/src/transformers/trainer.py#L2513 !!
+        # do NOT return log_probs outside of a dict else it will get truncated
+        return (loss, dict(log_probs=log_probs)) if return_outputs else loss
 
 
 class MultiPassageBERTTrainer(QuestionAnsweringTrainer):
