@@ -21,6 +21,7 @@ from copy import deepcopy
 import re
 
 import numpy as np
+from elasticsearch import Elasticsearch
 from datasets import load_from_disk, set_caching_enabled
 
 import optuna
@@ -310,7 +311,7 @@ def search(batch, kbs, reference_kb=None, k=100, metrics={}, metrics_kwargs={}, 
     return batch
 
 
-def index_es_kb(path, column, index_name=None, load=False, **kwargs):
+def index_es_kb(path, column, index_name=None, load=False, request_timeout=1000, es_client_kwargs={}, **kwargs):
     """
     Loads KB from path then either:
     - loads it (if load)
@@ -320,20 +321,21 @@ def index_es_kb(path, column, index_name=None, load=False, **kwargs):
     if index_name is None:
         index_name = column
     kb = load_from_disk(path)
+    es_client = Elasticsearch(timeout=request_timeout, **es_client_kwargs)
     if load:
-        kb.load_elasticsearch_index(index_name=index_name, **kwargs)
+        kb.load_elasticsearch_index(index_name=index_name, es_client=es_client, **kwargs)
         # fix: settings are not actually used when loading an existing ES index
         # TODO open an issue on HF to fix it upstream
         settings = kwargs.get('es_index_config', {}).get('settings')
         if settings is not None:
             es_index = kb._indexes[index_name]
-            es_client = es_index.es_client
             es_index_name = es_index.es_index_name
             es_client.indices.close(es_index_name)
             es_client.indices.put_settings(settings, es_index_name)
             es_client.indices.open(es_index_name)
     else:
-        kb.add_elasticsearch_index(column=column, index_name=index_name, **kwargs)
+        kb.add_elasticsearch_index(column=column, index_name=index_name, es_client=es_client, **kwargs)
+
     return kb, index_name
 
 
