@@ -154,7 +154,9 @@ Search is done using cosine distance, hence the `"L2norm,Flat"` for `string_fact
 The results, corresponding to a KB entity/article are then mapped to the corresponding passages to allow fusion with BM25 (next §)
 The image results is simply the union of both ResNet and ArcFace scores since they are exclusive 
 (you can tweak that with the `weight` parameter in the config file)
- 
+
+Beware that these results cannot be well interpreted because they do not have a reference KB which would allow looking if the answer is in the passage (TODO refactor to allow that). See other caveats in the next section.
+
 ### BM25 + Image
 
 Now in order to combine the text results of BM25 and the image results we do two things:
@@ -174,6 +176,14 @@ if you want to optimize it you can do `meerqat.ir.search hp fusion` but you will
 python -m meerqat.ir.search data/meerqat_dataset/test experiments/ir/meerqat/bm25+image/config.json --k=100 --metrics=experiments/ir/meerqat/bm25+image/metrics.json
 ```
 
+Beware that the ImageNet-ResNet and ArcFace results cannot be compared, neither between them nor with BM25 because:
+- they are exclusive, roughly **half** the questions have a face -> ArcFace, other don't -> ResNet, while BM25 is applied to **all** questions
+- the mapping from image/document to passage is arbitrary, so the ordering of image results is not so meaningful until it is re-ordered with BM25
+
+If you’re interested in comparing only image representations, leaving downstream performance aside (e.g. comparing ImageNet-Resnet with another representation for the full image), you should:
+- `filter` the dataset so that you don’t evaluate on irrelevant questions (e.g. those were the search is done with ArcFace because a face was detected)
+- evaluate at the *document-level* instead of passage-level. To do so, maybe `checkout` the `document` branch (TODO merge in `main`).
+
 ### Metrics
 We compute metrics for different top-K results, noted `<metric>@<K>`.
 
@@ -188,7 +198,7 @@ Given `relret@K = |retrieved@K & relevant|` and `R = |relevant|`:
 Results are then averaged over all queries, we do not take into account queries without any relevant passages
 
 A few notes:
-- We max out `R = max(R, k)`, where `k` is the number of results you asked with `--k`
+- We min out `R = min(R, k)`, where `k` is the number of results you asked with `--k`
 - Recall and R-precision should be interpreted carefully since we do not have a complete coverage of the relevant passages
 - MRR is a bit underestimated since we cut off at `k` results
 
