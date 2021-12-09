@@ -1,7 +1,7 @@
 """Both dense and sparse information retrieval is done via HF-Datasets, using FAISS and ElasticSearch, respectively
 
 Usage:
-search.py <dataset> <config> [--k=<k> --disable_caching --save_irrelevant --metrics=<path>]
+search.py <dataset> <config> [--k=<k> --disable_caching --metrics=<path>]
 
 Options:
 --k=<k>                 Hyperparameter to search for the k nearest neighbors [default: 100].
@@ -240,7 +240,8 @@ class Searcher:
         for kb_path, kb_kwarg in kb_kwargs.items():
             kb = KnowledgeBase(kb_path, es_client=es_client, **kb_kwarg)
             self.kbs[kb_path] = kb
-            index_names = kb.dataset._indexes.keys()
+            # same as kb.dataset._indexes.keys()
+            index_names = kb.indexes.keys()
             assert not (index_names & self.metrics.keys()), "All KBs should have unique index names"
             # N. B. dict.fromkeys creates pointers to the SAME object (Counter instance here)
             self.metrics.update({index_name: Counter() for index_name in index_names})
@@ -334,26 +335,53 @@ class Searcher:
         fusions = dict(interpolation=self.interpolation_fusion)
         return fusions[self.fusion_method](batch, k=k, **self.fusion_kwargs)
 
-    def interpolation_fusion(self, batch, k=100):
+    def interpolation_fusion(self, batch, k=100, default_minimum=False):
         """
         Simple weighted sum, e.g. : fusion = w_1*score_1 + w_2*score_2 + w_3*score_3
+        The *default-minimum trick* is used in Ma et al. (2021, arXiv:2104.05740): 
+        when combining results from systems A and B, it consists in giving the minimum score of A's results 
+        if a given passage was only retrieved by system B, and vice-versa.
 
         TODO: If the weight are partially provided or not provided at all they default to a uniform weight such that they all sum to 1.
+
+        Parameters
+        ----------
+        batch: dict
+            as parsed by datasets
+        k: int, optional
+            Defaults to 100
+        default_minimum: bool, optional
+            Use the *default-minimum trick* (defaults to not to).
         """
         batch_size = len(next(iter(batch.values())))
+
+        # make union of all search results
+        all_indices = [set() for _ in range(batch_size)]
+        for kb in self.kbs.values():
+            for index_name, index in kb.indexes.items():
+                batch_indices = batch[f'{index_name}_indices']
+                for i, indices in enumerate(batch_indices):
+                    all_indices[i] |= set(indices)
         # init scores
-        # N. B. [{}]*n creates n pointers to the SAME dict
-        scores_dicts = [{} for _ in range(batch_size)]
+        scores_dicts = [{i: 0. for i in indices} for indices in all_indices]
+
         #TODO # kbs = set_interpolation_weights(kbs)
         for kb in self.kbs.values():
             for index_name, index in kb.indexes.items():
                 weight = index.interpolation_weight
-
-                kb_scores_dicts = scores2dict(batch[f'{index_name}_scores'], batch[f'{index_name}_indices'])
-                for scores_dict, kb_scores_dict in zip(scores_dicts, kb_scores_dicts):
-                    for index, score in kb_scores_dict.items():
-                        scores_dict.setdefault(index, 0.)
-                        scores_dict[index] += weight * score
+                # search results using index (computed previously)
+                index_scores_dicts = scores2dict(batch[f'{index_name}_scores'], batch[f'{index_name}_indices'])
+                # iterate over *all* retrieved indices (-> passages), not only those retrieved using this index
+                for indices, scores_dict, index_scores_dict in zip(all_indices, scores_dicts, index_scores_dicts):
+                    # can happen, e.g. for a face index when no face was detected
+                    if not index_scores_dict:
+                        continue
+                    # follow Ma et al. (2021, arXiv:2104.05740) by using minimal score 
+                    # when the document was retrieved only by one system
+                    min_index_score = min(index_scores_dict.values()) if default_minimum else 0.
+                    for i in indices:
+                        score = index_scores_dict.get(i, min_index_score)
+                        scores_dict[i] += weight * score
 
         scores_batch, indices_batch = dict_batch2scores(scores_dicts, k=k)
         return scores_batch, indices_batch
