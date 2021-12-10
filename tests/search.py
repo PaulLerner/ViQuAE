@@ -1,30 +1,19 @@
 import unittest
 
-from meerqat.ir.search import map_indices
+import numpy as np
+
+from meerqat.ir.search import scores2dict, dict_batch2scores
 
 
-class MappingTester(unittest.TestCase):
-    def test_basic(self):
-        mapping = {
-            10: [0, 1],
-            1000: [2, 3, 4]
-        }
-        scores_batch = [[100, 10000]]
-        indices_batch = [[10, 1000]]
-        out_scores, out_indices = map_indices(scores_batch, indices_batch, mapping)
-        self.assertEqual(out_scores, [[100, 100, 10000, 10000, 10000]], 'wrong scores')
-        self.assertEqual(out_indices, [[0, 1, 2, 3, 4]])
-
-    def test_k(self):
-        mapping = {
-            10: [0, 1],
-            1000: [2, 3, 4]
-        }
-        scores_batch = [[100, 10000]]
-        indices_batch = [[10, 1000]]
-        out_scores, out_indices = map_indices(scores_batch, indices_batch, mapping, k=2)
-        self.assertEqual(out_scores, [[100, 100]], 'wrong scores')
-        self.assertEqual(out_indices, [[0, 1]])
+class Dict2ScoresTester(unittest.TestCase):
+    """Applies scores2dict and dict_batch2scores reciprocally to make sure we fall back on identity"""
+    def test_batch(self):
+        k = 10
+        # this is sorted in desc order
+        scores_input = np.arange(k*3, 0, -1).reshape(3, k)
+        dict_batch = scores2dict(scores_input, scores_input)
+        scores_output = np.array(dict_batch2scores(dict_batch, k=k))
+        self.assertTrue((scores_input==scores_output).all())
 
 
 if __name__ == '__main__':
