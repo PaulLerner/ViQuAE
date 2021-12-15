@@ -34,6 +34,7 @@ def find_relevant(retrieved, original_answer, alternative_answers, kb, reference
     """
     original_relevant, relevant = [], []
     for i in retrieved:
+        i = int(i)
         passage = answer_preprocess(kb[i][reference_key])
 
         answer = answer_preprocess(original_answer)
@@ -57,10 +58,7 @@ def find_relevant_batch(retrieved_batch, ground_truth_output_batch, kb, relevant
 
     for retrieved, relevant, ground_truth_output in zip(retrieved_batch, relevant_batch, ground_truth_output_batch):
         # we already know that relevant indices are relevant, no need to compute it twice
-        # N. B. need to convert both to lists because cannot index KB with np.int64
-        retrieved_list = retrieved.tolist() if isinstance(retrieved, np.ndarray) else retrieved
-        relevant_list = relevant.tolist() if isinstance(relevant, np.ndarray) else relevant        
-        retrieved_todo = set(retrieved_list) - set(relevant_list)
+        retrieved_todo = set(retrieved) - set(relevant)
         if original_answer_only:
             alternative_answers = []
         else:
