@@ -17,6 +17,7 @@ import time
 from copy import deepcopy
 import re
 import enum
+from pathlib import Path
 
 import numpy as np
 from elasticsearch import Elasticsearch
@@ -94,8 +95,12 @@ class Index:
 
 class KnowledgeBase:
     """A KB can be indexed by several indexes."""
-    def __init__(self, kb_path, index_mapping_path=None, index_kwargs={}, es_client=None):
-        self.dataset = load_from_disk(kb_path)
+    def __init__(self, kb_path=None, index_mapping_path=None, index_kwargs={}, es_client=None, load_dataset=True):
+        if load_dataset:
+            self.dataset = load_from_disk(kb_path)
+        # This is useful for hyperparameter search if you want to use pre-computed results (see ir.hp).
+        else:
+            self.dataset = None
         self.es_client = es_client
 
         # N. B. this dict[Index] holds extra informations about the indexes. 
@@ -173,15 +178,20 @@ class KnowledgeBase:
             new_indices_batch.append(new_indices)
         return new_scores_batch, new_indices_batch
 
-    def add_or_load_index(self, column, index_name=None, es=False, kind_str=None, key=None,
+    def add_or_load_index(self, column=None, index_name=None, es=False, kind_str=None, key=None,
                           normalization=None, interpolation_weight=None, **index_kwarg):
-        if index_name is None:
-            index_name = column
-        if es:
-            self.add_or_load_elasticsearch_index(column, index_name=index_name, **index_kwarg)
+        # do not actually add the index. 
+        # This is useful for hyperparameter search if you want to use pre-computed results (see ir.hp).
+        if column is None:
             do_L2norm = False
-        else:                
-            do_L2norm = self.add_or_load_faiss_index(column, index_name=index_name, **index_kwarg)
+        else:
+            if index_name is None:
+                index_name = column
+            if es:
+                self.add_or_load_elasticsearch_index(column, index_name=index_name, **index_kwarg)
+                do_L2norm = False
+            else:                
+                do_L2norm = self.add_or_load_faiss_index(column, index_name=index_name, **index_kwarg)
         index = Index(key=key, kind_str=kind_str, es=es, do_L2norm=do_L2norm, normalization=normalization, interpolation_weight=interpolation_weight)
         self.indexes[index_name] = index
 
@@ -237,7 +247,13 @@ class Searcher:
         # this does not require ES to run anyway
         es_client = Elasticsearch(timeout=request_timeout, **es_client_kwargs)
         # load KBs used to search and index them
+        resolved_kb_paths = {}
         for kb_path, kb_kwarg in kb_kwargs.items():
+            resolved_kb_path = Path(kb_path).expanduser().resolve()
+            if resolved_kb_path in resolved_kb_paths:
+                raise ValueError(f"'{kb_path}' and '{resolved_kb_paths[resolved_kb_path]}' resolve to the same path")
+            resolved_kb_paths[resolved_kb_path] = kb_path
+
             kb = KnowledgeBase(kb_path, es_client=es_client, **kb_kwarg)
             self.kbs[kb_path] = kb
             # same as kb.dataset._indexes.keys()
@@ -259,7 +275,7 @@ class Searcher:
                           "so results should be interpreted carefully.\n")
             self.reference_kb = None
         # reference KB already loaded in KBs used to search
-        elif reference_kb_path in self.kbs:
+        elif reference_kb_path in self.kbs and self.kbs[reference_kb_path].dataset is not None:
             self.reference_kb = self.kbs[reference_kb_path].dataset
         # reference-only KB (not used to search) so we have to load it
         else:
@@ -335,14 +351,24 @@ class Searcher:
         fusions = dict(interpolation=self.interpolation_fusion)
         return fusions[self.fusion_method](batch, k=k, **self.fusion_kwargs)
 
+    def union_results(self, batch):
+        """make union of all search results"""
+        batch_size = len(next(iter(batch.values())))
+
+        all_indices = [set() for _ in range(batch_size)]
+        for kb in self.kbs.values():
+            for index_name, index in kb.indexes.items():
+                batch_indices = batch[f'{index_name}_indices']
+                for i, indices in enumerate(batch_indices):
+                    all_indices[i] |= set(indices)
+        return all_indices
+
     def interpolation_fusion(self, batch, k=100, default_minimum=False):
         """
         Simple weighted sum, e.g. : fusion = w_1*score_1 + w_2*score_2 + w_3*score_3
         The *default-minimum trick* is used in Ma et al. (2021, arXiv:2104.05740): 
         when combining results from systems A and B, it consists in giving the minimum score of A's results 
         if a given passage was only retrieved by system B, and vice-versa.
-
-        TODO: If the weight are partially provided or not provided at all they default to a uniform weight such that they all sum to 1.
 
         Parameters
         ----------
@@ -353,22 +379,16 @@ class Searcher:
         default_minimum: bool, optional
             Use the *default-minimum trick* (defaults to not to).
         """
-        batch_size = len(next(iter(batch.values())))
-
-        # make union of all search results
-        all_indices = [set() for _ in range(batch_size)]
-        for kb in self.kbs.values():
-            for index_name, index in kb.indexes.items():
-                batch_indices = batch[f'{index_name}_indices']
-                for i, indices in enumerate(batch_indices):
-                    all_indices[i] |= set(indices)
+        all_indices = self.union_results(batch)
+        
         # init scores
         scores_dicts = [{i: 0. for i in indices} for indices in all_indices]
 
-        #TODO # kbs = set_interpolation_weights(kbs)
         for kb in self.kbs.values():
             for index_name, index in kb.indexes.items():
                 weight = index.interpolation_weight
+                assert weight is not None, \
+                    "You should set 'interpolation_weight' for each index to use interpolation_fusion"
                 # search results using index (computed previously)
                 index_scores_dicts = scores2dict(batch[f'{index_name}_scores'], batch[f'{index_name}_indices'])
                 # iterate over *all* retrieved indices (-> passages), not only those retrieved using this index
