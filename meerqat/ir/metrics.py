@@ -123,11 +123,11 @@ def compute_metrics(metrics, retrieved_batch, relevant_batch, K=100, ks=[1, 5, 1
         (not used in any metric for now)
     """
     for retrieved, relevant in zip(retrieved_batch, relevant_batch):
+        metrics["total_queries"] += 1
         if len(relevant) == 0:
             metrics["no_ground_truth"] += 1
             continue
 
-        metrics["total_queries"] += 1
         relevant_set = set(relevant)
 
         # R-Precision
@@ -155,13 +155,13 @@ def compute_metrics(metrics, retrieved_batch, relevant_batch, K=100, ks=[1, 5, 1
 
 def reduce_metrics(metrics_dict, K=100, ks=[1, 5, 10, 20, 100]):
     for key, metrics in metrics_dict.items():
-        no_ground_truth = metrics.pop("no_ground_truth", 0)
+        no_ground_truth = metrics.get("no_ground_truth", 0)
         if no_ground_truth > 0:
-            warnings.warn(f"{no_ground_truth} queries out of {no_ground_truth+metrics['total_queries']} had no-ground truth and therefore will not be taken into account")
-            if metrics["total_queries"] <= 0:
-                continue
+            warnings.warn(f"{no_ground_truth} queries out of {metrics['total_queries']} had no-ground truth but are still taken into account.")
+        if metrics["total_queries"] <= 0:
+            continue
 
-        # average MRR, r-precision, hits, precision and recall over the whole dataset over the whole dataset
+        # average MRR, r-precision, hits, precision and recall over the whole dataset
         for metric in [f"r-precision@{K}", f"MRR@{K}"]:
             metrics[metric] /= metrics["total_queries"]
         for k in ks:
