@@ -6,7 +6,7 @@ search.py <dataset> <config> [--k=<k> --disable_caching --metrics=<path>]
 Options:
 --k=<k>                 Hyperparameter to search for the k nearest neighbors [default: 100].
 --disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
---metrics=<path>        Path to save the results in JSON format
+--metrics=<path>        Path to the directory to save the results of the run and evaluation
 """
 import warnings
 
@@ -14,7 +14,6 @@ from docopt import docopt
 import json
 from collections import Counter
 import time
-from copy import deepcopy
 import re
 import enum
 from pathlib import Path
@@ -23,8 +22,9 @@ import numpy as np
 from elasticsearch import Elasticsearch
 from datasets import load_from_disk, set_caching_enabled
 from datasets.search import ElasticSearchIndex, FaissIndex
+import ranx
 
-from meerqat.ir.metrics import compute_metrics, reduce_metrics, stringify_metrics, find_relevant_batch, get_irrelevant_batch
+from meerqat.ir.metrics import find_relevant_batch
 from meerqat.data.utils import json_integer_keys
 
 
@@ -233,16 +233,45 @@ class KnowledgeBase:
             self.dataset.add_elasticsearch_index(column, index_name=index_name, es_client=self.es_client, **kwargs)
 
 
+def format_run_indices(indices_batch, scores_batch):
+    """Identifiers in ranx should be str, not int. Also, list cannot be empty because of Numba"""
+    str_indices_batch, non_empty_scores = [], []
+    for indices, scores in zip(indices_batch, scores_batch):
+        if len(indices) > 0:
+            str_indices_batch.append(list(map(str, indices)))
+            non_empty_scores.append(scores)
+        else:
+            str_indices_batch.append(["DUMMY_RUN"])
+            non_empty_scores.append([0])
+    return str_indices_batch, non_empty_scores
+
+
+def format_qrels_indices(indices_batch):
+    """Identifiers in ranx should be str, not int. Also, list cannot be empty because of Numba"""
+    str_indices_batch, non_empty_scores = [], []
+    for indices in indices_batch:
+        if len(indices) > 0:
+            str_indices_batch.append(list(map(str, indices)))
+            # relevance score should always be 1, see https://github.com/AmenRa/ranx/issues/5
+            non_empty_scores.append([1 for _ in indices])
+        else:
+            str_indices_batch.append(["DUMMY_QREL"])
+            non_empty_scores.append([0])
+    return str_indices_batch, non_empty_scores
+
+
 class Searcher:
     """
     Aggregates several KnowledgeBases (KBs). 
     Searches through a dataset using all the indexes of all KnowledgeBases.
     Fuses results of search with multiple indexes and compute metrics.
     """
-    def __init__(self, kb_kwargs, reference_kb_path=None, reference_key='passage', request_timeout=1000, 
+    def __init__(self, kb_kwargs, k=100, reference_kb_path=None, reference_key='passage', request_timeout=1000,
                  es_client_kwargs={}, fusion_kwargs={}, metrics_kwargs={}):
+        self.k = k
         self.kbs = {}
-        self.metrics = {}
+        self.qrels = ranx.Qrels()
+        self.runs = {}
         # FIXME maybe check if ES is needed before instantiating client?
         # this does not require ES to run anyway
         es_client = Elasticsearch(timeout=request_timeout, **es_client_kwargs)
@@ -258,13 +287,17 @@ class Searcher:
             self.kbs[kb_path] = kb
             # same as kb.dataset._indexes.keys()
             index_names = kb.indexes.keys()
-            assert not (index_names & self.metrics.keys()), "All KBs should have unique index names"
-            # N. B. dict.fromkeys creates pointers to the SAME object (Counter instance here)
-            self.metrics.update({index_name: Counter() for index_name in index_names})
-        assert not ({'search', 'fusion'} & self.metrics.keys()), "'search', 'fusion' are reserved names"
-        if len(self.metrics) > 1:
+            assert not (index_names & self.runs.keys()), "All KBs should have unique index names"
+            for index_name in index_names:
+                run = ranx.Run()
+                run.name = index_name
+                self.runs[index_name] = run
+        assert not ({'search', 'fusion'} & self.runs.keys()), "'search', 'fusion' are reserved names"
+        if len(self.runs) > 1:
             self.do_fusion = True
-            self.metrics["fusion"] = Counter()
+            run = ranx.Run()
+            run.name = "fusion"
+            self.runs["fusion"] = run
         else:
             self.do_fusion = False
 
@@ -279,15 +312,21 @@ class Searcher:
             self.reference_kb = self.kbs[reference_kb_path].dataset
         # reference-only KB (not used to search) so we have to load it
         else:
-            self.reference_kb = load_from_disk(kb_path)
+            self.reference_kb = load_from_disk(reference_kb_path)
         # N. B. the 'reference_kb' term is not so appropriate
         # it is not an instance of KnowledgeBase but Dataset !
         self.reference_key = reference_key
         self.fusion_method = fusion_kwargs.pop('method', 'interpolation')
         self.fusion_kwargs = fusion_kwargs
-        self.metrics_kwargs = metrics_kwargs
+        # I advise against using any kind of metric that uses recall (mAP, R-Precision, …) since we estimate
+        # relevant document on the go so the number of relevant documents will *depend on the systemS* you use
+        ks = metrics_kwargs.pop("ks", [1, 5, 10, 20, 100])
+        # TODO add hit_rate https://github.com/AmenRa/ranx/issues/7
+        default_metrics_kwargs = dict(metrics=[f"{m}@{k}" for m in ["precision", "mrr", "ndcg"] for k in ks])
+        default_metrics_kwargs.update(metrics_kwargs)
+        self.metrics_kwargs = default_metrics_kwargs
     
-    def __call__(self, batch, k=100):
+    def __call__(self, batch):
         """Search using all indexes of all KBs registered in self.kbs"""
         for kb in self.kbs.values():
             for index_name, index in kb.indexes.items():
@@ -295,11 +334,11 @@ class Searcher:
                 # N. B. cannot use `None in queries` because 
                 # "The truth value of an array with more than one element is ambiguous."
                 if any(query is None for query in queries):
-                    scores_batch, indices_batch = kb.search_batch_if_not_None(index_name, queries, k=k)
+                    scores_batch, indices_batch = kb.search_batch_if_not_None(index_name, queries, k=self.k)
                 else:
-                    scores_batch, indices_batch = kb.search_batch(index_name, queries, k=k)
+                    scores_batch, indices_batch = kb.search_batch(index_name, queries, k=self.k)
                 # indices might need to be mapped so that all KBs refer to the same semantic index
-                scores_batch, indices_batch = kb.map_indices(scores_batch, indices_batch, k=k)
+                scores_batch, indices_batch = kb.map_indices(scores_batch, indices_batch, k=self.k)
 
                 # eventually normalize the scores before fusing
                 if index.normalization is not None:
@@ -309,47 +348,59 @@ class Searcher:
                 batch[f'{index_name}_scores'] = scores_batch
                 batch[f'{index_name}_indices'] = indices_batch
 
+                # store results in the run
+                str_indices_batch, non_empty_scores = format_run_indices(indices_batch, scores_batch)
+                self.runs[index_name].add_multi(
+                    q_ids=batch['id'],
+                    doc_ids=str_indices_batch,
+                    scores=non_empty_scores
+                )
+
                 # are the retrieved documents relevant ?
                 if self.reference_kb is not None:
-                    relevant_batch = find_relevant_batch(indices_batch, batch['output'], 
-                                                         self.reference_kb, reference_key=self.reference_key,
-                                                         relevant_batch=deepcopy(batch['provenance_indices']))
-                else:
-                    relevant_batch = batch['provenance_indices']
-
-                # compute metrics
-                compute_metrics(self.metrics[index_name],
-                                retrieved_batch=indices_batch, relevant_batch=relevant_batch,
-                                K=k, scores_batch=scores_batch, **self.metrics_kwargs)
+                    # extend relevant documents with the retrieved
+                    # /!\ this means you should not compute/interpret recall as it will vary depending on the run/system
+                    find_relevant_batch(indices_batch, batch['output'], self.reference_kb,
+                                        reference_key=self.reference_key, relevant_batch=batch['provenance_indices'])
 
         # fuse the results of the searches
         if self.do_fusion:
-            self.fuse_and_compute_metrics(batch, k=k)
+            self.fuse_and_compute_metrics(batch)
+
+        # add Qrels scores depending on the documents retrieved by the systems
+        str_indices_batch, non_empty_scores = format_qrels_indices(batch['provenance_indices'])
+        self.qrels.add_multi(
+            q_ids=batch['id'],
+            doc_ids=str_indices_batch,
+            scores=non_empty_scores
+        )
         return batch
 
-    def fuse_and_compute_metrics(self, batch, k=100):
-        scores_batch, indices_batch = self.fuse(batch, k=k)
+    def fuse_and_compute_metrics(self, batch):
+        scores_batch, indices_batch = self.fuse(batch)
         batch['search_scores'], batch['search_indices'] = scores_batch, indices_batch
+
+        # store results in the run
+        str_indices_batch, non_empty_scores = format_run_indices(indices_batch, scores_batch)
+        self.runs["fusion"].add_multi(
+            q_ids=batch['id'],
+            doc_ids=str_indices_batch,
+            scores=non_empty_scores
+        )
 
         # are the retrieved documents relevant ?
         if self.reference_kb is not None:
-            relevant_batch = find_relevant_batch(indices_batch, batch['output'], 
-                                                 self.reference_kb, reference_key=self.reference_key,
-                                                 relevant_batch=deepcopy(batch['provenance_indices']))
-        else:
-            relevant_batch = batch['provenance_indices']
-
-        # compute metrics
-        compute_metrics(self.metrics["fusion"],
-                        retrieved_batch=indices_batch, relevant_batch=relevant_batch,
-                        K=k, scores_batch=scores_batch, **self.metrics_kwargs)
+            # extend relevant documents with the retrieved
+            # /!\ this means you should not compute/interpret recall as it will vary depending on the run/system
+            find_relevant_batch(indices_batch, batch['output'], self.reference_kb,
+                                reference_key=self.reference_key, relevant_batch=batch['provenance_indices'])
 
         return batch
 
-    def fuse(self, batch, k=100):
+    def fuse(self, batch):
         """Should return a (scores, indices) tuples the same way as Dataset.search_batch"""
         fusions = dict(interpolation=self.interpolation_fusion)
-        return fusions[self.fusion_method](batch, k=k, **self.fusion_kwargs)
+        return fusions[self.fusion_method](batch, **self.fusion_kwargs)
 
     def union_results(self, batch):
         """make union of all search results"""
@@ -363,7 +414,7 @@ class Searcher:
                     all_indices[i] |= set(indices)
         return all_indices
 
-    def interpolation_fusion(self, batch, k=100, default_minimum=False):
+    def interpolation_fusion(self, batch, default_minimum=False):
         """
         Simple weighted sum, e.g. : fusion = w_1*score_1 + w_2*score_2 + w_3*score_3
         The *default-minimum trick* is used in Ma et al. (2021, arXiv:2104.05740): 
@@ -374,8 +425,6 @@ class Searcher:
         ----------
         batch: dict
             as parsed by datasets
-        k: int, optional
-            Defaults to 100
         default_minimum: bool, optional
             Use the *default-minimum trick* (defaults to not to).
         """
@@ -403,25 +452,36 @@ class Searcher:
                         score = index_scores_dict.get(i, min_index_score)
                         scores_dict[i] += weight * score
 
-        scores_batch, indices_batch = dict_batch2scores(scores_dicts, k=k)
+        scores_batch, indices_batch = dict_batch2scores(scores_dicts, k=self.k)
         return scores_batch, indices_batch
 
 
 def dataset_search(dataset, k=100, metric_save_path=None, map_kwargs={}, **kwargs):
-    searcher = Searcher(**kwargs)
+    searcher = Searcher(k=k, **kwargs)
 
     # HACK: sleep until elasticsearch is good to go
     time.sleep(60)
 
     # search expects a batch as input
-    dataset = dataset.map(searcher, fn_kwargs=dict(k=k), batched=True, **map_kwargs)
+    dataset = dataset.map(searcher, batched=True, **map_kwargs)
 
-    metrics = searcher.metrics
-    reduce_metrics(metrics, K=k)
-    print(stringify_metrics(metrics, tablefmt='latex', floatfmt=".3f"))
+    # compute metrics
+    report = ranx.compare(
+        searcher.qrels,
+        runs=searcher.runs.values(),
+        **searcher.metrics_kwargs
+    )
+
+    print(report)
+    # save qrels, metrics (in JSON and LaTeX), statistical tests, and runs.
     if metric_save_path is not None:
-        with open(metric_save_path, 'w') as file:
-            json.dump(metrics, file)
+        metric_save_path.mkdir(exist_ok=True)
+        searcher.qrels.save(metric_save_path/"qrels.trec")
+        report.save(metric_save_path/"metrics.json")
+        with open(metric_save_path/"metrics.tex", 'wt') as file:
+            file.write(report.to_latex())
+        for index_name, run in searcher.runs.items():
+            run.save(metric_save_path/f"{index_name}.trec")
 
     return dataset
 
@@ -440,7 +500,7 @@ if __name__ == '__main__':
     k = int(args['--k'])
 
     dataset = dataset_search(dataset, k,
-                             metric_save_path=args['--metrics'],
+                             metric_save_path=Path(args['--metrics']),
                              **config)
 
     dataset.save_to_disk(dataset_path)
