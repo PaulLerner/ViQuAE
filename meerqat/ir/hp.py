@@ -9,7 +9,7 @@ Options:
 --cleanup_cache_files   Clean up all cache files in the dataset cache directory, 
                         excepted the currently used one, see Dataset.cleanup_cache_files()
                         Useful to avoid saturating disk storage (caches are only deleted when exiting with --disable_caching)
---metrics=<path>        Path to save the results in JSON format
+--metrics=<path>        Path to save the metrics in JSON and TeX format (only applicable with --test)
 --test=<dataset>        Name of the test dataset
 """
 import warnings
@@ -18,14 +18,15 @@ from docopt import docopt
 import json
 from collections import Counter
 import time
-import re
+from pathlib import Path
 
 import numpy as np
 from datasets import load_from_disk, set_caching_enabled
+import ranx
 
 import optuna
 
-from meerqat.ir.metrics import compute_metrics, reduce_metrics, stringify_metrics, find_relevant_batch
+from meerqat.ir.metrics import find_relevant_batch
 from meerqat.ir.search import Searcher
 
 
@@ -39,7 +40,7 @@ class Objective:
         # HACK: sleep until elasticsearch is good to go
         time.sleep(60)
         if metric_for_best_model is None:
-            self.metric_for_best_model = f"MRR@{self.k}"
+            self.metric_for_best_model = f"mrr@{self.k}"
         else:
             self.metric_for_best_model = metric_for_best_model
         self.eval_dataset = eval_dataset
@@ -62,14 +63,9 @@ class Objective:
 
         Returns
         -------
-        metrics: dict
+        report: ranx.Report
         """
         pass
-
-    def prefix_eval(self, eval_metrics):
-        for k in list(eval_metrics.keys()):
-            eval_metrics['eval_'+k] = eval_metrics.pop(k)
-        return eval_metrics
 
     def cache_relevant(self, batch):
         """
@@ -133,10 +129,8 @@ class FusionObjective(Objective):
         self.dataset.map(self.searcher.fuse_and_compute_metrics, fn_kwargs=self.fn_kwargs, batched=True, **self.map_kwargs)
         if self.cleanup_cache_files:
             self.dataset.cleanup_cache_files()
-        metrics = self.searcher.metrics
-        reduce_metrics(metrics, K=self.k)
-        trial.set_user_attr('metrics', metrics)
-        return metrics['fusion'][self.metric_for_best_model]
+        metric = ranx.evaluate(self.searcher.qrels, self.searcher.runs["fusion"], self.metric_for_best_model)
+        return metric
 
     def evaluate(self, best_params):
         fusion_method = self.searcher.fusion_method
@@ -148,9 +142,12 @@ class FusionObjective(Objective):
             raise NotImplementedError()
         self.searcher.metrics = {"fusion": Counter()}
         self.eval_dataset = self.eval_dataset.map(self.searcher.fuse_and_compute_metrics, fn_kwargs=self.fn_kwargs, batched=True, **self.map_kwargs)
-        eval_metrics = self.searcher.metrics
-        reduce_metrics(eval_metrics, K=self.k)
-        return self.prefix_eval(eval_metrics)
+        report = ranx.compare(
+            self.searcher.qrels,
+            runs=self.searcher.runs.values(),
+            **self.searcher.metrics_kwargs
+        )
+        return report
 
 
 class BM25Objective(Objective):
@@ -280,23 +277,26 @@ def hyperparameter_search(study_name=None, storage=None, metric_save_path=None,
         objective.cache_relevant_dataset()
     # actual optimisation
     study.optimize(objective, **optimize_kwargs)
-    print(f"Best value: {study.best_value} (should match {objective.metric_for_best_model})")
+    print(f"Best value: {study.best_value} ({objective.metric_for_best_model})")
     print(f"Best hyperparameters: {study.best_params}")
-    best_trial = study.best_trial
-    metrics = best_trial.user_attrs.get('metrics')
 
     # apply hyperparameters on test set
     if eval_dataset is not None:
         if objective.do_cache_relevant:
             objective.searcher.reference_kb = objective.keep_reference_kb
-        eval_metrics = objective.evaluate(study.best_params)
-        metrics.update(eval_metrics)
+        report = objective.evaluate(study.best_params)
+        print(report)
 
-    if metrics is not None:
-        print(stringify_metrics(metrics, tablefmt='latex', floatfmt=".2f"))
         if metric_save_path is not None:
-            with open(metric_save_path, 'w') as file:
-                json.dump(metrics, file)
+            metric_save_path = Path(metric_save_path)
+            metric_save_path.mkdir(exist_ok=True)
+            # N. B. qrels and runs are overwritten in Searcher every time there's a call to add_multi
+            objective.searcher.qrels.save(metric_save_path / "qrels.trec")
+            report.save(metric_save_path / "metrics.json")
+            with open(metric_save_path / "metrics.tex", 'wt') as file:
+                file.write(report.to_latex())
+            for index_name, run in objective.searcher.runs.items():
+                run.save(metric_save_path / f"{index_name}.trec")
 
     return objective.eval_dataset
 
