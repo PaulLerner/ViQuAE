@@ -1,15 +1,19 @@
 """
 Usage:
 metrics.py relevant <dataset> <passages> <title2index> <article2passage> [--disable_caching]
+metrics.py qrels <qrels>... --output=<path>
+metrics.py ranx <run>... --qrels=<path> [--output=<path> --kwargs=<path>]
 """
 from docopt import docopt
 import json
-from tabulate import tabulate
 import warnings
 import re
+from tqdm import tqdm
+from pathlib import Path
 
 import numpy as np
 from datasets import load_from_disk
+import ranx
 
 from meerqat.data.loading import answer_preprocess
 from meerqat.data.utils import json_integer_keys
@@ -101,6 +105,44 @@ def get_irrelevant_batch(retrieved_batch, relevant_batch):
     return irrelevant_batch
 
 
+def fuse_qrels(qrels_paths):
+    # nothing to fuse
+    if len(qrels_paths) == 1:
+        return ranx.Qrels.from_file(qrels_paths[0])
+    final_qrels = {}
+    for qrels_path in tqdm(qrels_paths):
+        qrels = ranx.Qrels.from_file(qrels_path).qrels
+        for q_id, rels in qrels.items():
+            final_qrels.setdefault(q_id, {})
+            for doc_id, score in rels.items():
+                final_qrels[q_id].setdefault(doc_id, {})
+                final_qrels[q_id][doc_id] = score
+    return ranx.Qrels.from_dict(final_qrels)
+
+
+def compare(qrels_path, runs_paths, output_path=None, **kwargs):
+    qrels = ranx.Qrels.from_file(qrels_path)
+    runs = []
+    for run_path in runs_paths:
+        run = ranx.Run.from_file(run_path)
+        run.name += run_path
+        runs.append(run)
+
+    report = ranx.compare(
+        qrels,
+        runs=runs,
+        **kwargs
+    )
+    print(report)
+
+    if output_path is not None:
+        output_path = Path(output_path)
+        output_path.mkdir(exist_ok=True)
+        report.save(output_path / "metrics.json", 'wt')
+        with open(output_path / "metrics.tex", 'wt') as file:
+            file.write(report.to_latex())
+
+
 if __name__ == '__main__':
     args = docopt(__doc__)
     if args['relevant']:
@@ -110,4 +152,15 @@ if __name__ == '__main__':
         with open(args['<article2passage>'], 'r') as file:
             article2passage = json.load(file, object_hook=json_integer_keys)
         find_relevant_dataset(args['<dataset>'], passages=passages, title2index=title2index, article2passage=article2passage)
+    elif args['qrels']:
+        qrels = fuse_qrels(args['<qrels>'])
+        qrels.save(args['--output'])
+    elif args['ranx']:
+        if args['--kwargs'] is not None:
+            with open(args['--kwargs'], 'rt') as file:
+                kwargs = json.load(file)
+        else:
+            ks = [1, 5, 10, 20, 100]
+            kwargs = dict(metrics=[f"{m}@{k}" for m in ["precision", "mrr"] for k in ks])
+        compare(args['--qrels'], args['<run>'], output_path=args['--output'], **kwargs)
 
