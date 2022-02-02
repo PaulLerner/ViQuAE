@@ -114,6 +114,7 @@ python -m meerqat.ir.metrics relevant data/meerqat_dataset data/meerqat_passages
 ```
 
 ### BM25
+Before running any of the commands below you should [launch the Elastic Search server](https://www.elastic.co/guide/en/elastic-stack-get-started/current/get-started-elastic-stack.html#install-elasticsearch).
 
 First you might want to optimize BM25 hyperparameters, `b` and `k_1`.
 We did this with a grid-search using `optuna`:
