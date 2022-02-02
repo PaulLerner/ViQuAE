@@ -138,7 +138,7 @@ def compare(qrels_path, runs_paths, output_path=None, **kwargs):
     if output_path is not None:
         output_path = Path(output_path)
         output_path.mkdir(exist_ok=True)
-        report.save(output_path / "metrics.json", 'wt')
+        report.save(output_path / "metrics.json")
         with open(output_path / "metrics.tex", 'wt') as file:
             file.write(report.to_latex())
 
