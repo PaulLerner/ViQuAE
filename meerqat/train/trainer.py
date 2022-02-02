@@ -309,6 +309,7 @@ class MultiPassageBERTTrainer(QuestionAnsweringTrainer):
         self.train_original_answer_only = train_original_answer_only
         self.full_oracle = full_oracle
         if self.full_oracle:
+            self.prediction_file_name = "full-oracle_predictions.json"
             self.metrics_file_name = "full-oracle_metrics.json"
             if self.n_relevant_passages != self.M:
                 warnings.warn(f"Full-oracle mode. Setting n_relevant_passages={self.M}")
