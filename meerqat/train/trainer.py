@@ -54,10 +54,27 @@ def max_memory_usage(human=False):
 
 class MeerqatTrainer(Trainer):
     """Base class for all trainers. Should be very similar to Trainer"""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.prediction_file_name = "predictions.json"
+        self.metrics_file_name = "metrics.json"
+
     def log(self, logs: dict) -> None:
         """Adds memory usage to the logs"""
         logs.update(max_memory_usage())
         return super().log(logs)
+
+    def write_predictions(self, predictions, resume_from_checkpoint):
+        if isinstance(predictions, (list, dict)):
+            with open(resume_from_checkpoint/self.prediction_file_name, "w") as file:
+                json.dump(predictions, file)
+        else:
+            raise NotImplementedError()
+
+    def write_metrics(self, metrics, resume_from_checkpoint):
+        print(metrics)
+        with open(resume_from_checkpoint/self.metrics_file_name, "w") as file:
+            json.dump(metrics, file)
 
 
 class QuestionAnsweringTrainer(MeerqatTrainer):
@@ -130,6 +147,7 @@ class QuestionAnsweringTrainer(MeerqatTrainer):
         elif n_relevant <= 0:
             warnings.warn(f"Didn't find any passage for question {item['id']}")
         return relevant_passages, irrelevant_passages
+
 
 
 class DPRBiEncoderTrainer(QuestionAnsweringTrainer):
@@ -284,11 +302,17 @@ class MultiPassageBERTTrainer(QuestionAnsweringTrainer):
         or all alternative answers (with the only limit of max_n_answers)
         This has no effect on the evaluation (where all alternative answers are always considered)
     """
-    def __init__(self, *args, max_n_answers=10, ignore_keys=['answer_strings'], train_original_answer_only=True, **kwargs):
+    def __init__(self, *args, max_n_answers=10, ignore_keys=['answer_strings'], train_original_answer_only=True, full_oracle=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.max_n_answers = max_n_answers
         self.ignore_keys = ignore_keys
         self.train_original_answer_only = train_original_answer_only
+        self.full_oracle = full_oracle
+        if self.full_oracle:
+            self.metrics_file_name = "full-oracle_metrics.json"
+            if self.n_relevant_passages != self.M:
+                warnings.warn(f"Full-oracle mode. Setting n_relevant_passages={self.M}")
+                self.n_relevant_passages = self.M
 
         # FIXME isn't there a more robust way of defining data_collator as the method collate_fn ?
         self.data_collator = self.collate_fn
@@ -357,7 +381,8 @@ class MultiPassageBERTTrainer(QuestionAnsweringTrainer):
             # N. B. seed is set in Trainer
             questions.extend([item['input']]*self.M)
 
-            if self.args.do_eval or self.args.do_predict:
+            # full-oracle -> use only relevant passages
+            if (self.args.do_eval or self.args.do_predict) and not self.full_oracle:
                 passage, score = self.get_eval_passages(item)
                 passage_scores.extend(score)
                 if len(score) < self.M:
@@ -667,20 +692,6 @@ def instantiate_trainer(trainee, trainer_class="MultiPassageBERTTrainer", debug=
     return trainer, training_args
 
 
-def write_predictions(predictions, resume_from_checkpoint):
-    if isinstance(predictions, (list, dict)):
-        with open(resume_from_checkpoint / "predictions.json", "w") as file:
-            json.dump(predictions, file)
-    else:
-        raise NotImplementedError()
-
-
-def write_metrics(metrics, resume_from_checkpoint):
-    print(metrics)
-    with open(resume_from_checkpoint/"metrics.json", "w") as file:
-        json.dump(metrics, file)
-
-
 if __name__ == "__main__":
     logger.debug(f"entering main {max_memory_usage(human=True)}")
     # load and parse arguments
@@ -719,7 +730,7 @@ if __name__ == "__main__":
             else:
                 warnings.warn("couldn't load trainer state, TB logging might use an inappropriate step")
             metrics = trainer.evaluate()
-            write_metrics(metrics, resume_from_checkpoint)
+            trainer.write_metrics(metrics, resume_from_checkpoint)
     elif training_args.do_predict:
         resume_from_checkpoints = get_checkpoint(**checkpoint)
         for resume_from_checkpoint in tqdm(resume_from_checkpoints, desc="Prediction"):
@@ -732,8 +743,8 @@ if __name__ == "__main__":
 
             # run model on evaluation dataset
             prediction_output = trainer.predict(trainer.eval_dataset)
-            write_metrics(prediction_output.metrics, resume_from_checkpoint)
-            write_predictions(prediction_output.predictions, resume_from_checkpoint)
+            trainer.write_metrics(prediction_output.metrics, resume_from_checkpoint)
+            trainer.write_predictions(prediction_output.predictions, resume_from_checkpoint)
     else:
         warnings.warn("Did nothing except instantiate the trainer, "
                       "you probably want to set do_train, do_eval or do_predict to True"
