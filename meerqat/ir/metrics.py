@@ -2,7 +2,7 @@
 Usage:
 metrics.py relevant <dataset> <passages> <title2index> <article2passage> [--disable_caching]
 metrics.py qrels <qrels>... --output=<path>
-metrics.py ranx <run>... --qrels=<path> [--output=<path> --kwargs=<path>]
+metrics.py ranx <run>... --qrels=<path> [--output=<path> --filter=<path> --kwargs=<path>]
 """
 from docopt import docopt
 import json
@@ -120,12 +120,16 @@ def fuse_qrels(qrels_paths):
     return ranx.Qrels.from_dict(final_qrels)
 
 
-def compare(qrels_path, runs_paths, output_path=None, **kwargs):
+def compare(qrels_path, runs_paths, output_path=None, filter_q_ids=[], **kwargs):
     qrels = ranx.Qrels.from_file(qrels_path)
+    for q_id in filter_q_ids:
+        qrels.qrels.pop(q_id)
     runs = []
     for run_path in runs_paths:
         run = ranx.Run.from_file(run_path)
         run.name += run_path
+        for q_id in filter_q_ids:
+            run.run.pop(q_id)
         runs.append(run)
 
     report = ranx.compare(
@@ -156,11 +160,16 @@ if __name__ == '__main__':
         qrels = fuse_qrels(args['<qrels>'])
         qrels.save(args['--output'])
     elif args['ranx']:
+        if args['--filter'] is not None:
+            with open(args['--filter'], 'rt') as file:
+                filter_q_ids = json.load(file)
+        else:
+            filter_q_ids = []
         if args['--kwargs'] is not None:
             with open(args['--kwargs'], 'rt') as file:
                 kwargs = json.load(file)
         else:
             ks = [1, 5, 10, 20, 100]
             kwargs = dict(metrics=[f"{m}@{k}" for m in ["precision", "mrr"] for k in ks])
-        compare(args['--qrels'], args['<run>'], output_path=args['--output'], **kwargs)
+        compare(args['--qrels'], args['<run>'], output_path=args['--output'], filter_q_ids=filter_q_ids, **kwargs)
 
