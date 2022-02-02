@@ -321,8 +321,7 @@ class Searcher:
         # I advise against using any kind of metric that uses recall (mAP, R-Precision, …) since we estimate
         # relevant document on the go so the number of relevant documents will *depend on the systemS* you use
         ks = metrics_kwargs.pop("ks", [1, 5, 10, 20, 100])
-        # TODO add hit_rate https://github.com/AmenRa/ranx/issues/7
-        default_metrics_kwargs = dict(metrics=[f"{m}@{k}" for m in ["precision", "mrr", "ndcg"] for k in ks])
+        default_metrics_kwargs = dict(metrics=[f"{m}@{k}" for m in ["mrr", "precision", "hit_rate"] for k in ks])
         default_metrics_kwargs.update(metrics_kwargs)
         self.metrics_kwargs = default_metrics_kwargs
     
