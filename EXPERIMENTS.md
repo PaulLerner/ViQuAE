@@ -20,7 +20,7 @@ Relevant configuration files can be found in the [experiments directory](./exper
 * [Reading Comprehension](#reading-comprehension)
     + [Pre-processing](#pre-processing)
     + [Pre-training on TriviaQA](#pre-training-on-triviaqa)
-    + [Fine-tuning on MEERQAT](#fine-tuning-on-meerqat)
+    + [Fine-tuning on ViQuAE](#fine-tuning-on-viquae)
 * [References](#references)
 
 
@@ -33,8 +33,8 @@ Obtained using a ResNet-50 pre-trained on ImageNet, pooled with max-pooling.
 You can tweak the pooling layer and the backbone in the config file, as long as it is a `nn.Module` and `torchvision.models`, respectively.
 Obviously you can also tweak the batch size.
 ```sh
-python -m meerqat.image.embedding data/meerqat_dataset experiments/image_embedding/config.json --disable_caching
-python -m meerqat.image.embedding data/meerqat_wikipedia experiments/image_embedding/config.json --disable_caching
+python -m meerqat.image.embedding data/viquae_dataset experiments/image_embedding/config.json --disable_caching
+python -m meerqat.image.embedding data/viquae_wikipedia experiments/image_embedding/config.json --disable_caching
 ```
 
 ### Face detection
@@ -49,8 +49,8 @@ Feel free to tweak the hyperparameters (we haven’t), you can also set whether 
 Probabilities, bounding boxes and landmarks are saved directly in the dataset, face croping happens as a pre-processing of Face recognition (next section).
 
 ```sh
-python -m meerqat.image.face_detection data/meerqat_dataset --disable_caching --batch_size=256
-python -m meerqat.image.face_detection data/meerqat_wikipedia/humans --disable_caching --batch_size=256
+python -m meerqat.image.face_detection data/viquae_dataset --disable_caching --batch_size=256
+python -m meerqat.image.face_detection data/viquae_wikipedia/humans --disable_caching --batch_size=256
 ```
 
 After this you will also want to split the humans KB into humans with detected faces and without.
@@ -81,15 +81,15 @@ You can tweak the backbone and the batch size, we only tried with ResNet-50
 
 Finally we can run it!
 ```sh
-python -m meerqat.image.face_recognition data/meerqat_dataset experiments/face_detection/meerqat_dataset experiments/face_recognition/config.json --disable_caching
-python -m meerqat.image.face_recognition data/meerqat_wikipedia/humans_with_faces experiments/face_detection/meerqat_wikipedia experiments/face_recognition/config.json --disable_caching
+python -m meerqat.image.face_recognition data/viquae_dataset experiments/face_detection/viquae_dataset experiments/face_recognition/config.json --disable_caching
+python -m meerqat.image.face_recognition data/viquae_wikipedia/humans_with_faces experiments/face_detection/viquae_wikipedia experiments/face_recognition/config.json --disable_caching
 ```
 
 ## IR
 
 Now that we have a bunch of dense representations, let’s see how to retrieve information!
 Dense IR is done with `faiss` and sparse IR is done with `elasticsearch`, both via HF `datasets`.
-We’ll use IR on both TriviaQA along with the complete Wikipedia (BM25 only) and MEERQAT along with the multimodal Wikipedia.
+We’ll use IR on both TriviaQA along with the complete Wikipedia (BM25 only) and ViQuAE along with the multimodal Wikipedia.
 
 ### Preprocessing passages
 You can probably skip this step as we will provide passages dataset along with provenance.
@@ -99,18 +99,18 @@ Each article is then split into disjoint passages of 100 words for text retrieva
 and the title of the article is appended to the beginning of each passage.
 
 ```sh
-python -m meerqat.data.loading passages data/meerqat_wikipedia data/meerqat_passages experiments/passages/config.json --disable_caching
+python -m meerqat.data.loading passages data/viquae_wikipedia data/viquae_passages experiments/passages/config.json --disable_caching
 ```
 
 Then you can extract some columns from the dataset to allow quick (and string) indexing:
 ```sh
-python -m meerqat.data.loading map data/meerqat_wikipedia wikipedia_title title2index.json --inverse --disable_caching
-python -m meerqat.data.loading map data/meerqat_wikipedia passage_index article2passage.json --disable_caching
+python -m meerqat.data.loading map data/viquae_wikipedia wikipedia_title title2index.json --inverse --disable_caching
+python -m meerqat.data.loading map data/viquae_wikipedia passage_index article2passage.json --disable_caching
 ```
 
 This allows us to find the relevant passages for the question (i.e. those than contain the answer or the alternative answers):
 ```sh
-python -m meerqat.ir.metrics relevant data/meerqat_dataset data/meerqat_passages data/meerqat_wikipedia/title2index.json data/meerqat_wikipedia/article2passage.json --disable_caching
+python -m meerqat.ir.metrics relevant data/viquae_dataset data/viquae_passages data/viquae_wikipedia/title2index.json data/viquae_wikipedia/article2passage.json --disable_caching
 ```
 
 ### BM25
@@ -120,12 +120,12 @@ First you might want to optimize BM25 hyperparameters, `b` and `k_1`.
 We did this with a grid-search using `optuna`:
 the `--k` option asks for the top-K search results.  
 ```sh
-python -m meerqat.ir.search hp bm25 data/meerqat_dataset/validation experiments/ir/meerqat/bm25/config.json --k=100 --metrics=experiments/ir/meerqat/bm25/metrics.json --test=data/meerqat_dataset/test --disable_caching
+python -m meerqat.ir.search hp bm25 data/viquae_dataset/validation experiments/ir/viquae/bm25/config.json --k=100 --metrics=experiments/ir/viquae/bm25/metrics.json --test=data/viquae_dataset/test --disable_caching
 ```
 
 Alternatively, you can use the parameters we optimized: `b=0.3` and `k_1=0.5` using the same config file but without the `study_name` and `storage` fields:
 ```sh
-python -m meerqat.ir.search data/meerqat_dataset/test experiments/ir/meerqat/bm25/config.json --k=100 --metrics=experiments/ir/meerqat/bm25/metrics.json --disable_caching
+python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/bm25/config.json --k=100 --metrics=experiments/ir/viquae/bm25/metrics.json --disable_caching
 ```
 
 You can also use the `--save_irrelevant` option if you want to save the irrelevant search results 
@@ -134,19 +134,19 @@ However in this case we take into account all alternative answers so this is use
 
 ### ResNet-ImageNet + ArcFace-MS-Celeb
 We trust the face detector, if it detects a face then:
-- the search is done on the human faces KB (`data/meerqat_wikipedia/humans_with_faces`)
+- the search is done on the human faces KB (`data/viquae_wikipedia/humans_with_faces`)
 
 else:
-- the search is done on the non-human global images KB (`data/meerqat_wikipedia/non_humans`)
+- the search is done on the non-human global images KB (`data/viquae_wikipedia/non_humans`)
 
 To implement that we simply set the global image embedding to None when a face was detected:
 ```py
 from datasets import load_from_disk, set_caching_enabled
 set_caching_enabled(False)
-dataset = load_from_disk('data/meerqat_dataset/')
+dataset = load_from_disk('data/viquae_dataset/')
 dataset = dataset.rename_column('image_embedding', 'keep_image_embedding')
 dataset = dataset.map(lambda item: {'image_embedding': item['keep_image_embedding'] if item['face_embedding'] is None else None})
-dataset.save_to_disk('data/meerqat_dataset/')
+dataset.save_to_disk('data/viquae_dataset/')
 ```
 
 Search is done using cosine distance, hence the `"L2norm,Flat"` for `string_factory` and `metric_type=0`
@@ -174,7 +174,7 @@ if you want to optimize it you can do `meerqat.ir.search hp fusion` but you will
 (and run the search at least once before so that you save BM25 and image results)
 
 ```sh
-python -m meerqat.ir.search data/meerqat_dataset/test experiments/ir/meerqat/bm25+image/config.json --k=100 --metrics=experiments/ir/meerqat/bm25+image/metrics.json
+python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/bm25+image/config.json --k=100 --metrics=experiments/ir/viquae/bm25+image/metrics.json
 ```
 
 Beware that the ImageNet-ResNet and ArcFace results cannot be compared, neither between them nor with BM25 because:
@@ -206,7 +206,7 @@ A few notes:
 ## Reading Comprehension
 
 Now we have retrieved candidate passages, it’s time to train a Reading Comprehension system (reader).
-We first pre-train the reader on TriviaQA before fine-tuning it on MEERQAT.
+We first pre-train the reader on TriviaQA before fine-tuning it on ViQuAE.
 Our model is based on Multi-Passage BERT (Wang et al., 2019), it simply extends the BERT fine-tuning for QA (Devlin et al., 2019)
 with the global normalization by Clark et. al (2018), 
 i.e. all passages are processed independently but share the same softmax normalization
@@ -242,8 +242,8 @@ from datasets import load_from_disk, set_caching_enabled
 from meerqat.ir.metrics import find_relevant
 
 set_caching_enabled(False)
-kb = load_from_disk('data/meerqat_passages/')
-dataset = load_from_disk('data/meerqat_dataset/')
+kb = load_from_disk('data/viquae_passages/')
+dataset = load_from_disk('data/viquae_dataset/')
 
 def keep_relevant_search_wrt_original_in_priority(item, kb):
     indices = item['search_indices']
@@ -256,15 +256,15 @@ def keep_relevant_search_wrt_original_in_priority(item, kb):
     return item
     
 dataset = dataset.map(keep_relevant_search_wrt_original_in_priority, fn_kwargs=dict(kb=kb))
-dataset.save_to_disk('data/meerqat_dataset/')
+dataset.save_to_disk('data/viquae_dataset/')
 ``` 
 
 ### Pre-training on TriviaQA
 We should provide this model so that you’re able to skip this step.
 
-Our training set consists of questions that were not used to generate any MEERQAT questions, 
+Our training set consists of questions that were not used to generate any ViQuAE questions, 
 even those that were discarded or remain to be annotated.
-Our validation set consists of the questions that were used to generate MEERQAT validation set.
+Our validation set consists of the questions that were used to generate ViQuAE validation set.
 
 We used the same hyperparameters as Karpukhin et al. except for the ratio of relevant passages:
 We use 8 relevant and 16 irrelevant passages (so 24 in total) per question 
@@ -281,7 +281,7 @@ python -m meerqat.train.trainer experiments/rc/triviaqa/train/config.json
 
 
 
-### Fine-tuning on MEERQAT
+### Fine-tuning on ViQuAE
 
 This is kind of a hack but once you’ve decided on a TriviaQA checkpoint (step 46000 in our case)
 you want to be sure that HF won’t load the optimizer or any other training stuff except the model:
@@ -295,7 +295,7 @@ mv training_args.pt .keep
 ```
 Then you can fine-tune the model:
 ```sh
-python -m meerqat.train.trainer experiments/rc/meerqat/train/config.json
+python -m meerqat.train.trainer experiments/rc/viquae/train/config.json
 ```
 
 Note that the validation is done using the same ratio of relevant and irrelevant passages (8:16) as training
@@ -305,7 +305,7 @@ The test is configured to save the prediction (without IR weighing) along with t
 if you don’t want this, set `do_eval=True` and `do_predict=False`.
 
 ```sh
-python -m meerqat.train.trainer experiments/rc/meerqat/test/config.json
+python -m meerqat.train.trainer experiments/rc/viquae/test/config.json
 ```
 
 # References

@@ -8,8 +8,8 @@
         "pretrained_model_name_or_path": "bert-base-uncased"
     },
     "verbosity": 10,
-    "train_dataset": "data/without_meerqat",
-    "eval_dataset": "data/with_meerqat_validation",
+    "train_dataset": "data/without_viquae",
+    "eval_dataset": "data/with_viquae_validation",
     "kb": "data/kilt_passages",
     "M": 24,
     "n_relevant_passages": 8,

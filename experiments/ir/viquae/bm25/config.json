@@ -1,17 +1,17 @@
 {
-  "study_name": "ir_meerqat_bm25_hp",
-  "storage": "sqlite:///experiments/ir/meerqat/bm25/hp.db",
+  "study_name": "ir_viquae_bm25_hp",
+  "storage": "sqlite:///experiments/ir/viquae/bm25/hp.db",
   "kb_kwargs": [
     {
       "es": true,
       "reference": true,
       "key": "input",
       "index_kwargs": {
-        "path": "data/meerqat_passages",
+        "path": "data/viquae_passages",
         "column": "passage",
         "index_name": "BM25",
         "load": true,
-        "es_index_name": "ir_meerqat_bm25",
+        "es_index_name": "ir_viquae_bm25",
         "es_index_config": {
         "settings": {
           "number_of_shards": 1,

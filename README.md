@@ -1,9 +1,8 @@
 # MEERQAT
-Source code and data used in my PhD/[MEERQAT project](https://www.meerqat.fr/).
+Source code and data used in the paper *ViQuAE, a Dataset for Knowledge-based Visual Question Answering about Named Entities*, submitted to SIGIR'22 Resource Papers (TODO add link or preprint). 
 
-In the paper [ViQuAE, a Dataset for Knowledge-based Visual Question Answering about Named Entities](https://openreview.net/forum?id=4YjpGcrcGy_), 
-under **double-blind** review at ACL RR, the dataset has been renamed *ViQuAE*.
-Until the paper is accepted, the name of the dataset will be *MEERQAT* here.
+See also [MEERQAT project](https://www.meerqat.fr/).
+
 
 # `data`
 
@@ -16,6 +15,8 @@ Images are distributed separately, in standard formats (e.g. jpg).
 Both dataset formats are distributed in two versions, with and without pre-computed features.
 The pre-computed feature version allows you to skip one or several step described in [EXPERIMENTS.md](./EXPERIMENTS.md) (e.g. face detection).
 
+TODO host on huggingface?
+
 Download the version you're interested in:
 
 |           | with precomputed features                                               | without precomputed features                                            |  
@@ -27,9 +28,9 @@ Download the images from https://cea.talkspirit.com/#/l/permalink/drive/619d08a1
 ```sh
 mkdir data
 tar -xvzf /path/to/dataset.tar.gz --directory data
-tar -xvzf /path/to/meerqat_dataset_Commons.tar.gz --directory data
+tar -xvzf /path/to/viquae_dataset_Commons.tar.gz --directory data
 # some part of the code expect that all of the images are stored in `data/Commons`
-mv data/meerqat_dataset_Commons data/Commons
+mv data/viquae_dataset_Commons data/Commons
 ```
 
 Instructions for the Knowledge Base (KB), coming soon!
@@ -39,7 +40,7 @@ Here I’ll describe the dataset without pre-computed features. Pre-computed fea
 
 ```py
 In [1]: from datasets import load_from_disk
-   ...: dataset = load_from_disk('meerqat_dataset_without_features')
+   ...: dataset = load_from_disk('viquae_dataset_without_features')
 In [2]: dataset
 Out[2]: 
 DatasetDict({
@@ -95,7 +96,7 @@ Please refer to [EXPERIMENTS.md](./EXPERIMENTS.md) for instructions to reproduce
 
 # Reference
 
-If you use this code or the MEERQAT dataset, please cite our paper:
+If you use this code or the ViQuAE dataset, please cite our paper:
 ```
 TODO
 ```
@@ -109,6 +110,8 @@ Install PyTorch 1.9.0 following [the official document wrt to your distribution]
 
 Also install [ElasticSearch](https://www.elastic.co/guide/en/elastic-stack-get-started/current/get-started-elastic-stack.html#install-elasticsearch) 
 (and run it) if you want to do sparse retrieval.
+
+TODO instructions for ranx (or, better, update mapping from doc to passage so that the order is preserved even after ranking)
 
 The rest should be installed using `pip`:
 ```sh

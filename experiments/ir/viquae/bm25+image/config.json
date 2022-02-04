@@ -10,11 +10,11 @@
         "std": 5.85003
       },
       "index_kwargs": {
-        "path": "data/meerqat_passages",
+        "path": "data/viquae_passages",
         "column": "passage",
         "index_name": "BM25",
         "load": true,
-        "es_index_name": "ir_meerqat_bm25",
+        "es_index_name": "ir_viquae_bm25",
         "es_index_config": {
           "settings": {
             "similarity": {
@@ -45,9 +45,9 @@
         "mean": 0.875486,
         "std": 0.0285142
       },
-      "index_mapping": "data/meerqat_wikipedia/non_humans/article2passage.json",
+      "index_mapping": "data/viquae_wikipedia/non_humans/article2passage.json",
       "index_kwargs": {
-        "path": "data/meerqat_wikipedia/non_humans",
+        "path": "data/viquae_wikipedia/non_humans",
         "column": "image_embedding",
         "index_name": "resnet",
         "string_factory": "L2norm,Flat",
@@ -65,9 +65,9 @@
         "mean": 0.499674,
         "std": 0.159321
       },
-      "index_mapping": "data/meerqat_wikipedia/humans_with_faces/article2passage.json",
+      "index_mapping": "data/viquae_wikipedia/humans_with_faces/article2passage.json",
       "index_kwargs": {
-        "path": "data/meerqat_wikipedia/humans_with_faces",
+        "path": "data/viquae_wikipedia/humans_with_faces",
         "column": "face_embedding",
         "index_name": "arcface",
         "string_factory": "L2norm,Flat",
