@@ -302,17 +302,17 @@ class MultiPassageBERTTrainer(QuestionAnsweringTrainer):
         or all alternative answers (with the only limit of max_n_answers)
         This has no effect on the evaluation (where all alternative answers are always considered)
     """
-    def __init__(self, *args, max_n_answers=10, ignore_keys=['answer_strings'], train_original_answer_only=True, full_oracle=False, **kwargs):
+    def __init__(self, *args, max_n_answers=10, ignore_keys=['answer_strings'], train_original_answer_only=True, oracle=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.max_n_answers = max_n_answers
         self.ignore_keys = ignore_keys
         self.train_original_answer_only = train_original_answer_only
-        self.full_oracle = full_oracle
-        if self.full_oracle:
-            self.prediction_file_name = "full-oracle_predictions.json"
-            self.metrics_file_name = "full-oracle_metrics.json"
+        self.oracle = oracle
+        if self.oracle:
+            self.prediction_file_name = "oracle_predictions.json"
+            self.metrics_file_name = "oracle_metrics.json"
             if self.n_relevant_passages != self.M:
-                warnings.warn(f"Full-oracle mode. Setting n_relevant_passages={self.M}")
+                warnings.warn(f"Oracle mode. Setting n_relevant_passages={self.M}")
                 self.n_relevant_passages = self.M
 
         # FIXME isn't there a more robust way of defining data_collator as the method collate_fn ?
@@ -382,8 +382,8 @@ class MultiPassageBERTTrainer(QuestionAnsweringTrainer):
             # N. B. seed is set in Trainer
             questions.extend([item['input']]*self.M)
 
-            # full-oracle -> use only relevant passages
-            if (self.args.do_eval or self.args.do_predict) and not self.full_oracle:
+            # oracle -> use only relevant passages
+            if (self.args.do_eval or self.args.do_predict) and not self.oracle:
                 passage, score = self.get_eval_passages(item)
                 passage_scores.extend(score)
                 if len(score) < self.M:
