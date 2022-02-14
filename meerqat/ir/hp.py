@@ -19,6 +19,7 @@ import json
 from collections import Counter
 import time
 from pathlib import Path
+from copy import deepcopy
 
 import numpy as np
 from datasets import load_from_disk, set_caching_enabled
@@ -27,27 +28,25 @@ import ranx
 import optuna
 
 from meerqat.ir.metrics import find_relevant_batch
-from meerqat.ir.search import Searcher
+from meerqat.ir.search import Searcher, format_qrels_indices
 
 
 class Objective:
     """Callable objective compatible with optuna."""
-    def __init__(self, dataset, k=100, metric_for_best_model=None, eval_dataset=None, 
-                 map_kwargs={}, fn_kwargs={}, do_cache_relevant=True, cleanup_cache_files=False, **kwargs):
+    def __init__(self, dataset, metric_for_best_model=None, eval_dataset=None,
+                 map_kwargs={}, fn_kwargs={}, cleanup_cache_files=False, **kwargs):
         self.dataset = dataset
-        self.k = k
         self.searcher = Searcher(**kwargs)
         # HACK: sleep until elasticsearch is good to go
         time.sleep(60)
         if metric_for_best_model is None:
-            self.metric_for_best_model = f"mrr@{self.k}"
+            self.metric_for_best_model = f"mrr@{self.searcher.k}"
         else:
             self.metric_for_best_model = metric_for_best_model
         self.eval_dataset = eval_dataset
         self.map_kwargs = map_kwargs
-        fn_kwargs.update(dict(k=self.k))
         self.fn_kwargs = fn_kwargs
-        self.do_cache_relevant = do_cache_relevant
+        self.do_cache_relevant = True
         self.cleanup_cache_files = cleanup_cache_files
 
     def __call__(self, trial):
@@ -67,21 +66,24 @@ class Objective:
         """
         pass
 
-    def cache_relevant(self, batch):
+    def cache_relevant(self, batch, do_copy=False):
         """
         Caches relevant passages w.r.t. union of all search results.
-
-        Beware this has effect on recall and R-precision since some passages in the union might be thrown away in fusion 
-        (and would not have been counted as relevant)     
         """
         all_indices = self.searcher.union_results(batch)
-        batch['provenance_indices'] = find_relevant_batch(all_indices, batch['output'], 
-                                                          self.searcher.reference_kb, reference_key=self.searcher.reference_key,
-                                                          relevant_batch=batch['provenance_indices'])
+        relevant_batch = deepcopy(batch['provenance_indices']) if do_copy else batch['provenance_indices']
+        provenance_indices = find_relevant_batch(all_indices, batch['output'], self.searcher.reference_kb,
+                                                 reference_key=self.searcher.reference_key, relevant_batch=relevant_batch)
+        str_indices_batch, non_empty_scores = format_qrels_indices(provenance_indices)
+        self.searcher.qrels.add_multi(
+            q_ids=batch['id'],
+            doc_ids=str_indices_batch,
+            scores=non_empty_scores
+        )
         return batch
     
-    def cache_relevant_dataset(self):
-        self.dataset = self.dataset.map(self.cache_relevant, batched=True, **self.map_kwargs)
+    def cache_relevant_dataset(self, do_copy=False):
+        self.dataset.map(self.cache_relevant, batched=True, fn_kwargs=dict(do_copy=do_copy), **self.map_kwargs)
         self.keep_reference_kb = self.searcher.reference_kb
         # so that subsequent calls to searcher.fuse_and_compute_metrics will not call find_relevant_batch
         self.searcher.reference_kb = None
@@ -125,7 +127,6 @@ class FusionObjective(Objective):
         else:
             raise NotImplementedError()
 
-        self.searcher.metrics = {"fusion": Counter()}
         self.dataset.map(self.searcher.fuse_and_compute_metrics, fn_kwargs=self.fn_kwargs, batched=True, **self.map_kwargs)
         if self.cleanup_cache_files:
             self.dataset.cleanup_cache_files()
@@ -133,6 +134,14 @@ class FusionObjective(Objective):
         return metric
 
     def evaluate(self, best_params):
+        # reset to erase qrels and runs of the validation set
+        self.searcher.qrels = ranx.Qrels()
+        run = ranx.Run()
+        run.name = "fusion"
+        self.searcher.runs = dict(fusion=run)
+        # fill qrels
+        self.eval_dataset.map(self.cache_relevant, batched=True, fn_kwargs=dict(do_copy=True), **self.map_kwargs)
+
         fusion_method = self.searcher.fusion_method
         if fusion_method == 'interpolation':
             for kb in self.searcher.kbs.values():
@@ -140,7 +149,7 @@ class FusionObjective(Objective):
                     index.interpolation_weight = best_params[f"{index_name}.interpolation_weight"]
         else:
             raise NotImplementedError()
-        self.searcher.metrics = {"fusion": Counter()}
+
         self.eval_dataset = self.eval_dataset.map(self.searcher.fuse_and_compute_metrics, fn_kwargs=self.fn_kwargs, batched=True, **self.map_kwargs)
         report = ranx.compare(
             self.searcher.qrels,
@@ -242,9 +251,9 @@ class BM25Objective(Objective):
         return self.prefix_eval(metrics)
 
 
-def get_objective(objective_type, train_dataset, k=100, **objective_kwargs):
+def get_objective(objective_type, train_dataset, **objective_kwargs):
     if objective_type == 'fusion':
-        objective = FusionObjective(train_dataset, k=k, **objective_kwargs)
+        objective = FusionObjective(train_dataset, **objective_kwargs)
         if objective.searcher.fusion_method == 'interpolation':
             search_space = {}
             for kb in objective.searcher.kbs.values():
@@ -256,7 +265,7 @@ def get_objective(objective_type, train_dataset, k=100, **objective_kwargs):
         else:
             default_study_kwargs = {}
     elif objective_type == 'bm25':
-        objective = BM25Objective(train_dataset, k=k, **objective_kwargs)
+        objective = BM25Objective(train_dataset, **objective_kwargs)
         hyp_hyp = objective.hyp_hyp
         search_space = dict(b=np.arange(*hyp_hyp['b']["bounds"], hyp_hyp['b']["step"]).tolist(),
                             k1=np.arange(*hyp_hyp['k1']["bounds"], hyp_hyp['k1']["step"]).tolist())
