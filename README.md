@@ -1,37 +1,26 @@
-# MEERQAT
+# ViQuAE
 Source code and data used in the paper *ViQuAE, a Dataset for Knowledge-based Visual Question Answering about Named Entities*, submitted to SIGIR'22 Resource Papers (TODO add link or preprint). 
 
 See also [MEERQAT project](https://www.meerqat.fr/).
 
 
-# `data`
-
-All the data should be stored in the same folder, at the root of this repo.
+# Getting the dataset and KB
 
 The data is provided in two formats: HF's `datasets` (based on Apache Arrow) and plain-text JSONL files (one JSON object per line). 
 Both formats can be used in the same way as `datasets` parses objects into python `dict` (see below), however our code only supports (and is heavily based upon) `datasets`.
 Images are distributed separately, in standard formats (e.g. jpg).
-
-Both dataset formats are distributed in two versions, with and without pre-computed features.
+Both dataset formats are distributed in two versions, with (TODO) and without pre-computed features.
 The pre-computed feature version allows you to skip one or several step described in [EXPERIMENTS.md](./EXPERIMENTS.md) (e.g. face detection).
 
-TODO host on huggingface?
-
-Download the version you're interested in:
-
-|           | with precomputed features                                               | without precomputed features                                            |  
-|---------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-|`datasets` | https://cea.talkspirit.com/#/l/permalink/drive/619d08e1eebc593c1716c623 | https://cea.talkspirit.com/#/l/permalink/drive/619d08e18989336a26769f8d |
-|`JSONL`    | https://cea.talkspirit.com/#/l/permalink/drive/619d08e147c0e207220663af | https://cea.talkspirit.com/#/l/permalink/drive/619d08e1ded5af4ac84368ac |
-
-Download the images from https://cea.talkspirit.com/#/l/permalink/drive/619d08a10a52e83dbe5ace7c
 ```sh
-mkdir data
-tar -xvzf /path/to/dataset.tar.gz --directory data
-tar -xvzf /path/to/viquae_dataset_Commons.tar.gz --directory data
-# some part of the code expect that all of the images are stored in `data/Commons`
-mv data/viquae_dataset_Commons data/Commons
+# get the images. TODO integrate this in a single dataset
+git clone https://huggingface.co/datasets/PaulLerner/viquae_images
+cd viquae_images
+tar -xzvf images.tar.gz
+export VIQUAE_IMAGES_PATH=$PWD/images
 ```
+
+If you don’t want to use `datasets` you can get the data directly from https://huggingface.co/datasets/PaulLerner/viquae (e.g. `git clone https://huggingface.co/datasets/PaulLerner/viquae`).
 
 Instructions for the Knowledge Base (KB), coming soon!
 
@@ -39,8 +28,8 @@ The dataset format largely follows [KILT](https://huggingface.co/datasets/kilt_t
 Here I’ll describe the dataset without pre-computed features. Pre-computed features are basically the output of each step described in [EXPERIMENTS.md](./EXPERIMENTS.md).
 
 ```py
-In [1]: from datasets import load_from_disk
-   ...: dataset = load_from_disk('viquae_dataset_without_features')
+In [1]: from datasets import load_dataset
+   ...: dataset = load_dataset('PaulLerner/viquae')
 In [2]: dataset
 Out[2]: 
 DatasetDict({
@@ -71,18 +60,27 @@ Out[5]: 'http://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Jackie_Wilson.
 In [6]: item['image']
 Out[6]: '512px-Jackie_Wilson.png'
 
+# you can load the image using $VIQUAE_IMAGES_PATH
+# meerqat.data.loading.load_image_batch does that for you
+In [7]: from meerqat.data.loading import load_image_batch
+# fake batch of size 1
+In [8]: image = load_image_batch([item['image']])[0]
+# it returns a PIL Image, all images have been resized to a width of 512
+In [9]: type(image), image.size
+Out[9]: (PIL.Image.Image, (512, 526))
+
 # question string
-In [7]: item['input']
-Out[7]: "this singer's re-issued song became the UK Christmas number one after helping to advertise what brand?"
+In [10]: item['input']
+Out[10]: "this singer's re-issued song became the UK Christmas number one after helping to advertise what brand?"
 
 # answer string
-In [8]: item['output']['original_answer']
-Out[8]: "Levi's"
+In [11]: item['output']['original_answer']
+Out[11]: "Levi's"
 
 # processing the data:
-In [9]: dataset.map(my_function)
+In [12]: dataset.map(my_function)
 # this is almost the same as (see how can you adapt the code if you don’t want to use the `datasets` library)
-In [10]: for item in dataset:
+In [13]: for item in dataset:
     ...:     my_function(item)
 ```
 
@@ -124,7 +122,7 @@ Those modules are best described along with the experiments, see [EXPERIMENTS.md
 
 ## `meerqat.data`
 
-This should contain scripts to load the data, annotate it...
+This should contain scripts to load the data, annotate it... All the data should be stored in the `data` folder, at the root of this repo.
 
 ### `loading`
 This is probably the only file in `data` interesting for the users of the dataset.
@@ -262,7 +260,3 @@ Used to manipulate the output of [Label Studio](https://labelstud.io/), see also
 - `merge` merges several LS outputs, also compute inter-annotator agreement and saves disagreements
 - `agree` merges the output of `merge` along with the corrected disagreements
 
-
-## `meerqat.visualization`
-
-This should allow to visualize the data
