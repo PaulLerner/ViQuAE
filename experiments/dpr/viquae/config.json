@@ -21,7 +21,7 @@
         "padding": "max_length"
     },
     "checkpoint": {
-        "resume_from_checkpoint": "experiments/dpr/kilt/checkpoint-13984"
+        "resume_from_checkpoint": "experiments/dpr/triviaqa/checkpoint-13984"
     },
     "callbacks_args": [
         {

@@ -5,7 +5,7 @@
     },
     "tokenizer": {
         "class_name": "BertTokenizer",
-        "pretrained_model_name_or_path": "bert-base-uncased"
+        "pretrained_model_name_or_path": "experiments/rc/triviaqa/train/checkpoint-46000"
     },
     "verbosity": 10,
     "train_dataset": "data/viquae_dataset/train",
@@ -20,7 +20,7 @@
         "padding": "max_length"
     },
     "checkpoint": {
-        "resume_from_checkpoint": "experiments/rc/viquae/train/checkpoint-46000"
+        "resume_from_checkpoint": null
     },
     "callbacks_args": [
         {

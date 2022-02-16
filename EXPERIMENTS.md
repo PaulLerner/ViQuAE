@@ -5,27 +5,39 @@ so that people are free to skip one or few steps. (TODO add instructions here or
 
 All commands assume that the working directory is the root of the git repo (e.g. same level as this file) 
 and that the data is stored in the `data` folder, at the root of this repo (except for images for which you can specify the `VIQUAE_IMAGES_PATH` environment variable).
-Alternatively, you can the paths in the config files.
+Alternatively, you can change the paths in the config files.
 
 Relevant configuration files can be found in the [experiments directory](./experiments).
 
+We train the models based on HF `transformers.Trainer`, itself based on `torch`. Even when not training models, all of our code is based on `torch`.
+
 **Table of contents**
-* [Image](#image)
+- [Experiments](#experiments)
+  * [Image](#image)
     + [Global image embedding](#global-image-embedding)
     + [Face detection](#face-detection)
     + [Face recognition](#face-recognition)
-* [IR](#ir)
+  * [IR](#ir)
     + [Preprocessing passages](#preprocessing-passages)
     + [BM25](#bm25)
-    + [ResNet-ImageNet + ArcFace-MS-Celeb](#resnet-imagenet---arcface-ms-celeb)
-    + [BM25 + Image](#bm25---image)
+    + [DPR](#dpr)
+      - [Pre-training on TriviaQA](#pre-training-on-triviaqa)
+      - [Fine-tuning on ViQuAE](#fine-tuning-on-viquae)
+      - [Embedding questions and passages](#embedding-questions-and-passages)
+      - [Searching](#searching)
+    + [ImageNet-ResNet and CLIP vs ArcFace-MS-Celeb](#imagenet-resnet-and-clip-vs-arcface-ms-celeb)
+    + [Text + Image](#text---image)
+      - [BM25 + Image](#bm25---image)
+        * [Tune hyperparameters](#tune-hyperparameters)
+        * [Run with the best hyperparameters](#run-with-the-best-hyperparameters)
+      - [DPR + Image](#dpr---image)
+        * [Run with the best hyperparameters](#run-with-the-best-hyperparameters-1)
     + [Metrics](#metrics)
-* [Reading Comprehension](#reading-comprehension)
+  * [Reading Comprehension](#reading-comprehension)
     + [Pre-processing](#pre-processing)
-    + [Pre-training on TriviaQA](#pre-training-on-triviaqa)
-    + [Fine-tuning on ViQuAE](#fine-tuning-on-viquae)
-* [References](#references)
-
+    + [Pre-training on TriviaQA](#pre-training-on-triviaqa-1)
+    + [Fine-tuning on ViQuAE](#fine-tuning-on-viquae-1)
+- [References](#references)
 
 ## Image
 This will be applied on both the QA dataset and the KB.  
@@ -104,6 +116,8 @@ Now that we have a bunch of dense representations, let’s see how to retrieve i
 Dense IR is done with `faiss` and sparse IR is done with `elasticsearch`, both via HF `datasets`.
 We’ll use IR on both TriviaQA along with the complete Wikipedia (BM25 only) and ViQuAE along with the multimodal Wikipedia.
 
+Hyperparameter tuning is done using grid search via `optuna` on the dev set to maximize MRR.
+
 ### Preprocessing passages
 You can probably skip this step as we will provide passages dataset along with provenance.
 
@@ -143,7 +157,7 @@ python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/bm25/
 
 ### DPR
 We use the same hyperparameters as [Karpukinh et al.](https://github.com/facebookresearch/DPR).
-We train DPR using 4 V100 GPUs of 32Go, allowing a total batch size of 256 (32 questions * 2 passages each * 4 GPUs). 
+We train DPR using 4 V100 GPUs of 32GB, allowing a total batch size of 256 (32 questions * 2 passages each * 4 GPUs). 
 This is crucial because each question uses all passages paired with other questions in the batch as negative examples. 
 Each question is paired with 1 relevant passage and 1 irrelevant passage mined with BM25.
 
@@ -161,7 +175,7 @@ Given the small size of ViQuAE, DPR is pre-trained on TriviaQA:
 
 In this step we use the complete `kilt_wikipedia` instead of `viquae_wikipedia`.
 
-`python -m meerqat.train.trainer experiments/dpr/kilt/config.json`
+`python -m meerqat.train.trainer experiments/dpr/triviaqa/config.json`
 
 The best checkpoint should be `checkpoint-13984`.
 
@@ -173,14 +187,14 @@ We use exactly the same hyperparameters as for pre-training.
 This is kind of a hack but once you’ve decided on a TriviaQA checkpoint (step 13984 in our case)
 you want to be sure that HF won’t load the optimizer or any other training stuff except the model:
 ```sh
-mkdir experiments/dpr/kilt/checkpoint-13984/.keep
-mv experiments/dpr/kilt/checkpoint-13984/optimizer.pt experiments/dpr/kilt/checkpoint-13984/scheduler.pt experiments/dpr/kilt/checkpoint-13984/training_args.pt experiments/dpr/kilt/checkpoint-13984/trainer_state.pt experiments/dpr/kilt/checkpoint-13984/.keep
+mkdir experiments/dpr/triviaqa/checkpoint-13984/.keep
+mv experiments/dpr/triviaqa/checkpoint-13984/optimizer.pt experiments/dpr/triviaqa/checkpoint-13984/scheduler.pt experiments/dpr/triviaqa/checkpoint-13984/training_args.pt experiments/dpr/triviaqa/checkpoint-13984/trainer_state.pt experiments/dpr/triviaqa/checkpoint-13984/.keep/
 ```
 
 `python -m meerqat.train.trainer experiments/dpr/viquae/config.json`
 
 The best checkpoint should be `checkpoint-40`.
-Run `python -m meerqat.train.split_DPR experiments/dpr/viquae/checkpoint-40` to split DPR in a a DPRQuestionEncoder and DPRContextEncoder.
+Run `python -m meerqat.train.split_DPR experiments/dpr/viquae/checkpoint-40` to split DPR in a DPRQuestionEncoder and DPRContextEncoder.
 We’ll use both to embed questions and passages below.
 
 #### Embedding questions and passages
@@ -219,11 +233,7 @@ dataset.save_to_disk('data/viquae_dataset/')
 Search is done using cosine distance, hence the `"L2norm,Flat"` for `string_factory` and `metric_type=0`
 (this does first L2-normalization then dot product).
 
-The results, corresponding to a KB entity/article are then mapped to the corresponding passages to allow fusion with BM25 (next §)
-The image results is simply the union of both ResNet and ArcFace scores since they are exclusive 
-(you can tweak that with the `weight` parameter in the config file)
-
-Beware that these results cannot be well interpreted because they do not have a reference KB which would allow looking if the answer is in the passage (TODO refactor to allow that). See other caveats in the next section.
+The results, corresponding to a KB entity/article are then mapped to the corresponding passages to allow fusion with BM25/DPR (next §)
 
 ### Text + Image
 
@@ -253,6 +263,8 @@ python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/bm25+
 #### DPR + Image
 Same script, different config.
 
+##### Tune hyperparameters
+
 `python -m meerqat.ir.hp fusion data/viquae_dataset/validation experiments/ir/viquae/hp/dpr+image/config.json --k=100 --disable_caching --test=data/viquae_dataset/test --metrics=experiments/ir/viquae/hp/dpr+image/metrics`
 
 ##### Run with the best hyperparameters
@@ -263,9 +275,15 @@ python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/dpr+i
 ```
 
 ### Metrics
-We use [ranx](https://github.com/AmenRa/ranx) to compute the metrics. TODO explain how to compare models.
+We use [ranx](https://github.com/AmenRa/ranx) to compute the metrics. 
 I advise against using any kind of metric that uses recall (mAP, R-Precision, …) 
 since we estimate relevant document on the go so the number of relevant documents will *depend on the systemS* you use.
+
+The above `meerqat.ir.search` saves results and qrels in format compatible with `trec_eval` if you prefer to use it.
+
+To compare different models (e.g. BM25+Image and DPR+Image), you should:
+- fuse the qrels (since relevant passages are estimated based on the model’s output): `python -m meerqat.ir.metrics qrels <qrels>... --output=experiments/ir/all_qrels.trec`
+- `python -m meerqat.ir.metrics ranx <run>... --qrels=experiments/ir/all_qrels.trec --output=experiments/ir/comparison`
 
 Beware that the ImageNet-ResNet and ArcFace results cannot be compared, neither between them nor with BM25/DPR because:
 - they are exclusive, roughly **half** the questions have a face -> ArcFace, other don't -> ResNet, while BM25/DPR is applied to **all** questions
@@ -289,8 +307,6 @@ and the implementation is based on DPR (Karpukhin et al., 2020)
 
 We also implemented the DPR Reader model from Karpukhin et al. (2020), which doesn’t use this global normalization trick
 but does re-ranking. However we did not test it (our intuition is that re-ranking with text only will only deteriorate the retriever results)
-
-We train the models based on HF `transformers.Trainer`, itself based on `torch`.
 
 We convert the model start and end answer position probabilities to answer spans in
 `meerqat.models.qa.get_best_spans`.
@@ -319,6 +335,8 @@ kb = load_from_disk('data/viquae_passages/')
 dataset = load_from_disk('data/viquae_dataset/')
 
 def keep_relevant_search_wrt_original_in_priority(item, kb):
+    # this contains the latest result of the fusion
+    # to reproduce the results of the paper, use DPR+Image as IR
     indices = item['search_indices']
     relevant_indices, _ = find_relevant(indices, item['output']['original_answer'], [], kb)
     if relevant_indices:
@@ -333,7 +351,7 @@ dataset.save_to_disk('data/viquae_dataset/')
 ``` 
 
 ### Pre-training on TriviaQA
-We should provide this model so that you’re able to skip this step.
+We should provide this model so that you’re able to skip this step (TODO).
 
 Our training set consists of questions that were not used to generate any ViQuAE questions, 
 even those that were discarded or remain to be annotated.
@@ -348,28 +366,24 @@ The model is trained to predict the first token (`[CLS]`) as answer for irreleva
 - `max_n_answers`: the model is trained to predict all off the positions of the answer in the passage up to this threshold 
 - `train_original_answer_only`: use in conjunction with the above preprocessing, defaults to True
 
+As with DPR, IR is then carried out with BM25 on the full 5.9M articles of KILT's Wikipedia instead of our multimodal KB.
+
 ```sh
 python -m meerqat.train.trainer experiments/rc/triviaqa/train/config.json
 ```
 
-
+The best checkpoint should be `checkpoint-46000`.
 
 ### Fine-tuning on ViQuAE
 
-This is kind of a hack but once you’ve decided on a TriviaQA checkpoint (step 46000 in our case)
-you want to be sure that HF won’t load the optimizer or any other training stuff except the model:
-```sh
-cd experiments/rc/triviaqa/train/checkpoint-46000
-mkdir .keep
-mv optimizer.pt .keep
-mv scheduler.pt .keep
-mv trainer_state.pt .keep
-mv training_args.pt .keep
-```
+Here you don’t have to hack the checkpoint folder and can simply set `experiments/rc/triviaqa/train/checkpoint-46000` as pre-trained model instead of `bert-base-uncased`.
+
 Then you can fine-tune the model:
 ```sh
 python -m meerqat.train.trainer experiments/rc/viquae/train/config.json
 ```
+The best checkpoint should be `checkpoint-3600`. This run uses the default seed in `transformers`: 42. 
+To have multiple runs, like in the paper, add `seed=<int>` in the config `training_kwargs`. We used seeds `[0, 1, 2, 3, 42]`.
 
 Note that the validation is done using the same ratio of relevant and irrelevant passages (8:16) as training
 while test is done using the top-24 IR results. That is why you should expect a performance gap between validation and test.
@@ -380,6 +394,11 @@ if you don’t want this, set `do_eval=True` and `do_predict=False`.
 ```sh
 python -m meerqat.train.trainer experiments/rc/viquae/test/config.json
 ```
+
+To reproduce the oracle results:
+- for "full-oracle", simply add the `oracle=True` flag in the config file and set `n_relevant_passages=24`
+- for "semi-oracle", in addition you should filter `search_provenance_indices` like above 
+  but setting `item['search_provenance_indices'] = []` when no relevant passages where retrieved by the IR system.
 
 # References
 Christopher Clark and Matt Gardner. 2018. Simple and
