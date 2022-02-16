@@ -13,3 +13,4 @@ scikit-image
 opencv-python>=4.5.3
 faiss-gpu>=1.7.1
 humanize>=3.12
+ranx
