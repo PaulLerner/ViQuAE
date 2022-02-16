@@ -20,7 +20,7 @@ tar -xzvf images.tar.gz
 export VIQUAE_IMAGES_PATH=$PWD/images
 ```
 
-If you don’t want to use `datasets` you can get the data directly from https://huggingface.co/datasets/PaulLerner/viquae (e.g. `git clone https://huggingface.co/datasets/PaulLerner/viquae`).
+If you don’t want to use `datasets` you can get the data directly from https://huggingface.co/datasets/PaulLerner/viquae_dataset (e.g. `git clone https://huggingface.co/datasets/PaulLerner/viquae_dataset`).
 
 Instructions for the Knowledge Base (KB), coming soon!
 
@@ -29,7 +29,7 @@ Here I’ll describe the dataset without pre-computed features. Pre-computed fea
 
 ```py
 In [1]: from datasets import load_dataset
-   ...: dataset = load_dataset('PaulLerner/viquae')
+   ...: dataset = load_dataset('PaulLerner/viquae_dataset')
 In [2]: dataset
 Out[2]: 
 DatasetDict({
@@ -56,11 +56,11 @@ Out[4]: dict
 In [5]: item['url']
 Out[5]: 'http://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Jackie_Wilson.png/512px-Jackie_Wilson.png'
 
-# file name of the grounding image as stored in `data/Commons`
+# file name of the grounding image as stored in $VIQUAE_IMAGES_PATH
 In [6]: item['image']
 Out[6]: '512px-Jackie_Wilson.png'
 
-# you can load the image using $VIQUAE_IMAGES_PATH
+# you can thus load the image from $VIQUAE_IMAGES_PATH/item['image']
 # meerqat.data.loading.load_image_batch does that for you
 In [7]: from meerqat.data.loading import load_image_batch
 # fake batch of size 1
@@ -109,12 +109,10 @@ Install PyTorch 1.9.0 following [the official document wrt to your distribution]
 Also install [ElasticSearch](https://www.elastic.co/guide/en/elastic-stack-get-started/current/get-started-elastic-stack.html#install-elasticsearch) 
 (and run it) if you want to do sparse retrieval.
 
-TODO instructions for ranx (or, better, update mapping from doc to passage so that the order is preserved even after ranking)
-
 The rest should be installed using `pip`:
 ```sh
-git clone https://github.com/PaulLerner/meerqat.git
-pip install -e meerqat
+git clone https://github.com/PaulLerner/ViQuAE.git
+pip install -e ViQuAE
 ```
 
 ## `image`, `ir`, `models`, `train`
@@ -122,10 +120,11 @@ Those modules are best described along with the experiments, see [EXPERIMENTS.md
 
 ## `meerqat.data`
 
-This should contain scripts to load the data, annotate it... All the data should be stored in the `data` folder, at the root of this repo.
+This should contain scripts to load the data, annotate it... 
 
 ### `loading`
-This is probably the only file in `data` interesting for the users of the dataset.
+This is probably the only file in `data` interesting for the users of the dataset. 
+The documentation below describes modules that were used to **annotate the dataset**.
 
 #### `passages` 
 Segments Wikipedia articles (from the `kilt_wikipedia` dataset) into passages (e.g. paragraphs)
@@ -141,6 +140,7 @@ Current options (passed in a JSON file) are:
 Make a JSON file out of a `dataset` column for quick (and string) indexing.
  
 ### `kilt2vqa.py`
+All the data should be stored in the `data` folder, at the root of this repo.
 
 The goal is to generate questions suitable for VQA by replacing explicit entity mentions in existing textual QA datasets
  by an ambiguous one and illustrate the question with an image (that depicts the entity).
