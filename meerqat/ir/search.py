@@ -116,7 +116,6 @@ class KnowledgeBase:
         for index_name, index_kwarg in index_kwargs.items():
             self.add_or_load_index(index_name=index_name, **index_kwarg)
 
-
     def search_batch(self, index_name, queries, k=100):
         """Pre-process queries according to index before computing self.dataset.search_batch"""
         index = self.indexes[index_name]
@@ -171,7 +170,10 @@ class KnowledgeBase:
             for score, index in zip(scores, indices):
                 # extend because it can be a 1-many mapping (e.g. document/image to passage)
                 new_indices.extend(self.index_mapping[index])
-                new_scores.extend([score]*len(self.index_mapping[index]))
+                for i in range(len(self.index_mapping[index])):
+                    # add a slightly decreasing number so that the order of passage in document is preserved
+                    # this is to prevent the downstream buggy sort of ranx, see https://github.com/AmenRa/ranx/issues/9
+                    new_scores.append(score-i*1e-6)
                 if k is not None and len(new_indices) >= k:
                     break
             new_scores_batch.append(new_scores)
