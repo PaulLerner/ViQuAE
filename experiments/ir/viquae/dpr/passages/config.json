@@ -1,0 +1,21 @@
+{
+    "model": {
+        "class_name": "DPRContextEncoder",
+        "pretrained_model_name_or_path": "experiments/dpr/viquae/checkpoint-40/context_model"
+    },
+    "tokenizer": {
+        "class_name": "BertTokenizer",
+        "pretrained_model_name_or_path": "bert-base-uncased"
+    },
+    "tokenization_kwargs": {
+        "max_length": 256,
+        "padding": "max_length"
+    },
+    "key": "passage",
+    "save_as": "DPR_few_shot",
+    "output_key": "pooler_output",
+    "map_kwargs":
+    {
+        "batch_size": 2048
+    }
+}

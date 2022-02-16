@@ -3,7 +3,10 @@
 All of the intermediate outputs of the pipeline should be provided along with the data 
 so that people are free to skip one or few steps. (TODO add instructions here or in the README data section)
 
-All commands assume that the working directory is the root of the github repo (e.g. same level as this file).
+All commands assume that the working directory is the root of the git repo (e.g. same level as this file) 
+and that the data is stored in the `data` folder, at the root of this repo (except for images for which you can specify the `VIQUAE_IMAGES_PATH` environment variable).
+Alternatively, you can the paths in the config files.
+
 Relevant configuration files can be found in the [experiments directory](./experiments).
 
 **Table of contents**
@@ -29,12 +32,22 @@ This will be applied on both the QA dataset and the KB.
 
 ### Global image embedding
 
-Obtained using a ResNet-50 pre-trained on ImageNet, pooled with max-pooling.
-You can tweak the pooling layer and the backbone in the config file, as long as it is a `nn.Module` and `torchvision.models`, respectively.
+Obtained using ResNet-50:
+- one pre-trained on ImageNet, pooled with max-pooling. 
+  You can tweak the pooling layer and the backbone in the config file, 
+  as long as it is a `nn.Module` and `torchvision.models`, respectively.
+- the other trained using [CLIP](https://github.com/openai/CLIP)
+
 Obviously you can also tweak the batch size.
 ```sh
-python -m meerqat.image.embedding data/viquae_dataset experiments/image_embedding/config.json --disable_caching
-python -m meerqat.image.embedding data/viquae_wikipedia experiments/image_embedding/config.json --disable_caching
+# embed dataset images with ImageNet-ResNet50
+python -m meerqat.image.embedding data/viquae_dataset experiments/image_embedding/imagenet/config.json --disable_caching
+# embed KB images with ImageNet-ResNet50
+python -m meerqat.image.embedding data/viquae_wikipedia experiments/image_embedding/imagenet/config.json --disable_caching
+# embed dataset images with CLIP-ResNet50
+python -m meerqat.image.embedding data/viquae_dataset experiments/image_embedding/clip/config.json --disable_caching
+# embed KB images with CLIP-ResNet50
+python -m meerqat.image.embedding data/viquae_wikipedia experiments/image_embedding/clip/config.json --disable_caching
 ```
 
 ### Face detection
@@ -120,19 +133,71 @@ First you might want to optimize BM25 hyperparameters, `b` and `k_1`.
 We did this with a grid-search using `optuna`:
 the `--k` option asks for the top-K search results.  
 ```sh
-python -m meerqat.ir.search hp bm25 data/viquae_dataset/validation experiments/ir/viquae/bm25/config.json --k=100 --metrics=experiments/ir/viquae/bm25/metrics.json --test=data/viquae_dataset/test --disable_caching
+TODO
 ```
 
-Alternatively, you can use the parameters we optimized: `b=0.3` and `k_1=0.5` using the same config file but without the `study_name` and `storage` fields:
+Alternatively, you can use the parameters we optimized: `b=0.3` and `k_1=0.5`:
 ```sh
-python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/bm25/config.json --k=100 --metrics=experiments/ir/viquae/bm25/metrics.json --disable_caching
+python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/bm25/config.json --k=100 --metrics=experiments/ir/viquae/bm25/metrics --disable_caching
 ```
 
-You can also use the `--save_irrelevant` option if you want to save the irrelevant search results 
-along with the union of relevant search results and the output of `meerqat.ir.metrics relevant`.
-However in this case we take into account all alternative answers so this is useless if you want to exactly reproduce our reader experiments (see §[Reading Comprehension](#Reading Comprehension))
+### DPR
+We use the same hyperparameters as [Karpukinh et al.](https://github.com/facebookresearch/DPR).
+We train DPR using 4 V100 GPUs of 32Go, allowing a total batch size of 256 (32 questions * 2 passages each * 4 GPUs). 
+This is crucial because each question uses all passages paired with other questions in the batch as negative examples. 
+Each question is paired with 1 relevant passage and 1 irrelevant passage mined with BM25.
 
-### ResNet-ImageNet + ArcFace-MS-Celeb
+Both the question and passage encoder are initialized from `"bert-base-uncased"`.
+
+To launch the script with multiple GPUs you should you use `torch.distributed.launch --nproc_per_node=<number of GPUs>`. This is omitted in the following commands.
+
+
+#### Pre-training on TriviaQA
+TODO provide pre-trained model.
+
+Given the small size of ViQuAE, DPR is pre-trained on TriviaQA:
+- filtered out of all questions used for ViQuAE for training 
+- on questions used to generate ViQuAE’s validation set for validation
+
+In this step we use the complete `kilt_wikipedia` instead of `viquae_wikipedia`.
+
+`python -m meerqat.train.trainer experiments/dpr/kilt/config.json`
+
+The best checkpoint should be `checkpoint-13984`.
+
+#### Fine-tuning on ViQuAE
+TODO provide pre-trained model.
+
+We use exactly the same hyperparameters as for pre-training.
+
+This is kind of a hack but once you’ve decided on a TriviaQA checkpoint (step 13984 in our case)
+you want to be sure that HF won’t load the optimizer or any other training stuff except the model:
+```sh
+mkdir experiments/dpr/kilt/checkpoint-13984/.keep
+mv experiments/dpr/kilt/checkpoint-13984/optimizer.pt experiments/dpr/kilt/checkpoint-13984/scheduler.pt experiments/dpr/kilt/checkpoint-13984/training_args.pt experiments/dpr/kilt/checkpoint-13984/trainer_state.pt experiments/dpr/kilt/checkpoint-13984/.keep
+```
+
+`python -m meerqat.train.trainer experiments/dpr/viquae/config.json`
+
+The best checkpoint should be `checkpoint-40`.
+Run `python -m meerqat.train.split_DPR experiments/dpr/viquae/checkpoint-40` to split DPR in a a DPRQuestionEncoder and DPRContextEncoder.
+We’ll use both to embed questions and passages below.
+
+#### Embedding questions and passages
+```sh
+python -m meerqat.ir.embedding data/viquae_dataset experiments/ir/viquae/dpr/questions/config.json --disable_caching
+python -m meerqat.ir.embedding data/viquae_passages experiments/ir/viquae/dpr/passages/config.json --disable_caching
+```
+
+#### Searching
+
+Like with BM25:
+
+```sh
+python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/dpr/search/config.json --k=100 --metrics=experiments/ir/viquae/dpr/search/metrics --disable_caching
+```
+
+### ImageNet-ResNet and CLIP vs ArcFace-MS-Celeb
 We trust the face detector, if it detects a face then:
 - the search is done on the human faces KB (`data/viquae_wikipedia/humans_with_faces`)
 
@@ -144,8 +209,10 @@ To implement that we simply set the global image embedding to None when a face w
 from datasets import load_from_disk, set_caching_enabled
 set_caching_enabled(False)
 dataset = load_from_disk('data/viquae_dataset/')
-dataset = dataset.rename_column('image_embedding', 'keep_image_embedding')
-dataset = dataset.map(lambda item: {'image_embedding': item['keep_image_embedding'] if item['face_embedding'] is None else None})
+dataset = dataset.rename_column('imagenet-RN50', 'keep_imagenet-RN50')
+dataset = dataset.rename_column('clip-RN50', 'keep_clip-RN50')
+dataset = dataset.map(lambda item: {'imagenet-RN50': item['keep_imagenet-RN50'] if item['face_embedding'] is None else None})
+dataset = dataset.map(lambda item: {'clip-RN50': item['keep_clip-RN50'] if item['face_embedding'] is None else None})
 dataset.save_to_disk('data/viquae_dataset/')
 ```
 
@@ -158,50 +225,56 @@ The image results is simply the union of both ResNet and ArcFace scores since th
 
 Beware that these results cannot be well interpreted because they do not have a reference KB which would allow looking if the answer is in the passage (TODO refactor to allow that). See other caveats in the next section.
 
-### BM25 + Image
+### Text + Image
 
-Now in order to combine the text results of BM25 and the image results we do two things:
+Now in order to combine the text results of text and the image results we do two things:
 1. normalize the scores so that they have zero-mean and unit variance, 
-   the mean and the variance is computed over the whole subset so you might want to do a dry run first or use ours
+   **the mean and the variance is computed over the whole subset** so you might want to do a dry run first **or use ours** 
+   (this corresponds to the mysterious "normalization" parameter in the config files)
 2. sum the text and image score for each passage before re-ordering, note that
    if only the text finds a given passage then its image score is set to the minimum of the image results (and vice-versa)
 
 The results are then re-ordered before evaluation.
+Each model has an interpolation hyperparameter. You can either tune-it on the dev set or use ours (more details below).
 
-You can tweak the fusion settings: `alpha` weighs on the image score when doing `fusion = text + alpha*image`.
-We’ve tried optimizing it but it converged to `alpha=1` so I won’t spend too much time on it,
-if you want to optimize it you can do `meerqat.ir.search hp fusion` but you will have to change the config file
-(and run the search at least once before so that you save BM25 and image results)
+#### BM25 + Image
+
+##### Tune hyperparameters
+`python -m meerqat.ir.hp fusion data/viquae_dataset/validation experiments/ir/viquae/hp/bm25+image/config.json --k=100 --disable_caching --test=data/viquae_dataset/test --metrics=experiments/ir/viquae/hp/bm25+image/metrics`
+
+##### Run with the best hyperparameters
+If you don’t use the `--test` option above.
 
 ```sh
-python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/bm25+image/config.json --k=100 --metrics=experiments/ir/viquae/bm25+image/metrics.json
+python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/bm25+image/config.json --k=100 --metrics=experiments/ir/viquae/bm25+image/metrics
 ```
 
-Beware that the ImageNet-ResNet and ArcFace results cannot be compared, neither between them nor with BM25 because:
-- they are exclusive, roughly **half** the questions have a face -> ArcFace, other don't -> ResNet, while BM25 is applied to **all** questions
-- the mapping from image/document to passage is arbitrary, so the ordering of image results is not so meaningful until it is re-ordered with BM25
+
+#### DPR + Image
+Same script, different config.
+
+`python -m meerqat.ir.hp fusion data/viquae_dataset/validation experiments/ir/viquae/hp/dpr+image/config.json --k=100 --disable_caching --test=data/viquae_dataset/test --metrics=experiments/ir/viquae/hp/dpr+image/metrics`
+
+##### Run with the best hyperparameters
+If you don’t use the `--test` option above.
+
+```sh
+python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/dpr+image/config.json --k=100 --metrics=experiments/ir/viquae/dpr+image/metrics
+```
+
+### Metrics
+We use [ranx](https://github.com/AmenRa/ranx) to compute the metrics. TODO explain how to compare models.
+I advise against using any kind of metric that uses recall (mAP, R-Precision, …) 
+since we estimate relevant document on the go so the number of relevant documents will *depend on the systemS* you use.
+
+Beware that the ImageNet-ResNet and ArcFace results cannot be compared, neither between them nor with BM25/DPR because:
+- they are exclusive, roughly **half** the questions have a face -> ArcFace, other don't -> ResNet, while BM25/DPR is applied to **all** questions
+- the mapping from image/document to passage is arbitrary, so the ordering of image results is not so meaningful until it is re-ordered with BM25/DPR
 
 If you’re interested in comparing only image representations, leaving downstream performance aside (e.g. comparing ImageNet-Resnet with another representation for the full image), you should:
 - `filter` the dataset so that you don’t evaluate on irrelevant questions (e.g. those were the search is done with ArcFace because a face was detected)
 - evaluate at the *document-level* instead of passage-level. To do so, maybe `checkout` the `document` branch (TODO merge in `main`).
 
-### Metrics
-We compute metrics for different top-K results, noted `<metric>@<K>`.
-
-Given `relret@K = |retrieved@K & relevant|` and `R = |relevant|`:
-- `precision@K = relret@K/K`
-- `recall@K = relret@K/R`
-- `hits@K = min(1, relret@K)`, 
-   equivalent to `precision@K` when `K=1` and to `recall@K` when `R=1` (i.e. there is only one relevant passage)
-- `MRR = 1/rank` where `rank` is the rank of the *first* relevant passage retrieved
-- `R-precision = relret@R/R`
-
-Results are then averaged over all queries, we do not take into account queries without any relevant passages
-
-A few notes:
-- We min out `R = min(R, k)`, where `k` is the number of results you asked with `--k`
-- Recall and R-precision should be interpreted carefully since we do not have a complete coverage of the relevant passages
-- MRR is a bit underestimated since we cut off at `k` results
 
 ## Reading Comprehension
 
@@ -309,98 +382,48 @@ python -m meerqat.train.trainer experiments/rc/viquae/test/config.json
 ```
 
 # References
-```bib
-@inproceedings{clark_simple_2018,
-        address = {Melbourne, Australia},
-        title = {Simple and {Effective} {Multi}-{Paragraph} {Reading} {Comprehension}},
-        url = {https://aclanthology.org/P18-1078},
-        doi = {10.18653/v1/P18-1078},
-        urldate = {2021-07-08},
-        booktitle = {Proceedings of the 56th {Annual} {Meeting} of the {Association} for {Computational} {Linguistics} ({Volume} 1: {Long} {Papers})},
-        publisher = {Association for Computational Linguistics},
-        author = {Clark, Christopher and Gardner, Matt},
-        month = jul,
-        year = {2018},
-        pages = {845--855},
-    }
+Christopher Clark and Matt Gardner. 2018. Simple and
+Effective Multi-Paragraph Reading Comprehension.
+In Proceedings of the 56th Annual Meeting of the
+Association for Computational Linguistics (Volume 1:
+Long Papers), pages 845–855, Melbourne, Australia.
+Association for Computational Linguistics.
 
-@inproceedings{deng_arcface_2019,
-	title = {{ArcFace}: {Additive} {Angular} {Margin} {Loss} for {Deep} {Face} {Recognition}},
-	shorttitle = {{ArcFace}},
-	url = {https://openaccess.thecvf.com/content_CVPR_2019/html/Deng_ArcFace_Additive_Angular_Margin_Loss_for_Deep_Face_Recognition_CVPR_2019_paper.html},
-	urldate = {2020-11-27},
-	author = {Deng, Jiankang and Guo, Jia and Xue, Niannan and Zafeiriou, Stefanos},
-	year = {2019},
-	pages = {4690--4699},
-}
+Jiankang Deng, Jia Guo, Niannan Xue, and Stefanos
+Zafeiriou. 2019. ArcFace: Additive Angular Margin
+Loss for Deep Face Recognition. pages 4690–4699.
+Jacob Devlin, Ming-Wei Chang, Kenton Lee, and
+Kristina Toutanova. 2019. BERT: Pre-training
+of Deep Bidirectional Transformers for Language
+Understanding. arXiv:1810.04805 [cs]. ArXiv:
+1810.04805.
 
-@article{devlin_bert_2019,
-	title = {{BERT}: {Pre}-training of {Deep} {Bidirectional} {Transformers} for {Language} {Understanding}},
-	shorttitle = {{BERT}},
-	url = {http://arxiv.org/abs/1810.04805},
-	abstract = {We introduce a new language representation model called BERT, which stands for Bidirectional Encoder Representations from Transformers. Unlike recent language representation models (Peters et al., 2018a; Radford et al., 2018), BERT is designed to pretrain deep bidirectional representations from unlabeled text by jointly conditioning on both left and right context in all layers. As a result, the pre-trained BERT model can be ﬁnetuned with just one additional output layer to create state-of-the-art models for a wide range of tasks, such as question answering and language inference, without substantial taskspeciﬁc architecture modiﬁcations.},
-	language = {en},
-	urldate = {2020-10-09},
-	journal = {arXiv:1810.04805 [cs]},
-	author = {Devlin, Jacob and Chang, Ming-Wei and Lee, Kenton and Toutanova, Kristina},
-	month = may,
-	year = {2019},
-	note = {arXiv: 1810.04805},
-}
+Yandong Guo, Lei Zhang, Yuxiao Hu, Xiaodong He,
+and Jianfeng Gao. 2016. MS-Celeb-1M: A Dataset
+and Benchmark for Large-Scale Face Recognition.
+In Computer Vision – ECCV 2016, Lecture Notes in
+Computer Science, pages 87–102, Cham. Springer
+International Publishing.
 
-@inproceedings{guo_ms-celeb-1m_2016,
-	address = {Cham},
-	series = {Lecture {Notes} in {Computer} {Science}},
-	title = {{MS}-{Celeb}-{1M}: {A} {Dataset} and {Benchmark} for {Large}-{Scale} {Face} {Recognition}},
-	isbn = {978-3-319-46487-9},
-	shorttitle = {{MS}-{Celeb}-{1M}},
-	doi = {10.1007/978-3-319-46487-9_6},
-	language = {en},
-	booktitle = {Computer {Vision} – {ECCV} 2016},
-	publisher = {Springer International Publishing},
-	author = {Guo, Yandong and Zhang, Lei and Hu, Yuxiao and He, Xiaodong and Gao, Jianfeng},
-	editor = {Leibe, Bastian and Matas, Jiri and Sebe, Nicu and Welling, Max},
-	year = {2016},
-	pages = {87--102},
-}
+Vladimir Karpukhin, Barlas Oguz, Sewon Min, Patrick
+Lewis, Ledell Wu, Sergey Edunov, Danqi Chen, and
+Wen-tau Yih. 2020. Dense Passage Retrieval for
+Open-Domain Question Answering. In Proceedings
+of the 2020 Conference on Empirical Methods in
+Natural Language Processing (EMNLP), pages 6769-6781. Https://github.com/facebookresearch/DPR.
 
-@inproceedings{karpukhin_dense_2020,
-	title = {Dense {Passage} {Retrieval} for {Open}-{Domain} {Question} {Answering}},
-	url = {https://www.aclweb.org/anthology/2020.emnlp-main.550.pdf},
-	booktitle = {Proceedings of the 2020 {Conference} on {Empirical} {Methods} in {Natural} {Language} {Processing} ({EMNLP})},
-	author = {Karpukhin, Vladimir and Oguz, Barlas and Min, Sewon and Lewis, Patrick and Wu, Ledell and Edunov, Sergey and Chen, Danqi and Yih, Wen-tau},
-	year = {2020},
-	note = {https://github.com/facebookresearch/DPR},
-	pages = {6769--6781},
-}
+Zhiguo Wang, Patrick Ng, Xiaofei Ma, Ramesh Nallap-
+ati, and Bing Xiang. 2019. Multi-passage BERT:
+A Globally Normalized BERT Model for Open-
+domain Question Answering. In Proceedings of
+the 2019 Conference on Empirical Methods in Natu-
+ral Language Processing and the 9th International
+Joint Conference on Natural Language Processing
+(EMNLP-IJCNLP), pages 5878–5882, Hong Kong,
+China. Association for Computational Linguistics.
 
-@inproceedings{wang_multi-passage_2019,
-        address = {Hong Kong, China},
-        title = {Multi-passage {BERT}: {A} {Globally} {Normalized} {BERT} {Model} for {Open}-domain {Question} {Answering}},
-        shorttitle = {Multi-passage {BERT}},
-        url = {https://www.aclweb.org/anthology/D19-1599},
-        doi = {10.18653/v1/D19-1599},
-        urldate = {2021-06-14},
-        booktitle = {Proceedings of the 2019 {Conference} on {Empirical} {Methods} in {Natural} {Language} {Processing} and the 9th {International} {Joint} {Conference} on {Natural} {Language} {Processing} ({EMNLP}-{IJCNLP})},
-        publisher = {Association for Computational Linguistics},
-        author = {Wang, Zhiguo and Ng, Patrick and Ma, Xiaofei and Nallapati, Ramesh and Xiang, Bing},
-        month = nov,
-        year = {2019},
-        pages = {5878--5882}
-    }
-
-@article{zhang_joint_2016,
-	title = {Joint {Face} {Detection} and {Alignment} {Using} {Multitask} {Cascaded} {Convolutional} {Networks}},
-	volume = {23},
-	issn = {1558-2361},
-	doi = {10.1109/LSP.2016.2603342},
-	abstract = {Face detection and alignment in unconstrained environment are challenging due to various poses, illuminations, and occlusions. Recent studies show that deep learning approaches can achieve impressive performance on these two tasks. In this letter, we propose a deep cascaded multitask framework that exploits the inherent correlation between detection and alignment to boost up their performance. In particular, our framework leverages a cascaded architecture with three stages of carefully designed deep convolutional networks to predict face and landmark location in a coarse-to-fine manner. In addition, we propose a new online hard sample mining strategy that further improves the performance in practice. Our method achieves superior accuracy over the state-of-the-art techniques on the challenging face detection dataset and benchmark and WIDER FACE benchmarks for face detection, and annotated facial landmarks in the wild benchmark for face alignment, while keeps real-time performance.},
-	number = {10},
-	journal = {IEEE Signal Processing Letters},
-	author = {Zhang, Kaipeng and Zhang, Zhanpeng and Li, Zhifeng and Qiao, Yu},
-	month = oct,
-	year = {2016},
-	note = {Conference Name: IEEE Signal Processing Letters},
-	pages = {1499--1503},
-}
-```
+Kaipeng Zhang, Zhanpeng Zhang, Zhifeng Li, and
+Yu Qiao. 2016. Joint Face Detection and Alignment
+Using Multitask Cascaded Convolutional Networks.
+IEEE Signal Processing Letters, 23(10):1499–1503.
+Conference Name: IEEE Signal Processing Letters.

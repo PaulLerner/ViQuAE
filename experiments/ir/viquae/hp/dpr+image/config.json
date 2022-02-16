@@ -1,49 +1,32 @@
 {
+    "study_name": "dpr+image",
+    "storage": "sqlite:///experiments/ir/viquae/hp/dpr+image/hp.db",
     "kb_kwargs": {
-        "data/meerqat_passages": {
-            "load_dataset": true,
+        "data/viquae_passages": {
             "index_kwargs": {
-                "BM25": {
-                    "column": "passage",
-                    "es": true,
+                "DPR_few_shot_dp": {
+                    "column": null,
+                    "es": false,
                     "kind_str": "TEXT",
-                    "key": "input",
-                    "load": true,
+                    "key": "DPR_few_shot",
                     "normalization": {
-                        "method": "normalize",
-                        "mean": 20.1111,
-                        "std": 5.85003
+                      "method": "normalize",
+                      "mean": 71.3295,
+                      "std": 2.16671
                     },
-                    "interpolation_weight": 0.3,
-                    "es_index_name": "viquae_bm25",
-                    "es_index_config": {
-                        "settings": {
-                            "similarity": {
-                                "viquae_bm25": {
-                                    "b": 0.3,
-                                    "k1": 0.5
-                                }
-                            }
-                        },
-                        "mappings": {
-                            "properties": {
-                                "text": {
-                                    "type": "text",
-                                    "analyzer": "standard",
-                                    "similarity": "viquae_bm25"
-                                }
-                            }
-                        }
-                    }
+                    "string_factory": "Flat",
+                    "load": false,
+                    "device": null,
+                    "metric_type": 0,
+                    "interpolation_weight": null
                 }
             }
         },
         "data/viquae_wikipedia/non_humans": {
-            "index_mapping_path": "data/viquae_wikipedia/non_humans/article2passage.json",
-            "load_dataset": true,
+            "index_mapping_path": null,
             "index_kwargs": {
                 "resnet": {
-                    "column": "imagenet-RN50",
+                    "column": null,
                     "es": false,
                     "kind_str": "IMAGE",
                     "key": "imagenet-RN50",
@@ -51,7 +34,7 @@
                     "load": false,
                     "device": null,
                     "metric_type": 0,
-                    "interpolation_weight": 0.1,
+                    "interpolation_weight": null,
                     "normalization": {
                         "method": "normalize",
                         "mean": 0.875486,
@@ -59,7 +42,7 @@
                     }
                 },
                 "clip-RN50": {
-                    "column": "clip-RN50",
+                    "column": null,
                     "es": false,
                     "kind_str": "IMAGE",
                     "key": "clip-RN50",
@@ -67,7 +50,7 @@
                     "load": false,
                     "device": null,
                     "metric_type": 0,
-                    "interpolation_weight": 0.3,
+                    "interpolation_weight": null,
                     "normalization": {
                         "method": "normalize",
                         "mean": 0.827869,
@@ -77,11 +60,10 @@
             }
         },
         "data/viquae_wikipedia/humans_with_faces": {
-            "index_mapping_path": "data/viquae_wikipedia/humans_with_faces/article2passage.json",
-            "load_dataset": true,
+            "index_mapping_path": null,
             "index_kwargs": {
                 "arcface": {
-                    "column": "face_embedding",
+                    "column": null,
                     "es": false,
                     "kind_str": "FACE",
                     "key": "face_embedding",
@@ -89,7 +71,7 @@
                     "load": false,
                     "device": null,
                     "metric_type": 0,
-                    "interpolation_weight": 0.3,
+                    "interpolation_weight": null,
                     "normalization": {
                         "method": "normalize",
                         "mean": 0.499674,
@@ -99,7 +81,7 @@
             }
         }
     },
-    "reference_kb_path": "data/meerqat_passages",
+    "reference_kb_path": "data/viquae_passages",
     "map_kwargs": {
         "batch_size": 256,
         "desc": "searching"

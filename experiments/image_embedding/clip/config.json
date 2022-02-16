@@ -1,0 +1,12 @@
+{
+  "map_kwargs":
+  {
+    "batch_size": 2048
+  },
+  "model_kwargs":
+  {
+    "type": "clip",
+    "name": "RN50"
+  },
+  "save_as": "clip-RN50"
+}

@@ -1,51 +1,47 @@
 {
-  "study_name": "ir_viquae_bm25_hp",
-  "storage": "sqlite:///experiments/ir/viquae/bm25/hp.db",
-  "kb_kwargs": [
-    {
-      "es": true,
-      "reference": true,
-      "key": "input",
-      "index_kwargs": {
-        "path": "data/viquae_passages",
-        "column": "passage",
-        "index_name": "BM25",
-        "load": true,
-        "es_index_name": "ir_viquae_bm25",
-        "es_index_config": {
-        "settings": {
-          "number_of_shards": 1,
-          "analysis": {
-            "analyzer": {
-              "stop_standard": {
-                "type": "standard",
-                " stopwords": "_english_"
-              }
+    "kb_kwargs": {
+        "data/meerqat_passages": {
+            "load_dataset": true,
+            "index_kwargs": {
+                "BM25": {
+                    "column": "passage",
+                    "es": true,
+                    "kind_str": "TEXT",
+                    "key": "input",
+                    "load": true,
+                    "normalization": {
+                        "method": "normalize",
+                        "mean": 20.1111,
+                        "std": 5.85003
+                    },
+                    "interpolation_weight": 0.3,
+                    "es_index_name": "viquae_bm25",
+                    "es_index_config": {
+                        "settings": {
+                            "similarity": {
+                                "viquae_bm25": {
+                                    "b": 0.3,
+                                    "k1": 0.5
+                                }
+                            }
+                        },
+                        "mappings": {
+                            "properties": {
+                                "text": {
+                                    "type": "text",
+                                    "analyzer": "standard",
+                                    "similarity": "viquae_bm25"
+                                }
+                            }
+                        }
+                    }
+                }
             }
-          },
-          "similarity": {
-            "karpukhin": {
-              "type": "BM25",
-              "b": 0.3,
-              "k1": 0.5
-            }
-          }
-        },
-        "mappings": {
-          "properties": {
-            "text": {
-              "type": "text",
-              "analyzer": "standard",
-              "similarity": "karpukhin"
-            }
-          }
         }
-        }
-      }
+    },
+    "reference_kb_path": "data/meerqat_passages",
+    "map_kwargs": {
+        "batch_size": 256,
+        "desc": "searching"
     }
-  ],
-  "map_kwargs": {
-    "batch_size": 1
-  },
-  "fusion_kwargs": {}
 }
