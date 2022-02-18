@@ -8,6 +8,7 @@ and that the data is stored in the `data` folder, at the root of this repo (exce
 Alternatively, you can change the paths in the config files.
 
 Relevant configuration files can be found in the [experiments directory](./experiments).
+Expected output can be found in the relevant subdirectory of `experiments`.
 
 We train the models based on HF `transformers.Trainer`, itself based on `torch`. Even when not training models, all of our code is based on `torch`.
 
@@ -167,7 +168,11 @@ To launch the script with multiple GPUs you should you use `torch.distributed.la
 
 
 #### Pre-training on TriviaQA
-TODO provide pre-trained model.
+You can skip this step and use our pre-trained models:
+- question model: https://huggingface.co/PaulLerner/dpr_question_encoder_triviaqa_without_viquae
+- context/passage model: https://huggingface.co/PaulLerner/dpr_context_encoder_triviaqa_without_viquae
+
+To be used with `transformers`’s `DPRQuestionEncoder` and `DPRContextEncoder`, respectively.
 
 Given the small size of ViQuAE, DPR is pre-trained on TriviaQA:
 - filtered out of all questions used for ViQuAE for training 
@@ -180,7 +185,6 @@ In this step we use the complete `kilt_wikipedia` instead of `viquae_wikipedia`.
 The best checkpoint should be `checkpoint-13984`.
 
 #### Fine-tuning on ViQuAE
-TODO provide pre-trained model.
 
 We use exactly the same hyperparameters as for pre-training.
 
@@ -190,6 +194,16 @@ you want to be sure that HF won’t load the optimizer or any other training stu
 mkdir experiments/dpr/triviaqa/checkpoint-13984/.keep
 mv experiments/dpr/triviaqa/checkpoint-13984/optimizer.pt experiments/dpr/triviaqa/checkpoint-13984/scheduler.pt experiments/dpr/triviaqa/checkpoint-13984/training_args.pt experiments/dpr/triviaqa/checkpoint-13984/trainer_state.pt experiments/dpr/triviaqa/checkpoint-13984/.keep/
 ```
+
+Alternatively, if you want to start training from our pre-trained model, run:
+```py
+from meerqat.train.trainee import DPRBiEncoder
+question_model = transformers.DPRQuestionEncoder.from_pretrained("PaulLerner/dpr_question_encoder_triviaqa_without_viquae")
+context_model = transformers.DPRContextEncoder.from_pretrained("PaulLerner/dpr_context_encoder_triviaqa_without_viquae")
+dpr = DPRBiEncoder(question_model, context_model)
+dpr.save_pretrained("experiments/dpr/triviaqa/PaulLerner")
+```
+And then set `"experiments/dpr/triviaqa/PaulLerner"` as pre-trained model in the config file instead of `bert-base-uncased` and set `resume_from_checkpoint=null`
 
 `python -m meerqat.train.trainer experiments/dpr/viquae/config.json`
 
@@ -351,7 +365,7 @@ dataset.save_to_disk('data/viquae_dataset/')
 ``` 
 
 ### Pre-training on TriviaQA
-We should provide this model so that you’re able to skip this step (TODO).
+If you want to skip this step you can get our pretrained model at https://huggingface.co/PaulLerner/multi_passage_bert_triviaqa_without_viquae
 
 Our training set consists of questions that were not used to generate any ViQuAE questions, 
 even those that were discarded or remain to be annotated.
@@ -376,7 +390,7 @@ The best checkpoint should be `checkpoint-46000`.
 
 ### Fine-tuning on ViQuAE
 
-Here you don’t have to hack the checkpoint folder and can simply set `experiments/rc/triviaqa/train/checkpoint-46000` as pre-trained model instead of `bert-base-uncased`.
+Here you don’t have to hack the checkpoint folder and can simply set `experiments/rc/triviaqa/train/checkpoint-46000` as pre-trained model instead of `bert-base-uncased` (`PaulLerner/multi_passage_bert_triviaqa_without_viquae` to use ours).
 
 Then you can fine-tune the model:
 ```sh
@@ -384,6 +398,7 @@ python -m meerqat.train.trainer experiments/rc/viquae/train/config.json
 ```
 The best checkpoint should be `checkpoint-3600`. This run uses the default seed in `transformers`: 42. 
 To have multiple runs, like in the paper, add `seed=<int>` in the config `training_kwargs`. We used seeds `[0, 1, 2, 3, 42]`.
+The expected output provided is with `seed=1`.
 
 Note that the validation is done using the same ratio of relevant and irrelevant passages (8:16) as training
 while test is done using the top-24 IR results. That is why you should expect a performance gap between validation and test.
