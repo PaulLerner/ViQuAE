@@ -12,6 +12,9 @@ Images are distributed separately, in standard formats (e.g. jpg).
 Both dataset formats are distributed in two versions, with (TODO) and without pre-computed features.
 The pre-computed feature version allows you to skip one or several step described in [EXPERIMENTS.md](./EXPERIMENTS.md) (e.g. face detection).
 
+## The images
+
+Here’s how to get the images grounding the questions of the dataset:
 ```sh
 # get the images. TODO integrate this in a single dataset
 git clone https://huggingface.co/datasets/PaulLerner/viquae_images
@@ -20,9 +23,13 @@ tar -xzvf images.tar.gz
 export VIQUAE_IMAGES_PATH=$PWD/images
 ```
 
-If you don’t want to use `datasets` you can get the data directly from https://huggingface.co/datasets/PaulLerner/viquae_dataset (e.g. `git clone https://huggingface.co/datasets/PaulLerner/viquae_dataset`).
+The complete reference images of the KB seems to be too large (106GB) for hosting on https://huggingface.co
+If you need them, please open an issue and I’ll upload them on a temporary storage like filesender.renater.fr/
+Alternatively, you can download them from Wikimedia Commons using `meerqat.data.kilt2vqa download` (see below).
 
-Instructions for the Knowledge Base (KB), coming soon!
+## The ViQuAE dataset
+
+If you don’t want to use `datasets` you can get the data directly from https://huggingface.co/datasets/PaulLerner/viquae_dataset (e.g. `git clone https://huggingface.co/datasets/PaulLerner/viquae_dataset`).
 
 The dataset format largely follows [KILT](https://huggingface.co/datasets/kilt_tasks). 
 Here I’ll describe the dataset without pre-computed features. Pre-computed features are basically the output of each step described in [EXPERIMENTS.md](./EXPERIMENTS.md).
@@ -84,7 +91,52 @@ In [13]: for item in dataset:
     ...:     my_function(item)
 ```
 
-## Annotation of the data
+## The ViQuAE Knowledge Base (KB)
+
+Again, the format of the KB is very similar to [KILT’s Wikipedia](https://huggingface.co/datasets/kilt_wikipedia) so I will not describe all fields exhaustively.
+
+```py
+# again you can also clone directly from https://huggingface.co/datasets/PaulLerner/viquae_wikipedia to get the raw data
+>>> data_files = dict(
+    humans_with_faces='humans_with_faces.jsonl.gz', 
+    humans_without_faces='humans_without_faces.jsonl.gz', 
+    non_humans='non_humans.jsonl.gz'
+)
+>>> kb = load_dataset('viquae_wikipedia', data_files=data_files)
+>>> kb
+DatasetDict({
+    humans_with_faces: Dataset({
+        features: ['anchors', 'categories', 'image', 'kilt_id', 'text', 'url', 'wikidata_info', 'wikipedia_id', 'wikipedia_title'],
+        num_rows: 506237
+    })
+    humans_without_faces: Dataset({
+        features: ['anchors', 'categories', 'image', 'kilt_id', 'text', 'url', 'wikidata_info', 'wikipedia_id', 'wikipedia_title'],
+        num_rows: 35736
+    })
+    non_humans: Dataset({
+        features: ['anchors', 'categories', 'image', 'kilt_id', 'text', 'url', 'wikidata_info', 'wikipedia_id', 'wikipedia_title'],
+        num_rows: 953379
+    })
+})
+>>> item = kb['humans_with_faces'][0]
+>>> item['wikidata_info']['wikidata_id'], item['wikidata_info']['wikipedia_title']
+('Q313590', 'Alain Connes')
+# file name of the reference image as stored in $VIQUAE_IMAGES_PATH
+# you can use meerqat.data.loading.load_image_batch like above
+>>> item['image']
+'512px-Alain_Connes.jpg'
+# the text is stored in a list of string, one per paragraph
+>>> type(item['text']['paragraph']), len(item['text']['paragraph'])
+(list, 25)
+>>> item['text']['paragraph'][1]
+"Alain Connes (; born 1 April 1947) is a French mathematician, \
+currently Professor at the Collège de France, IHÉS, Ohio State University and Vanderbilt University. \
+He was an Invited Professor at the Conservatoire national des arts et métiers (2000).\n"
+```
+
+To format the articles into text passages, follow instructions at [EXPERIMENTS.md](./EXPERIMENTS.md) (Preprocessing passages section).
+
+# Annotation of the data
 
 Please refer to [`ANNOTATION.md`](./ANNOTATION.md) for the annotation instructions
 
