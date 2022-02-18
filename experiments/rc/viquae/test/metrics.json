@@ -1,0 +1,1 @@
+{"test_loss": 75.24623107910156, "test_exact_match": 21.957040572792362, "test_f1": 25.378922779047297, "test_weighted_exact_match": 21.877486077963404, "test_weighted_f1": 25.29936828421834, "test_runtime": 501.8659, "test_samples_per_second": 2.505, "test_steps_per_second": 0.315}
