@@ -33,7 +33,7 @@ from meerqat.ir.search import Searcher, format_qrels_indices
 
 class Objective:
     """Callable objective compatible with optuna."""
-    def __init__(self, dataset, metric_for_best_model=None, eval_dataset=None,
+    def __init__(self, dataset, do_cache_relevant, metric_for_best_model=None, eval_dataset=None,
                  map_kwargs={}, fn_kwargs={}, cleanup_cache_files=False, **kwargs):
         self.dataset = dataset
         self.searcher = Searcher(**kwargs)
@@ -46,7 +46,7 @@ class Objective:
         self.eval_dataset = eval_dataset
         self.map_kwargs = map_kwargs
         self.fn_kwargs = fn_kwargs
-        self.do_cache_relevant = True
+        self.do_cache_relevant = do_cache_relevant
         self.cleanup_cache_files = cleanup_cache_files
 
     def __call__(self, trial):
@@ -160,14 +160,8 @@ class FusionObjective(Objective):
 
 
 class BM25Objective(Objective):
-    def __init__(self, *args, kb_kwargs=None, hyp_hyp=None, settings=None,
-                 fn_kwargs={}, fusion_kwargs={}, map_kwargs={}, **kwargs):                 
-        raise NotImplementedError("Broken since bfc336b219e42d447bbaa546ee77305e37de1458")
-
+    def __init__(self, *args, hyp_hyp=None, settings=None, **kwargs):                 
         super().__init__(*args, **kwargs)
-        self.fusion_kwargs = fusion_kwargs
-        self.map_kwargs = map_kwargs
-
         # default parameters
         if hyp_hyp is None:
             self.hyp_hyp = {
@@ -187,22 +181,20 @@ class BM25Objective(Objective):
         else:
             self.settings = settings
 
-        fn_kwargs['k'] = self.k
-        kbs = load_kbs(kb_kwargs)
-        es_kbs, _ = split_es_and_faiss_kbs(kbs['kbs'])
-        if len(es_kbs) != 1:
-            raise ValueError(f"Expected exactly 1 ES KB, got {len(es_kbs)}")
-        self.es_kb = es_kbs[0]
-        self.index_name = self.es_kb['index_name']
-        es_index = self.es_kb['kb']._indexes[self.index_name]
-        self.es_client = es_index.es_client
-        self.es_index_name = es_index.es_index_name
-        fn_kwargs.update(kbs)
-        self.fn_kwargs = fn_kwargs
+        # check that there is a single ES index + save ES client and ES client’s name
+        self.index_name = None
+        for kb in self.searcher.kbs.values():
+            for index_name, index in kb.indexes.items():
+                if index.es:
+                    assert self.index_name is None, f"Expected a single ES index, got {self.index_name} and {index_name}"
+                    self.index_name = index_name
+                    self.es_client = kb.es_client
+                    es_index = kb.dataset._indexes[self.index_name]
+                    self.es_index_name = es_index.es_index_name
+
+        assert self.index_name is not None, "Did not find an ES index"
 
     def __call__(self, trial):
-        fn_kwargs = self.fn_kwargs
-        kbs = self.fn_kwargs['kbs']
         settings = self.settings
 
         # suggest hyperparameters
@@ -216,21 +208,28 @@ class BM25Objective(Objective):
         self.es_client.indices.put_settings(settings, self.es_index_name)
         self.es_client.indices.open(self.es_index_name)
 
-        metrics = {kb['index_name']: Counter() for kb in kbs}
-        if len(kbs) > 1:
-            metrics["fusion"] = Counter()
-        fn_kwargs['metrics'] = metrics
-
-        self.dataset.map(search, fn_kwargs=fn_kwargs, batched=True, **self.map_kwargs)
-        reduce_metrics(metrics, K=self.k)
-
-        trial.set_user_attr('metrics', metrics)
-        metric = metrics.get('fusion', metrics[self.index_name])
-        return metric[self.metric_for_best_model]
+        self.dataset.map(self.searcher, fn_kwargs=self.fn_kwargs, batched=True, **self.map_kwargs)
+        if self.searcher.do_fusion:
+            run = self.searcher.runs["fusion"]
+        else:           
+            run = self.searcher.runs[self.index_name]
+        metric = ranx.evaluate(self.searcher.qrels, run, self.metric_for_best_model)
+        return metric
 
     def evaluate(self, best_params):
-        fn_kwargs = self.fn_kwargs
-        kbs = self.fn_kwargs['kbs']
+        # reset to erase qrels and runs of the validation set
+        self.searcher.qrels = ranx.Qrels()
+        self.searcher.runs = dict()
+        for kb in self.searcher.kbs.values():
+            for index_name, index in kb.indexes.items():
+                run = ranx.Run()
+                run.name = index_name
+                self.searcher.runs[index_name] = run
+        if self.searcher.do_fusion:
+            run = ranx.Run()
+            run.name = "fusion"
+            self.searcher.runs["fusion"] = run
+        
         settings = self.settings
 
         for parameters in settings['similarity'].values():
@@ -240,20 +239,18 @@ class BM25Objective(Objective):
         self.es_client.indices.put_settings(settings, self.es_index_name)
         self.es_client.indices.open(self.es_index_name)
 
-        metrics = {kb['index_name']: Counter() for kb in kbs}
-        if len(kbs) > 1:
-            metrics["fusion"] = Counter()
-        fn_kwargs['metrics'] = metrics
-
-        self.eval_dataset = self.eval_dataset.map(search, fn_kwargs=fn_kwargs, batched=True, **self.map_kwargs)
-        reduce_metrics(metrics, K=self.k)
-
-        return self.prefix_eval(metrics)
+        self.eval_dataset = self.eval_dataset.map(self.searcher, fn_kwargs=self.fn_kwargs, batched=True, **self.map_kwargs)
+        report = ranx.compare(
+            self.searcher.qrels,
+            runs=self.searcher.runs.values(),
+            **self.searcher.metrics_kwargs
+        )
+        return report
 
 
 def get_objective(objective_type, train_dataset, **objective_kwargs):
     if objective_type == 'fusion':
-        objective = FusionObjective(train_dataset, **objective_kwargs)
+        objective = FusionObjective(train_dataset, do_cache_relevant=True, **objective_kwargs)
         if objective.searcher.fusion_method == 'interpolation':
             search_space = {}
             for kb in objective.searcher.kbs.values():
@@ -265,7 +262,7 @@ def get_objective(objective_type, train_dataset, **objective_kwargs):
         else:
             default_study_kwargs = {}
     elif objective_type == 'bm25':
-        objective = BM25Objective(train_dataset, **objective_kwargs)
+        objective = BM25Objective(train_dataset, do_cache_relevant=False, **objective_kwargs)
         hyp_hyp = objective.hyp_hyp
         search_space = dict(b=np.arange(*hyp_hyp['b']["bounds"], hyp_hyp['b']["step"]).tolist(),
                             k1=np.arange(*hyp_hyp['k1']["bounds"], hyp_hyp['k1']["step"]).tolist())
