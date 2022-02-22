@@ -14,8 +14,6 @@ import torchvision
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize
 from datasets import load_from_disk, set_caching_enabled
 
-import clip
-
 from meerqat.models.utils import device
 from meerqat.data.loading import load_image_batch
 
@@ -36,8 +34,23 @@ def get_nn_module(Class_name, *args, **kwargs):
     return getattr(nn, Class_name)(*args, **kwargs)
 
 
-def from_pretrained(model_name='resnet50', **kwargs):
-    return getattr(torchvision.models, model_name)(pretrained=True, **kwargs)
+def from_pretrained(model_name='resnet50', imagenet=True, pretrained_model_path=None, **kwargs):
+    """
+    N. B. for models trained on other dataset than imagenet, don’t forget to pass the right num_classes in kwargs
+
+    To load from a Places365 checkpoint, first process the state_dict as this:
+    >>> checkpoint = torch.load("resnet50_places365.pth.tar", map_location="cpu")
+    >>> state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
+    >>> torch.save(state_dict, "resnet50_places365_state_dict.pth")
+    """
+    model = getattr(torchvision.models, model_name)(pretrained=imagenet, **kwargs)
+    if not imagenet:
+        print(f"Loading pre-trained model from '{pretrained_model_path}'")
+        state_dict = torch.load(pretrained_model_path)
+        model.load_state_dict(state_dict)
+    else:
+        print("Loaded pre-trained model on ImageNet")
+    return model
 
 
 def get_encoder(torchvision_model):
@@ -51,7 +64,7 @@ def get_encoder(torchvision_model):
 
 
 def get_torchvision_model(pretrained_kwargs={}, pool_kwargs={}):
-    """Get model pre-trained on ImageNet"""
+    """Get model pre-trained on ImageNet or Places365"""
     torchvision_model = from_pretrained(**pretrained_kwargs)
     encoder = get_encoder(torchvision_model)
     pool = get_nn_module(**pool_kwargs)
@@ -59,6 +72,8 @@ def get_torchvision_model(pretrained_kwargs={}, pool_kwargs={}):
 
 
 def get_transform(resize_kwargs=dict(size=224), crop_size=224, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
+    # N. B. default parameters work for both ImageNet provided by pytorch 
+    # and places365 https://github.com/CSAILVision/places365/blob/master/run_placesCNN_basic.py#L31
     return Compose([
         Resize(**resize_kwargs),
         CenterCrop(crop_size),
@@ -74,6 +89,7 @@ def get_model_and_transform(model_kwargs={}, transform_kwargs={}):
         model = get_torchvision_model(**model_kwargs)
         transform = get_transform(**transform_kwargs)
     elif model_type == "clip":
+        import clip
         clip_model, transform = clip.load(**model_kwargs, device=device)
         # only interested in the visual bottleneck here (for content-based image retrieval)
         model = clip_model.visual
@@ -81,6 +97,7 @@ def get_model_and_transform(model_kwargs={}, transform_kwargs={}):
         raise ValueError(f"Unexpected model type '{model_type}'")
 
     model = model.to(device).train(training)
+    print(model)
     if torch.cuda.device_count() > 1:
         model = torch.nn.DataParallel(model)
 
