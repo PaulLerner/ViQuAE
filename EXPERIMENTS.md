@@ -178,6 +178,8 @@ Given the small size of ViQuAE, DPR is pre-trained on TriviaQA:
 - filtered out of all questions used for ViQuAE for training 
 - on questions used to generate ViQuAE’s validation set for validation
 
+Get TriviaQA with these splits from: https://huggingface.co/datasets/PaulLerner/triviaqa_for_viquae (or `load_dataset("triviaqa_for_viquae")`)
+
 In this step we use the complete `kilt_wikipedia` instead of `viquae_wikipedia`.
 
 `python -m meerqat.train.trainer experiments/dpr/triviaqa/config.json`
@@ -370,6 +372,7 @@ If you want to skip this step you can get our pretrained model at https://huggin
 Our training set consists of questions that were not used to generate any ViQuAE questions, 
 even those that were discarded or remain to be annotated.
 Our validation set consists of the questions that were used to generate ViQuAE validation set.
+Get TriviaQA with these splits from: https://huggingface.co/datasets/PaulLerner/triviaqa_for_viquae (or `load_dataset("triviaqa_for_viquae")`)
 
 We used the same hyperparameters as Karpukhin et al. except for the ratio of relevant passages:
 We use 8 relevant and 16 irrelevant passages (so 24 in total) per question 
