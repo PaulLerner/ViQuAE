@@ -147,8 +147,9 @@ Before running any of the commands below you should [launch the Elastic Search s
 First you might want to optimize BM25 hyperparameters, `b` and `k_1`.
 We did this with a grid-search using `optuna`:
 the `--k` option asks for the top-K search results.  
+
 ```sh
-TODO
+python -m meerqat.ir.hp bm25 data/viquae_dataset/validation experiments/ir/viquae/hp/bm25/config.json --k=100 --disable_caching --test=data/viquae_dataset/test --metrics=experiments/ir/viquae/hp/bm25/metrics
 ```
 
 Alternatively, you can use the parameters we optimized: `b=0.3` and `k_1=0.5`:
