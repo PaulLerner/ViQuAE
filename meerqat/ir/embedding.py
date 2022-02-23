@@ -15,12 +15,13 @@ from meerqat.models.utils import device, prepare_inputs
 from meerqat.data.loading import load_pretrained_in_kwargs
 
 
-def embed(batch, model, tokenizer, tokenization_kwargs={}, key='passage', save_as='text_embedding', output_key=None):
+def embed(batch, model, tokenizer, tokenization_kwargs={}, key='passage', 
+          save_as='text_embedding', output_key=None, forward_kwargs={}, layers=None):
     inputs = tokenizer(batch[key], **tokenization_kwargs)
     # move to device
     inputs = prepare_inputs(inputs)
     with torch.no_grad():
-        outputs = model(**inputs)
+        outputs = model(**inputs, **forward_kwargs)
     # single ouput
     if isinstance(outputs, torch.Tensor):
         output = outputs
@@ -31,7 +32,15 @@ def embed(batch, model, tokenizer, tokenization_kwargs={}, key='passage', save_a
         output = outputs[output_key]
     else:
         raise TypeError(f"Invalid type '{type(outputs)}' for model's outputs:\n{outputs}")
-    batch[save_as] = output.cpu().numpy()
+    if layers is None:
+        batch[save_as] = output.cpu().numpy()
+    # extract representation for each layer in layers
+    # in this case, output_key should be 'hidden_states' or equivalent
+    # i.e. output holds the representation of each token for each layer
+    else:
+        for layer in layers:
+            # FIXME: ad-hoc for DPR: keep only the representation of the [CLS] token
+            batch[f"{save_as}_layer_{layer}"] = output[layer][:,0].cpu().numpy()
     return batch
 
 
