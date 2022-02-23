@@ -19,11 +19,11 @@
                 }
             }
         }
-    }
+    },
     "reference_kb_path": "data/viquae_passages",
     "map_kwargs": {
         "batch_size": 256,
         "desc": "searching"
-    }
+    },
     "format": {}
 }
