@@ -1,6 +1,6 @@
 {
     "model": {
-        "class_name": "DPRContextEncoder",
+        "class_name": "DPRQuestionEncoder",
         "pretrained_model_name_or_path": "experiments/dpr/viquae/checkpoint-40/question_model"
     },
     "tokenizer": {
@@ -11,7 +11,7 @@
         "max_length": 256,
         "padding": "max_length"
     },
-    "key": "passage",
+    "key": "input",
     "save_as": "DPR_few_shot",
     "output_key": "pooler_output",
     "map_kwargs":
