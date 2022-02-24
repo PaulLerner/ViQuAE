@@ -206,7 +206,7 @@ context_model = transformers.DPRContextEncoder.from_pretrained("PaulLerner/dpr_c
 dpr = DPRBiEncoder(question_model, context_model)
 dpr.save_pretrained("experiments/dpr/triviaqa/PaulLerner")
 ```
-And then set `"experiments/dpr/triviaqa/PaulLerner"` as pre-trained model in the config file instead of `bert-base-uncased` and set `resume_from_checkpoint=null`
+And then set `resume_from_checkpoint="experiments/dpr/triviaqa/PaulLerner"` in the config file.
 
 `python -m meerqat.train.trainer experiments/dpr/viquae/config.json`
 
