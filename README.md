@@ -18,14 +18,15 @@ Here’s how to get the images grounding the questions of the dataset:
 ```sh
 # get the images. TODO integrate this in a single dataset
 git clone https://huggingface.co/datasets/PaulLerner/viquae_images
+# to get ALL images (dataset+KB) use https://huggingface.co/datasets/PaulLerner/viquae_all_images instead 
 cd viquae_images
+# in viquae_all_images, the archive is split into parts of 5GB
+# cat parts/* > images.tar.gz
 tar -xzvf images.tar.gz
 export VIQUAE_IMAGES_PATH=$PWD/images
 ```
 
-The complete reference images of the KB seems to be too large (106GB) for hosting on https://huggingface.co
-If you need them, please open an issue and I’ll upload them on a temporary storage like filesender.renater.fr/
-Alternatively, you can download them from Wikimedia Commons using `meerqat.data.kilt2vqa download` (see below).
+Alternatively, you can download images from Wikimedia Commons using `meerqat.data.kilt2vqa download` (see below).
 
 ## The ViQuAE dataset
 
