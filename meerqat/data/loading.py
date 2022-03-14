@@ -3,6 +3,7 @@
 Usage:
 loading.py passages <input> <output> [<config> --disable_caching]
 loading.py map <dataset> <key> <output> [--inverse --one2many --disable_caching]
+loading.py sentences <dataset>
 
 Options:
 --disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
@@ -354,6 +355,26 @@ def make_passage_dataset(input_path, output_path, sentencizer=False, **kwargs):
     dataset.save_to_disk(input_path)
 
 
+def make_sentences_item(item, model):
+    doc = model(item['text'])
+    item['sentences'] = []
+    for s in doc.sents:
+        item['sentences'].append({
+            "text": s.text,
+            "n_tokens": len(s)
+        })
+    return item
+
+
+def make_sentences_dataset(dataset_path):
+    dataset = load_from_disk(dataset_path)
+    model = English()
+    sentencizer = model.create_pipe("sentencizer")
+    model.add_pipe(sentencizer)
+    dataset = dataset.map(make_sentences_item, fn_kwargs=dict(model=model))
+    dataset.save_to_disk(dataset_path)
+
+
 def load_pretrained_in_kwargs(kwargs):
     """Recursively loads pre-trained models/tokenizer in kwargs using get_pretrained"""
     for k, v in kwargs.items():
@@ -383,4 +404,5 @@ if __name__ == '__main__':
     elif args['map']:
         make_mapping_dataset(Path(args['<dataset>']), args['<key>'], args['<output>'],
                              inverse=args['--inverse'], one2many=args['--one2many'])
-
+    elif args['sentences']:
+        make_sentences_dataset(args['<dataset>'])
