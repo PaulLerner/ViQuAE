@@ -118,8 +118,11 @@ class FusionObjective(Objective):
             for kb in self.searcher.kbs.values():
                 for index_name, index in kb.indexes.items():
                     hp_name = f"{index_name}.interpolation_weight"
-                    hyp_hyp = self.hyp_hyp[hp_name]["bounds"]
-                    index.interpolation_weight = trial.suggest_float(hp_name, *hyp_hyp)
+                    hyp_hyp = self.hyp_hyp[hp_name]
+                    index.interpolation_weight = trial.suggest_float(
+                        # bounds are mandatory, step is optional (defaults to None)
+                        hp_name, *hyp_hyp["bounds"], step=hyp_hyp.get('step')
+                    )
                     interpolation_weight_sum += index.interpolation_weight
             # constrain all weights to sum to 1, do not compute trial otherwise
             if abs(1 - interpolation_weight_sum) > 1e-6:
@@ -276,9 +279,14 @@ def hyperparameter_search(study_name=None, storage=None, metric_save_path=None,
                           optimize_kwargs={}, study_kwargs={}, cleanup_cache_files=False, **objective_kwargs):
     objective, default_study_kwargs = get_objective(cleanup_cache_files=cleanup_cache_files, **objective_kwargs)
     default_study_kwargs.update(study_kwargs)
+    sampler = default_study_kwargs.get('sampler')
+    # get sampler by name
+    if isinstance(sampler, str):
+        default_study_kwargs['sampler'] = getattr(optuna.samplers, sampler)(**default_study_kwargs.get('sampler_kwargs', {}))
     if storage is None and study_name is not None:
         storage = f"sqlite:///{study_name}.db"
     study = optuna.create_study(storage=storage, study_name=study_name, load_if_exists=True, **default_study_kwargs)
+    print(f"Using a sampler of type {type(study.sampler)}")
     if objective.do_cache_relevant:
         objective.cache_relevant_dataset()
     # actual optimisation
