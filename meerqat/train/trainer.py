@@ -91,8 +91,9 @@ class QuestionAnsweringTrainer(MeerqatTrainer):
     Parameters
     ----------
     *args, **kwargs: additional arguments are passed to MeerqatTrainer
-    kb: str
+    kb: str, optional
         path towards the knowledge base (Dataset) used to get the passages
+        Optional because not needed in ICTTrainer, mandatory for the other trainers.
     M: int, optional
         Number of passages (relevant or irrelevant) per question in a batch
         Defaults to 24
@@ -109,10 +110,13 @@ class QuestionAnsweringTrainer(MeerqatTrainer):
     tokenization_kwargs: dict, optional
         To be passed to self.tokenizer
     """
-    def __init__(self, *args, kb, M=24, n_relevant_passages=1, search_key='search', tokenization_kwargs=None, **kwargs):
+    def __init__(self, *args, kb=None, M=24, n_relevant_passages=1, search_key='search', tokenization_kwargs=None, **kwargs):
         super().__init__(*args, **kwargs)
         assert self.tokenizer is not None
-        self.kb = load_from_disk(kb)
+        if kb is not None:
+            self.kb = load_from_disk(kb)
+        else:
+            self.kb = None
         self.M = M
         assert n_relevant_passages <= M
         self.n_relevant_passages = n_relevant_passages
@@ -280,6 +284,109 @@ class DPRBiEncoderTrainer(QuestionAnsweringTrainer):
         # beware of https://github.com/huggingface/transformers/blob/master/src/transformers/trainer.py#L2513 !!
         # do NOT return log_probs outside of a dict else it will get truncated
         return (loss, dict(log_probs=log_probs)) if return_outputs else loss
+
+
+class ICTTrainer(DPRBiEncoderTrainer):
+    """
+    Extends the Inverse Cloze Task (ICT, lee_latent_2019) to multimodal documents.
+    Given a wikipedia section, one sentence is considered as a pseudo-question/query and the nearby sentences as a pseudo-target/relevant passage.
+    In this multimodal setting, we also consider the image of the section in the query and the infobox/main image of the article in the target.
+
+    Inherits from DPRBiEncoderTrainer and overrides:
+    - get_training_passages, which implements what’s described above
+    - collate_fn to load and concatenate the image features
+
+    The kb and search_key attributes are not used.
+
+    References
+    ----------
+    @inproceedings{lee_latent_2019,
+        address = {Florence, Italy},
+        title = {Latent {Retrieval} for {Weakly} {Supervised} {Open} {Domain} {Question} {Answering}},
+        url = {https://aclanthology.org/P19-1612},
+        doi = {10.18653/v1/P19-1612},
+        booktitle = {Proceedings of the 57th {Annual} {Meeting} of the {Association} for {Computational} {Linguistics}},
+        publisher = {Association for Computational Linguistics},
+        author = {Lee, Kenton and Chang, Ming-Wei and Toutanova, Kristina},
+        month = jul,
+        year = {2019},
+        pages = {6086--6096}
+    }
+    """
+    def __init__(self, *args, sentences_per_target=4, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.kb = None
+        self.sentences_per_target = sentences_per_target
+
+        self.data_collator = self.collate_fn
+
+    def get_training_passages(self, item):
+        """
+        Beware this does not return the same data as the parent classes.
+
+        Returns
+        -------
+        query: dict
+        target: dict
+        """
+        sentences = item['sentences']
+
+        # pick a random sentence: easy
+        i = np.random.randint(len(sentences))
+        query = dict(text=sentences[i]['text'])
+
+        # pick n random sentences around it: more tricky
+        n = min(self.sentences_per_target, len(sentences)-1)
+        max_shift = min(i, n)
+        if i+n < len(sentences):
+            min_shift = 0
+        else:
+            min_shift = i + n - len(sentences) + 1
+        shift = np.random.randint(min_shift, max_shift+1)
+        target = [s['text'] for s in sentences[i-shift: i]+sentences[i+1: i+1+n-shift]]
+        target = dict(text=" ".join(target))        
+
+        # TODO load image features
+
+        return query, target
+
+    def collate_fn(self, items):
+        """
+        Collate batch so that each question is associate with n_relevant_passages and M-n irrelevant ones.
+        Also tokenizes input strings
+
+        N - number of questions in a batch
+        M - number of passages per questions
+        d - dimension of the model/embeddings
+
+        Returns (a dict of)
+        -------------------
+        question_inputs: dict[torch.LongTensor]
+            input_ids: torch.LongTensor
+                shape (N, L)
+            **kwargs: more tensors depending on the tokenizer, e.g. attention_mask
+        context_inputs: dict[torch.LongTensor]
+            input_ids: torch.LongTensor
+                shape (N*M, L)
+                The first N rows correspond to the relevant contexts for the N questions
+                The rest N*(M-1) rows are irrelevant contexts for all questions.
+            **kwargs: idem
+        """
+        
+        questions, relevant_passages, irrelevant_passages, labels = [], [], [], []
+        for i, item in enumerate(items):
+            query, relevant_passage = self.get_training_passages(item)
+            labels.append(i)
+            questions.append(query['text'])
+            relevant_passages.append(relevant_passage['text'])
+
+        question_inputs = self.tokenizer(questions, **self.tokenization_kwargs)
+        context_inputs = self.tokenizer(relevant_passages, **self.tokenization_kwargs)
+        n_irrelevant_passages = self.M-self.n_relevant_passages
+        # TODO: make n_irrelevant_passages by shifting the images of relevant passages
+        labels = torch.tensor(labels)
+        batch = dict(question_inputs=question_inputs, context_inputs=context_inputs, labels=labels)
+        return batch
 
 
 class MultiPassageBERTTrainer(QuestionAnsweringTrainer):
