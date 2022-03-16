@@ -140,14 +140,14 @@ class QuestionAnsweringTrainer(MeerqatTrainer):
         if n_relevant > 0:
             relevant_indices = np.random.choice(all_relevant_indices, n_relevant, replace=False)
             if len(relevant_indices) > 0:
-                relevant_passages = self.kb.select(relevant_indices)['passage']
+                relevant_passages = self.kb.select(relevant_indices)
         irrelevant_passages = []
         all_irrelevant_indices = item[self.search_key+"_irrelevant_indices"]
         n_irrelevant = min(len(all_irrelevant_indices), self.M-self.n_relevant_passages)
         if n_irrelevant > 0:
             irrelevant_indices = np.random.choice(all_irrelevant_indices, n_irrelevant, replace=False)
             if len(irrelevant_indices) > 0:
-                irrelevant_passages = self.kb.select(irrelevant_indices)['passage']
+                irrelevant_passages = self.kb.select(irrelevant_indices)
         elif n_relevant <= 0:
             warnings.warn(f"Didn't find any passage for question {item['id']}")
         return relevant_passages, irrelevant_passages
@@ -183,12 +183,11 @@ class DPRBiEncoderTrainer(QuestionAnsweringTrainer):
                 The rest N*(M-1) rows are irrelevant contexts for all questions.
             **kwargs: idem
         """
-        # OK (device_ids == local_rank)
-        # logger.debug(f"local_rank: {self.args.local_rank}, device_ids: {self.model_wrapped.device_ids}")
         n_irrelevant_passages = self.M-self.n_relevant_passages
         questions, relevant_passages, irrelevant_passages, labels = [], [], [], []
         for i, item in enumerate(items):
             relevant_passage, irrelevant_passage = self.get_training_passages(item)
+            relevant_passage, irrelevant_passage = relevant_passage['passage'], irrelevant_passage['passage']
             if len(relevant_passage) < 1:
                 relevant_passage = ['']
                 labels.append(self.loss_fct.ignore_index)
@@ -204,7 +203,6 @@ class DPRBiEncoderTrainer(QuestionAnsweringTrainer):
         context_inputs = self.tokenizer(relevant_passages + irrelevant_passages, **self.tokenization_kwargs)
         labels = torch.tensor(labels)
         batch = dict(question_inputs=question_inputs, context_inputs=context_inputs, labels=labels)
-        # print(f"collate_fn - local_rank: {self.args.local_rank}\n{batch}")
         return batch
 
     def compute_loss(self, model, inputs, return_outputs=False):
@@ -286,13 +284,123 @@ class DPRBiEncoderTrainer(QuestionAnsweringTrainer):
         return (loss, dict(log_probs=log_probs)) if return_outputs else loss
 
 
-class ICTTrainer(DPRBiEncoderTrainer):
+class ILFTrainer(DPRBiEncoderTrainer):
+    """
+    Fuses DPR’s text representation with image embeddings by projecting them linearly in the same space
+    --> loads pre-computed image features along with text 
+    --> overrides collate_fn
+
+    Parameters
+    ----------
+    n_faces: int, optional
+        Given x detected and embedded faces, trim or pad to n_faces
+        Defaults to 1.
+    """
+    def __init__(self, *args, n_faces=1, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.n_faces = n_faces
+
+        # image dimensions and model names
+        assert(self.model.question_model.image_embeddings.keys() == self.model.context_model.image_embeddings.keys())  
+        self.image_embeddings_keys = self.model.question_model.image_embeddings.keys()
+        self.image_dims = {}
+        for name in self.image_embeddings_keys:
+            image_dim = self.model.question_model.image_embeddings[name].linear.in_features
+            assert(image_dim == self.model.context_model.image_embeddings[name].linear.in_features)
+            self.image_dims[name] = image_dim
+        assert(self.model.question_model.face_embedding.face_proj.in_features == self.model.context_model.face_embedding.face_proj.in_features)
+        self.face_dim = self.model.question_model.face_embedding.face_proj.in_features
+        assert(self.model.question_model.face_embedding.bbox_proj.in_features == self.model.context_model.face_embedding.bbox_proj.in_features)
+        self.bbox_dim = self.model.question_model.face_embedding.bbox_proj.in_features
+
+    def get_face_inputs(self, items):
+        # trim or pad, and convert to tensor
+        face_embeddings = torch.zeros((len(items), self.n_faces, self.face_dim))
+        face_boxes = torch.zeros((len(items), self.n_faces, self.bbox_dim))
+        for i, item in enumerate(items):
+            face_embedding = item.get("face_embedding")
+            # can happen in two cases: 1. no face detected; 2. padding passage
+            if face_embedding is None:
+                # keep zero-padding
+                continue
+            n_faces = min(self.n_faces, len(face_embedding))
+            face_embeddings[i,: n_faces] = torch.tensor(face_embedding[: n_faces])
+            bbox = item["face_box"]
+            face_boxes[i,: n_faces] = torch.tensor(bbox[: n_faces])
+        
+        # convert to list (one per face batch) of dict (one per attribute) of tensor
+        face_inputs = []
+        for i in range(self.n_faces):
+            face_inputs.append({
+                "face_embedding": face_embeddings[:, i],
+                "face_box": face_boxes[:, i]
+            })
+        return face_inputs
+
+    def get_image_inputs(self, items):
+        image_inputs = {}
+        for name in self.image_embeddings_keys: 
+            image_inputs[name] = []                                                                                                                   
+            for item in items:                   
+                feature = item.get(name)
+                # in case of padding passage
+                if feature is None:
+                    feature = [0.] * self.image_dims[name]
+                image_inputs[name].append(feature)
+        for k, v in image_inputs.items():
+            image_inputs[k] = dict(input=torch.tensor(v))
+        return image_inputs                                                  
+
+    def collate_fn(self, items):
+        # find relevant and irrelevant passages, pad if necessary
+        n_irrelevant_passages = self.M-self.n_relevant_passages
+        questions, relevant_passages, irrelevant_passages, labels = [], [], [], []
+        for i, item in enumerate(items):
+            relevant_passage, irrelevant_passage = self.get_training_passages(item)
+            # Dataset to list (to get the same format as items)
+            relevant_passage, irrelevant_passage = list(relevant_passage), list(irrelevant_passage)
+            if len(relevant_passage) < 1:
+                relevant_passage = [{'passage': ''}]
+                labels.append(self.loss_fct.ignore_index)
+            else:
+                labels.append(i)
+            if len(irrelevant_passage) < n_irrelevant_passages:
+                irrelevant_passage.extend([{'passage': ''}]*(n_irrelevant_passages-len(irrelevant_passage)))
+            questions.append(item['input'])
+            relevant_passages.extend(relevant_passage)
+            irrelevant_passages.extend(irrelevant_passage)
+
+        # tokenize questions
+        question_inputs_text = self.tokenizer(questions, **self.tokenization_kwargs)
+        # concatenate passages and tokenize
+        all_passages = relevant_passages + irrelevant_passages
+        context_inputs_text = self.tokenizer([p['passage'] for p in all_passages], **self.tokenization_kwargs)
+
+        # get image features, for both questions and passages
+        question_inputs = dict(
+            text_inputs=question_inputs_text, 
+            face_inputs=self.get_face_inputs(items), 
+            image_inputs=self.get_image_inputs(items)
+        )
+        context_inputs = dict(
+            text_inputs=context_inputs_text, 
+            face_inputs=self.get_face_inputs(all_passages), 
+            image_inputs=self.get_image_inputs(all_passages)
+        )
+
+        # wrap it up
+        labels = torch.tensor(labels)
+        batch = dict(question_inputs=question_inputs, context_inputs=context_inputs, labels=labels)
+        return batch
+
+
+class ICTTrainer(ILFTrainer):
     """
     Extends the Inverse Cloze Task (ICT, lee_latent_2019) to multimodal documents.
     Given a wikipedia section, one sentence is considered as a pseudo-question/query and the nearby sentences as a pseudo-target/relevant passage.
     In this multimodal setting, we also consider the image of the section in the query and the infobox/main image of the article in the target.
 
-    Inherits from DPRBiEncoderTrainer and overrides:
+    Inherits from ILFTrainer/DPRBiEncoderTrainer and overrides:
     - get_training_passages, which implements what’s described above
     - collate_fn to load and concatenate the image features
 
@@ -429,7 +537,7 @@ class MultiPassageBERTTrainer(QuestionAnsweringTrainer):
         """Keep the top-M passages retrieved by the IR"""
         indices = item[self.search_key+"_indices"][: self.M]
         scores = item[self.search_key+"_scores"][: self.M]
-        return self.kb.select(indices)['passage'], scores
+        return self.kb.select(indices), scores
 
     def get_answer_position(self, batch, answers, answer_mask):
         """Adapted from DPR"""
@@ -492,12 +600,13 @@ class MultiPassageBERTTrainer(QuestionAnsweringTrainer):
             # oracle -> use only relevant passages
             if (self.args.do_eval or self.args.do_predict) and not self.oracle:
                 passage, score = self.get_eval_passages(item)
+                passage = passage['passage']
                 passage_scores.extend(score)
                 if len(score) < self.M:
                     passage_scores.extend([0]*(self.M-len(score)))
             else:
                 relevant_passage, irrelevant_passage = self.get_training_passages(item)
-                passage = relevant_passage + irrelevant_passage
+                passage = relevant_passage['passage'] + irrelevant_passage['passage']
 
             passages.extend(passage)
             # all passages have at least 1 non-masked answer (set to 0 for irrelevant passages)
