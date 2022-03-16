@@ -25,6 +25,7 @@ from datasets import load_dataset, Dataset, load_from_disk, set_caching_enabled
 import transformers
 
 from meerqat.train import trainee
+from meerqat.models import mm
 from meerqat import __file__ as ROOT_PATH
 
 DATA_ROOT_PATH = (Path(ROOT_PATH).parent.parent/"data").resolve()
@@ -94,7 +95,31 @@ def DPR_from_BERT(Class, pretrained_model_name_or_path, question_config={}, cont
     return Class(question_model, context_model)
 
 
-def get_pretrained(class_name, pretrained_model_name_or_path, trainee_class=None, trainee_kwargs={}, **kwargs):
+def biencoder_from_DPR(
+        Class, question_class, dpr_question_model_name_or_path, question_kwargs={}, 
+        context_class=None, dpr_context_model_name_or_path=None, context_kwargs=None
+    ):
+    # default to symmetric encoders
+    context_class = question_class if context_class is None else context_class
+    dpr_context_model_name_or_path = dpr_question_model_name_or_path if dpr_context_model_name_or_path is None else dpr_context_model_name_or_path
+    context_kwargs = question_kwargs if context_kwargs is None else context_kwargs
+
+    # init pre-trained DPR
+    dpr_question_model = transformers.DPRQuestionEncoder.from_pretrained(dpr_question_model_name_or_path)
+    dpr_context_model = transformers.DPRContextEncoder.from_pretrained(dpr_context_model_name_or_path)
+
+    # init encoders (that wrap DPR)
+    QuestionClass = getattr(mm, question_class)
+    question_model = QuestionClass(dpr_question_model, **question_kwargs)
+    ContextClass = getattr(mm, context_class)
+    context_model = ContextClass(dpr_context_model, **context_kwargs)
+
+    # finally wrap both encoders
+    biencoder = Class(question_model, context_model)
+    return biencoder
+
+
+def get_pretrained(class_name, trainee_class=None, trainee_kwargs={}, **kwargs):
     Class = None
     modules = [trainee, transformers]
     for module in modules:
@@ -103,15 +128,17 @@ def get_pretrained(class_name, pretrained_model_name_or_path, trainee_class=None
             break
     if Class is not None:
         if issubclass(Class, trainee.DPRBiEncoder):
-            return DPR_from_BERT(Class, pretrained_model_name_or_path, **kwargs)
+            return DPR_from_BERT(Class, **kwargs)
+        elif issubclass(Class, trainee.BiEncoder):
+            return biencoder_from_DPR(Class, **kwargs)
         elif issubclass(Class, trainee.Trainee):
             # first get the wrapped pre-trained model in Trainee
-            trainee_model = get_pretrained(trainee_class, pretrained_model_name_or_path, **kwargs)
+            trainee_model = get_pretrained(trainee_class, **kwargs)
             # then init the Trainee
             model = Class(trainee_model, **trainee_kwargs)
         # simply use PreTrainedModel.from_pretrained method
         else:
-            model = Class.from_pretrained(pretrained_model_name_or_path, **kwargs)
+            model = Class.from_pretrained(**kwargs)
     else:
         raise ValueError(f"Could not find {class_name} in {modules}")
     return model
@@ -377,12 +404,12 @@ def make_sentences_dataset(dataset_path):
 
 def load_pretrained_in_kwargs(kwargs):
     """Recursively loads pre-trained models/tokenizer in kwargs using get_pretrained"""
+    # base case: load pre-trained model
+    if 'class_name' in kwargs:
+        return get_pretrained(**kwargs)
+    # recursively look in the child arguments
     for k, v in kwargs.items():
-        # base case: load pre-trained model
-        if k == 'pretrained_model_name_or_path':
-            return get_pretrained(**kwargs)
-        # recursively look in the child arguments
-        elif isinstance(v, dict):
+        if isinstance(v, dict):
             kwargs[k] = load_pretrained_in_kwargs(v)
         # else keep as is
     return kwargs

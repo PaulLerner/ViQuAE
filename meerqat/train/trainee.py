@@ -46,7 +46,13 @@ class MultiPassageBERTOutput(QuestionAnsweringModelOutput):
 
 
 @dataclass 
-class DPRBiEncoderOutput(ModelOutput):
+class BiEncoderOutput(ModelOutput):
+    question_pooler_output: Optional[torch.FloatTensor] = None
+    context_pooler_output: Optional[torch.FloatTensor] = None
+
+
+@dataclass 
+class DPRBiEncoderOutput(BiEncoderOutput):
     """
     Outputs from the question and context encoders 
     (same as DPRQuestionEncoderOutput, DPRContextEncoderOutput with prefixes)
@@ -59,24 +65,42 @@ class DPRBiEncoderOutput(ModelOutput):
     context_attentions: Optional[Tuple[torch.FloatTensor]] = None
 
 
-class DPRBiEncoder(nn.Module):
+class BiEncoder(nn.Module):
+    def __init__(self, question_model, context_model):
+        """
+        Parameters
+        ----------
+        question_model, context_model: nn.Module
+        """
+        super().__init__()
+        self.question_model = question_model
+        self.context_model = context_model
+
+    def forward(self, question_inputs, context_inputs):
+        # embed questions and contexts
+        question_outputs = self.question_model(**question_inputs)
+        context_outputs = self.context_model(**context_inputs)
+
+        return BiEncoderOutput(
+            question_pooler_output=question_outputs.pooler_output,
+            context_pooler_output=context_outputs.pooler_output)
+
+
+class DPRBiEncoder(BiEncoder):
     """Adapted from https://github.com/facebookresearch/DPR/blob/main/dpr/models/biencoder.py"""
     def __init__(self, question_model, context_model):
         """
         Parameters
         ----------
-
         question_model: transformers.DPRQuestionEncoder
             Encoder based on BERT used to encode the question/query
         context_model: transformers.DPRContextEncoder  
             Encoder based on BERT used to encode the context/evidence/passage 
             ('context' is confusing IMO but I keep it for consistency with DPR and transformers)
         """
-        super().__init__()
-        self.question_model = question_model
-        self.context_model = context_model
+        super().__init__(question_model=question_model, context_model=context_model)
     
-    def forward(self, question_inputs, context_inputs, return_dict=None):
+    def forward(self, question_inputs, context_inputs):
         """
         Embeds questions and contexts with their respective model and returns the embeddings.
         
@@ -95,11 +119,7 @@ class DPRBiEncoder(nn.Module):
             input_ids: torch.LongTensor
                 shape (N*M, L)
             usual BERT inputs, see transformers.DPRContextEncoder
-        return_dict: bool, optional
         """
-        return_dict = return_dict if return_dict is not None else self.question_model.config.use_return_dict
-
-        # embed questions and contexts
         question_outputs = self.question_model(**question_inputs)
         context_outputs = self.context_model(**context_inputs)
 
