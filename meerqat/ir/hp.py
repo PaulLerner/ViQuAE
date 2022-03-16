@@ -1,7 +1,7 @@
 """Both dense and sparse information retrieval is done via HF-Datasets, using FAISS and ElasticSearch, respectively
 
 Usage:
-hp.py <type> <dataset> <config> [--k=<k> --disable_caching --cleanup_cache_files --metrics=<path> --test=<dataset>]
+hp.py <type> <config> [--train=<dataset> --k=<k> --disable_caching --cleanup_cache_files --metrics=<path> --test=<dataset>]
 
 Options:
 --k=<k>                 Hyperparameter to search for the k nearest neighbors [default: 100].
@@ -287,16 +287,17 @@ def hyperparameter_search(study_name=None, storage=None, metric_save_path=None,
         storage = f"sqlite:///{study_name}.db"
     study = optuna.create_study(storage=storage, study_name=study_name, load_if_exists=True, **default_study_kwargs)
     print(f"Using a sampler of type {type(study.sampler)}")
-    if objective.do_cache_relevant:
+    if objective.do_cache_relevant and objective.dataset is not None:
         objective.cache_relevant_dataset()
     # actual optimisation
-    study.optimize(objective, **optimize_kwargs)
+    if objective.dataset is not None:
+        study.optimize(objective, **optimize_kwargs)
     print(f"Best value: {study.best_value} ({objective.metric_for_best_model})")
     print(f"Best hyperparameters: {study.best_params}")
 
     # apply hyperparameters on test set
     if eval_dataset is not None:
-        if objective.do_cache_relevant:
+        if objective.do_cache_relevant and objective.dataset is not None:
             objective.searcher.reference_kb = objective.keep_reference_kb
         report = objective.evaluate(study.best_params)
         print(report)
@@ -316,20 +317,23 @@ def hyperparameter_search(study_name=None, storage=None, metric_save_path=None,
 
 if __name__ == '__main__':
     args = docopt(__doc__)
-    dataset_path = args['<dataset>']
-    dataset = load_from_disk(dataset_path)
     set_caching_enabled(not args['--disable_caching'])
     cleanup_cache_files = args['--cleanup_cache_files']
     config_path = args['<config>']
     with open(config_path, 'r') as file:
         config = json.load(file)
     format_kwargs = config.pop('format', {})
-    dataset.set_format(**format_kwargs)
+
+    if args['--train'] is not None:
+        dataset = load_from_disk(dataset_path)
+        dataset.set_format(**format_kwargs)
+    else:
+        dataset = None
 
     k = int(args['--k'])
 
     eval_dataset_path = args['--test']
-    if eval_dataset_path:
+    if eval_dataset_path is not None:
         eval_dataset = load_from_disk(eval_dataset_path)
         eval_dataset.set_format(**format_kwargs)
     else:
