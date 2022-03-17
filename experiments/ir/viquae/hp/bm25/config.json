@@ -10,7 +10,7 @@
                     "es": true,
                     "kind_str": "TEXT",
                     "key": "input",
-                    "load": true,
+                    "load": false,
                     "normalization": {
                         "method": "normalize",
                         "mean": 20.1111,
