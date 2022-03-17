@@ -157,6 +157,8 @@ Alternatively, you can use the parameters we optimized: `b=0.3` and `k_1=0.5`:
 python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/bm25/config.json --k=100 --metrics=experiments/ir/viquae/bm25/metrics --disable_caching
 ```
 
+Note that, in this case, we set `index_kwargs.BM25.load=True` to re-use the index computed in the previous step.
+
 ### DPR
 We use the same hyperparameters as [Karpukinh et al.](https://github.com/facebookresearch/DPR).
 We train DPR using 4 V100 GPUs of 32GB, allowing a total batch size of 256 (32 questions * 2 passages each * 4 GPUs). 
