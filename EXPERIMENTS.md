@@ -63,6 +63,12 @@ python -m meerqat.image.embedding data/viquae_dataset experiments/image_embeddin
 python -m meerqat.image.embedding data/viquae_wikipedia experiments/image_embedding/clip/config.json --disable_caching
 ```
 
+To get a better sense of the representations the these model provide, 
+you can have a look at an interactive UMAP visualization, 
+on 1% of the KB images and the whole dataset images, w.r.t. the entity type,
+[here](http://meerqat.fr/imagenet-viquae.html) for ImageNet-ResNet50, and [there](http://meerqat.fr/clip-viquae.html) for CLIP (takes a while to load).
+
+
 ### Face detection
 
 Things get a little more complicated here, first, you will want to split your KB in humans and non-humans,
@@ -110,6 +116,8 @@ Finally we can run it!
 python -m meerqat.image.face_recognition data/viquae_dataset experiments/face_detection/viquae_dataset experiments/face_recognition/config.json --disable_caching
 python -m meerqat.image.face_recognition data/viquae_wikipedia/humans_with_faces experiments/face_detection/viquae_wikipedia experiments/face_recognition/config.json --disable_caching
 ```
+
+Again, you can have a look at an [interactive UMAP visualization](http://meerqat.fr/arcface-viquae.html) (takes a while to load), trained on the whole KB faces (but displaying only 10K to get a reasonable HTML size).
 
 ## IR
 
