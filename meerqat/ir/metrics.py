@@ -108,10 +108,10 @@ def get_irrelevant_batch(retrieved_batch, relevant_batch):
 def fuse_qrels(qrels_paths):
     # nothing to fuse
     if len(qrels_paths) == 1:
-        return ranx.Qrels.from_file(qrels_paths[0])
+        return ranx.Qrels.from_file(qrels_paths[0], kind='trec')
     final_qrels = {}
     for qrels_path in tqdm(qrels_paths):
-        qrels = ranx.Qrels.from_file(qrels_path).qrels
+        qrels = ranx.Qrels.from_file(qrels_path, kind='trec').qrels
         for q_id, rels in qrels.items():
             final_qrels.setdefault(q_id, {})
             for doc_id, score in rels.items():
@@ -121,13 +121,16 @@ def fuse_qrels(qrels_paths):
 
 
 def compare(qrels_path, runs_paths, output_path=None, filter_q_ids=[], **kwargs):
-    qrels = ranx.Qrels.from_file(qrels_path)
+    qrels = ranx.Qrels.from_file(qrels_path, kind='trec')
     for q_id in filter_q_ids:
         qrels.qrels.pop(q_id)
     runs = []
     for run_path in runs_paths:
-        run = ranx.Run.from_file(run_path)
-        run.name += run_path
+        run = ranx.Run.from_file(run_path, kind='trec')
+        if run.name is None:
+            run.name = run_path
+        else:
+            run.name += run_path
         for q_id in filter_q_ids:
             run.run.pop(q_id)
         runs.append(run)
@@ -158,7 +161,7 @@ if __name__ == '__main__':
         find_relevant_dataset(args['<dataset>'], passages=passages, title2index=title2index, article2passage=article2passage)
     elif args['qrels']:
         qrels = fuse_qrels(args['<qrels>'])
-        qrels.save(args['--output'])
+        qrels.save(args['--output'], kind='trec')
     elif args['ranx']:
         if args['--filter'] is not None:
             with open(args['--filter'], 'rt') as file:
