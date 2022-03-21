@@ -66,9 +66,6 @@ def get_pil_preprocessor():
 
 
 def compute_face_embedding(batch, model, preprocessor, tform, max_n_faces=1):
-    if max_n_faces != 1:
-        raise NotImplementedError()
-
     # 1. filter out images without any detected faces
     output = []
     not_None_values, not_None_values_indices = [], []
@@ -77,10 +74,11 @@ def compute_face_embedding(batch, model, preprocessor, tform, max_n_faces=1):
         output.append(None)
         if landmarks is not None:
             image = load_image_batch([image])[0]
-            landmarks = np.array(landmarks[0], dtype=np.float32)
-            face = similarity_transform(image, landmarks, SRC, tform)
-            not_None_values.append(preprocessor(face).unsqueeze(0))
-            not_None_values_indices.append(i)
+            landmarks = np.array(landmarks[:max_n_faces], dtype=np.float32)
+            for landmark in landmarks:
+                face = similarity_transform(image, landmark, SRC, tform)
+                not_None_values.append(preprocessor(face).unsqueeze(0))
+            not_None_values_indices.append((i, landmarks.shape[0]))
     # None of the image had a face detected
     if not not_None_values:
         batch['face_embedding'] = output
@@ -91,19 +89,21 @@ def compute_face_embedding(batch, model, preprocessor, tform, max_n_faces=1):
     not_None_output = model(not_None_values)
 
     # 3. return the results in a list of list with proper indices
-    for j, i in enumerate(not_None_values_indices):
-        output[i] = not_None_output[j]
+    j = 0
+    for i, n_faces in not_None_values_indices:
+        output[i] = not_None_output[j: j+n_faces]
+        j += n_faces
 
     batch['face_embedding'] = output
     return batch
 
 
-def dataset_compute_face_embedding(dataset_path, map_kwargs={}, pretrained_kwargs={}):
+def dataset_compute_face_embedding(dataset_path, map_kwargs={}, pretrained_kwargs={}, fn_kwargs={}):
     dataset = load_from_disk(dataset_path)
     model = from_pretrained(**pretrained_kwargs)
     preprocessor = get_pil_preprocessor()
     tform = transform.SimilarityTransform()
-    fn_kwargs = dict(model=model, preprocessor=preprocessor, tform=tform)
+    fn_kwargs.update(dict(model=model, preprocessor=preprocessor, tform=tform))
     dataset = dataset.map(compute_face_embedding, batched=True, fn_kwargs=fn_kwargs, **map_kwargs)
     dataset.save_to_disk(dataset_path)
 
