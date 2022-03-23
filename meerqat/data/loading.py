@@ -36,8 +36,12 @@ OKVQA_PATH = DATA_ROOT_PATH/"OK-VQA"
 MSCOCO_PATH = DATA_ROOT_PATH/"MS-COCO"
 
 
+def load_image(file_name):
+    return Image.open(IMAGE_PATH / file_name).convert('RGB')
+
+
 def load_image_batch(file_names):
-    return [Image.open(IMAGE_PATH / file_name).convert('RGB') for file_name in file_names]
+    return [load_image(file_name) for file_name in file_names]
 
 
 def load_faces(image, root_face_path, max_n_faces=None):
