@@ -13,9 +13,9 @@ from pathlib import Path
 from docopt import docopt
 import json
 import os
+import warnings
 
-from PIL import Image
-
+from PIL import Image, ImageFile
 import re
 import string
 
@@ -28,6 +28,15 @@ from meerqat.train import trainee
 from meerqat.models import mm
 from meerqat import __file__ as ROOT_PATH
 
+
+# avoid PIL.Image.DecompressionBombError 
+# https://stackoverflow.com/questions/51152059/pillow-in-python-wont-let-me-open-image-exceeds-limit
+Image.MAX_IMAGE_PIXELS = None
+
+# avoid UnidentifiedImageError https://github.com/python-pillow/Pillow/issues/5136
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+
+# constant paths
 DATA_ROOT_PATH = (Path(ROOT_PATH).parent.parent/"data").resolve()
 COMMONS_PATH = DATA_ROOT_PATH / "Commons"
 IMAGE_PATH = Path(os.environ.get("VIQUAE_IMAGES_PATH", COMMONS_PATH))
@@ -37,7 +46,13 @@ MSCOCO_PATH = DATA_ROOT_PATH/"MS-COCO"
 
 
 def load_image(file_name):
-    return Image.open(IMAGE_PATH / file_name).convert('RGB')
+    path = IMAGE_PATH / file_name
+    try:
+        image = Image.open(path).convert('RGB')
+    except Exception as e:
+        warnings.warn(f"{e} with image {path}")
+        return None
+    return image
 
 
 def load_image_batch(file_names):
