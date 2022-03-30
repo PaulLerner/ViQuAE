@@ -52,7 +52,8 @@ def debug_shape(batch, prefix=""):
         if isinstance(data, (dict, BatchEncoding)):
             debug_shape(data, prefix=f"{prefix}.{key}")
         elif isinstance(data, (tuple, list)):
-            print(f"{prefix}.{key} ({type(data)}): {len(data)}")
+            for i, v in enumerate(data):
+                debug_shape(v, prefix=f"{prefix}.{key}.{i}")
         elif isinstance(data, (torch.Tensor, np.ndarray)):
             print(f"{prefix}.{key} ({type(data)}): {data.shape}")
         else:
