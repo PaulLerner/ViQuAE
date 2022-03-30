@@ -8,6 +8,7 @@ import collections
 import sys
 import logging
 import humanize
+import re
 
 import numpy as np
 import torch
@@ -54,11 +55,27 @@ def max_memory_usage(human=False):
 
 class MeerqatTrainer(Trainer):
     """Base class for all trainers. Should be very similar to Trainer"""
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, model, *args, freeze=None, **kwargs):
+        if freeze is not None:
+            model = self.freeze(model, freeze)
+        super().__init__(model, *args, **kwargs)
         self.prediction_file_name = "predictions.json"
         self.metrics_file_name = "metrics.json"
-
+    
+    def freeze(self, model, regex):
+        regex = re.compile(regex)
+        total, frozen = 0, 0
+        logger.debug("Model parameters:\t\t\t\tName\t#Trainable\t#Total")
+        for name, param in model.named_parameters():
+            numel = param.numel()
+            if regex.match(name):
+                param.requires_grad = False
+                frozen += numel
+            total += numel
+            logger.debug(f"{name}\t\t{(numel if param.requires_grad else 0):,d}\t{numel:,d}")
+        logger.info(f"Froze {frozen:,d} parameters out of {total:,d}")
+        return model
+        
     def log(self, logs: dict) -> None:
         """Adds memory usage to the logs"""
         logs.update(max_memory_usage())
