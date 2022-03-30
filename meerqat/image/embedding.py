@@ -104,8 +104,8 @@ def get_model_and_transform(model_kwargs={}, transform_kwargs={}):
     return dict(model=model, transform=transform)
 
 
-def embed(batch, model, transform, save_as='image_embedding'):
-    images = load_image_batch(batch['image'])
+def embed(batch, model, transform, save_as='image_embedding', image_key='image'):
+    images = load_image_batch(batch[image_key])
     images = [transform(image).unsqueeze(0) for image in images]
     images = torch.cat(images).to(device)
     with torch.no_grad():

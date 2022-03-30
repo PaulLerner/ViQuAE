@@ -65,11 +65,11 @@ def get_pil_preprocessor():
     ])
 
 
-def compute_face_embedding(batch, model, preprocessor, tform, max_n_faces=1):
+def compute_face_embedding(batch, model, preprocessor, tform, max_n_faces=1, image_key='image'):
     # 1. filter out images without any detected faces
     output = []
     not_None_values, not_None_values_indices = [], []
-    for i, (image, landmarks) in enumerate(zip(batch['image'], batch['face_landmarks'])):
+    for i, (image, landmarks) in enumerate(zip(batch[image_key], batch['face_landmarks'])):
         # will be overwritten for not_None_values
         output.append(None)
         if landmarks is not None:

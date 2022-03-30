@@ -88,6 +88,10 @@ def detect_face(file_names, model, save_root_path=None):
     # group images by size to allow MTCNN batch-processing
     images_by_size = {}
     for i, (image, file_name) in enumerate(zip(images, file_names)):
+        # trouble when loading the image
+        if image is None:
+            continue
+        
         # if there are multiple faces, the actual save path will be
         # save_root_path/f'{file_name}-{face_index}.jpg'
         # https://github.com/timesler/facenet-pytorch/blob/54c869c51e0e3e12f7f92f551cdd2ecd164e2443/models/mtcnn.py#L488
@@ -175,5 +179,6 @@ if __name__ == '__main__':
         save_root_path = Path(save_root_path)
         save_root_path.mkdir(exist_ok=True, parents=True)
 
-    dataset = dataset_detect_faces(dataset, model=model, image_key=image_key, save_root_path=save_root_path)
+    dataset = dataset_detect_faces(dataset, model=model, image_key=image_key,
+                                   save_root_path=save_root_path, batch_size=batch_size)
     dataset.save_to_disk(dataset_path)
