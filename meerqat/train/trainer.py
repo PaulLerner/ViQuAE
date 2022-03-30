@@ -25,8 +25,7 @@ from transformers.trainer_pt_utils import (
     IterableDatasetShard,
     find_batch_size,
     nested_concat,
-    nested_numpify,
-    nested_detach
+    nested_numpify
 )
 from transformers.trainer_utils import EvalLoopOutput, denumpify_detensorize
 if is_torch_tpu_available():
@@ -34,6 +33,7 @@ if is_torch_tpu_available():
 
 from meerqat.data.loading import load_pretrained_in_kwargs
 from meerqat.models.qa import get_best_spans, format_predictions_for_squad
+from meerqat.models.utils import debug_shape
 from meerqat.train import metrics as metric_functions
 
 
@@ -151,7 +151,6 @@ class QuestionAnsweringTrainer(MeerqatTrainer):
         elif n_relevant <= 0:
             warnings.warn(f"Didn't find any passage for question {item['id']}")
         return relevant_passages, irrelevant_passages
-
 
 
 class DPRBiEncoderTrainer(QuestionAnsweringTrainer):
@@ -324,16 +323,16 @@ class ILFTrainer(DPRBiEncoderTrainer):
                 # keep zero-padding
                 continue
             n_faces = min(self.n_faces, len(face_embedding))
-            face_embeddings[i,: n_faces] = torch.tensor(face_embedding[: n_faces])
+            face_embeddings[i, : n_faces] = torch.tensor(face_embedding[: n_faces])
             bbox = item["face_box"]
-            face_boxes[i,: n_faces] = torch.tensor(bbox[: n_faces])
+            face_boxes[i, : n_faces] = torch.tensor(bbox[: n_faces])
         
         # convert to list (one per face batch) of dict (one per attribute) of tensor
         face_inputs = []
         for i in range(self.n_faces):
             face_inputs.append({
-                "face_embedding": face_embeddings[:, i],
-                "face_box": face_boxes[:, i]
+                "face": face_embeddings[:, i],
+                "bbox": face_boxes[:, i]
             })
         return face_inputs
 
@@ -425,7 +424,6 @@ class ICTTrainer(ILFTrainer):
         super().__init__(*args, **kwargs)
         self.kb = None
         self.sentences_per_target = sentences_per_target
-
         self.data_collator = self.collate_fn
 
     def get_training_passages(self, item):
@@ -442,7 +440,6 @@ class ICTTrainer(ILFTrainer):
         # pick a random sentence: easy
         i = np.random.randint(len(sentences))
         query = dict(text=sentences[i]['text'])
-
         # pick n random sentences around it: more tricky
         n = min(self.sentences_per_target, len(sentences)-1)
         max_shift = min(i, n)
@@ -452,46 +449,41 @@ class ICTTrainer(ILFTrainer):
             min_shift = i + n - len(sentences) + 1
         shift = np.random.randint(min_shift, max_shift+1)
         target = [s['text'] for s in sentences[i-shift: i]+sentences[i+1: i+1+n-shift]]
-        target = dict(text=" ".join(target))        
+        target = dict(text=" ".join(target))  
 
-        # TODO load image features
-
+        # rename context image features
+        for k in ({"face_box", "face_embedding"} | self.image_embeddings_keys):
+            target[k] = item.get(f"context_{k}")
         return query, target
 
-    def collate_fn(self, items):
-        """
-        Collate batch so that each question is associate with n_relevant_passages and M-n irrelevant ones.
-        Also tokenizes input strings
-
-        N - number of questions in a batch
-        M - number of passages per questions
-        d - dimension of the model/embeddings
-
-        Returns (a dict of)
-        -------------------
-        question_inputs: dict[torch.LongTensor]
-            input_ids: torch.LongTensor
-                shape (N, L)
-            **kwargs: more tensors depending on the tokenizer, e.g. attention_mask
-        context_inputs: dict[torch.LongTensor]
-            input_ids: torch.LongTensor
-                shape (N*M, L)
-                The first N rows correspond to the relevant contexts for the N questions
-                The rest N*(M-1) rows are irrelevant contexts for all questions.
-            **kwargs: idem
-        """
-        
-        questions, relevant_passages, irrelevant_passages, labels = [], [], [], []
+    def collate_fn(self, items):        
+        questions, relevant_passages, labels = [], [], []
         for i, item in enumerate(items):
             query, relevant_passage = self.get_training_passages(item)
             labels.append(i)
-            questions.append(query['text'])
-            relevant_passages.append(relevant_passage['text'])
+            questions.append(query)
+            relevant_passages.append(relevant_passage)
 
-        question_inputs = self.tokenizer(questions, **self.tokenization_kwargs)
-        context_inputs = self.tokenizer(relevant_passages, **self.tokenization_kwargs)
-        n_irrelevant_passages = self.M-self.n_relevant_passages
+        question_inputs_text = self.tokenizer([q['text'] for q in questions], **self.tokenization_kwargs)
+        context_inputs_text = self.tokenizer([p['text'] for p in relevant_passages], **self.tokenization_kwargs)
+        # get image features, for both questions and passages
+        question_inputs = dict(
+            text_inputs=question_inputs_text, 
+            face_inputs=self.get_face_inputs(items), 
+            image_inputs=self.get_image_inputs(items)
+        )
+        context_inputs = dict(
+            text_inputs=context_inputs_text, 
+            face_inputs=self.get_face_inputs(relevant_passages), 
+            image_inputs=self.get_image_inputs(relevant_passages)
+        )
+
         # TODO: make n_irrelevant_passages by shifting the images of relevant passages
+        n_irrelevant_passages = self.M-self.n_relevant_passages
+        if n_irrelevant_passages > 0:
+            raise NotImplementedError()
+
+        # wrap it up
         labels = torch.tensor(labels)
         batch = dict(question_inputs=question_inputs, context_inputs=context_inputs, labels=labels)
         return batch
