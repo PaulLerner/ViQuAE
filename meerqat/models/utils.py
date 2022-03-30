@@ -49,12 +49,14 @@ def map_if_not_None(values, function, *args, default_value=None, **kwargs):
 
 def debug_shape(batch, prefix=""):
     for key, data in batch.items():
-        if isinstance(data, dict):
+        if isinstance(data, (dict, BatchEncoding)):
             debug_shape(data, prefix=f"{prefix}.{key}")
         elif isinstance(data, (tuple, list)):
             print(f"{prefix}.{key} ({type(data)}): {len(data)}")
         elif isinstance(data, (torch.Tensor, np.ndarray)):
             print(f"{prefix}.{key} ({type(data)}): {data.shape}")
+        else:
+            print(f"{prefix}.{key} ({type(data)})")
 
 
 def prepare_inputs(data):
