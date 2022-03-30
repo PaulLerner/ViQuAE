@@ -495,10 +495,30 @@ class ICTTrainer(ILFTrainer):
             image_inputs=self.get_image_inputs(relevant_passages)
         )
 
-        # TODO: make n_irrelevant_passages by shifting the images of relevant passages
+        # make n_irrelevant_passages by shifting the images of relevant passages
         n_irrelevant_passages = self.M-self.n_relevant_passages
         if n_irrelevant_passages > 0:
-            raise NotImplementedError()
+            # duplicate relevant text
+            for k, v in context_inputs["text_inputs"].items():
+                context_inputs["text_inputs"][k] = torch.tile(v, (self.M, 1))
+            # shift relevant images
+            for k, v in context_inputs['image_inputs'].items():
+                shifted_input = [v['input']]
+                for shift in range(n_irrelevant_passages):
+                    # shift along axis 0 (batch axis)
+                    shifted_input.append(torch.roll(v['input'], shift+1, 0))
+                # cat along axis 0 (batch axis)
+                v['input'] = torch.cat(shifted_input, 0)
+            # shift relevant faces
+            for face in context_inputs['face_inputs']:
+                shifted_faces, shifted_boxes = [face["face"]], [face["bbox"]]
+                for shift in range(n_irrelevant_passages):
+                    # shift along axis 0 (batch axis)
+                    shifted_faces.append(torch.roll(face["face"], shift+1, 0))
+                    shifted_boxes.append(torch.roll(face["bbox"], shift+1, 0))
+                # cat along axis 0 (batch axis)
+                face["face"] = torch.cat(shifted_faces, 0)
+                face["bbox"] = torch.cat(shifted_boxes, 0)
 
         # wrap it up
         labels = torch.tensor(labels)
