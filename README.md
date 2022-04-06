@@ -103,7 +103,7 @@ Again, the format of the KB is very similar to [KILT’s Wikipedia](https://hugg
     humans_without_faces='humans_without_faces.jsonl.gz', 
     non_humans='non_humans.jsonl.gz'
 )
->>> kb = load_dataset('viquae_wikipedia', data_files=data_files)
+>>> kb = load_dataset('PaulLerner/viquae_wikipedia', data_files=data_files)
 >>> kb
 DatasetDict({
     humans_with_faces: Dataset({
@@ -136,6 +136,7 @@ He was an Invited Professor at the Conservatoire national des arts et métiers (
 ```
 
 To format the articles into text passages, follow instructions at [EXPERIMENTS.md](./EXPERIMENTS.md) (Preprocessing passages section).
+Alternatively, get them from https://huggingface.co/datasets/PaulLerner/viquae_passages (`load_dataset('PaulLerner/viquae_passages')`)
 
 # Annotation of the data
 

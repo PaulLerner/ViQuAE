@@ -49,7 +49,7 @@ Obtained using ResNet-50:
 - one pre-trained on ImageNet, pooled with max-pooling. 
   You can tweak the pooling layer and the backbone in the config file, 
   as long as it is a `nn.Module` and `torchvision.models`, respectively.
-- the other trained using [CLIP](https://github.com/openai/CLIP)
+- the other trained using [CLIP](https://github.com/openai/CLIP) (install it from their repo)
 
 Obviously you can also tweak the batch size.
 ```sh
@@ -210,11 +210,12 @@ mv experiments/dpr/triviaqa/checkpoint-13984/optimizer.pt experiments/dpr/trivia
 
 Alternatively, if you want to start training from our pre-trained model, run:
 ```py
+import torch
 from meerqat.train.trainee import DPRBiEncoder
 question_model = transformers.DPRQuestionEncoder.from_pretrained("PaulLerner/dpr_question_encoder_triviaqa_without_viquae")
 context_model = transformers.DPRContextEncoder.from_pretrained("PaulLerner/dpr_context_encoder_triviaqa_without_viquae")
 dpr = DPRBiEncoder(question_model, context_model)
-dpr.save_pretrained("experiments/dpr/triviaqa/PaulLerner")
+torch.save(dpr.state_dict(), "experiments/dpr/triviaqa/PaulLerner/pytorch_model.bin")
 ```
 And then set `resume_from_checkpoint="experiments/dpr/triviaqa/PaulLerner"` in the config file.
 
