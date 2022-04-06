@@ -6,10 +6,11 @@ from tqdm import tqdm
 from docopt import docopt
 import json
 import re
+import pandas as pd
 
 from meerqat.data.loading import DATA_ROOT_PATH
 from meerqat.data.wiki import VALID_ENCODING
-from meerqat.visualization.utils import simple_stats
+
 
 NAMESPACE = {"mw": "http://www.mediawiki.org/xml/export-0.10/"}
 
@@ -138,4 +139,4 @@ if __name__ == "__main__":
     print(f"Successfully saved output to {path}")
 
     n_images = [len(entity.get('images', [])) for entity in entities.values()]
-    print(f"Gathered images from {len(entities)} entities:\n{simple_stats(n_images)}")
+    print(f"Gathered images from {len(entities)} entities:\n{pd.DataFrame(n_images).describe()}")

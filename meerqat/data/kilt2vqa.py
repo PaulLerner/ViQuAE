@@ -21,6 +21,7 @@ Options:
 
 import json
 import numpy as np
+import pandas as pd
 import random
 import re
 import spacy
@@ -39,7 +40,6 @@ from datasets import load_dataset, load_from_disk, set_caching_enabled
 from meerqat.data.loading import map_kilt_triviaqa, DATA_ROOT_PATH
 from meerqat.data.wiki import HUMAN, RESERVED_IMAGES, special_path_to_file_name, file_name_to_thumbnail, thumbnail_to_file_name, save_image
 from meerqat.data.utils import md5
-from meerqat.visualization.utils import viz_spacy, simple_stats
 
 # spacy constants for NER
 INVALID_ENTITIES = {DATE, TIME, PERCENT, MONEY, QUANTITY, ORDINAL, CARDINAL}
@@ -176,7 +176,7 @@ def stringify(kilt_subset, field="placeholder", include_answer=True, include_pro
                 result.append(f"\t{item['output']['provenance'][0]['title'][0]}")
             results.append("\n".join(result))
         else:
-            invalid.append(viz_spacy(item['spacy_input']))
+            invalid.append(item['spacy_input'])
     return "\n\n\n".join(results), "\n".join(invalid)
 
 
@@ -290,7 +290,7 @@ def count_entities(subset, wer_threshold=0.5):
     print(f"\nSuccessfully saved output to {output_path}")
     print(f"Disambiguated {disambiguated} questions ({len(entities)} unique entities) "
           f"out of {total} questions with a threshold of {wer_threshold}")
-    print(simple_stats([entity["n_questions"] for entity in entities.values()]))
+    print(pd.DataFrame([entity["n_questions"] for entity in entities.values()]).describe())
 
 
 def generate_mention(item, entities, wer_threshold=0.5, feminine_labels={}):
