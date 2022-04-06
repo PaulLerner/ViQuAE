@@ -333,38 +333,44 @@ class ILFTrainer(DPRBiEncoderTrainer):
         # trim or pad, and convert to tensor
         face_embeddings = torch.zeros((len(items), self.n_faces, self.face_dim))
         face_boxes = torch.zeros((len(items), self.n_faces, self.bbox_dim))
+        # 0=masked, 1=not masked
+        attention_mask = torch.zeros((len(items), self.n_faces), dtype=torch.long)
         for i, item in enumerate(items):
             face_embedding = item.get("face_embedding")
             # can happen in two cases: 1. no face detected; 2. padding passage
             if face_embedding is None:
-                # keep zero-padding
+                # keep zero-padding/mask
                 continue
             n_faces = min(self.n_faces, len(face_embedding))
             face_embeddings[i, : n_faces] = torch.tensor(face_embedding[: n_faces])
             bbox = item["face_box"]
             face_boxes[i, : n_faces] = torch.tensor(bbox[: n_faces])
-        
-        # convert to list (one per face batch) of dict (one per attribute) of tensor
-        face_inputs = []
-        for i in range(self.n_faces):
-            face_inputs.append({
-                "face": face_embeddings[:, i],
-                "bbox": face_boxes[:, i]
-            })
+            attention_mask[i, : n_faces] = 1
+
+        face_inputs = {
+            "face": face_embeddings,
+            "bbox": face_boxes,
+            "attention_mask": attention_mask
+        }
         return face_inputs
 
     def get_image_inputs(self, items):
         image_inputs = {}
         for name in self.image_embeddings_keys: 
-            image_inputs[name] = []                                                                                                                   
-            for item in items:                   
+            features = torch.zeros(len(items), self.image_dims[name])
+            # 0=masked, 1=not masked
+            attention_mask = torch.zeros(len(items), dtype=torch.long)
+
+            for i, item in enumerate(items):
                 feature = item.get(name)
                 # in case of padding passage
                 if feature is None:
-                    feature = [0.] * self.image_dims[name]
-                image_inputs[name].append(feature)
-        for k, v in image_inputs.items():
-            image_inputs[k] = dict(input=torch.tensor(v))
+                    # keep zero-padding/mask
+                    continue
+                features[i] = torch.tensor(feature)
+                attention_mask[i] = 1
+
+            image_inputs[name] = dict(input=features, attention_mask=attention_mask)
         return image_inputs                                                  
 
     def collate_fn(self, items):
@@ -503,22 +509,26 @@ class ICTTrainer(ILFTrainer):
                 context_inputs["text_inputs"][k] = torch.tile(v, (self.M, 1))
             # shift relevant images
             for k, v in context_inputs['image_inputs'].items():
-                shifted_input = [v['input']]
+                shifted_input, shifted_mask = [v['input']], [v['attention_mask']]
                 for shift in range(n_irrelevant_passages):
                     # shift along axis 0 (batch axis)
                     shifted_input.append(torch.roll(v['input'], shift+1, 0))
+                    shifted_mask.append(torch.roll(v['attention_mask'], shift+1, 0))
                 # cat along axis 0 (batch axis)
                 v['input'] = torch.cat(shifted_input, 0)
+                v['attention_mask'] = torch.cat(shifted_mask, 0)
             # shift relevant faces
-            for face in context_inputs['face_inputs']:
-                shifted_faces, shifted_boxes = [face["face"]], [face["bbox"]]
-                for shift in range(n_irrelevant_passages):
-                    # shift along axis 0 (batch axis)
-                    shifted_faces.append(torch.roll(face["face"], shift+1, 0))
-                    shifted_boxes.append(torch.roll(face["bbox"], shift+1, 0))
-                # cat along axis 0 (batch axis)
-                face["face"] = torch.cat(shifted_faces, 0)
-                face["bbox"] = torch.cat(shifted_boxes, 0)
+            shifted_faces, shifted_boxes = [context_inputs['face_inputs']["face"]], [context_inputs['face_inputs']["bbox"]]
+            shifted_mask = [context_inputs['face_inputs']['attention_mask']]
+            for shift in range(n_irrelevant_passages):
+                # shift along axis 0 (batch axis)
+                shifted_faces.append(torch.roll(context_inputs['face_inputs']["face"], shift+1, 0))
+                shifted_boxes.append(torch.roll(context_inputs['face_inputs']["bbox"], shift+1, 0))
+                shifted_mask.append(torch.roll(context_inputs['face_inputs']["attention_mask"], shift+1, 0))
+            # cat along axis 0 (batch axis)
+            context_inputs['face_inputs']["face"] = torch.cat(shifted_faces, 0)
+            context_inputs['face_inputs']["bbox"] = torch.cat(shifted_boxes, 0)
+            context_inputs['face_inputs']['attention_mask'] = torch.cat(shifted_mask, 0)
 
         # wrap it up
         labels = torch.tensor(labels)
