@@ -47,7 +47,6 @@ if __name__ == '__main__':
     args = docopt(__doc__)
     dataset_path = args['<dataset>']
     dataset = load_from_disk(dataset_path)
-    model_config_path = args['<model_config>']
     set_caching_enabled(not args['--disable_caching'])
 
     image_key = args['--image_key']
