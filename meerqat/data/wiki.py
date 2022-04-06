@@ -32,6 +32,7 @@ import warnings
 import datetime
 from collections import Counter
 from tabulate import tabulate
+import pandas as pd
 
 import requests
 from SPARQLWrapper import SPARQLWrapper, JSON
@@ -42,8 +43,6 @@ from docopt import docopt
 
 from meerqat.data.loading import DATA_ROOT_PATH, COMMONS_PATH
 from meerqat.data.utils import md5
-from meerqat.visualization.utils import simple_stats
-
 
 # One client (user agent + IP) is allowed 60 seconds of processing time each 60 seconds
 # https://www.mediawiki.org/wiki/Wikidata_Query_Service/User_Manual
@@ -614,7 +613,7 @@ def update_from_commons_rest(entities, max_images=1000, max_categories=100):
         n_images.append(len(images))
         n_categories.append(len(categories))
     print(f"{len(n_images)} entities out of {len(entities)} have a root Commons Category and questions in the dataset\n"
-          f"Retrieved images:\n{simple_stats(n_images)}\nand categories:\n{simple_stats(n_categories)}")
+          f"Retrieved images:\n{pd.DataFrame(n_images).describe()}\nand categories:\n{pd.DataFrame(n_categories).describe()}")
     return entities
 
 
@@ -676,8 +675,8 @@ def image_heuristic(entities, heuristics=VALID_IMAGE_HEURISTICS):
                 best_score = score
         best_scores.append(best_score)
     print(f"Applied heuristics {heuristics} on {len(entities)} entities/{len(scores)} images\n"
-          f"\nEntity-level best scores stats:\n{simple_stats(best_scores)}"
-          f"\nImage-level scores stats:\n{simple_stats(scores)}")
+          f"\nEntity-level best scores stats:\n{pd.DataFrame(best_scores).describe()}"
+          f"\nImage-level scores stats:\n{pd.DataFrame(scores).describe()}")
     return entities
 
 
