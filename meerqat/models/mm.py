@@ -85,8 +85,8 @@ class DMREncoder(nn.Module):
         # embed images
         image_outputs, image_attention_mask = [], []
         for name, image in image_inputs.items():
-            image_outputs.append(self.image_embeddings[name](image['input']))
-            image_attention_mask.append(image['attention_mask'])
+            image_outputs.append(self.image_embeddings[name](image['input']).unsqueeze(0))
+            image_attention_mask.append(image['attention_mask'].unsqueeze(0))
         # (n_images, batch_size, embedding_dim) -> (batch_size, n_images, embedding_dim)
         image_outputs = torch.cat(image_outputs, 0).transpose(0, 1)
         image_attention_mask = torch.cat(image_attention_mask, 0).transpose(0, 1)
@@ -98,8 +98,10 @@ class DMREncoder(nn.Module):
         # (batch_size, sequence_length+n_faces+n_images, embedding_dim)
         multimodal_embeddings = torch.cat((text_embeddings, face_output, image_outputs), dim=1)
         attention_mask = torch.cat((text_inputs['attention_mask'], face_inputs['attention_mask'], image_attention_mask), dim=1)
-
-        outputs = self.bert_model.encoder(multimodal_embeddings, attention_mask=attention_mask)
+        extended_attention_mask = self.bert_model.get_extended_attention_mask(
+            attention_mask, multimodal_embeddings.shape[:-1], multimodal_embeddings.device
+        )
+        outputs = self.bert_model.encoder(multimodal_embeddings, attention_mask=extended_attention_mask)
 
         # same as DPR: extract representation from [CLS]: the first token
         sequence_output = outputs[0]
