@@ -116,7 +116,7 @@ def DPR_from_BERT(Class, pretrained_model_name_or_path, question_config={}, cont
 
 def biencoder_from_DPR(
         Class, question_class, dpr_question_model_name_or_path, question_kwargs={}, 
-        context_class=None, dpr_context_model_name_or_path=None, context_kwargs=None
+        context_class=None, dpr_context_model_name_or_path=None, context_kwargs=None, bert=False
     ):
     # default to symmetric encoders
     context_class = question_class if context_class is None else context_class
@@ -126,6 +126,10 @@ def biencoder_from_DPR(
     # init pre-trained DPR
     dpr_question_model = transformers.DPRQuestionEncoder.from_pretrained(dpr_question_model_name_or_path)
     dpr_context_model = transformers.DPRContextEncoder.from_pretrained(dpr_context_model_name_or_path)
+    # use BERT instead of DPR
+    if bert:
+        dpr_question_model = dpr_question_model.question_encoder.bert_model
+        dpr_context_model = dpr_context_model.ctx_encoder.bert_model
 
     # init encoders (that wrap DPR)
     QuestionClass = getattr(mm, question_class)
