@@ -907,9 +907,15 @@ def get_checkpoint(resume_from_checkpoint: str, *args, **kwargs):
     return resume_from_checkpoints
 
 
+def subsample_dataset(dataset, num_shards):
+    dataset = dataset.shuffle(seed=0)
+    return dataset.shard(num_shards, 0)
+
+
 def instantiate_trainer(trainee, trainer_class="MultiPassageBERTTrainer", debug=False, 
                         train_dataset=None, eval_dataset=None, metric='squad', 
-                        training_kwargs={}, callbacks_args=[], **kwargs):
+                        training_kwargs={}, callbacks_args=[], 
+                        train_shards=None, eval_shards=None, **kwargs):
     """Additional arguments are passed to Trainer"""
     # debug (see torch.autograd.detect_anomaly)
     set_detect_anomaly(debug)
@@ -917,8 +923,12 @@ def instantiate_trainer(trainee, trainer_class="MultiPassageBERTTrainer", debug=
     # data
     if train_dataset is not None:
         train_dataset = load_from_disk(train_dataset)
+        if train_shards is not None:
+            train_dataset = subsample_dataset(train_dataset, train_shards)
     if eval_dataset is not None:
         eval_dataset = load_from_disk(eval_dataset)
+        if eval_shards is not None:
+            eval_dataset = subsample_dataset(eval_dataset, eval_shards)
 
     # training
     # revert the post-init that overrides do_eval
