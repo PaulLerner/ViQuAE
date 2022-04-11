@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 from typing import Optional, Tuple
+from functools import partial
 
 import torch.nn as nn
 import torch
 from transformers.models.dpr.modeling_dpr import DPRReaderOutput
+from transformers.models.bert.modeling_bert import BertEncoder
 from transformers.modeling_outputs import QuestionAnsweringModelOutput, ModelOutput
 from transformers import BertForQuestionAnswering
 
@@ -66,6 +68,7 @@ class DPRBiEncoderOutput(BiEncoderOutput):
 
 
 class BiEncoder(nn.Module):
+    supports_gradient_checkpointing = True
     def __init__(self, question_model, context_model):
         """
         Parameters
@@ -84,7 +87,40 @@ class BiEncoder(nn.Module):
         return BiEncoderOutput(
             question_pooler_output=question_outputs.pooler_output,
             context_pooler_output=context_outputs.pooler_output)
+    
+    # gradient checkpointing: taken from transformers
+    def _set_gradient_checkpointing(self, module, value=False):
+        if isinstance(module, BertEncoder):
+            module.gradient_checkpointing = value
+            
+    def gradient_checkpointing_enable(self):
+        """
+        Activates gradient checkpointing for the current model.
+        Note that in other frameworks this feature can be referred to as "activation checkpointing" or "checkpoint
+        activations".
+        """
+        if not self.supports_gradient_checkpointing:
+            raise ValueError(f"{self.__class__.__name__} does not support gradient checkpointing.")
+        self.apply(partial(self._set_gradient_checkpointing, value=True))
 
+    def gradient_checkpointing_disable(self):
+        """
+        Deactivates gradient checkpointing for the current model.
+        Note that in other frameworks this feature can be referred to as "activation checkpointing" or "checkpoint
+        activations".
+        """
+        if self.supports_gradient_checkpointing:
+            self.apply(partial(self._set_gradient_checkpointing, value=False))
+
+    @property
+    def is_gradient_checkpointing(self) -> bool:
+        """
+        Whether gradient checkpointing is activated for this model or not.
+        Note that in other frameworks this feature can be referred to as "activation checkpointing" or "checkpoint
+        activations".
+        """
+        return any(hasattr(m, "gradient_checkpointing") and m.gradient_checkpointing for m in self.modules())
+    
 
 class DPRBiEncoder(BiEncoder):
     """Adapted from https://github.com/facebookresearch/DPR/blob/main/dpr/models/biencoder.py"""

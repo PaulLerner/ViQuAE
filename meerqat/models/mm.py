@@ -32,7 +32,6 @@ class DMREncoder(nn.Module):
         note = {https://github.com/ChenRocks/UNITER}
     }
     """
-
     def __init__(
             self, bert_model, embedding_dim=None,
             dropout=0.1, layer_norm_eps=1e-12, face_kwargs={}, image_kwargs={}
