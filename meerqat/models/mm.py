@@ -4,16 +4,39 @@ from typing import Optional
 import torch
 from torch import nn
 from transformers.modeling_outputs import ModelOutput
+from transformers import PreTrainedModel, BertModel, DPRQuestionEncoder, DPRContextEncoder
+from transformers.models.bert import BertConfig
 
 from meerqat.models.image import ImageEmbedding, FaceEmbedding
 
 
-@dataclass 
+@dataclass
 class EncoderOutput(ModelOutput):
     pooler_output: Optional[torch.FloatTensor] = None
 
 
-class DMREncoder(nn.Module):
+class MMConfig(BertConfig):
+    def __init__(self,
+                 *args,
+                 face_kwargs=None,
+                 image_kwargs=None,
+                 **kwargs
+                 ):
+        super().__init__(*args, **kwargs)
+        if face_kwargs is None:
+            self.face_kwargs = dict(face_dim=512, bbox_dim=7)
+        else:
+            self.face_kwargs = face_kwargs
+        if image_kwargs is None:
+            self.image_kwargs = {
+                "clip-RN50": {"input_dim": 1024},
+                "imagenet-RN50": {"input_dim": 2048}
+            }
+        else:
+            self.image_kwargs = image_kwargs
+
+
+class DMREncoder(PreTrainedModel):
     """
     Text and image are fused by concatenating them at the sequence-level then feeding them to BERT, à la UNITER (Chen et al.)
       one face ≃ one token
@@ -32,24 +55,22 @@ class DMREncoder(nn.Module):
         note = {https://github.com/ChenRocks/UNITER}
     }
     """
-    def __init__(
-            self, bert_model, embedding_dim=None,
-            dropout=0.1, layer_norm_eps=1e-12, face_kwargs={}, image_kwargs={}
-    ):
-        """
-        Arguments
-        ---------
-        bert_model: BertModel
-        """
-        super().__init__()
-        self.bert_model = bert_model
-        if embedding_dim is None:
-            embedding_dim = self.bert_model.config.hidden_size
-        self.face_embedding = FaceEmbedding(embedding_dim=embedding_dim, dropout=dropout,
-                                            layer_norm_eps=layer_norm_eps, **face_kwargs)
+    config_class = MMConfig
+    load_tf_weights = None
+
+    def __init__(self, config):
+        super().__init__(config)
+        self.config = config
+        # FIXME: set add_pooling_layer=False
+        self.bert_model = BertModel(config)
+        self.face_embedding = FaceEmbedding(embedding_dim=self.config.hidden_size,
+                                            dropout=self.config.hidden_dropout_prob,
+                                            layer_norm_eps=self.config.layer_norm_eps,
+                                            **self.config.face_kwargs)
         self.image_embeddings = nn.ModuleDict()
-        for name, image_kwarg in image_kwargs.items():
-            self.image_embeddings[name] = ImageEmbedding(embedding_dim=embedding_dim, dropout=dropout,
+        for name, image_kwarg in self.config.image_kwargs.items():
+            self.image_embeddings[name] = ImageEmbedding(embedding_dim=self.config.hidden_size,
+                                                         dropout=self.config.hidden_dropout_prob,
                                                          **image_kwarg)
 
     def forward(self, text_inputs, face_inputs, image_inputs):
@@ -96,7 +117,8 @@ class DMREncoder(nn.Module):
 
         # (batch_size, sequence_length+n_faces+n_images, embedding_dim)
         multimodal_embeddings = torch.cat((text_embeddings, face_output, image_outputs), dim=1)
-        attention_mask = torch.cat((text_inputs['attention_mask'], face_inputs['attention_mask'], image_attention_mask), dim=1)
+        attention_mask = torch.cat((text_inputs['attention_mask'], face_inputs['attention_mask'], image_attention_mask),
+                                   dim=1)
         extended_attention_mask = self.bert_model.get_extended_attention_mask(
             attention_mask, multimodal_embeddings.shape[:-1], multimodal_embeddings.device
         )
@@ -109,29 +131,28 @@ class DMREncoder(nn.Module):
         return EncoderOutput(pooler_output=pooled_output)
 
 
-class IntermediateLinearFusion(nn.Module):
+class IntermediateLinearFusion(PreTrainedModel):
     """Fuses DPR’s text representation with image embeddings by projecting them linearly in the same space"""
+    config_class = MMConfig
+    load_tf_weights = None
+
     def __init__(
-            self, dpr_encoder, embedding_dim=None, 
-            dropout=0.1, layer_norm_eps=1e-12, face_kwargs={}, image_kwargs={}
-        ):
-        """
-        Arguments
-        ---------
-        dpr_encoder: DPRContextEncoder or DPRQuestionEncoder
-        """
-        super().__init__()
-        self.dpr_encoder = dpr_encoder
-        if embedding_dim is None:
-            embedding_dim = self.dpr_encoder.config.hidden_size
-        self.face_embedding = FaceEmbedding(embedding_dim=embedding_dim, dropout=dropout, 
-                                            layer_norm_eps=layer_norm_eps, **face_kwargs)
+            self, config, question_encoder=True
+    ):
+        super().__init__(config)
+        self.config = config
+        if question_encoder:
+            self.dpr_encoder = DPRQuestionEncoder(config)
+        else:
+            self.dpr_encoder = DPRContextEncoder(config)
+        self.face_embedding = FaceEmbedding(embedding_dim=self.config.hidden_size, dropout=self.config.hidden_dropout_prob,
+                                            layer_norm_eps=self.config.layer_norm_eps, **self.config.face_kwargs)
         self.image_embeddings = nn.ModuleDict()
-        for name, image_kwarg in image_kwargs.items():
-            self.image_embeddings[name] = ImageEmbedding(embedding_dim=embedding_dim, dropout=dropout, **image_kwarg)
-        self.dpr_proj = nn.Linear(dpr_encoder.config.hidden_size, embedding_dim)
-        self.LayerNorm = nn.LayerNorm(embedding_dim, eps=layer_norm_eps)
-        self.dropout = nn.Dropout(dropout)
+        for name, image_kwarg in self.config.image_kwargs.items():
+            self.image_embeddings[name] = ImageEmbedding(embedding_dim=self.config.hidden_size, dropout=self.config.hidden_dropout_prob, **image_kwarg)
+        self.dpr_proj = nn.Linear(self.config.hidden_size, self.config.hidden_size)
+        self.LayerNorm = nn.LayerNorm(self.config.hidden_size, eps=self.config.layer_norm_eps)
+        self.dropout = nn.Dropout(self.config.hidden_dropout_prob)
 
     def forward(self, text_inputs, face_inputs, image_inputs):
         """
@@ -157,9 +178,9 @@ class IntermediateLinearFusion(nn.Module):
         # reshape faces
         faces = face_inputs['face']
         batch_size, n_faces, face_dim = faces.shape
-        faces = faces.reshape(batch_size*n_faces, face_dim)
+        faces = faces.reshape(batch_size * n_faces, face_dim)
         # embed batch of size batch_size*n_faces
-        face_output = self.face_embedding(face=faces, bbox=face_inputs['bbox'].reshape(batch_size*n_faces, -1))
+        face_output = self.face_embedding(face=faces, bbox=face_inputs['bbox'].reshape(batch_size * n_faces, -1))
         face_output = face_output.reshape(batch_size, n_faces, -1)
         # sum over all faces
         face_output = face_output.sum(axis=1)
