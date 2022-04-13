@@ -305,16 +305,10 @@ class ILFTrainer(DPRBiEncoderTrainer):
     Fuses DPR’s text representation with image embeddings by projecting them linearly in the same space
     --> loads pre-computed image features along with text 
     --> overrides collate_fn
-
-    Parameters
-    ----------
-    n_faces: int, optional
-        Given x detected and embedded faces, trim or pad to n_faces
-        Defaults to 1.
     """
-    def __init__(self, *args, n_faces=1, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.n_faces = n_faces
+        self.n_faces = self.model.config.n_faces
 
         # image dimensions and model names
         assert(self.model.question_model.image_embeddings.keys() == self.model.context_model.image_embeddings.keys())  

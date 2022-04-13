@@ -18,11 +18,13 @@ class EncoderOutput(ModelOutput):
 class MMConfig(BertConfig):
     def __init__(self,
                  *args,
+                 n_faces=4,
                  face_kwargs=None,
                  image_kwargs=None,
                  **kwargs
                  ):
         super().__init__(*args, **kwargs)
+        self.n_faces = n_faces
         if face_kwargs is None:
             self.face_kwargs = dict(face_dim=512, bbox_dim=7)
         else:
@@ -136,7 +138,7 @@ class DMREncoder(PreTrainedModel):
         return EncoderOutput(pooler_output=pooled_output)
 
 
-class ILFConfig(BertConfig):
+class ILFConfig(MMConfig):
     def __init__(self,
                  *args,
                  question_encoder=True,
