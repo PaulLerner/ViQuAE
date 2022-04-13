@@ -99,43 +99,28 @@ def answer_preprocess(answer):
     return white_space_fix(remove_articles(remove_punc(answer.lower())))
 
 
-def DPR_from_BERT(Class, pretrained_model_name_or_path, question_config={}, context_config={}):
-    """Initializes the weights of DPR encoders with BERT pre-training"""
-    # DPR (and maybe future inhereting classes) consists of two BERT (todo generalize?) encoders
-
-    # one for the question/query
-    question_model = transformers.DPRQuestionEncoder(transformers.DPRConfig(**question_config))
-    # FIXME set add_pooling_layer=False, see https://github.com/huggingface/transformers/issues/14486
-    question_model.question_encoder.bert_model = transformers.BertModel.from_pretrained(pretrained_model_name_or_path, add_pooling_layer=True)
-    # one for the context/evidence/passage
-    context_model = transformers.DPRContextEncoder(transformers.DPRConfig(**context_config))
-    context_model.ctx_encoder.bert_model = transformers.BertModel.from_pretrained(pretrained_model_name_or_path, add_pooling_layer=True)
-
-    return Class(question_model, context_model)
-
-
-def biencoder_from_DPR(
-        Class, question_class, dpr_question_model_name_or_path, question_kwargs={}, 
-        context_class=None, dpr_context_model_name_or_path=None, context_kwargs=None, bert=False
+def get_class_from_name(class_name):
+    modules = [mm, trainee, transformers]
+    for module in modules:
+        Class = getattr(module, class_name, None)
+        if Class is not None:
+            return Class
+    raise ValueError(f"Could not find {class_name} in {modules}")
+    
+    
+def get_biencoder(
+        Class, question_class, dpr_question_model_name_or_path, 
+        context_class=None, dpr_context_model_name_or_path=None
     ):
     # default to symmetric encoders
     context_class = question_class if context_class is None else context_class
     dpr_context_model_name_or_path = dpr_question_model_name_or_path if dpr_context_model_name_or_path is None else dpr_context_model_name_or_path
-    context_kwargs = question_kwargs if context_kwargs is None else context_kwargs
 
-    # init pre-trained DPR
-    dpr_question_model = transformers.DPRQuestionEncoder.from_pretrained(dpr_question_model_name_or_path)
-    dpr_context_model = transformers.DPRContextEncoder.from_pretrained(dpr_context_model_name_or_path)
-    # use BERT instead of DPR
-    if bert:
-        dpr_question_model = dpr_question_model.question_encoder.bert_model
-        dpr_context_model = dpr_context_model.ctx_encoder.bert_model
-
-    # init encoders (that wrap DPR)
-    QuestionClass = getattr(mm, question_class)
-    question_model = QuestionClass(dpr_question_model, **question_kwargs)
-    ContextClass = getattr(mm, context_class)
-    context_model = ContextClass(dpr_context_model, **context_kwargs)
+    # init encoders
+    QuestionClass = get_class_from_name(question_class)
+    question_model = QuestionClass.from_pretrained(dpr_question_model_name_or_path)
+    ContextClass = get_class_from_name(context_class)
+    context_model = ContextClass.from_pretrained(dpr_context_model_name_or_path)
 
     # finally wrap both encoders
     biencoder = Class(question_model, context_model)
@@ -143,27 +128,17 @@ def biencoder_from_DPR(
 
 
 def get_pretrained(class_name, trainee_class=None, trainee_kwargs={}, **kwargs):
-    Class = None
-    modules = [trainee, transformers]
-    for module in modules:
-        Class = getattr(module, class_name, None)
-        if Class is not None:
-            break
-    if Class is not None:
-        if issubclass(Class, trainee.DPRBiEncoder):
-            return DPR_from_BERT(Class, **kwargs)
-        elif issubclass(Class, trainee.BiEncoder):
-            return biencoder_from_DPR(Class, **kwargs)
-        elif issubclass(Class, trainee.Trainee):
-            # first get the wrapped pre-trained model in Trainee
-            trainee_model = get_pretrained(trainee_class, **kwargs)
-            # then init the Trainee
-            model = Class(trainee_model, **trainee_kwargs)
-        # simply use PreTrainedModel.from_pretrained method
-        else:
-            model = Class.from_pretrained(**kwargs)
+    Class = get_class_from_name(class_name)
+    if issubclass(Class, trainee.BiEncoder):
+        return get_biencoder(Class, **kwargs)
+    elif issubclass(Class, trainee.Trainee):
+        # first get the wrapped pre-trained model in Trainee
+        trainee_model = get_pretrained(trainee_class, **kwargs)
+        # then init the Trainee
+        model = Class(trainee_model, **trainee_kwargs)
+    # simply use PreTrainedModel.from_pretrained method
     else:
-        raise ValueError(f"Could not find {class_name} in {modules}")
+        model = Class.from_pretrained(**kwargs)        
     return model
 
 
