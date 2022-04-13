@@ -57,6 +57,7 @@ class DMREncoder(PreTrainedModel):
     """
     config_class = MMConfig
     load_tf_weights = None
+    base_model_prefix = "bert_model"
 
     def __init__(self, config):
         super().__init__(config)
@@ -72,7 +73,11 @@ class DMREncoder(PreTrainedModel):
             self.image_embeddings[name] = ImageEmbedding(embedding_dim=self.config.hidden_size,
                                                          dropout=self.config.hidden_dropout_prob,
                                                          **image_kwarg)
-
+            
+    def _init_weights(self, module):
+        # keep torch defaults
+        pass
+    
     def forward(self, text_inputs, face_inputs, image_inputs):
         """
         Arguments
@@ -135,6 +140,7 @@ class IntermediateLinearFusion(PreTrainedModel):
     """Fuses DPR’s text representation with image embeddings by projecting them linearly in the same space"""
     config_class = MMConfig
     load_tf_weights = None
+    base_model_prefix = "dpr_encoder"
 
     def __init__(
             self, config, question_encoder=True
@@ -153,7 +159,11 @@ class IntermediateLinearFusion(PreTrainedModel):
         self.dpr_proj = nn.Linear(self.config.hidden_size, self.config.hidden_size)
         self.LayerNorm = nn.LayerNorm(self.config.hidden_size, eps=self.config.layer_norm_eps)
         self.dropout = nn.Dropout(self.config.hidden_dropout_prob)
-
+        
+    def _init_weights(self, module):
+        # keep torch defaults
+        pass
+    
     def forward(self, text_inputs, face_inputs, image_inputs):
         """
         Arguments
