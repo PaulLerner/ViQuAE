@@ -134,28 +134,18 @@ class DMREncoder(PreTrainedModel):
         pooled_output = sequence_output[:, 0, :]
 
         return EncoderOutput(pooler_output=pooled_output)
-
-
-class ILFConfig(BertConfig):
-    def __init__(self,
-                 *args,
-                 question_encoder=True,
-                 **kwargs
-                 ):
-        super().__init__(*args, **kwargs)
-        self.question_encoder = question_encoder
          
             
 class IntermediateLinearFusion(PreTrainedModel):
     """Fuses DPR’s text representation with image embeddings by projecting them linearly in the same space"""
-    config_class = ILFConfig
+    config_class = MMConfig
     load_tf_weights = None
     base_model_prefix = "dpr_encoder"
 
     def __init__(self, config):
         super().__init__(config)
         self.config = config
-        if self.config.question_encoder:
+        if "DPRQuestionEncoder" in self.config.architectures:
             self.dpr_encoder = DPRQuestionEncoder(config)
         else:
             self.dpr_encoder = DPRContextEncoder(config)
