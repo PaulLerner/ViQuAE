@@ -12,12 +12,62 @@ import torch
 from datasets import load_from_disk, set_caching_enabled
 
 from meerqat.models.utils import device, prepare_inputs
+from meerqat.models import mm
 from meerqat.data.loading import load_pretrained_in_kwargs
+
+
+def get_face_inputs(batch, n_faces=4, face_dim=512, bbox_dim=7):
+    face_list = batch["face_embedding"]
+    batch_size = len(face_list)
+    # trim or pad, and convert to tensor
+    face_embeddings = torch.zeros((batch_size, n_faces, face_dim))
+    face_boxes = torch.zeros((batch_size, n_faces, bbox_dim))
+    # 0=masked, 1=not masked
+    attention_mask = torch.zeros((batch_size, n_faces), dtype=torch.long)
+    for i, (face_embedding, bbox) in enumerate(zip(face_list, batch["face_box"])):
+        # no face detected
+        if face_embedding is None:
+            # keep zero-padding/mask
+            continue
+        min_n = min(n_faces, len(face_embedding))
+        face_embeddings[i, : min_n] = torch.tensor(face_embedding[: min_n])
+        face_boxes[i, : min_n] = torch.tensor(bbox[: min_n])
+        attention_mask[i, : min_n] = 1
+
+    face_inputs = {
+        "face": face_embeddings,
+        "bbox": face_boxes,
+        "attention_mask": attention_mask
+    }
+    return face_inputs
+
+
+def get_image_inputs(batch, image_kwargs):
+    image_inputs = {}
+    for name, image_kwarg in image_kwargs.items():
+        features = torch.tensor(batch[name])
+        # 0=masked, 1=not masked
+        attention_mask = torch.ones(features.shape[0], dtype=torch.long)
+        image_inputs[name] = dict(input=features, attention_mask=attention_mask)
+    return image_inputs  
+
+
+def get_inputs(batch, model, tokenizer, tokenization_kwargs={}, key='passage'):
+    text_inputs = tokenizer(batch[key], **tokenization_kwargs)
+    if isinstance(model, (mm.DMREncoder, mm.IntermediateLinearFusion)):
+        inputs = dict(
+            text_inputs=text_inputs, 
+            face_inputs=get_face_inputs(batch, model.config.n_faces, **model.config.face_kwargs), 
+            image_inputs=get_image_inputs(batch, model.config.image_kwargs)
+        )
+    else:
+        inputs = text_inputs
+    return inputs
 
 
 def embed(batch, model, tokenizer, tokenization_kwargs={}, key='passage', 
           save_as='text_embedding', output_key=None, forward_kwargs={}, layers=None):
-    inputs = tokenizer(batch[key], **tokenization_kwargs)
+    inputs = get_inputs(batch, model, tokenizer, tokenization_kwargs=tokenization_kwargs, key=key)
     # move to device
     inputs = prepare_inputs(inputs)
     with torch.no_grad():
