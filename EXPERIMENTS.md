@@ -14,12 +14,15 @@ We train the models based on HF `transformers.Trainer`, itself based on `torch`.
 
 **Table of contents**
 - [Experiments](#experiments)
+  * [Preprocessing passages](#preprocessing-passages)
+    + [Splitting articles in passages](#splitting-articles-in-passages)
+    + [Find relevant passages in the linked wikipedia article](#find-relevant-passages-in-the-linked-wikipedia-article)
+    + [Find relevant passages in the IR results](#find-relevant-passages-in-the-ir-results)
   * [Image](#image)
     + [Global image embedding](#global-image-embedding)
     + [Face detection](#face-detection)
     + [Face recognition](#face-recognition)
   * [IR](#ir)
-    + [Preprocessing passages](#preprocessing-passages)
     + [BM25](#bm25)
     + [DPR](#dpr)
       - [Pre-training on TriviaQA](#pre-training-on-triviaqa)
@@ -32,13 +35,74 @@ We train the models based on HF `transformers.Trainer`, itself based on `torch`.
         * [Tune hyperparameters](#tune-hyperparameters)
         * [Run with the best hyperparameters](#run-with-the-best-hyperparameters)
       - [DPR + Image](#dpr---image)
+        * [Tune hyperparameters](#tune-hyperparameters-1)
         * [Run with the best hyperparameters](#run-with-the-best-hyperparameters-1)
     + [Metrics](#metrics)
   * [Reading Comprehension](#reading-comprehension)
-    + [Pre-processing](#pre-processing)
     + [Pre-training on TriviaQA](#pre-training-on-triviaqa-1)
     + [Fine-tuning on ViQuAE](#fine-tuning-on-viquae-1)
 - [References](#references)
+
+
+## Preprocessing passages
+### Splitting articles in passages
+Articles are stripped of semi-structured data, such as tables and lists. 
+Each article is then split into disjoint passages of 100 words for text retrieval, while preserving sentence boundaries, 
+and the title of the article is appended to the beginning of each passage.
+
+```sh
+python -m meerqat.data.loading passages data/viquae_wikipedia data/viquae_passages experiments/passages/config.json --disable_caching
+```
+
+Then you can extract some columns from the dataset to allow quick (and string) indexing:
+```sh
+python -m meerqat.data.loading map data/viquae_wikipedia wikipedia_title title2index.json --inverse --disable_caching
+python -m meerqat.data.loading map data/viquae_wikipedia passage_index article2passage.json --disable_caching
+```
+
+### Find relevant passages in the linked wikipedia article
+
+This allows us to find the relevant passages for the question (i.e. those than contain the answer or the alternative answers):
+```sh
+python -m meerqat.ir.metrics relevant data/viquae_dataset data/viquae_passages data/viquae_wikipedia/title2index.json data/viquae_wikipedia/article2passage.json --disable_caching
+```
+
+### Find relevant passages in the IR results
+
+Our clue that the passage is relevant for the answer is quite weak:
+it contains the answer. That’s it. 
+When scanning for the wikipedia article of the entity (in `meerqat.ir.metrics relevant`)
+you might find some passages that contain the answer but have nothing to do with the question.
+In order to tackle this, we use relevant passages that come from the IR step in priority.
+Moreover, in this step (and it has no impact on the evaluation) we only check for the *original answer*
+not all alternative answers (which come from wikipedia aliases).
+Since this step does not really fit in any of the modules and I cannot think of a way of making it robust,
+I’ll just let you run it yourself from this code snippet:
+```py
+from datasets import load_from_disk, set_caching_enabled
+from meerqat.ir.metrics import find_relevant
+
+set_caching_enabled(False)
+kb = load_from_disk('data/viquae_passages/')
+dataset = load_from_disk('data/viquae_dataset/')
+
+def keep_relevant_search_wrt_original_in_priority(item, kb):
+    # this contains the latest result of the fusion
+    # to reproduce the results of the paper:
+    # - use DPR+Image as IR to train the reader
+    # - use BM25 as IR to train DPR (then save in 'BM25_provenance_indices'/'BM25_irrelevant_indices')
+    indices = item['search_indices']
+    relevant_indices, _ = find_relevant(indices, item['output']['original_answer'], [], kb)
+    if relevant_indices:
+        item['search_provenance_indices'] = relevant_indices
+    else:
+        item['search_provenance_indices'] = item['original_answer_provenance_indices']
+    item['search_irrelevant_indices'] = list(set(indices) - set(relevant_indices))
+    return item
+    
+dataset = dataset.map(keep_relevant_search_wrt_original_in_priority, fn_kwargs=dict(kb=kb))
+dataset.save_to_disk('data/viquae_dataset/')
+``` 
 
 ## Image
 This will be applied on both the QA dataset and the KB.  
@@ -119,6 +183,7 @@ python -m meerqat.image.face_recognition data/viquae_wikipedia/humans_with_faces
 
 Again, you can have a look at an [interactive UMAP visualization](http://meerqat.fr/arcface-viquae.html) (takes a while to load), trained on the whole KB faces (but displaying only 10K to get a reasonable HTML size).
 
+
 ## IR
 
 Now that we have a bunch of dense representations, let’s see how to retrieve information!
@@ -126,28 +191,6 @@ Dense IR is done with `faiss` and sparse IR is done with `elasticsearch`, both v
 We’ll use IR on both TriviaQA along with the complete Wikipedia (BM25 only) and ViQuAE along with the multimodal Wikipedia.
 
 Hyperparameter tuning is done using grid search via `optuna` on the dev set to maximize MRR.
-
-### Preprocessing passages
-You can probably skip this step as we will provide passages dataset along with provenance.
-
-Articles are stripped of semi-structured data, such as tables and lists. 
-Each article is then split into disjoint passages of 100 words for text retrieval, while preserving sentence boundaries, 
-and the title of the article is appended to the beginning of each passage.
-
-```sh
-python -m meerqat.data.loading passages data/viquae_wikipedia data/viquae_passages experiments/passages/config.json --disable_caching
-```
-
-Then you can extract some columns from the dataset to allow quick (and string) indexing:
-```sh
-python -m meerqat.data.loading map data/viquae_wikipedia wikipedia_title title2index.json --inverse --disable_caching
-python -m meerqat.data.loading map data/viquae_wikipedia passage_index article2passage.json --disable_caching
-```
-
-This allows us to find the relevant passages for the question (i.e. those than contain the answer or the alternative answers):
-```sh
-python -m meerqat.ir.metrics relevant data/viquae_dataset data/viquae_passages data/viquae_wikipedia/title2index.json data/viquae_wikipedia/article2passage.json --disable_caching
-```
 
 ### BM25
 Before running any of the commands below you should [launch the Elastic Search server](https://www.elastic.co/guide/en/elastic-stack-get-started/current/get-started-elastic-stack.html#install-elasticsearch).
@@ -343,40 +386,6 @@ We also enforce that the start starts before the end and
 that the first token (`[CLS]`) cannot be the answer since it’s the objective for irrelevant passages
 (this is the default behavior but can be changed with the `cannot_be_first_token` flag).
 
-
-### Pre-processing
-Our clue that the passage is relevant for the answer is quite weak:
-it contains the answer. That’s it. 
-When scanning for the wikipedia article of the entity (in `meerqat.ir.metrics relevant`)
-you might find some passages that contain the answer but have nothing to do with the question.
-In order to tackle this, we use relevant passages that come from the IR step in priority.
-Moreover, in this step (and it has no impact on the evaluation) we only check for the *original answer*
-not all alternative answers (which come from wikipedia aliases).
-Since this step does not really fit in any of the modules and I cannot think of a way of making it robust,
-I’ll just let you run it yourself from this code snippet:
-```py
-from datasets import load_from_disk, set_caching_enabled
-from meerqat.ir.metrics import find_relevant
-
-set_caching_enabled(False)
-kb = load_from_disk('data/viquae_passages/')
-dataset = load_from_disk('data/viquae_dataset/')
-
-def keep_relevant_search_wrt_original_in_priority(item, kb):
-    # this contains the latest result of the fusion
-    # to reproduce the results of the paper, use DPR+Image as IR
-    indices = item['search_indices']
-    relevant_indices, _ = find_relevant(indices, item['output']['original_answer'], [], kb)
-    if relevant_indices:
-        item['search_provenance_indices'] = relevant_indices
-    else:
-        item['search_provenance_indices'] = item['original_answer_provenance_indices']
-    item['search_irrelevant_indices'] = list(set(indices) - set(relevant_indices))
-    return item
-    
-dataset = dataset.map(keep_relevant_search_wrt_original_in_priority, fn_kwargs=dict(kb=kb))
-dataset.save_to_disk('data/viquae_dataset/')
-``` 
 
 ### Pre-training on TriviaQA
 If you want to skip this step you can get our pretrained model at https://huggingface.co/PaulLerner/multi_passage_bert_triviaqa_without_viquae
