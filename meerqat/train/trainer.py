@@ -308,9 +308,10 @@ class ILFTrainer(DPRBiEncoderTrainer):
     """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.n_faces = self.model.config.n_faces
-
         # image dimensions and model names
+        self.n_faces = self.model.question_model.config.n_faces
+        assert self.n_faces == self.model.context_model.config.n_faces
+        
         assert(self.model.question_model.image_embeddings.keys() == self.model.context_model.image_embeddings.keys())  
         self.image_embeddings_keys = self.model.question_model.image_embeddings.keys()
         self.image_dims = {}
@@ -318,6 +319,7 @@ class ILFTrainer(DPRBiEncoderTrainer):
             image_dim = self.model.question_model.image_embeddings[name].linear.in_features
             assert(image_dim == self.model.context_model.image_embeddings[name].linear.in_features)
             self.image_dims[name] = image_dim
+            
         assert(self.model.question_model.face_embedding.face_proj.in_features == self.model.context_model.face_embedding.face_proj.in_features)
         self.face_dim = self.model.question_model.face_embedding.face_proj.in_features
         assert(self.model.question_model.face_embedding.bbox_proj.in_features == self.model.context_model.face_embedding.bbox_proj.in_features)

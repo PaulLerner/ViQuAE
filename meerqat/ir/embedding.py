@@ -1,7 +1,9 @@
-"""Usage: embedding.py <dataset> <config> [--disable_caching]
+"""Usage: embedding.py <dataset> <config> [--disable_caching --kb=<path> --output=<path>]
 
 Options:
---disable_caching                       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
+--disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
+--kb=<path>             Path to the KB that can be mapped from the passages
+--output=<path>         Optionnally save the resulting dataset there instead of overwriting the input dataset.
 """
 
 from docopt import docopt
@@ -52,13 +54,35 @@ def get_image_inputs(batch, image_kwargs):
     return image_inputs  
 
 
-def get_inputs(batch, model, tokenizer, tokenization_kwargs={}, key='passage'):
+def map_passage_to_kb(batch, kb):
+    """
+    Parameters
+    ----------
+    batch: dict
+        Should be a batch from the passages KB
+        Should be able to map to the KB using the 'index' key
+    kb: Dataset
+        Should be a dataset with pre-computed features
+    """
+    subset = kb.select(batch['index'])
+    for feature in subset.features:
+        batch.setdefault(feature, subset[feature])
+    return batch
+
+    
+def get_inputs(batch, model, tokenizer, tokenization_kwargs={}, key='passage', kb=None):
     text_inputs = tokenizer(batch[key], **tokenization_kwargs)
     if isinstance(model, (mm.DMREncoder, mm.IntermediateLinearFusion)):
+        if kb is not None:
+            # /!\ do not modify batch, copy before (else all the features of the KB will be saved). 
+            # no need to deepcopy (only modifying batch keys)
+            new_batch = map_passage_to_kb(batch.copy(), kb)
+        else:
+            new_batch = batch
         inputs = dict(
             text_inputs=text_inputs, 
-            face_inputs=get_face_inputs(batch, model.config.n_faces, **model.config.face_kwargs), 
-            image_inputs=get_image_inputs(batch, model.config.image_kwargs)
+            face_inputs=get_face_inputs(new_batch, model.config.n_faces, **model.config.face_kwargs), 
+            image_inputs=get_image_inputs(new_batch, model.config.image_kwargs)
         )
     else:
         inputs = text_inputs
@@ -66,8 +90,8 @@ def get_inputs(batch, model, tokenizer, tokenization_kwargs={}, key='passage'):
 
 
 def embed(batch, model, tokenizer, tokenization_kwargs={}, key='passage', 
-          save_as='text_embedding', output_key=None, forward_kwargs={}, layers=None):
-    inputs = get_inputs(batch, model, tokenizer, tokenization_kwargs=tokenization_kwargs, key=key)
+          save_as='text_embedding', output_key=None, forward_kwargs={}, layers=None, kb=None):
+    inputs = get_inputs(batch, model, tokenizer, tokenization_kwargs=tokenization_kwargs, key=key, kb=kb)
     # move to device
     inputs = prepare_inputs(inputs)
     with torch.no_grad():
@@ -94,15 +118,22 @@ def embed(batch, model, tokenizer, tokenization_kwargs={}, key='passage',
     return batch
 
 
-def dataset_embed(dataset_path, map_kwargs={}, **fn_kwargs):
+def dataset_embed(dataset_path, map_kwargs={}, output_path=None, **fn_kwargs):
     dataset = load_from_disk(dataset_path)
+    # defaults to overwrite the dataset
+    if output_path is None:
+        output_path = dataset_path
     dataset = dataset.map(embed, batched=True, fn_kwargs=fn_kwargs, **map_kwargs)
-    dataset.save_to_disk(dataset_path)
+    dataset.save_to_disk(output_path)
 
 
 if __name__ == '__main__':
     args = docopt(__doc__)
     set_caching_enabled(not args['--disable_caching'])
+    if args['--kb']:
+        kb = load_from_disk(args['--kb'])
+    else:
+        kb = None
     config_path = args['<config>']
     with open(config_path, 'rt') as file:
         config = load_pretrained_in_kwargs(json.load(file))
@@ -114,4 +145,4 @@ if __name__ == '__main__':
     model = model.to(device).eval()
     if torch.cuda.device_count() > 1:
         model = torch.nn.DataParallel(model)
-    dataset_embed(args['<dataset>'], model=model, **config)
+    dataset_embed(args['<dataset>'], model=model, kb=kb, output_path=args['--output'], **config)
