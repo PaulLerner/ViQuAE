@@ -305,9 +305,20 @@ class ILFTrainer(DPRBiEncoderTrainer):
     Fuses DPR’s text representation with image embeddings by projecting them linearly in the same space
     --> loads pre-computed image features along with text 
     --> overrides collate_fn
+    
+    Parameters
+    ----------
+    image_kb: str, optional
+        Path to the KB that holds pre-computed image features
+        Can be mapped from kb using kb['index']
+        Optional to ease inheritance
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, image_kb=None, **kwargs):
         super().__init__(*args, **kwargs)
+        if image_kb is not None:
+            self.image_kb = load_from_disk(image_kb)
+        else:
+            self.image_kb = None
         # image dimensions and model names
         self.n_faces = self.model.question_model.config.n_faces
         assert self.n_faces == self.model.context_model.config.n_faces
@@ -367,8 +378,17 @@ class ILFTrainer(DPRBiEncoderTrainer):
                 attention_mask[i] = 1
 
             image_inputs[name] = dict(input=features, attention_mask=attention_mask)
-        return image_inputs                                                  
-
+        return image_inputs               
+                                   
+    def add_image_features(self, passages):
+        output = []
+        for passage in passages:
+            image_item = self.image_kb[passage['index']]
+            for k, v in image_item.items():
+                passage.setdefault(k, v)
+            output.append(passage)
+        return output
+        
     def collate_fn(self, items):
         # find relevant and irrelevant passages, pad if necessary
         n_irrelevant_passages = self.M-self.n_relevant_passages
@@ -376,7 +396,7 @@ class ILFTrainer(DPRBiEncoderTrainer):
         for i, item in enumerate(items):
             relevant_passage, irrelevant_passage = self.get_training_passages(item)
             # Dataset to list (to get the same format as items)
-            relevant_passage, irrelevant_passage = list(relevant_passage), list(irrelevant_passage)
+            relevant_passage, irrelevant_passage = self.add_image_features(relevant_passage), self.add_image_features(irrelevant_passage)
             if len(relevant_passage) < 1:
                 relevant_passage = [{'passage': ''}]
                 labels.append(self.loss_fct.ignore_index)
@@ -422,7 +442,7 @@ class ICTTrainer(ILFTrainer):
     - get_training_passages, which implements what’s described above
     - collate_fn to load and concatenate the image features
 
-    The kb and search_key attributes are not used.
+    The image_kb, kb and search_key attributes are not used.
 
     References
     ----------
@@ -442,6 +462,7 @@ class ICTTrainer(ILFTrainer):
     def __init__(self, *args, sentences_per_target=4, **kwargs):
         super().__init__(*args, **kwargs)
         self.kb = None
+        self.image_kb = None
         self.sentences_per_target = sentences_per_target
         self.data_collator = self.collate_fn
 
