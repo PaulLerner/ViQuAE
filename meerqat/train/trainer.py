@@ -300,9 +300,8 @@ class DPRBiEncoderTrainer(QuestionAnsweringTrainer):
         return (loss, dict(log_probs=log_probs)) if return_outputs else loss
 
 
-class ILFTrainer(DPRBiEncoderTrainer):
+class MMTrainer(DPRBiEncoderTrainer):
     """
-    Fuses DPR’s text representation with image embeddings by projecting them linearly in the same space
     --> loads pre-computed image features along with text 
     --> overrides collate_fn
     
@@ -381,12 +380,20 @@ class ILFTrainer(DPRBiEncoderTrainer):
         return image_inputs               
                                    
     def add_image_features(self, passages):
-        output = []
+        if len(passages) < 1:
+            return passages
+        features = ({"face_box", "face_embedding"} | self.image_embeddings_keys)
+        batch = {'index': [], 'passage': []}
         for passage in passages:
-            image_item = self.image_kb[passage['index']]
-            for k, v in image_item.items():
-                passage.setdefault(k, v)
-            output.append(passage)
+            batch['index'].append(passage['index'])
+            batch['passage'].append(passage['passage'])
+        subset = self.image_kb.select(batch['index'])
+        for feature in features:
+            batch.setdefault(feature, subset[feature])
+        # dict of list to list of dict
+        output = []
+        for values in zip(*batch.values()):
+            output.append({k: v for k, v in zip(batch.keys(), values)})
         return output
         
     def collate_fn(self, items):
@@ -432,13 +439,13 @@ class ILFTrainer(DPRBiEncoderTrainer):
         return batch
 
 
-class ICTTrainer(ILFTrainer):
+class ICTTrainer(MMTrainer):
     """
     Extends the Inverse Cloze Task (ICT, lee_latent_2019) to multimodal documents.
     Given a wikipedia section, one sentence is considered as a pseudo-question/query and the nearby sentences as a pseudo-target/relevant passage.
     In this multimodal setting, we also consider the image of the section in the query and the infobox/main image of the article in the target.
 
-    Inherits from ILFTrainer/DPRBiEncoderTrainer and overrides:
+    Inherits from MMTrainer/DPRBiEncoderTrainer and overrides:
     - get_training_passages, which implements what’s described above
     - collate_fn to load and concatenate the image features
 

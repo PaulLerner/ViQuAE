@@ -3,7 +3,7 @@
 Options:
 --disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
 --kb=<path>             Path to the KB that can be mapped from the passages
---output=<path>         Optionnally save the resulting dataset there instead of overwriting the input dataset.
+--output=<path>         Optionally save the resulting dataset there instead of overwriting the input dataset.
 """
 
 from docopt import docopt
@@ -54,7 +54,7 @@ def get_image_inputs(batch, image_kwargs):
     return image_inputs  
 
 
-def map_passage_to_kb(batch, kb):
+def map_passage_to_kb(batch, kb, features):
     """
     Parameters
     ----------
@@ -65,7 +65,7 @@ def map_passage_to_kb(batch, kb):
         Should be a dataset with pre-computed features
     """
     subset = kb.select(batch['index'])
-    for feature in subset.features:
+    for feature in features:
         batch.setdefault(feature, subset[feature])
     return batch
 
@@ -74,9 +74,10 @@ def get_inputs(batch, model, tokenizer, tokenization_kwargs={}, key='passage', k
     text_inputs = tokenizer(batch[key], **tokenization_kwargs)
     if isinstance(model, (mm.DMREncoder, mm.IntermediateLinearFusion)):
         if kb is not None:
+            features = {"face_embedding", "face_box"} | model.config.image_kwargs.keys()
             # /!\ do not modify batch, copy before (else all the features of the KB will be saved). 
             # no need to deepcopy (only modifying batch keys)
-            new_batch = map_passage_to_kb(batch.copy(), kb)
+            new_batch = map_passage_to_kb(batch.copy(), kb, features)
         else:
             new_batch = batch
         inputs = dict(
@@ -96,7 +97,7 @@ def embed(batch, model, tokenizer, tokenization_kwargs={}, key='passage',
     inputs = prepare_inputs(inputs)
     with torch.no_grad():
         outputs = model(**inputs, **forward_kwargs)
-    # single ouput
+    # single output
     if isinstance(outputs, torch.Tensor):
         output = outputs
     # multiple outputs
@@ -114,7 +115,7 @@ def embed(batch, model, tokenizer, tokenization_kwargs={}, key='passage',
     else:
         for layer in layers:
             # FIXME: ad-hoc for DPR: keep only the representation of the [CLS] token
-            batch[f"{save_as}_layer_{layer}"] = output[layer][:,0].cpu().numpy()
+            batch[f"{save_as}_layer_{layer}"] = output[layer][:, 0].cpu().numpy()
     return batch
 
 
