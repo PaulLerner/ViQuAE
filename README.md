@@ -1,5 +1,5 @@
 # ViQuAE
-Source code and data used in the paper *ViQuAE, a Dataset for Knowledge-based Visual Question Answering about Named Entities*, submitted to SIGIR'22 Resource Papers (TODO add link or preprint). 
+Source code and data used in the paper [*ViQuAE, a Dataset for Knowledge-based Visual Question Answering about Named Entities*](https://hal.archives-ouvertes.fr/hal-03650618), Lerner et al., SIGIR'22. 
 
 See also [MEERQAT project](https://www.meerqat.fr/).
 
@@ -150,7 +150,20 @@ Please refer to [EXPERIMENTS.md](./EXPERIMENTS.md) for instructions to reproduce
 
 If you use this code or the ViQuAE dataset, please cite our paper:
 ```
-TODO
+@inproceedings{lerner2022,
+   author = {Paul Lerner and Olivier Ferret and Camille Guinaudeau and Le Borgne, Hervé  and Romaric
+   Besançon and Moreno, Jose G  and Lovón Melgarejo, Jesús },
+   year={2022},
+   title={{ViQuAE}, a
+   Dataset for Knowledge-based Visual Question Answering about Named
+   Entities},
+   booktitle = {Proceedings of The 45th International ACM SIGIR Conference on Research and Development in Information Retrieval},
+	series = {SIGIR’22},
+   URL = {https://hal.archives-ouvertes.fr/hal-03650618},
+   DOI = {10.1145/3477495.3531753},
+   publisher = {Association for Computing Machinery},
+   address = {New York, NY, USA}
+}
 ```
 
 # `meerqat`
