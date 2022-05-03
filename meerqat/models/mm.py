@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Tuple
 
 import torch
 from torch import nn
@@ -13,6 +13,16 @@ from meerqat.models.image import ImageEmbedding, FaceEmbedding
 @dataclass
 class EncoderOutput(ModelOutput):
     pooler_output: Optional[torch.FloatTensor] = None
+
+
+@dataclass 
+class DMREncoderOutput(EncoderOutput):
+    """
+    Same as DPRQuestionEncoderOutput / DPRContextEncoderOutput
+    """
+    pooler_output: Optional[torch.FloatTensor] = None
+    hidden_states: Optional[Tuple[torch.FloatTensor]] = None
+    attentions: Optional[Tuple[torch.FloatTensor]] = None
 
 
 class MMConfig(BertConfig):
@@ -80,7 +90,10 @@ class DMREncoder(PreTrainedModel):
         # keep torch defaults
         pass
     
-    def forward(self, text_inputs, face_inputs, image_inputs):
+    def forward(self, text_inputs, face_inputs, image_inputs,
+                output_attentions=False,
+                output_hidden_states=False,
+                return_dict=True):
         """
         Arguments
         ---------
@@ -129,13 +142,22 @@ class DMREncoder(PreTrainedModel):
         extended_attention_mask = self.bert_model.get_extended_attention_mask(
             attention_mask, multimodal_embeddings.shape[:-1], multimodal_embeddings.device
         )
-        outputs = self.bert_model.encoder(multimodal_embeddings, attention_mask=extended_attention_mask)
+        outputs = self.bert_model.encoder(multimodal_embeddings, attention_mask=extended_attention_mask,
+                                          output_attentions=output_attentions,
+                                          output_hidden_states=output_hidden_states,
+                                          return_dict=return_dict)
 
         # same as DPR: extract representation from [CLS]: the first token
         sequence_output = outputs[0]
         pooled_output = sequence_output[:, 0, :]
-
-        return EncoderOutput(pooler_output=pooled_output)
+        
+        if not return_dict:
+            return (pooled_output, ) + outputs[2:]
+        
+        return DMREncoderOutput(
+                pooler_output=pooled_output,
+                hidden_states=outputs.hidden_states, 
+                attentions=outputs.attentions)
 
 
 class ILFConfig(MMConfig):
