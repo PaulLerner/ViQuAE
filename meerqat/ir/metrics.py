@@ -2,7 +2,7 @@
 Usage:
 metrics.py relevant <dataset> <passages> <title2index> <article2passage> [--disable_caching]
 metrics.py qrels <qrels>... --output=<path>
-metrics.py ranx <run>... --qrels=<path> [--output=<path> --filter=<path> --kwargs=<path>]
+metrics.py ranx --qrels=<path> [<run>... --output=<path> --filter=<path> --kwargs=<path>]
 """
 from docopt import docopt
 import json
@@ -120,17 +120,27 @@ def fuse_qrels(qrels_paths):
     return ranx.Qrels.from_dict(final_qrels)
 
 
-def compare(qrels_path, runs_paths, output_path=None, filter_q_ids=[], **kwargs):
+def compare(qrels_path, runs_paths, runs_dict={}, output_path=None, filter_q_ids=[], **kwargs):
     qrels = ranx.Qrels.from_file(qrels_path, kind='trec')
     for q_id in filter_q_ids:
         qrels.qrels.pop(q_id)
     runs = []
+    
+    # load runs from CLI
     for run_path in runs_paths:
         run = ranx.Run.from_file(run_path, kind='trec')
         if run.name is None:
             run.name = run_path
         else:
             run.name += run_path
+        for q_id in filter_q_ids:
+            run.run.pop(q_id)
+        runs.append(run)
+    
+    # load runs from config file
+    for name, run_path in runs_dict.items():
+        run = ranx.Run.from_file(run_path, kind='trec')
+        run.name = name
         for q_id in filter_q_ids:
             run.run.pop(q_id)
         runs.append(run)
@@ -174,5 +184,9 @@ if __name__ == '__main__':
         else:
             ks = [1, 5, 10, 20, 100]
             kwargs = dict(metrics=[f"{m}@{k}" for m in ["precision", "mrr"] for k in ks])
-        compare(args['--qrels'], args['<run>'], output_path=args['--output'], filter_q_ids=filter_q_ids, **kwargs)
+        if args['<run>'] is not None:
+            runs_paths = args['<run>']
+        else:
+            runs_paths = []
+        compare(args['--qrels'], runs_paths, output_path=args['--output'], filter_q_ids=filter_q_ids, **kwargs)
 
