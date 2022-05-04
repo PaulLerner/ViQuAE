@@ -42,4 +42,4 @@ if __name__ == '__main__':
         config = load_pretrained_in_kwargs(json.load(file))
     
     bert = args['--bert']
-    split_biencoder(**config, bert=bert)
+    split_biencoder(config['trainee'], config['checkpoint'], bert=bert)
