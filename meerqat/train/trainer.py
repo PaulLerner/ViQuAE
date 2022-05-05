@@ -466,12 +466,12 @@ class ICTTrainer(MMTrainer):
         pages = {6086--6096}
     }
     """
-    def __init__(self, *args, sentences_per_target=4, add_title=False, **kwargs):
+    def __init__(self, *args, sentences_per_target=4, prepend_title=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.kb = None
         self.image_kb = None
         self.sentences_per_target = sentences_per_target
-        self.add_title = add_title
+        self.prepend_title = prepend_title
         self.data_collator = self.collate_fn
 
     def get_training_passages(self, item):
@@ -497,7 +497,7 @@ class ICTTrainer(MMTrainer):
             min_shift = i + n - len(sentences) + 1
         shift = np.random.randint(min_shift, max_shift+1)
         target = [s['text'] for s in sentences[i-shift: i]+sentences[i+1: i+1+n-shift]]
-        if self.add_title:
+        if self.prepend_title:
             target.insert(0, self.tokenizer.sep_token)
             target.insert(0, item['title'])
         target = dict(text=" ".join(target))  
