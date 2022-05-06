@@ -32,10 +32,10 @@ def fplot(reduced_embeddings, figsize=(20,20), alpha=0.5, s=5):
     return fig
 
 
-def iplot(reduced_embeddings, dataset, input_key='input', thumb_width=128, title='UMAP projection',
+def iplot(reduced_embeddings, dataset, urls, input_key='input', thumb_width=128, title='UMAP projection',
           plot_width=600, plot_height=600, tools=('pan, wheel_zoom, reset'),
           line_alpha=0.6, fill_alpha=0.6, size=4):
-    thumbnails = [file_name_to_thumbnail(thumbnail_to_file_name(url), thumb_width) for url in dataset['url']]
+    thumbnails = [file_name_to_thumbnail(thumbnail_to_file_name(url), thumb_width) for url in urls]
     df = pd.DataFrame(reduced_embeddings, columns=('x', 'y'))
     df['text'] = dataset[input_key]
     df['image'] = thumbnails
@@ -64,14 +64,28 @@ def iplot(reduced_embeddings, dataset, input_key='input', thumb_width=128, title
     return fig
 
     
-def main(dataset, key, output_path, shard=None, reduce_kwargs={}, fplot_kwargs={}, iplot_kwargs={}):
+def main(dataset, key, output_path, image_kb=None, shard=None, reduce_kwargs={}, fplot_kwargs={}, iplot_kwargs={}):
     if shard is not None:
         dataset = dataset.shuffle(seed=0).shard(shard, 0)
+    print(dataset)
+    # add features from the image KB
+    if image_kb is not None:
+        image_kb = load_from_disk(image_kb)
+        print(image_kb)
+        indices = dataset['index']
+        print(len(indices))
+        urls = image_kb.select(indices)['url']
+        print(len(urls))
+    else:
+        urls = dataset['url']
+    print(dataset)
     embeddings = np.array(dataset[key])
+    print(embeddings.shape)
     reduced_embeddings = reduce(embeddings, **reduce_kwargs)
+    print(reduced_embeddings.shape)
     ffig = fplot(reduced_embeddings, **fplot_kwargs)
     ffig.savefig(output_path/f"umap_{key}.png")
-    ifig = iplot(reduced_embeddings, dataset, **iplot_kwargs)
+    ifig = iplot(reduced_embeddings, dataset, urls=urls, **iplot_kwargs)
     output_file(output_path/f"umap_{key}.html")
     save(ifig)
 
