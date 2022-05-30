@@ -26,7 +26,6 @@ def reduce(embeddings, metric='cosine'):
 
 
 def fplot(reduced_embeddings, figsize=(20,20), alpha=0.5, s=5):
-    output_path.mkdir(exist_ok=True)
     fig, ax = plt.subplots(figsize=figsize)
     ax.scatter(reduced_embeddings[:, 0], reduced_embeddings[:, 1], alpha=alpha, s=s)
     return fig
@@ -65,9 +64,9 @@ def iplot(reduced_embeddings, dataset, urls, input_key='input', thumb_width=128,
 
     
 def main(dataset, key, output_path, image_kb=None, shard=None, reduce_kwargs={}, fplot_kwargs={}, iplot_kwargs={}):
+    output_path.mkdir(exist_ok=True)
     if shard is not None:
         dataset = dataset.shuffle(seed=0).shard(shard, 0)
-    print(dataset)
     # add features from the image KB
     if image_kb is not None:
         image_kb = load_from_disk(image_kb)
@@ -78,11 +77,8 @@ def main(dataset, key, output_path, image_kb=None, shard=None, reduce_kwargs={},
         print(len(urls))
     else:
         urls = dataset['url']
-    print(dataset)
     embeddings = np.array(dataset[key])
-    print(embeddings.shape)
     reduced_embeddings = reduce(embeddings, **reduce_kwargs)
-    print(reduced_embeddings.shape)
     ffig = fplot(reduced_embeddings, **fplot_kwargs)
     ffig.savefig(output_path/f"umap_{key}.png")
     ifig = iplot(reduced_embeddings, dataset, urls=urls, **iplot_kwargs)
