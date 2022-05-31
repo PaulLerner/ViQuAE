@@ -15,6 +15,7 @@ import torch
 from torch import nn
 from torch.autograd import set_detect_anomaly
 from torch.utils.data.dataset import IterableDataset
+from torch.utils.data import RandomSampler
 import torch.distributed as dist
 
 from transformers import Trainer, TrainingArguments, trainer_callback, logging as t_logging
@@ -507,7 +508,15 @@ class ICTTrainer(MMTrainer):
             target[k] = item.get(f"context_{k}")
         return query, target
 
-    def collate_fn(self, items):        
+    def _get_eval_sampler(self, eval_dataset):
+        if self.args.use_legacy_prediction_loop:
+            raise NotImplementedError()
+        # Build the sampler.
+        if self.args.group_by_length or self.args.world_size > 1:
+            raise NotImplementedError()
+        return RandomSampler(eval_dataset)
+
+    def collate_fn(self, items):
         questions, relevant_passages, labels = [], [], []
         for i, item in enumerate(items):
             query, relevant_passage = self.get_training_passages(item)
