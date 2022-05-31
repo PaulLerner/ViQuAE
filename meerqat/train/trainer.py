@@ -940,7 +940,10 @@ def get_checkpoint(resume_from_checkpoint: str, *args, **kwargs):
         warnings.warn(f"ignoring additional arguments:\n{args}\n{kwargs}")
     cpt = Path(resume_from_checkpoint)
     # weird trick to glob using pathlib
-    resume_from_checkpoints = list(cpt.parent.glob(cpt.name))
+    resume_from_checkpoints = cpt.parent.glob(cpt.name)
+    # sort by checkpoint number
+    resume_from_checkpoints = sorted(resume_from_checkpoints, key=lambda path: int(path.name.split('-')[-1]))
+    print(resume_from_checkpoints)
     return resume_from_checkpoints
 
 
