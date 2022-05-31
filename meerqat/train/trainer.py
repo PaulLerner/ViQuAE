@@ -323,18 +323,18 @@ class MMTrainer(DPRBiEncoderTrainer):
         self.n_faces = self.model.question_model.config.n_faces
         assert self.n_faces == self.model.context_model.config.n_faces
         
-        assert(self.model.question_model.image_embeddings.keys() == self.model.context_model.image_embeddings.keys())  
-        self.image_embeddings_keys = self.model.question_model.image_embeddings.keys()
+        assert(self.model.question_model.config.image_kwargs.keys() == self.model.context_model.config.image_kwargs.keys())
+        self.image_embeddings_keys = self.model.question_model.config.image_kwargs.keys()
         self.image_dims = {}
         for name in self.image_embeddings_keys:
-            image_dim = self.model.question_model.image_embeddings[name].linear.in_features
-            assert(image_dim == self.model.context_model.image_embeddings[name].linear.in_features)
+            image_dim = self.model.question_model.config.image_kwargs[name]["input_dim"]
+            assert(image_dim == self.model.context_model.config.image_kwargs[name]["input_dim"])
             self.image_dims[name] = image_dim
-            
-        assert(self.model.question_model.face_embedding.face_proj.in_features == self.model.context_model.face_embedding.face_proj.in_features)
-        self.face_dim = self.model.question_model.face_embedding.face_proj.in_features
-        assert(self.model.question_model.face_embedding.bbox_proj.in_features == self.model.context_model.face_embedding.bbox_proj.in_features)
-        self.bbox_dim = self.model.question_model.face_embedding.bbox_proj.in_features
+
+        self.face_dim = self.model.question_model.config.face_kwargs['face_dim']
+        assert(self.face_dim == self.model.context_model.config.face_kwargs['face_dim'])
+        self.bbox_dim = self.model.question_model.config.face_kwargs['bbox_dim']
+        assert(self.bbox_dim == self.model.context_model.config.face_kwargs['bbox_dim'])
 
     def get_face_inputs(self, items):
         # trim or pad, and convert to tensor
