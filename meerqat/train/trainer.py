@@ -152,14 +152,14 @@ class QuestionAnsweringTrainer(MeerqatTrainer):
             self.args.remove_unused_columns = False
 
     def get_training_passages(self, item):
-        relevant_passages = []
+        relevant_passages = {'passage': []}
         all_relevant_indices = item[self.search_key+"_provenance_indices"]
         n_relevant = min(len(all_relevant_indices), self.n_relevant_passages)
         if n_relevant > 0:
             relevant_indices = np.random.choice(all_relevant_indices, n_relevant, replace=False)
             if len(relevant_indices) > 0:
                 relevant_passages = self.kb.select(relevant_indices)
-        irrelevant_passages = []
+        irrelevant_passages = {'passage': []}
         all_irrelevant_indices = item[self.search_key+"_irrelevant_indices"]
         n_irrelevant = min(len(all_irrelevant_indices), self.M-self.n_relevant_passages)
         if n_irrelevant > 0:
