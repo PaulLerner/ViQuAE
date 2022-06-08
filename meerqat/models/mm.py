@@ -31,6 +31,7 @@ class MMConfig(BertConfig):
                  n_faces=4,
                  face_kwargs=None,
                  image_kwargs=None,
+                 face_and_image_are_exclusive=False,
                  **kwargs
                  ):
         super().__init__(*args, **kwargs)
@@ -46,6 +47,7 @@ class MMConfig(BertConfig):
             }
         else:
             self.image_kwargs = image_kwargs
+        self.face_and_image_are_exclusive = face_and_image_are_exclusive
 
 
 class DMREncoder(PreTrainedModel):
@@ -130,6 +132,13 @@ class DMREncoder(PreTrainedModel):
         # (n_images, batch_size, embedding_dim) -> (batch_size, n_images, embedding_dim)
         image_outputs = torch.cat(image_outputs, 0).transpose(0, 1)
         image_attention_mask = torch.cat(image_attention_mask, 0).transpose(0, 1)
+        
+        if self.config.face_and_image_are_exclusive:
+            face_attention_mask = face_inputs["attention_mask"]
+            # indices at the batch level: at least one face detected (i.e. not masked)
+            where_are_faces = face_attention_mask.nonzero()[:,0].unique()
+            # mask images if at least one face was detected
+            image_attention_mask[where_are_faces] = 0
 
         # embed text: (batch_size, sequence_length, embedding_dim)
         text_embeddings = self.bert_model.embeddings(input_ids=text_inputs['input_ids'],
@@ -191,6 +200,8 @@ class IntermediateLinearFusion(PreTrainedModel):
         self.dpr_proj = nn.Linear(self.config.hidden_size, self.config.hidden_size)
         self.LayerNorm = nn.LayerNorm(self.config.hidden_size, eps=self.config.layer_norm_eps)
         self.dropout = nn.Dropout(self.config.hidden_dropout_prob)
+        if self.config.face_and_image_are_exclusive:
+            raise NotImplementedError()
         
     def _init_weights(self, module):
         # keep torch defaults
