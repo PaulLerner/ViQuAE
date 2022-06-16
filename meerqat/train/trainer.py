@@ -152,14 +152,14 @@ class QuestionAnsweringTrainer(MeerqatTrainer):
             self.args.remove_unused_columns = False
 
     def get_training_passages(self, item):
-        relevant_passages = {'passage': []}
+        relevant_passages = []
         all_relevant_indices = item[self.search_key+"_provenance_indices"]
         n_relevant = min(len(all_relevant_indices), self.n_relevant_passages)
         if n_relevant > 0:
             relevant_indices = np.random.choice(all_relevant_indices, n_relevant, replace=False)
             if len(relevant_indices) > 0:
                 relevant_passages = self.kb.select(relevant_indices)
-        irrelevant_passages = {'passage': []}
+        irrelevant_passages = []
         all_irrelevant_indices = item[self.search_key+"_irrelevant_indices"]
         n_irrelevant = min(len(all_irrelevant_indices), self.M-self.n_relevant_passages)
         if n_irrelevant > 0:
@@ -204,7 +204,7 @@ class DPRBiEncoderTrainer(QuestionAnsweringTrainer):
         questions, relevant_passages, irrelevant_passages, labels = [], [], [], []
         for i, item in enumerate(items):
             relevant_passage, irrelevant_passage = self.get_training_passages(item)
-            relevant_passage, irrelevant_passage = relevant_passage['passage'], irrelevant_passage['passage']
+            relevant_passage, irrelevant_passage = [p['passage'] for p in relevant_passage], [p['passage'] for p in  irrelevant_passage]
             if len(relevant_passage) < 1:
                 relevant_passage = ['']
                 labels.append(self.loss_fct.ignore_index)
@@ -682,7 +682,7 @@ class MultiPassageBERTTrainer(QuestionAnsweringTrainer):
                     passage_scores.extend([0]*(self.M-len(score)))
             else:
                 relevant_passage, irrelevant_passage = self.get_training_passages(item)
-                passage = relevant_passage['passage'] + irrelevant_passage['passage']
+                passage = [p['passage'] for p in relevant_passage] + [p['passage'] for p in irrelevant_passage]
 
             passages.extend(passage)
             # all passages have at least 1 non-masked answer (set to 0 for irrelevant passages)
