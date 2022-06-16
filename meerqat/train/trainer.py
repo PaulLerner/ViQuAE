@@ -467,12 +467,15 @@ class ICTTrainer(MMTrainer):
         pages = {6086--6096}
     }
     """
-    def __init__(self, *args, sentences_per_target=4, prepend_title=False, **kwargs):
+    def __init__(self, *args, sentences_per_target=4, prepend_title=False, 
+                 text_mask_rate=1.0, image_mask_rate=1.0, **kwargs):
         super().__init__(*args, **kwargs)
         self.kb = None
         self.image_kb = None
         self.sentences_per_target = sentences_per_target
         self.prepend_title = prepend_title
+        self.text_mask_rate = text_mask_rate
+        self.image_mask_rate = image_mask_rate
         self.data_collator = self.collate_fn
 
     def get_training_passages(self, item):
@@ -497,15 +500,27 @@ class ICTTrainer(MMTrainer):
         else:
             min_shift = i + n - len(sentences) + 1
         shift = np.random.randint(min_shift, max_shift+1)
-        target = [s['text'] for s in sentences[i-shift: i]+sentences[i+1: i+1+n-shift]]
+        # standard ICT: remove sentence from its context
+        if np.random.rand() < self.text_mask_rate:
+            target = [s['text'] for s in sentences[i-shift: i]+sentences[i+1: i+1+n-shift]]
+        # robustness trick: keep the sentence in the context so that the model learns lexical overlap
+        else:
+            target = [s['text'] for s in sentences[i-shift: i+1+n-shift]]
+            
         if self.prepend_title:
             target.insert(0, self.tokenizer.sep_token)
             target.insert(0, item['title'])
         target = dict(text=" ".join(target))  
-
+        
+        # standard MICT: use the contextual image as target
+        if np.random.rand() < self.image_mask_rate:
+            context_image_key = "context_"
+        # robustness trick: use the same image in query/target so that the model keeps image information
+        else:
+            context_image_key = ""
         # rename context image features
         for k in ({"face_box", "face_embedding"} | self.image_embeddings_keys):
-            target[k] = item.get(f"context_{k}")
+            target[k] = item.get(f"{context_image_key}{k}")
         return query, target
 
     def _get_eval_sampler(self, eval_dataset):
