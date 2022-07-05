@@ -209,8 +209,6 @@ class IntermediateLinearFusion(PreTrainedModel):
         self.dpr_proj = nn.Linear(self.config.hidden_size, self.config.hidden_size)
         self.LayerNorm = nn.LayerNorm(self.config.hidden_size, eps=self.config.layer_norm_eps)
         self.dropout = nn.Dropout(self.config.hidden_dropout_prob)
-        if self.config.face_and_image_are_exclusive:
-            raise NotImplementedError()
         
     def _init_weights(self, module):
         # keep torch defaults
@@ -253,7 +251,14 @@ class IntermediateLinearFusion(PreTrainedModel):
 
         # fuse text and image
         output += face_output
+        if self.config.face_and_image_are_exclusive:
+            face_attention_mask = face_inputs["attention_mask"]
+            # indices at the batch level: at least one face detected (i.e. not masked)
+            where_are_faces = face_attention_mask.nonzero()[:,0].unique()
         for name, image in image_inputs.items():
+            # mask images if at least one face was detected
+            if self.config.face_and_image_are_exclusive:
+                image['input'][where_are_faces] = 0
             output += self.image_embeddings[name](image['input'])
         output = self.LayerNorm(output)
         output = self.dropout(output)
