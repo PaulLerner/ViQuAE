@@ -951,6 +951,8 @@ class MultiPassageBERTTrainer(QuestionAnsweringTrainer):
 
 
 def get_checkpoint(resume_from_checkpoint: str, *args, **kwargs):
+    if resume_from_checkpoint is None:
+        return [None]
     if args or kwargs:
         warnings.warn(f"ignoring additional arguments:\n{args}\n{kwargs}")
     cpt = Path(resume_from_checkpoint)
@@ -958,7 +960,6 @@ def get_checkpoint(resume_from_checkpoint: str, *args, **kwargs):
     resume_from_checkpoints = cpt.parent.glob(cpt.name)
     # sort by checkpoint number
     resume_from_checkpoints = sorted(resume_from_checkpoints, key=lambda path: int(path.name.split('-')[-1]))
-    print(resume_from_checkpoints)
     return resume_from_checkpoints
 
 
@@ -1037,6 +1038,11 @@ if __name__ == "__main__":
     elif training_args.do_eval:
         resume_from_checkpoints = get_checkpoint(**checkpoint)
         for resume_from_checkpoint in tqdm(resume_from_checkpoints, desc="Evaluation"):
+            # zero-shot test
+            if resume_from_checkpoint is None:
+                metrics = trainer.evaluate()
+                print(metrics)
+                continue
             # load state dict
             state_dict_path = resume_from_checkpoint / WEIGHTS_NAME
             if not state_dict_path.exists():
