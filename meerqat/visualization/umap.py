@@ -17,6 +17,7 @@ from datasets import load_from_disk
 
 import ranx
 
+import urllib
 from meerqat.data.wiki import thumbnail_to_file_name, file_name_to_thumbnail
 
 
@@ -36,7 +37,7 @@ def fplot(reduced_embeddings, figsize=(20,20), alpha=0.5, s=5):
 def iplot(reduced_embeddings, dataset, urls, input_key='input', thumb_width=128, title='UMAP projection',
           plot_width=600, plot_height=600, tools=('pan, wheel_zoom, reset'),
           line_alpha=0.6, fill_alpha=0.6, size=4, metric=None, palette='Viridis256'):
-    thumbnails = [file_name_to_thumbnail(thumbnail_to_file_name(url), thumb_width) for url in urls]
+    thumbnails = [file_name_to_thumbnail(thumbnail_to_file_name(urllib.parse.unquote(url)), thumb_width) for url in urls]
     df = pd.DataFrame(reduced_embeddings, columns=('x', 'y'))
     df['text'] = dataset[input_key]
     df['image'] = thumbnails
@@ -83,7 +84,7 @@ def get_ranx_run(qrels_path, run_path, metric='mrr'):
     return run, metric
 
     
-def main(dataset, key, output_path, image_kb=None, shard=None, 
+def main(dataset, key, output_path, image_kb=None, shard=None, url_key='url',
          reduce_kwargs={}, fplot_kwargs={}, iplot_kwargs={}, ranx_kwargs=None):
     output_path.mkdir(exist_ok=True)
     if shard is not None:
@@ -94,10 +95,10 @@ def main(dataset, key, output_path, image_kb=None, shard=None,
         print(image_kb)
         indices = dataset['index']
         print(len(indices))
-        urls = image_kb.select(indices)['url']
+        urls = image_kb.select(indices)[url_key]
         print(len(urls))
     else:
-        urls = dataset['url']
+        urls = dataset[url_key]
     if ranx_kwargs is not None:
         ranx_run, metric = get_ranx_run(**ranx_kwargs)   
         dataset=dataset.map(lambda item: {metric: ranx_run.scores[metric][item["id"]]})
