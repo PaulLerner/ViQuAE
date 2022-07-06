@@ -88,10 +88,15 @@ def get_ranx_run(qrels_path, run_path, metric='mrr'):
 
     
 def main(dataset, key, output_path, image_kb=None, shard=None, url_key='url',
-         reduce_kwargs={}, fplot_kwargs={}, iplot_kwargs={}, ranx_kwargs=None):
+         reduce_kwargs={}, fplot_kwargs={}, iplot_kwargs={}, ranx_kwargs=None, face=False):
     output_path.mkdir(exist_ok=True)
     if shard is not None:
         dataset = dataset.shuffle(seed=0).shard(shard, 0)
+    if face:
+        dataset = dataset.filter(lambda x: x is not None, input_columns=key)
+        embeddings = np.array([x[0] for x in dataset[key]])
+    else:
+        embeddings = np.array(dataset[key])
     # add features from the image KB
     if image_kb is not None:
         image_kb = load_from_disk(image_kb)
@@ -107,7 +112,6 @@ def main(dataset, key, output_path, image_kb=None, shard=None, url_key='url',
         dataset=dataset.map(lambda item: {metric: ranx_run.scores[metric][item["id"]]})
     else:
         ranx_run, metric = None, None
-    embeddings = np.array(dataset[key])
     reduced_embeddings = reduce(embeddings, **reduce_kwargs)
     ffig = fplot(reduced_embeddings, **fplot_kwargs)
     ffig.savefig(output_path/f"umap_{key}.png")
