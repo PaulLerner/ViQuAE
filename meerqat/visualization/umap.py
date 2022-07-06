@@ -39,7 +39,10 @@ def iplot(reduced_embeddings, dataset, urls, input_key='input', thumb_width=128,
           line_alpha=0.6, fill_alpha=0.6, size=4, metric=None, palette='Viridis256'):
     thumbnails = [file_name_to_thumbnail(thumbnail_to_file_name(urllib.parse.unquote(url)), thumb_width) for url in urls]
     df = pd.DataFrame(reduced_embeddings, columns=('x', 'y'))
-    df['text'] = dataset[input_key]
+    if input_key is None:
+        df['text'] = ['']*len(dataset)
+    else:
+        df['text'] = dataset[input_key]
     df['image'] = thumbnails
     if metric is not None:
         df[metric] = dataset[metric]
