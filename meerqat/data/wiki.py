@@ -244,7 +244,7 @@ def thumbnail_to_file_name(url, original=True):
         else:
             return file_name[len('a/a8/'):]
     else:
-        raise ValueError(f'Invalid url {url}')
+        return url.split('/')[-1]
 
 
 def bytes2dict(b):
