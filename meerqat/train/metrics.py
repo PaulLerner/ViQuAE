@@ -34,13 +34,10 @@ def retrieval(eval_prediction, ignore_index=-100):
         rank = (ranking == label).nonzero()[0].item() + 1
         mrr += 1/rank
     mrr /= (dataset_size-ignored_predictions)
-    # print(f"dataset_size: {dataset_size}, ignored_predictions: {ignored_predictions}")
     metrics["MRR@N*M"] = mrr
 
     # argmax to get index of prediction (equivalent to `log_probs.argmax(axis=1)`)
     predictions = rankings[:, 0]
-    # print(f"predictions[:100] {predictions.shape}:\n{predictions[:100]}")
-    # print(f"eval_prediction.label_ids[:100] {eval_prediction.label_ids.shape}:\n{eval_prediction.label_ids[:100]}")
     # hits@1
     where = eval_prediction.label_ids != ignore_index
     metrics["hits@1"] = (predictions[where] == eval_prediction.label_ids[where]).mean()
