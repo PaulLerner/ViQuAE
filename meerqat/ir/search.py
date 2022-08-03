@@ -269,7 +269,7 @@ class Searcher:
     Fuses results of search with multiple indexes and compute metrics.
     """
     def __init__(self, kb_kwargs, k=100, reference_kb_path=None, reference_key='passage', request_timeout=1000,
-                 es_client_kwargs={}, fusion_kwargs={}, metrics_kwargs={}):
+                 es_client_kwargs={}, fusion_kwargs={}, metrics_kwargs={}, save_in_dataset=True):
         self.k = k
         self.kbs = {}
         self.qrels = ranx.Qrels()
@@ -300,8 +300,12 @@ class Searcher:
             run = ranx.Run()
             run.name = "fusion"
             self.runs["fusion"] = run
+            if not save_in_dataset:
+                save_in_dataset = True
+                warnings.warn("setting save_in_dataset=True to be able to fuse results")
         else:
             self.do_fusion = False
+        self.save_in_dataset = save_in_dataset
 
         # no reference KB
         if reference_kb_path is None:
@@ -346,8 +350,9 @@ class Searcher:
                     scores_batch = normalize(scores_batch, **index.normalization)
 
                 # store result in the dataset
-                batch[f'{index_name}_scores'] = scores_batch
-                batch[f'{index_name}_indices'] = indices_batch
+                if self.save_in_dataset:
+                    batch[f'{index_name}_scores'] = scores_batch
+                    batch[f'{index_name}_indices'] = indices_batch
 
                 # store results in the run
                 str_indices_batch, non_empty_scores = format_run_indices(indices_batch, scores_batch)
@@ -483,8 +488,10 @@ def dataset_search(dataset, k=100, metric_save_path=None, map_kwargs={}, **kwarg
             file.write(report.to_latex())
         for index_name, run in searcher.runs.items():
             run.save(metric_save_path/f"{index_name}.trec", kind='trec')
-
-    return dataset
+    
+    if searcher.save_in_dataset:
+        return dataset
+    return None
 
 
 if __name__ == '__main__':
@@ -503,5 +510,5 @@ if __name__ == '__main__':
     dataset = dataset_search(dataset, k,
                              metric_save_path=Path(args['--metrics']),
                              **config)
-
-    dataset.save_to_disk(dataset_path)
+    if dataset is not None:
+        dataset.save_to_disk(dataset_path)
