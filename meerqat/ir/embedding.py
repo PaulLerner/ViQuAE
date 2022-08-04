@@ -26,6 +26,13 @@ def get_face_inputs(batch, n_faces=4, face_dim=512, bbox_dim=7):
     face_boxes = torch.zeros((batch_size, n_faces, bbox_dim))
     # 0=masked, 1=not masked
     attention_mask = torch.zeros((batch_size, n_faces), dtype=torch.long)
+    if n_faces == 0:
+        return {
+                "face": face_embeddings,
+                "bbox": face_boxes,
+                "attention_mask": attention_mask
+            }
+
     for i, (face_embedding, bbox) in enumerate(zip(face_list, batch["face_box"])):
         # no face detected
         if face_embedding is None:

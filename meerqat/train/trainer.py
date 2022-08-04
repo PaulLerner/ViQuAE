@@ -342,6 +342,12 @@ class MMTrainer(DPRBiEncoderTrainer):
         face_boxes = torch.zeros((len(items), self.n_faces, self.bbox_dim))
         # 0=masked, 1=not masked
         attention_mask = torch.zeros((len(items), self.n_faces), dtype=torch.long)
+        if self.n_faces == 0:
+            return {
+                "face": face_embeddings,
+                "bbox": face_boxes,
+                "attention_mask": attention_mask
+            }
         for i, item in enumerate(items):
             face_embedding = item.get("face_embedding")
             # can happen in two cases: 1. no face detected; 2. padding passage

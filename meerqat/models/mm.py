@@ -80,10 +80,13 @@ class DMREncoder(PreTrainedModel):
         self.config = config
         # FIXME: set add_pooling_layer=False
         self.bert_model = BertModel(config)
-        self.face_embedding = FaceEmbedding(embedding_dim=self.config.hidden_size,
-                                            dropout=self.config.hidden_dropout_prob,
-                                            layer_norm_eps=self.config.layer_norm_eps,
-                                            **self.config.face_kwargs)
+        if self.config.n_faces > 0:
+            self.face_embedding = FaceEmbedding(embedding_dim=self.config.hidden_size,
+                                                dropout=self.config.hidden_dropout_prob,
+                                                layer_norm_eps=self.config.layer_norm_eps,
+                                                **self.config.face_kwargs)
+        else:
+            self.face_embedding = None
         self.image_embeddings = nn.ModuleDict()
         for name, image_kwarg in self.config.image_kwargs.items():
             self.image_embeddings[name] = ImageEmbedding(embedding_dim=self.config.hidden_size,
@@ -121,10 +124,13 @@ class DMREncoder(PreTrainedModel):
         # reshape faces
         faces = face_inputs['face']
         batch_size, n_faces, face_dim = faces.shape
-        faces = faces.reshape(batch_size * n_faces, face_dim)
-        # embed batch of size batch_size*n_faces
-        face_output = self.face_embedding(face=faces, bbox=face_inputs['bbox'].reshape(batch_size * n_faces, -1))
-        face_output = face_output.reshape(batch_size, n_faces, -1)
+        if n_faces > 0:
+            faces = faces.reshape(batch_size * n_faces, face_dim)
+            # embed batch of size batch_size*n_faces
+            face_output = self.face_embedding(face=faces, bbox=face_inputs['bbox'].reshape(batch_size * n_faces, -1))
+            face_output = face_output.reshape(batch_size, n_faces, -1)
+        else:
+            face_output = torch.zeros(batch_size, 0, self.config.hidden_size, device=faces.device)
 
         # embed images
         image_outputs, image_attention_mask = [], []
