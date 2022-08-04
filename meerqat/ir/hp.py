@@ -4,6 +4,7 @@ Usage:
 hp.py <type> <config> [--train=<dataset> --k=<k> --disable_caching --cleanup_cache_files --metrics=<path> --test=<dataset>]
 
 Options:
+--train=<dataset>       Name of the train dataset
 --k=<k>                 Hyperparameter to search for the k nearest neighbors [default: 100].
 --disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
 --cleanup_cache_files   Clean up all cache files in the dataset cache directory, 
@@ -325,7 +326,7 @@ if __name__ == '__main__':
     format_kwargs = config.pop('format', {})
 
     if args['--train'] is not None:
-        dataset = load_from_disk(dataset_path)
+        dataset = load_from_disk(args['--train'])
         dataset.set_format(**format_kwargs)
     else:
         dataset = None
