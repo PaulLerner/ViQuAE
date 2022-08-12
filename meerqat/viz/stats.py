@@ -26,12 +26,12 @@ def dataset_stats(dataset, keys, output_path=None, lengths=False, pgf=False, dis
             # simply flatten
             else:
                 values = [x_i for x in values for x_i in x]
-        df = pd.DataFrame(values)
+        df = pd.DataFrame(values, columns=[key])
         print(df.describe().to_latex())
         print("equal zero:", (df == 0).sum())
         if output_path is not None:
             output_path.mkdir(exist_ok=True, parents=True)
-            fig = sns.displot(data=df, x=0, discrete=discrete, **kwargs)
+            fig = sns.displot(data=df, x=key, discrete=discrete, **kwargs)
             fig.savefig(output_path/f"{key}_distribution.png")
             if pgf:
                 fig.savefig(output_path/f"{key}_distribution.pgf")
