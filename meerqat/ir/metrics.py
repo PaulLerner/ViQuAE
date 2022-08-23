@@ -3,6 +3,7 @@ Usage:
 metrics.py relevant <dataset> <passages> <title2index> <article2passage> [--disable_caching]
 metrics.py qrels <qrels>... --output=<path>
 metrics.py ranx --qrels=<path> [<run>... --output=<path> --filter=<path> --kwargs=<path>]
+metrics.py cats --qrels=<path> --cats=<path> [<run>... --output=<path> --kwargs=<path>]
 """
 from docopt import docopt
 import json
@@ -11,6 +12,7 @@ import re
 from tqdm import tqdm
 from pathlib import Path
 
+import pandas as pd
 import numpy as np
 from datasets import load_from_disk
 import ranx
@@ -120,10 +122,7 @@ def fuse_qrels(qrels_paths):
     return ranx.Qrels.from_dict(final_qrels)
 
 
-def compare(qrels_path, runs_paths, runs_dict={}, output_path=None, filter_q_ids=[], **kwargs):
-    qrels = ranx.Qrels.from_file(qrels_path, kind='trec')
-    for q_id in filter_q_ids:
-        qrels.qrels.pop(q_id)
+def load_runs(runs_paths, runs_dict={}, filter_q_ids=[]):
     runs = []
     
     # load runs from CLI
@@ -144,6 +143,16 @@ def compare(qrels_path, runs_paths, runs_dict={}, output_path=None, filter_q_ids
         for q_id in filter_q_ids:
             run.run.pop(q_id)
         runs.append(run)
+    
+    return runs
+        
+
+def compare(qrels_path, runs_paths, runs_dict={}, output_path=None, filter_q_ids=[], **kwargs):
+    qrels = ranx.Qrels.from_file(qrels_path, kind='trec')
+    for q_id in filter_q_ids:
+        qrels.qrels.pop(q_id)
+    
+    runs = load_runs(runs_paths, runs_dict=runs_dict, filter_q_ids=filter_q_ids)
 
     report = ranx.compare(
         qrels,
@@ -160,6 +169,45 @@ def compare(qrels_path, runs_paths, runs_dict={}, output_path=None, filter_q_ids
             file.write(report.to_latex())
 
 
+def cat_breakdown(qrels_path, runs_paths, cats, runs_dict={}, output_path=None, metrics=["mrr"]):
+    if output_path is not None:
+        output_path = Path(output_path)
+        output_path.mkdir(exist_ok=True)
+        
+    qrels = ranx.Qrels.from_file(qrels_path, kind='trec')    
+    runs = load_runs(runs_paths, runs_dict=runs_dict)
+    
+    # break qrels by cat
+    qrels_by_cat = {}
+    for cat, q_ids in cats.items():
+        qrels_by_cat[cat] = ranx.Qrels({q_id: qrels.qrels[q_id] for q_id in q_ids})
+    
+    # break runs by cat
+    runs_by_cat = []
+    for run in runs:
+        run_by_cat = {}
+        for cat, q_ids in cats.items():
+            run_by_cat[cat] = ranx.Run({q_id: run.run[q_id] for q_id in q_ids}, name=run.name)
+        runs_by_cat.append(run_by_cat)
+            
+    # compute metrics for each cat
+    for metric in metrics:
+        metric_by_cat = {}
+        for cat, qrels_of_cat in qrels_by_cat.items():
+            for run_by_cat in runs_by_cat:
+                run = run_by_cat[cat]
+                metric_by_cat.setdefault(run.name, {})
+                #TODO use compare instead of evaluate and print report with stat test
+                metric_by_cat[run.name][cat] = ranx.evaluate(qrels_of_cat, run, metric)
+        
+        df = pd.DataFrame(metric_by_cat).T
+        print(metric)
+        print(df.to_latex(float_format='{:,.1%}'.format))
+        print('\n***********\n')
+        if output_path is not None:
+            df.to_csv(output_path/f'{metric}.csv')
+    
+    
 if __name__ == '__main__':
     args = docopt(__doc__)
     if args['relevant']:
@@ -189,4 +237,18 @@ if __name__ == '__main__':
         else:
             runs_paths = []
         compare(args['--qrels'], runs_paths, output_path=args['--output'], filter_q_ids=filter_q_ids, **kwargs)
+    elif args['cats']:
+        with open(args['--cats'], 'rt') as file:
+            cats = json.load(file)
+        if args['--kwargs'] is not None:
+            with open(args['--kwargs'], 'rt') as file:
+                kwargs = json.load(file)
+        else:
+            ks = [1, 5, 10, 20, 100]
+            kwargs = dict(metrics=[f"{m}@{k}" for m in ["precision", "mrr"] for k in ks])
+        if args['<run>'] is not None:
+            runs_paths = args['<run>']
+        else:
+            runs_paths = []
+        cat_breakdown(args['--qrels'], runs_paths, output_path=args['--output'], cats=cats, **kwargs)
 
