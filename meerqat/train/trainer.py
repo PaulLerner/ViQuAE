@@ -33,6 +33,8 @@ from transformers.trainer_utils import EvalLoopOutput, denumpify_detensorize
 if is_torch_tpu_available():
     import torch_xla.distributed.parallel_loader as pl
 
+import ranx
+
 from meerqat.data.loading import load_pretrained_in_kwargs
 from meerqat.models.qa import get_best_spans, format_predictions_for_squad
 from meerqat.models.utils import debug_shape
@@ -613,8 +615,17 @@ class MultiPassageBERTTrainer(QuestionAnsweringTrainer):
         Whether the model should be trained to predict only the original answer (default)
         or all alternative answers (with the only limit of max_n_answers)
         This has no effect on the evaluation (where all alternative answers are always considered)
+    oracle: bool, optional
+        Whether to use only relevant passages at inference (stored in {search_key}_provenance_indices)
+        Will enforce n_relevant_passages=M
+        Defaults to False (use IR passages at inference, stored in {search_key}_indices)
+    run_path: str, optional
+        Path to the ranx run stored in the TREC format that holds the IR results.
+        To be used instead of search_key at inference.
+        Defaults to None.
     """
-    def __init__(self, *args, max_n_answers=10, ignore_keys=['answer_strings'], train_original_answer_only=True, oracle=False, **kwargs):
+    def __init__(self, *args, max_n_answers=10, ignore_keys=['answer_strings'], 
+                 train_original_answer_only=True, oracle=False, run_path=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.max_n_answers = max_n_answers
         self.ignore_keys = ignore_keys
@@ -626,14 +637,26 @@ class MultiPassageBERTTrainer(QuestionAnsweringTrainer):
             if self.n_relevant_passages != self.M:
                 warnings.warn(f"Oracle mode. Setting n_relevant_passages={self.M}")
                 self.n_relevant_passages = self.M
+                
+        if run_path is not None:
+            self.run = ranx.Run.from_file(run_path, 'trec')
+        else:
+            self.run = None
 
         # FIXME isn't there a more robust way of defining data_collator as the method collate_fn ?
         self.data_collator = self.collate_fn
 
     def get_eval_passages(self, item):
         """Keep the top-M passages retrieved by the IR"""
-        indices = item[self.search_key+"_indices"][: self.M]
-        scores = item[self.search_key+"_scores"][: self.M]
+        if self.run is None:
+            indices = item[self.search_key+"_indices"][: self.M]
+            scores = item[self.search_key+"_scores"][: self.M]
+        else:
+            ir_results = self.run.run[item['id']]
+            # document ids in ranx are str so we map them back to indices (int)
+            indices = list(map(int, ir_results.keys()))[: self.M]
+            scores = list(ir_results.values())[: self.M]
+            
         return self.kb.select(indices), scores
 
     def get_answer_position(self, batch, answers, answer_mask):
