@@ -211,8 +211,11 @@ class IntermediateLinearFusion(PreTrainedModel):
             self.dpr_encoder = DPRQuestionEncoder(config)
         else:
             self.dpr_encoder = DPRContextEncoder(config)
-        self.face_embedding = FaceEmbedding(embedding_dim=self.config.hidden_size, dropout=self.config.hidden_dropout_prob,
-                                            layer_norm_eps=self.config.layer_norm_eps, **self.config.face_kwargs)
+        if self.config.n_faces > 0:
+            self.face_embedding = FaceEmbedding(embedding_dim=self.config.hidden_size, dropout=self.config.hidden_dropout_prob,
+                                                layer_norm_eps=self.config.layer_norm_eps, **self.config.face_kwargs)
+        else:
+            self.face_embedding = None
         self.image_embeddings = nn.ModuleDict()
         for name, image_kwarg in self.config.image_kwargs.items():
             self.image_embeddings[name] = ImageEmbedding(embedding_dim=self.config.hidden_size, dropout=self.config.hidden_dropout_prob, **image_kwarg)
@@ -245,22 +248,25 @@ class IntermediateLinearFusion(PreTrainedModel):
             }
         }
         """
-        # reshape faces
-        faces = face_inputs['face']
-        batch_size, n_faces, face_dim = faces.shape
-        faces = faces.reshape(batch_size * n_faces, face_dim)
-        # embed batch of size batch_size*n_faces
-        face_output = self.face_embedding(face=faces, bbox=face_inputs['bbox'].reshape(batch_size * n_faces, -1))
-        face_output = face_output.reshape(batch_size, n_faces, -1)
-        # sum over all faces
-        face_output = face_output.sum(axis=1)
-
         # embed text
         output = self.dpr_encoder(**text_inputs).pooler_output
         output = self.dpr_proj(output)
+        
+        # reshape faces
+        faces = face_inputs['face']
+        batch_size, n_faces, face_dim = faces.shape
+        if n_faces > 0:
+            faces = faces.reshape(batch_size * n_faces, face_dim)
+            # embed batch of size batch_size*n_faces
+            face_output = self.face_embedding(face=faces, bbox=face_inputs['bbox'].reshape(batch_size * n_faces, -1))
+            face_output = face_output.reshape(batch_size, n_faces, -1)
+            # sum over all faces
+            face_output = face_output.sum(axis=1)
+            
+            # fuse text and faces
+            output += face_output
 
         # fuse text and image
-        output += face_output
         if self.config.face_and_image_are_exclusive:
             face_attention_mask = face_inputs["attention_mask"]
             # indices at the batch level: at least one face detected (i.e. not masked)
