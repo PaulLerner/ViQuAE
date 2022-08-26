@@ -133,13 +133,17 @@ class DMREncoder(PreTrainedModel):
             face_output = torch.zeros(batch_size, 0, self.config.hidden_size, device=faces.device)
 
         # embed images
-        image_outputs, image_attention_mask = [], []
-        for name, image in image_inputs.items():
-            image_outputs.append(self.image_embeddings[name](image['input']).unsqueeze(0))
-            image_attention_mask.append(image['attention_mask'].unsqueeze(0))
-        # (n_images, batch_size, embedding_dim) -> (batch_size, n_images, embedding_dim)
-        image_outputs = torch.cat(image_outputs, 0).transpose(0, 1)
-        image_attention_mask = torch.cat(image_attention_mask, 0).transpose(0, 1)
+        if image_inputs:
+            image_outputs, image_attention_mask = [], []
+            for name, image in image_inputs.items():
+                image_outputs.append(self.image_embeddings[name](image['input']).unsqueeze(0))
+                image_attention_mask.append(image['attention_mask'].unsqueeze(0))
+            # (n_images, batch_size, embedding_dim) -> (batch_size, n_images, embedding_dim)
+            image_outputs = torch.cat(image_outputs, 0).transpose(0, 1)
+            image_attention_mask = torch.cat(image_attention_mask, 0).transpose(0, 1)
+        else:
+            image_outputs = torch.zeros(batch_size, 0, self.config.hidden_size, device=faces.device)
+            image_attention_mask = torch.zeros(batch_size, 0, device=faces.device)
         
         if self.config.face_and_image_are_exclusive:
             face_attention_mask = face_inputs["attention_mask"]
