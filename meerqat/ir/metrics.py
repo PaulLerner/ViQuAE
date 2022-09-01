@@ -2,8 +2,7 @@
 Usage:
 metrics.py relevant <dataset> <passages> <title2index> <article2passage> [--disable_caching]
 metrics.py qrels <qrels>... --output=<path>
-metrics.py ranx --qrels=<path> [<run>... --output=<path> --filter=<path> --kwargs=<path>]
-metrics.py cats --qrels=<path> --cats=<path> [<run>... --output=<path> --kwargs=<path>]
+metrics.py ranx --qrels=<path> [<run>... --output=<path> --filter=<path> --kwargs=<path> --cats=<path>]
 """
 from docopt import docopt
 import json
@@ -95,6 +94,7 @@ def find_relevant_item(item, passages, title2index, article2passage):
 
 def find_relevant_dataset(dataset_path, **kwargs):
     dataset = load_from_disk(dataset_path)
+    # TODO save qrels in TREC/ranx format in dataset_path/qrels.trec
     dataset = dataset.map(find_relevant_item, fn_kwargs=kwargs)
     dataset.save_to_disk(dataset_path)
 
@@ -169,7 +169,8 @@ def compare(qrels_path, runs_paths, runs_dict={}, output_path=None, filter_q_ids
             file.write(report.to_latex())
 
 
-def cat_breakdown(qrels_path, runs_paths, cats, runs_dict={}, output_path=None, metrics=["mrr"]):
+def cat_breakdown(qrels_path, runs_paths, cats, runs_dict={}, output_path=None, 
+                  filter_q_ids=[], metrics=["mrr"]):
     if output_path is not None:
         output_path = Path(output_path)
         output_path.mkdir(exist_ok=True)
@@ -221,6 +222,13 @@ if __name__ == '__main__':
         qrels = fuse_qrels(args['<qrels>'])
         qrels.save(args['--output'], kind='trec')
     elif args['ranx']:
+        # usage: either cat_breakdown or compare
+        if args['--cats'] is not None:
+            with open(args['--cats'], 'rt') as file:
+                cats = json.load(file)
+        else:
+            cats = None
+            
         if args['--filter'] is not None:
             with open(args['--filter'], 'rt') as file:
                 filter_q_ids = json.load(file)
@@ -236,19 +244,11 @@ if __name__ == '__main__':
             runs_paths = args['<run>']
         else:
             runs_paths = []
-        compare(args['--qrels'], runs_paths, output_path=args['--output'], filter_q_ids=filter_q_ids, **kwargs)
-    elif args['cats']:
-        with open(args['--cats'], 'rt') as file:
-            cats = json.load(file)
-        if args['--kwargs'] is not None:
-            with open(args['--kwargs'], 'rt') as file:
-                kwargs = json.load(file)
-        else:
-            ks = [1, 5, 10, 20, 100]
-            kwargs = dict(metrics=[f"{m}@{k}" for m in ["precision", "mrr"] for k in ks])
-        if args['<run>'] is not None:
-            runs_paths = args['<run>']
-        else:
-            runs_paths = []
-        cat_breakdown(args['--qrels'], runs_paths, output_path=args['--output'], cats=cats, **kwargs)
+        
+        if cats is None:
+            compare(args['--qrels'], runs_paths, output_path=args['--output'], 
+                    filter_q_ids=filter_q_ids, **kwargs)
+        else:            
+            cat_breakdown(args['--qrels'], runs_paths, output_path=args['--output'], 
+                          cats=cats, filter_q_ids=filter_q_ids, **kwargs)
 
