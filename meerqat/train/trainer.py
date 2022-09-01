@@ -993,14 +993,29 @@ def get_checkpoint(resume_from_checkpoint: str, *args, **kwargs):
 
 
 def subsample_dataset(dataset, num_shards):
+    before_len = len(dataset)
     dataset = dataset.shuffle(seed=0)
-    return dataset.shard(num_shards, 0)
+    dataset = dataset.shard(num_shards, 0)
+    after_len = len(dataset)
+    logger.debug(f"Sharded the dataset from {before_len} to {after_len} items")
+    return dataset
 
 
+def filter_rels(dataset, search_key):
+    before_len = len(dataset)
+    # FIXME: should also work when a ranx Run is used instead of search_key
+    dataset = dataset.filter(lambda item: len(item[f"{search_key}_provenance_indices"]) > 0)
+    after_len = len(dataset)
+    logger.debug(f"Filtered the dataset with empty '{search_key}_provenance_indices' from {before_len} to {after_len} items")
+    return dataset
+    
+    
 def instantiate_trainer(trainee, trainer_class="MultiPassageBERTTrainer", debug=False, 
                         train_dataset=None, eval_dataset=None, metric='squad', 
                         training_kwargs={}, callbacks_args=[], 
-                        train_shards=None, eval_shards=None, **kwargs):
+                        train_shards=None, eval_shards=None, 
+                        filter_train_rels=False, filter_eval_rels=False,
+                        search_key=None, **kwargs):
     """Additional arguments are passed to Trainer"""
     # debug (see torch.autograd.detect_anomaly)
     set_detect_anomaly(debug)
@@ -1010,10 +1025,16 @@ def instantiate_trainer(trainee, trainer_class="MultiPassageBERTTrainer", debug=
         train_dataset = load_from_disk(train_dataset)
         if train_shards is not None:
             train_dataset = subsample_dataset(train_dataset, train_shards)
+        # filter questions without any relevant passages to train
+        if filter_train_rels:
+            train_dataset = filter_rels(train_dataset, search_key=search_key)
     if eval_dataset is not None:
         eval_dataset = load_from_disk(eval_dataset)
         if eval_shards is not None:
             eval_dataset = subsample_dataset(eval_dataset, eval_shards)
+        # filter questions without any relevant passages to train
+        if filter_eval_rels:
+            eval_dataset = filter_rels(eval_dataset, search_key=search_key)
 
     # training
     # revert the post-init that overrides do_eval
@@ -1034,7 +1055,7 @@ def instantiate_trainer(trainee, trainer_class="MultiPassageBERTTrainer", debug=
     TrainerClass = getattr(sys.modules[__name__], trainer_class)
     trainer = TrainerClass(model=trainee, args=training_args,
                            train_dataset=train_dataset, eval_dataset=eval_dataset,
-                           compute_metrics=compute_metrics, **kwargs)
+                           compute_metrics=compute_metrics, search_key=search_key, **kwargs)
     # training callbacks
     for callback in callbacks_args:
         CallbackClass = getattr(trainer_callback, callback.pop("Class"))
