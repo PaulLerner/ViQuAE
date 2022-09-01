@@ -201,7 +201,10 @@ def cat_breakdown(qrels_path, runs_paths, cats, runs_dict={}, output_path=None,
                 #TODO use compare instead of evaluate and print report with stat test
                 metric_by_cat[run.name][cat] = ranx.evaluate(qrels_of_cat, run, metric)
         
-        df = pd.DataFrame(metric_by_cat).T
+        df = pd.DataFrame(metric_by_cat)
+        means = df.mean()
+        df = df.T
+        df['micro-avg'] = means
         print(metric)
         print(df.to_latex(float_format='{:,.1%}'.format))
         print('\n***********\n')
