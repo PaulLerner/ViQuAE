@@ -3,6 +3,16 @@ Usage:
 metrics.py relevant <dataset> <passages> <title2index> <article2passage> [--disable_caching]
 metrics.py qrels <qrels>... --output=<path>
 metrics.py ranx --qrels=<path> [<run>... --output=<path> --filter=<path> --kwargs=<path> --cats=<path>]
+metrics.py (win|tie|loss) <metrics> [--metric=<metric>]
+
+Options:
+--disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
+--output==<path>        1. qrels: output path to the TREC file
+                        2. ranx: output path to the directory where to save metrics
+--filter=<path>         Path towards the JSON file that contains a list of question ids to filter *out*
+--kwargs=<path>         Path towards the JSON config file that contains kwargs
+--cats=<path>           Path towards the JSON that maps categories to their question ids
+--metric=<metric>       Metric on which to compute wins/ties/losses [default: precision@1].                                                            
 """
 from docopt import docopt
 import json
@@ -211,9 +221,22 @@ def cat_breakdown(qrels_path, runs_paths, cats, runs_dict={}, output_path=None,
         if output_path is not None:
             df.to_csv(output_path/f'{metric}.csv')
     
+
+def get_wtl_table(metrics, wtl_key='W', wtl_metric='precision@1'):
+    for k in ["metrics", "model_names", "stat_test"]:
+        metrics.pop(k, None)
+    table = {}
+    for model, metric in metrics.items():
+        table[model] = {model:0}
+        for m2, wtl in metric['win_tie_loss'].items():
+            table[model][m2] = wtl[wtl_metric][wtl_key]    
+    return pd.DataFrame(table).T
     
+
 if __name__ == '__main__':
     args = docopt(__doc__)
+    wtl_key = None
+    
     if args['relevant']:
         passages = load_from_disk(args['<passages>'])
         with open(args['<title2index>'], 'r') as file:
@@ -221,17 +244,18 @@ if __name__ == '__main__':
         with open(args['<article2passage>'], 'r') as file:
             article2passage = json.load(file, object_hook=json_integer_keys)
         find_relevant_dataset(args['<dataset>'], passages=passages, title2index=title2index, article2passage=article2passage)
+    
     elif args['qrels']:
         qrels = fuse_qrels(args['<qrels>'])
         qrels.save(args['--output'], kind='trec')
+        
     elif args['ranx']:
         # usage: either cat_breakdown or compare
         if args['--cats'] is not None:
             with open(args['--cats'], 'rt') as file:
                 cats = json.load(file)
         else:
-            cats = None
-            
+            cats = None            
         if args['--filter'] is not None:
             with open(args['--filter'], 'rt') as file:
                 filter_q_ids = json.load(file)
@@ -246,12 +270,26 @@ if __name__ == '__main__':
         if args['<run>'] is not None:
             runs_paths = args['<run>']
         else:
-            runs_paths = []
-        
+            runs_paths = []        
         if cats is None:
             compare(args['--qrels'], runs_paths, output_path=args['--output'], 
                     filter_q_ids=filter_q_ids, **kwargs)
         else:            
             cat_breakdown(args['--qrels'], runs_paths, output_path=args['--output'], 
                           cats=cats, filter_q_ids=filter_q_ids, **kwargs)
+                    
+    elif args['win']:
+        wtl_key = 'W'
+    elif args['tie']:
+        wtl_key = 'T'
+    elif args['loss']:
+        wtl_key = 'L'
+    if wtl_key is not None:
+        metric = args['--metric']
+        if metric is None:
+            metric = 'precision@1'
+        with open(args['<metrics>'], 'rt') as file:
+            metrics = json.load(file)
+        wtl = get_wtl_table(metrics, wtl_key=wtl_key, wtl_metric=metric)
+        print(wtl.to_latex())
 
