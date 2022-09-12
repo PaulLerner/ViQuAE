@@ -13,9 +13,9 @@ import torch
 
 from datasets import load_from_disk, set_caching_enabled
 
-from meerqat.models.utils import device, prepare_inputs
-from meerqat.models import mm
-from meerqat.data.loading import load_pretrained_in_kwargs
+from ..models.utils import device, prepare_inputs
+from ..models import mm
+from ..data.loading import load_pretrained_in_kwargs
 
 
 def get_face_inputs(batch, n_faces=4, face_dim=512, bbox_dim=7):

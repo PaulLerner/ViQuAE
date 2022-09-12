@@ -18,7 +18,7 @@ from datasets import load_from_disk
 import ranx
 
 import urllib
-from meerqat.data.wiki import thumbnail_to_file_name, file_name_to_thumbnail
+from ..data.wiki import thumbnail_to_file_name, file_name_to_thumbnail
 
 
 def reduce(embeddings, metric='cosine'):    

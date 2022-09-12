@@ -19,8 +19,8 @@ import cv2
 from skimage import transform
 from PIL import Image
 
-from meerqat.data.loading import DATA_ROOT_PATH, load_image_batch
-from meerqat.models.utils import device
+from ..data.loading import DATA_ROOT_PATH, load_image_batch
+from ..models.utils import device
 
 
 ARCFACE_PATH = DATA_ROOT_PATH/"arcface"

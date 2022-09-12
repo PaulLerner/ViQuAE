@@ -37,9 +37,9 @@ import warnings
 import requests
 
 from datasets import load_dataset, load_from_disk, set_caching_enabled
-from meerqat.data.loading import map_kilt_triviaqa, DATA_ROOT_PATH
-from meerqat.data.wiki import HUMAN, RESERVED_IMAGES, special_path_to_file_name, file_name_to_thumbnail, thumbnail_to_file_name, save_image
-from meerqat.data.utils import md5
+from .loading import map_kilt_triviaqa, DATA_ROOT_PATH
+from .wiki import HUMAN, RESERVED_IMAGES, special_path_to_file_name, file_name_to_thumbnail, thumbnail_to_file_name, save_image
+from .utils import md5
 
 # spacy constants for NER
 INVALID_ENTITIES = {DATE, TIME, PERCENT, MONEY, QUANTITY, ORDINAL, CARDINAL}

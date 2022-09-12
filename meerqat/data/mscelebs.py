@@ -12,7 +12,7 @@ from pathlib import Path
 from tqdm import tqdm
 from docopt import docopt
 
-from meerqat.data.loading import DATA_ROOT_PATH
+from .loading import DATA_ROOT_PATH
 
 
 TOTAL_LINES = 8456240

@@ -11,7 +11,7 @@ import json
 import torch
 from transformers.file_utils import WEIGHTS_NAME
 
-from meerqat.data.loading import load_pretrained_in_kwargs
+from ..data.loading import load_pretrained_in_kwargs
 
 
 def split_biencoder(trainee, checkpoint, bert=False):

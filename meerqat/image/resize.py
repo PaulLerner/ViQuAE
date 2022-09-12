@@ -10,7 +10,7 @@ import json
 from torchvision.transforms import Compose, Resize
 from datasets import load_from_disk, set_caching_enabled
 
-from meerqat.data.loading import load_image
+from ..data.loading import load_image
 
 
 def get_transform(resize_kwargs=dict(size=512)):

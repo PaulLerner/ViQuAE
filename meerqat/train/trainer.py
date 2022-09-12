@@ -35,10 +35,10 @@ if is_torch_tpu_available():
 
 import ranx
 
-from meerqat.data.loading import load_pretrained_in_kwargs
-from meerqat.models.qa import get_best_spans, format_predictions_for_squad
-from meerqat.models.utils import debug_shape
-from meerqat.train import metrics as metric_functions
+from ..data.loading import load_pretrained_in_kwargs
+from ..models.qa import get_best_spans, format_predictions_for_squad
+from ..models.utils import debug_shape
+from . import metrics as metric_functions
 
 
 logging.basicConfig()

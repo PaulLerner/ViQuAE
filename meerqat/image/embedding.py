@@ -14,8 +14,8 @@ import torchvision
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize
 from datasets import load_from_disk, set_caching_enabled
 
-from meerqat.models.utils import device
-from meerqat.data.loading import load_image_batch
+from ..models.utils import device
+from ..data.loading import load_image_batch
 
 
 class ImageEncoder(nn.Module):

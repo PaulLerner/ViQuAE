@@ -16,9 +16,9 @@ from datasets import load_from_disk, set_caching_enabled
 
 from facenet_pytorch import MTCNN as facenet_MTCNN
 
-from meerqat.models.utils import device
-from meerqat.data.loading import COMMONS_PATH as IMAGE_PATH, load_image_batch
-from meerqat.data.wiki import VALID_ENCODING
+from ..models.utils import device
+from ..data.loading import COMMONS_PATH as IMAGE_PATH, load_image_batch
+from ..data.wiki import VALID_ENCODING
 
 
 class MTCNN(facenet_MTCNN):

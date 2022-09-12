@@ -24,8 +24,8 @@ from datasets import load_from_disk, set_caching_enabled
 from datasets.search import ElasticSearchIndex, FaissIndex
 import ranx
 
-from meerqat.ir.metrics import find_relevant_batch
-from meerqat.data.utils import json_integer_keys
+from .metrics import find_relevant_batch
+from ..data.utils import json_integer_keys
 
 
 def scores2dict(scores_batch, indices_batch):

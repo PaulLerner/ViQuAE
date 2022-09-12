@@ -41,8 +41,8 @@ from urllib3.exceptions import MaxRetryError
 from tqdm import tqdm
 from docopt import docopt
 
-from meerqat.data.loading import DATA_ROOT_PATH, COMMONS_PATH
-from meerqat.data.utils import md5
+from .loading import DATA_ROOT_PATH, COMMONS_PATH
+from .utils import md5
 
 # One client (user agent + IP) is allowed 60 seconds of processing time each 60 seconds
 # https://www.mediawiki.org/wiki/Wikidata_Query_Service/User_Manual

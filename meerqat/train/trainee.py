@@ -9,7 +9,7 @@ from transformers.models.bert.modeling_bert import BertEncoder
 from transformers.modeling_outputs import QuestionAnsweringModelOutput, ModelOutput
 from transformers import BertForQuestionAnswering
 
-from meerqat.train.losses import _calc_mml
+from .losses import _calc_mml
 
 
 class Trainee(nn.Module):

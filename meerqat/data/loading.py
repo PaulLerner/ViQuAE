@@ -24,8 +24,8 @@ from spacy.lang.en import English
 from datasets import load_dataset, Dataset, load_from_disk, set_caching_enabled
 import transformers
 
-from meerqat.train import trainee
-from meerqat.models import mm
+from ..train import trainee
+from ..models import mm
 from meerqat import __file__ as ROOT_PATH
 
 

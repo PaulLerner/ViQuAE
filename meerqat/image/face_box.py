@@ -10,7 +10,7 @@ import numpy as np
 
 from datasets import load_from_disk, set_caching_enabled
 
-from meerqat.data.loading import load_image
+from ..data.loading import load_image
 
 
 def scale_box(item, image_key='image'):

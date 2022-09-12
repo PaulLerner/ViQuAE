@@ -28,8 +28,8 @@ import ranx
 
 import optuna
 
-from meerqat.ir.metrics import find_relevant_batch
-from meerqat.ir.search import Searcher, format_qrels_indices
+from .metrics import find_relevant_batch
+from .search import Searcher, format_qrels_indices
 
 
 class Objective:

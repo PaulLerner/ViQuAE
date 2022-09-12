@@ -26,8 +26,8 @@ import numpy as np
 from datasets import load_from_disk
 import ranx
 
-from meerqat.data.loading import answer_preprocess
-from meerqat.data.utils import json_integer_keys
+from ..data.loading import answer_preprocess
+from ..data.utils import json_integer_keys
 
 
 def find_relevant(retrieved, original_answer, alternative_answers, kb, reference_key='passage'):

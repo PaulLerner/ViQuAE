@@ -8,8 +8,8 @@ import json
 import re
 import pandas as pd
 
-from meerqat.data.loading import DATA_ROOT_PATH
-from meerqat.data.wiki import VALID_ENCODING
+from .loading import DATA_ROOT_PATH
+from .wiki import VALID_ENCODING
 
 
 NAMESPACE = {"mw": "http://www.mediawiki.org/xml/export-0.10/"}

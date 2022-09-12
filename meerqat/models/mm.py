@@ -7,7 +7,7 @@ from transformers.modeling_outputs import ModelOutput
 from transformers import PreTrainedModel, BertModel, DPRQuestionEncoder, DPRContextEncoder
 from transformers.models.bert import BertConfig
 
-from meerqat.models.image import ImageEmbedding, FaceEmbedding
+from .image import ImageEmbedding, FaceEmbedding
 
 
 @dataclass
