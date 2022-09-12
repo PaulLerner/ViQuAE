@@ -1,3 +1,4 @@
+"""Implements the two main architectures presented in the ECIR-submitted paper."""
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
@@ -12,6 +13,7 @@ from .image import ImageEmbedding, FaceEmbedding
 
 @dataclass
 class EncoderOutput(ModelOutput):
+    """Generic class for any encoder output of the BiEncoder framework."""
     pooler_output: Optional[torch.FloatTensor] = None
 
 
@@ -26,6 +28,7 @@ class DMREncoderOutput(EncoderOutput):
 
 
 class MMConfig(BertConfig):
+    """Base configuration class for multimodal models based on BertConfig."""
     def __init__(self,
                  *args,
                  n_faces=4,
@@ -35,6 +38,29 @@ class MMConfig(BertConfig):
                  no_text=False,
                  **kwargs
                  ):
+        """
+        Parameters
+        ----------
+        *args, **kwargs: additionnal arguments are passed to BertConfig.
+        n_faces: int, optional
+            Number of faces that the multimodal model should take as input. Defaults to 4.
+        face_kwargs: dict, optional
+            Keyword arguments used for the FaceEmbedding module.
+            Defaults to dict(face_dim=512, bbox_dim=7).
+        image_kwargs: dict, optional
+            Keyword arguments used for as many ImageEmbedding modules (one per key).
+            Defaults to {
+                "clip-RN50": {"input_dim": 1024},
+                "imagenet-RN50": {"input_dim": 2048}
+            }
+        face_and_image_are_exclusive: bool, optional
+            Whether face and full-image representation should be combined (default) or exclusive.
+            Handled with attention masks in transformers
+        no_text: bool, optional
+            Whether to rely only on faces and images. 
+            In this case, only the [CLS] token embedding is concatenated to the image features.
+            Defaults to False.
+        """
         super().__init__(*args, **kwargs)
         self.n_faces = n_faces
         if face_kwargs is None:
@@ -54,22 +80,19 @@ class MMConfig(BertConfig):
 
 class DMREncoder(PreTrainedModel):
     """
-    Text and image are fused by concatenating them at the sequence-level then feeding them to BERT, à la UNITER (Chen et al.)
-      one face ≃ one token
+    Text and image are fused by concatenating them at the sequence-level then feeding them to BERT, à la UNITER [1]_
+    
+      one face ≃ one token  
+      
       one image ≃ one token
 
     The multimodal representation is obtained from the "[CLS]" token
 
     References
     ----------
-    @inproceedings{chen_uniter_2020,
-        title = {{UNITER}: {UNiversal} {Image}-{TExt} {Representation} {Learning}},
-        url = {https://openreview.net/forum?id=S1eL4kBYwr},
-        booktitle = {{ECCV} 2020},
-        author = {Chen, Yen-Chun and Li, Linjie and Yu, Licheng and Kholy, Ahmed El and Ahmed, Faisal and Gan, Zhe and Cheng, Yu and Liu, Jingjing},
-        year = {2020},
-        note = {https://github.com/ChenRocks/UNITER}
-    }
+    .. [1] Chen, Y.C., Li, L., Yu, L., El Kholy, A., Ahmed, F., Gan, Z., Cheng, Y., Liu, J.:
+        Uniter: Universal image-text representation learning. In: European Conference on
+        Computer Vision. pp. 104–120. https://openreview.net/forum?id=S1eL4kBYwr. Springer (2020)
     """
     config_class = MMConfig
     load_tf_weights = None
@@ -107,19 +130,19 @@ class DMREncoder(PreTrainedModel):
         text_inputs: dict[str, torch.LongTensor]
             usual BERT inputs, see transformers.BertModel
         face_inputs: dict[str, torch.FloatTensor]
-        {
-            "face": (batch_size, n_faces, face_dim),
-            "bbox": (batch_size, n_faces, bbox_dim),
-            "attention_mask": (batch_size, n_faces)
-        }
-        image_inputs: dict[str, dict[str, torch.FloatTensor]]
-        {
-            model:
             {
-                "input": (batch_size, image_dim)
-                "attention_mask": (batch_size, )
+                "face": (batch_size, n_faces, face_dim),
+                "bbox": (batch_size, n_faces, bbox_dim),
+                "attention_mask": (batch_size, n_faces)
             }
-        }
+        image_inputs: dict[str, dict[str, torch.FloatTensor]]
+            {
+                model:
+                {
+                    "input": (batch_size, image_dim)
+                    "attention_mask": (batch_size, )
+                }
+            }
         """
         # reshape faces
         faces = face_inputs['face']
@@ -189,6 +212,12 @@ class DMREncoder(PreTrainedModel):
 
 
 class ILFConfig(MMConfig):
+    """
+    Same as MMConfig with an extra parameter: 
+    question_encoder: bool, optional
+        Whether to use DPRQuestionEncoder (default) or DPRContextEncoder.
+        This makes no real differences in the architecture, only the name changes.
+    """
     def __init__(self,
                  *args,
                  question_encoder=True,
@@ -234,19 +263,19 @@ class IntermediateLinearFusion(PreTrainedModel):
         text_inputs: dict[str, torch.LongTensor]
             usual BERT inputs, see transformers.DPRQuestionEncoder
         face_inputs: dict[str, torch.FloatTensor]
-        {
-            "face": (batch_size, n_faces, face_dim),
-            "bbox": (batch_size, n_faces, bbox_dim),
-            "attention_mask": (batch_size, n_faces)
-        }
-        image_inputs: dict[str, dict[str, torch.FloatTensor]]
-        {
-            model:
             {
-                "input": (batch_size, image_dim)
-                "attention_mask": (batch_size, )
+                "face": (batch_size, n_faces, face_dim),
+                "bbox": (batch_size, n_faces, bbox_dim),
+                "attention_mask": (batch_size, n_faces)
             }
-        }
+        image_inputs: dict[str, dict[str, torch.FloatTensor]]
+            {
+                model:
+                {
+                    "input": (batch_size, image_dim)
+                    "attention_mask": (batch_size, )
+                }
+            }
         """
         # embed text
         output = self.dpr_encoder(**text_inputs).pooler_output

@@ -1,3 +1,4 @@
+"""Building blocks for computer vision models."""
 from torch import nn
 
 

@@ -1,3 +1,4 @@
+"""Misc. utility functions."""
 import torch
 import numpy as np
 
@@ -48,6 +49,7 @@ def map_if_not_None(values, function, *args, default_value=None, **kwargs):
 
 
 def debug_shape(batch, prefix=""):
+    """Recursively prints the shape of Tensor and ndarray in nested dict/BatchEncoding/tuple/list"""
     for key, data in batch.items():
         if isinstance(data, (dict, BatchEncoding)):
             debug_shape(data, prefix=f"{prefix}.{key}")

@@ -1,3 +1,4 @@
+"""Utility functions specific to Question Answering."""
 import warnings
 
 import numpy as np
@@ -9,7 +10,9 @@ def get_best_spans(start_probs, end_probs, weights=None, cannot_be_first_token=T
 
     notations:
         N - number of distinct questions
+        
         M - number of passages per question in a batch
+        
         L - sequence length
 
     Parameters
@@ -67,6 +70,10 @@ def get_best_spans(start_probs, end_probs, weights=None, cannot_be_first_token=T
 
 
 def format_predictions_for_squad(predictions, references):
+    """
+    Utility function. 
+    Converts the output of MultiPassageBERTTrainer.log_probs_to_answers to squad metric input.
+    """
     predictions_squad, references_squad = [], []
     for i, (prediction, reference) in enumerate(zip(predictions, references)):
         i = str(i)
