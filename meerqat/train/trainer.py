@@ -89,7 +89,7 @@ class MeerqatTrainer(Trainer):
         see Trainer
     freeze: str, optional
         represents a regex used to match the model parameters to freeze
-        (i.e. set `requires_grad = False`).
+        (i.e. set ``requires_grad = False``).
         Defaults to None (keep model fully-trainable)
     """
     def __init__(self, model, *args, freeze=None, **kwargs):
@@ -224,16 +224,16 @@ class QuestionAnsweringTrainer(MeerqatTrainer):
 class DPRBiEncoderTrainer(QuestionAnsweringTrainer):
     """
     Model should be a BiEncoder (or subclass). 
-    Loss is computed in `compute_loss` (and not in model, like usually in Trainer).
+    Loss is computed in ``compute_loss`` (and not in model, like usually in Trainer).
     
     The training objective is to minimize the negative log-likelihood of the similarities (dot product)
-    between the questions and the passages embeddings, as described in [3]_.
-    Therefore there should be only one relevant passage per question (i.e. `self.n_relevant_passages == 1`)
+    between the questions and the passages embeddings, as described in [1]_.
+    Therefore there should be only one relevant passage per question (i.e. ``self.n_relevant_passages == 1``)
     This objective is also used in subclasses for visual questions and visual passages.
     
     References
     ----------
-    .. [3] Vladimir Karpukhin, Barlas Oguz, Sewon Min, Patrick Lewis, Ledell Wu, Sergey Edunov, Danqi Chen, Wen-tau Yih. 
+    .. [1] Vladimir Karpukhin, Barlas Oguz, Sewon Min, Patrick Lewis, Ledell Wu, Sergey Edunov, Danqi Chen, Wen-tau Yih. 
        Dense Passage Retrieval for Open-Domain Question Answering. 
        Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 6769–6781, 2020.
     """
@@ -294,7 +294,9 @@ class DPRBiEncoderTrainer(QuestionAnsweringTrainer):
         Calculates In-batch negatives schema loss and supports to run it in DDP mode by exchanging the representations across all the nodes.
         Adapted from https://github.com/facebookresearch/DPR/blob/main/train_dense_encoder.py
 
-        N. B. this means that the whole representations of questions and contexts, and their similarity matrix, must fit on a single GPU.
+        Notes
+        -----
+        This means that the whole representations of questions and contexts, and their similarity matrix, must fit on a single GPU.
         """
         if self.label_smoother is not None:
             raise NotImplementedError()
@@ -373,7 +375,7 @@ class MMTrainer(DPRBiEncoderTrainer):
         - loads pre-computed image features along with text 
         - => overrides collate_fn
     
-    `model` sohuld be a BiEncoder and its question_model and context_model 
+    ``model`` sohuld be a BiEncoder and its question_model and context_model 
     should have a MMConfig config attribute to be able to infer:
         - n_faces: int
         - face_dim: int
@@ -382,6 +384,8 @@ class MMTrainer(DPRBiEncoderTrainer):
     
     Parameters
     ----------
+    *args, **kwargs: 
+        additional arguments are passed to DPRBiEncoderTrainer
     image_kb: str, optional
         Path to the KB that holds pre-computed image features
         Can be mapped from kb using kb['index']
@@ -547,19 +551,32 @@ class MMTrainer(DPRBiEncoderTrainer):
 
 class ICTTrainer(MMTrainer):
     """
-    Extends the Inverse Cloze Task (ICT, [4]_) to multimodal documents.
+    Extends the Inverse Cloze Task (ICT, [2]_) to multimodal documents.
     Given a wikipedia section, one sentence is considered as a pseudo-question/query and the nearby sentences as a pseudo-target/relevant passage.
     In this multimodal setting, we also consider the image of the section in the query and the infobox/main image of the article in the target.
 
     Inherits from MMTrainer/DPRBiEncoderTrainer and overrides:
-    - get_training_passages, which implements what’s described above
-    - collate_fn to load and concatenate the image features
+        - ``get_training_passages``, which implements what’s described above
+        - ``collate_fn`` to load and concatenate the image features
 
     The image_kb, kb and search_key attributes are not used.
-
+    
+    Parameters
+    ----------
+    *args, **kwargs: 
+        additional arguments are passed to MMTrainer
+    sentences_per_target: int, optional
+        Number of sentences in the target passages
+    prepend_title: bool, optional
+        Whether to preprend the title of the article to the target passage
+    text_mask_rate: float, optional
+        Rate at which the pseudo-question is masked in the target passage
+    image_mask_rate: float, optional
+        Rate at which the infobox image is used as target (keep input image otherwise)
+        
     References
     ----------
-    .. [4] Kenton Lee, Ming-Wei Chang, and Kristina Toutanova. 2019. Latent Retrieval for Weakly Supervised Open Domain Question Answering. 
+    .. [2] Kenton Lee, Ming-Wei Chang, and Kristina Toutanova. 2019. Latent Retrieval for Weakly Supervised Open Domain Question Answering. 
        In Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics, 
        pages 6086–6096, Florence, Italy. Association for Computational Linguistics.
     """
@@ -632,6 +649,7 @@ class ICTTrainer(MMTrainer):
         return RandomSampler(eval_dataset)
 
     def collate_fn(self, items):
+        """"""
         questions, relevant_passages, labels = [], [], []
         for i, item in enumerate(items):
             query, relevant_passage = self.get_training_passages(item)
@@ -1079,7 +1097,7 @@ def get_checkpoint(resume_from_checkpoint: str, *args, **kwargs):
     Parameters
     ----------
     resume_from_checkpoint: str, optional
-        Path (possibly regex) to the directory(ies) checkpointed during training (that hold `pytorch_model.bin` etc.)
+        Path (possibly regex) to the directory(ies) checkpointed during training (that hold ``pytorch_model.bin`` etc.)
     
     Returns
     -------

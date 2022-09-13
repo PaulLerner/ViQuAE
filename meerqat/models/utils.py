@@ -11,7 +11,7 @@ def map_if_not_None(values, function, *args, default_value=None, **kwargs):
     """
     Map all not None values through function (along with additionnal arguments)
 
-    Values that are None will output `default_value`
+    Values that are None will output ``default_value``
 
     Parameters
     ----------
@@ -26,7 +26,7 @@ def map_if_not_None(values, function, *args, default_value=None, **kwargs):
     Returns
     -------
     Output: list
-        of len batch_size (same as values), with `default_value` where values are None
+        of len batch_size (same as values), with ``default_value`` where values are None
     """
     # 1. filter out values that are None
     output = []
@@ -65,7 +65,7 @@ def debug_shape(batch, prefix=""):
 
 def prepare_inputs(data):
     """
-    Moves tensors in data to `device`, be it a tensor or a nested list/dictionary of tensors.
+    Moves tensors in data to ``device``, be it a tensor or a nested list/dictionary of tensors.
     Adapted from transformers.Trainer
     """
     if isinstance(data, (dict, BatchEncoding)):

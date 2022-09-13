@@ -1,19 +1,37 @@
 """
-Usage:
+Script and functions related to metrics and ranx.
+
+(for docopt) Usage:
 metrics.py relevant <dataset> <passages> <title2index> <article2passage> [--disable_caching]
 metrics.py qrels <qrels>... --output=<path>
 metrics.py ranx --qrels=<path> [<run>... --output=<path> --filter=<path> --kwargs=<path> --cats=<path>]
 metrics.py (win|tie|loss) <metrics> [--metric=<metric>]
+                                  
+Usages:
+    1. metrics.py relevant <dataset> <passages> <title2index> <article2passage> [--disable_caching]    
+    2. metrics.py qrels <qrels>... --output=<path>    
+    3. metrics.py ranx --qrels=<path> [<run>... --output=<path> --filter=<path> --kwargs=<path> --cats=<path>]     
+    4. metrics.py (win|tie|loss) <metrics> [--metric=<metric>]  
+    
+Positional arguments:
+    * <usage>              Pick one usage.
+    * <dataset>            Path to the dataset  
+    * <passages>           Path to the passages (also a Dataset)
+    * <title2index>        Path to the JSON file mapping article’s title to it’s index in the KB
+    * <article2passage>    Path to the JSON file mapping article’s index to its corresponging passage indices
+    * <qrels>...           Paths to the Qrels to merge
+    * <metrics>            Path to the JSON metrics file (output of ranx)
 
 Options:
---disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
---output==<path>        1. qrels: output path to the TREC file
-                        2. ranx: output path to the directory where to save metrics
---filter=<path>         Path towards the JSON file that contains a list of question ids to filter *out*
---kwargs=<path>         Path towards the JSON config file that contains kwargs
---cats=<path>           Path towards the JSON that maps categories to their question ids
---metric=<metric>       Metric on which to compute wins/ties/losses [default: precision@1].                                                            
+    --disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
+    --output=<path>         1. qrels: output path to the TREC file
+                            2. ranx: output path to the directory where to save metrics
+    --filter=<path>         Path towards the JSON file that contains a list of question ids to filter *out*
+    --kwargs=<path>         Path towards the JSON config file that contains kwargs
+    --cats=<path>           Path towards the JSON that maps categories to their question ids
+    --metric=<metric>       Metric on which to compute wins/ties/losses [default: precision@1].                                                            
 """
+
 from docopt import docopt
 import json
 import warnings
@@ -36,6 +54,7 @@ def find_relevant(retrieved, original_answer, alternative_answers, kb, reference
     ----------
     retrieved: List[int]
     original_answer: str
+        Included in alternative_answers so original_relevant is included in relevant
     alternative_answers: List[str]
     kb: Dataset
     reference_key: str, optional
@@ -66,7 +85,25 @@ def find_relevant(retrieved, original_answer, alternative_answers, kb, reference
     return original_relevant, relevant
 
 
-def find_relevant_batch(retrieved_batch, ground_truth_output_batch, kb, relevant_batch=None, reference_key='passage', original_answer_only=False):
+def find_relevant_batch(retrieved_batch, ground_truth_output_batch, kb, 
+                        relevant_batch=None, reference_key='passage', original_answer_only=False):
+    """
+    Applies ``find_relevant`` on a batch (output of ir.search)
+    
+    Parameters
+    ----------
+    retrieved_batch: List[List[int]]
+    ground_truth_output_batch: List[dict]
+    kb: Dataset
+    relevant_batch: List[List[int]], optional
+        Each item in relevant_batch will be extended with the other relevant indices we find with ``find_relevant``
+        Defaults to a batch of empty lists.
+    reference_key: str, optional
+        Used to get the reference field in kb
+        Defaults to 'passage'
+    original_answer_only: bool, optional
+        Consider that only the original answer is relevant, not alternative ones.
+    """
     if relevant_batch is None:
         batch_size = len(ground_truth_output_batch)
         relevant_batch = [[] for _ in range(batch_size)]
@@ -85,6 +122,18 @@ def find_relevant_batch(retrieved_batch, ground_truth_output_batch, kb, relevant
 
 
 def find_relevant_item(item, passages, title2index, article2passage):
+    """
+    Applies ``find_relevant`` with passages of articles linked to the question.
+    
+    Parameters
+    ----------
+    item: dict
+    passages: Dataset
+    title2index: dict[str, int]
+        Mapping article’s title to it’s index in the KB
+    article2passage: dict[int, List[int]]
+        Mapping article’s index to its corresponging passage indices
+    """
     # ignore from which paragraph the answer comes from
     # (might have been quicker to do this mapping in make_passage)
     titles = set(provenance['title'][0] for provenance in item['output']['provenance'])
@@ -103,21 +152,25 @@ def find_relevant_item(item, passages, title2index, article2passage):
 
 
 def find_relevant_dataset(dataset_path, **kwargs):
+    """Loads dataset, maps it through find_relevant_item and saves it back."""
     dataset = load_from_disk(dataset_path)
     # TODO save qrels in TREC/ranx format in dataset_path/qrels.trec
     dataset = dataset.map(find_relevant_item, fn_kwargs=kwargs)
     dataset.save_to_disk(dataset_path)
 
 
-def get_irrelevant_batch(retrieved_batch, relevant_batch):
-    irrelevant_batch = []
-    for retrieved, relevant in zip(retrieved_batch, relevant_batch):
-        # N. B. list because sets are not allowed in datasets
-        irrelevant_batch.append(list(set(retrieved) - set(relevant)))
-    return irrelevant_batch
-
-
 def fuse_qrels(qrels_paths):
+    """
+    Loads all qrels in qrels_paths and unions them under a single Qrels.
+    
+    Parameters
+    ----------
+    qrels_paths: List[str]
+    
+    Returns
+    -------
+    fused_qrels: ranx.Qrels
+    """
     # nothing to fuse
     if len(qrels_paths) == 1:
         return ranx.Qrels.from_file(qrels_paths[0], kind='trec')
@@ -132,7 +185,22 @@ def fuse_qrels(qrels_paths):
     return ranx.Qrels.from_dict(final_qrels)
 
 
-def load_runs(runs_paths, runs_dict={}, filter_q_ids=[]):
+def load_runs(runs_paths=[], runs_dict={}, filter_q_ids=[]):
+    """
+    Loads runs from both run_paths and runs_dict. Eventually filters out some questions.
+    
+    Parameters
+    ----------
+    runs_paths: List[str], optional
+    runs_dict: dict[str, str], optional
+        {name of the run: path of the run}
+    filter_q_ids: List[str]
+        Question identifiers to filter from the runs
+        
+    Returns
+    -------
+    runs: List[ranx.Run]
+    """
     runs = []
     
     # load runs from CLI
@@ -157,7 +225,24 @@ def load_runs(runs_paths, runs_dict={}, filter_q_ids=[]):
     return runs
         
 
-def compare(qrels_path, runs_paths, runs_dict={}, output_path=None, filter_q_ids=[], **kwargs):
+def compare(qrels_path, runs_paths=[], runs_dict={}, output_path=None, filter_q_ids=[], **kwargs):
+    """
+    Loads Qrels and Runs, feed them to ranx.compare and save result.
+    
+    Parameters
+    ----------
+    qrels_path: str
+    runs_paths: List[str], optional
+    runs_dict: dict[str, str], optional
+        {name of the run: path of the run}
+    output_path: str, optional
+        Path of the directory were to save output JSON and TeX files.
+        Defaults not to save (only print results)
+    filter_q_ids: List[str]
+        Question identifiers to filter from the Runs and Qrels
+    **kwargs:
+        Passed to ranx.compare
+    """
     qrels = ranx.Qrels.from_file(qrels_path, kind='trec')
     for q_id in filter_q_ids:
         qrels.qrels.pop(q_id)
@@ -181,6 +266,14 @@ def compare(qrels_path, runs_paths, runs_dict={}, output_path=None, filter_q_ids
 
 def cat_breakdown(qrels_path, runs_paths, cats, runs_dict={}, output_path=None, 
                   filter_q_ids=[], metrics=["mrr"]):
+    """
+    qrels_path, runs_paths, runs_dict, output_path, filter_q_ids: 
+        see ``compare``
+    cats: dict[str, List[str]]
+        {category: list of question identifiers that belong to it}
+    metrics: List[str], optional
+        Which metrics to compute
+    """
     if output_path is not None:
         output_path = Path(output_path)
         output_path.mkdir(exist_ok=True)
@@ -223,6 +316,17 @@ def cat_breakdown(qrels_path, runs_paths, cats, runs_dict={}, output_path=None,
     
 
 def get_wtl_table(metrics, wtl_key='W', wtl_metric='precision@1'):
+    """
+    Formats either the wins, ties, or losses of the models against each other
+    according to wtl_key in a pandas.DataFrame
+    
+    metrics: dict
+        loaded from the JSON output of ranx
+    wtl_key: str, optional
+        Whether to compute the win ('W'), tie ('T'), or loss ('L')
+    wtl_metric: str, optional
+        What does it mean to win?
+    """
     for k in ["metrics", "model_names", "stat_test"]:
         metrics.pop(k, None)
     table = {}

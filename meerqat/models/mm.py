@@ -28,7 +28,32 @@ class DMREncoderOutput(EncoderOutput):
 
 
 class MMConfig(BertConfig):
-    """Base configuration class for multimodal models based on BertConfig."""
+    """
+    Base configuration class for multimodal models based on BertConfig.
+    
+    Parameters
+    ----------
+    *args, **kwargs: 
+        additionnal arguments are passed to BertConfig.
+    n_faces: int, optional
+        Number of faces that the multimodal model should take as input. Defaults to 4.
+    face_kwargs: dict, optional
+        Keyword arguments used for the FaceEmbedding module.
+        Defaults to dict(face_dim=512, bbox_dim=7).
+    image_kwargs: dict, optional
+        Keyword arguments used for as many ImageEmbedding modules (one per key).
+        Defaults to {
+            "clip-RN50": {"input_dim": 1024},
+            "imagenet-RN50": {"input_dim": 2048}
+        }
+    face_and_image_are_exclusive: bool, optional
+        Whether face and full-image representation should be combined (default) or exclusive.
+        Handled with attention masks in transformers
+    no_text: bool, optional
+        Whether to rely only on faces and images. 
+        In this case, only the [CLS] token embedding is concatenated to the image features.
+        Defaults to False.
+    """
     def __init__(self,
                  *args,
                  n_faces=4,
@@ -38,30 +63,6 @@ class MMConfig(BertConfig):
                  no_text=False,
                  **kwargs
                  ):
-        """
-        Parameters
-        ----------
-        *args, **kwargs: 
-            additionnal arguments are passed to BertConfig.
-        n_faces: int, optional
-            Number of faces that the multimodal model should take as input. Defaults to 4.
-        face_kwargs: dict, optional
-            Keyword arguments used for the FaceEmbedding module.
-            Defaults to dict(face_dim=512, bbox_dim=7).
-        image_kwargs: dict, optional
-            Keyword arguments used for as many ImageEmbedding modules (one per key).
-            Defaults to {
-                "clip-RN50": {"input_dim": 1024},
-                "imagenet-RN50": {"input_dim": 2048}
-            }
-        face_and_image_are_exclusive: bool, optional
-            Whether face and full-image representation should be combined (default) or exclusive.
-            Handled with attention masks in transformers
-        no_text: bool, optional
-            Whether to rely only on faces and images. 
-            In this case, only the [CLS] token embedding is concatenated to the image features.
-            Defaults to False.
-        """
         super().__init__(*args, **kwargs)
         self.n_faces = n_faces
         if face_kwargs is None:

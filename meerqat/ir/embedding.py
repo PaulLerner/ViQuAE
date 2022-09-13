@@ -1,9 +1,15 @@
-"""Usage: embedding.py <dataset> <config> [--disable_caching --kb=<path> --output=<path>]
+"""Script to embed dataset and Knowledge Base prior to search.
 
+Usage: embedding.py <dataset> <config> [--disable_caching --kb=<path> --output=<path>]
+
+Positional arguments:
+    1. <dataset>   Path to the dataset  
+    2. <config>    Path to the JSON configuration file (passed as kwargs)
+    
 Options:
---disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
---kb=<path>             Path to the KB that can be mapped from the passages
---output=<path>         Optionally save the resulting dataset there instead of overwriting the input dataset.
+    --disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
+    --kb=<path>             Path to the KB that can be mapped from the passages
+    --output=<path>         Optionally save the resulting dataset there instead of overwriting the input dataset.
 """
 
 from docopt import docopt
@@ -19,6 +25,25 @@ from ..data.loading import load_pretrained_in_kwargs
 
 
 def get_face_inputs(batch, n_faces=4, face_dim=512, bbox_dim=7):
+    """
+    Formats pre-computed face features in nice square tensors similarly to MMTrainer.get_face_inputs
+        
+    Parameters
+    ----------
+    batch: dict
+    n_faces: int, optional
+    face_dim: int, optional
+    bbox_dim: int, optional
+    
+    Returns
+    -------
+    face_inputs: dict[str, Tensor]
+        {
+           * face: Tensor(batch_size, n_faces, face_dim)
+           * bbox: Tensor(batch_size, n_faces, bbox_dim)
+           * attention_mask: Tensor(batch_size, n_faces)
+        }
+    """
     face_list = batch["face_embedding"]
     batch_size = len(face_list)
     # trim or pad, and convert to tensor
@@ -51,7 +76,26 @@ def get_face_inputs(batch, n_faces=4, face_dim=512, bbox_dim=7):
     return face_inputs
 
 
-def get_image_inputs(batch, image_kwargs):
+def get_image_inputs(batch, image_kwargs):    
+    """
+    Formats pre-computed full-image features in nice square tensors similarly to MMTrainer.get_image_inputs
+    
+    Parameters
+    ----------
+    batch: dict
+    image_kwargs: dict
+        keys are used to index batch to get precomputed features.
+    
+    Returns
+    -------
+    image_inputs: dict[str, dict[str,Tensor]]
+        one key per image feature (the same as image_kwargs)
+        {
+           * input: Tensor(batch_size, ?)
+           * attention_mask: Tensor(batch_size, )
+             None of the images are masked
+        }
+        """
     image_inputs = {}
     for name, image_kwarg in image_kwargs.items():
         features = torch.tensor(batch[name])
@@ -70,6 +114,8 @@ def map_passage_to_kb(batch, kb, features):
         Should be able to map to the KB using the 'index' key
     kb: Dataset
         Should be a dataset with pre-computed features
+    features: List[str]
+        each feature in features is used to index kb and is then added to the batch
     """
     subset = kb.select(batch['index'])
     for feature in features:
@@ -78,7 +124,25 @@ def map_passage_to_kb(batch, kb, features):
 
     
 def get_inputs(batch, model, tokenizer, tokenization_kwargs={}, key='passage', kb=None):
+    """
+    Tokenizes input text and optionally gathers image features from the kb depending on model.
+    
+    Parameters
+    ----------
+    batch: dict
+    model: nn.Module
+        If it’s a DMREncoder or IntermediateLinearFusion instance, 
+        will gather image features to take as input (from the kb if kb is not None)
+    tokenizer: PreTrainedTokenizer
+    tokenization_kwargs: dict, optional
+        To be passed to tokenizer
+    key: str, optional
+        Used to index the batch to get the text
+    kb: Dataset, optional
+        Should hold image features and be mappable from batch['index']
+    """
     text_inputs = tokenizer(batch[key], **tokenization_kwargs)
+    # FIXME this is not robust
     if isinstance(model, (mm.DMREncoder, mm.IntermediateLinearFusion)):
         if kb is not None:
             features = {"face_embedding", "face_box"} | model.config.image_kwargs.keys()
@@ -99,6 +163,22 @@ def get_inputs(batch, model, tokenizer, tokenization_kwargs={}, key='passage', k
 
 def embed(batch, model, tokenizer, tokenization_kwargs={}, key='passage', 
           save_as='text_embedding', output_key=None, forward_kwargs={}, layers=None, kb=None):
+    """
+    Parameters
+    ----------
+    batch, model, tokenizer, tokenization_kwargs, key, kb: 
+        see ``get_inputs``
+    save_as: str, optional
+        key to save the resulting embedding in batch
+    output_key: str or int, optional
+        if model outputs a dict, list, or tuple, used to get THE output Tensor you want
+    forward_kwargs: dict, optional
+        passed to model.forward
+    layers: list[int], optional
+        if not None, expects that the output is a List[Tensor] 
+        with each Tensor being shaped like (batch_size, sequence_length, hidden_size)
+        In this case, it will save in {save_as}_layer_{layer} the representation of the first token (DMR-like), for each layer
+    """
     inputs = get_inputs(batch, model, tokenizer, tokenization_kwargs=tokenization_kwargs, key=key, kb=kb)
     # move to device
     inputs = prepare_inputs(inputs)
@@ -127,6 +207,7 @@ def embed(batch, model, tokenizer, tokenization_kwargs={}, key='passage',
 
 
 def dataset_embed(dataset_path, map_kwargs={}, output_path=None, **fn_kwargs):
+    """Loads dataset from path, maps it through embed, and saves it to output_path"""
     dataset = load_from_disk(dataset_path)
     # defaults to overwrite the dataset
     if output_path is None:

@@ -32,9 +32,12 @@ class Trainee(nn.Module):
 
 @dataclass
 class DPRReaderForQuestionAnsweringOutput(DPRReaderOutput):
-    """Same as DPRReaderOutput with an extra loss attribute (or as QuestionAnsweringModelOutput with relevance_logits)
+    """
+    Same as DPRReaderOutput with an extra loss attribute (or as QuestionAnsweringModelOutput with relevance_logits)
 
-    N. B. unfortunately we have to redefine everything so that loss is the first attribute
+    Notes
+    -----
+    Unfortunately we have to redefine everything so that loss is the first attribute
     """
     loss: Optional[torch.FloatTensor] = None
     start_logits: torch.FloatTensor = None
@@ -138,16 +141,19 @@ class BiEncoder(nn.Module):
     
 
 class DPRBiEncoder(BiEncoder):
-    """Adapted from https://github.com/facebookresearch/DPR/blob/main/dpr/models/biencoder.py"""
+    """
+    Adapted from https://github.com/facebookresearch/DPR/blob/main/dpr/models/biencoder.py
+    
+    Parameters
+    ----------
+    question_model: transformers.DPRQuestionEncoder
+        Encoder based on BERT used to encode the question/query
+    context_model: transformers.DPRContextEncoder  
+        Encoder based on BERT used to encode the context/evidence/passage 
+        ('context' is confusing IMO but I keep it for consistency with DPR and transformers)
+    """
     def __init__(self, question_model, context_model):
         """
-        Parameters
-        ----------
-        question_model: transformers.DPRQuestionEncoder
-            Encoder based on BERT used to encode the question/query
-        context_model: transformers.DPRContextEncoder  
-            Encoder based on BERT used to encode the context/evidence/passage 
-            ('context' is confusing IMO but I keep it for consistency with DPR and transformers)
         """
         super().__init__(question_model=question_model, context_model=context_model)
     
@@ -249,7 +255,9 @@ class MultiPassageBERT(BertForQuestionAnswering):
     Code based on transformers.BertForQuestionAnswering, dpr.models.Reader
     and https://github.com/allenai/document-qa/blob/master/docqa/nn/span_prediction.py
 
-    N. B. differences with DPRReaderForQuestionAnswering:
+    Notes
+    -----
+    Differences with DPRReaderForQuestionAnswering:
         * no projection layer between BERT and QA-extraction
         * no re-ranking (TODO implement MultiPassageDPRReader?)
         * global normalization
@@ -288,11 +296,11 @@ class MultiPassageBERT(BertForQuestionAnswering):
             There should always be a constant number of passages (relevant or not) per question
         start_positions, end_positions: Tensor[int], optional
             shape (N, M, max_n_answers)
-            The answer might be found several time in the same passage, maximum `max_n_answers` times
+            The answer might be found several time in the same passage, maximum ``max_n_answers`` times
             Defaults to None (i.e. don’t compute the loss)
         answer_mask: Tensor[int], optional
             shape (N, M, max_n_answers)
-            Used to mask the loss for answers that are not `max_n_answers` times in the passage
+            Used to mask the loss for answers that are not ``max_n_answers`` times in the passage
             Required if start_positions and end_positions are specified
         **kwargs: additional arguments are passed to BERT after being reshape like 
         """

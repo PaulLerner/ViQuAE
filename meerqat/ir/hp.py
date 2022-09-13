@@ -1,17 +1,22 @@
-"""Both dense and sparse information retrieval is done via HF-Datasets, using FAISS and ElasticSearch, respectively
+"""
+Optimize hyperparameters of the ir.search pipeline.
 
 Usage:
 hp.py <type> <config> [--train=<dataset> --k=<k> --disable_caching --cleanup_cache_files --metrics=<path> --test=<dataset>]
 
+Positional arguments:
+    1. <type>      'fusion'|'bm25' to optimize fusion or BM25 hyperparameters, respectively.
+    2. <config>    Path to the JSON configuration file (passed as kwargs)
+    
 Options:
---train=<dataset>       Name of the train dataset
---k=<k>                 Hyperparameter to search for the k nearest neighbors [default: 100].
---disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
---cleanup_cache_files   Clean up all cache files in the dataset cache directory, 
-                        excepted the currently used one, see Dataset.cleanup_cache_files()
-                        Useful to avoid saturating disk storage (caches are only deleted when exiting with --disable_caching)
---metrics=<path>        Path to save the metrics in JSON and TeX format (only applicable with --test)
---test=<dataset>        Name of the test dataset
+    --train=<dataset>       Name of the train dataset
+    --k=<k>                 Hyperparameter to search for the k nearest neighbors [default: 100].
+    --disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
+    --cleanup_cache_files   Clean up all cache files in the dataset cache directory, 
+                            excepted the currently used one, see Dataset.cleanup_cache_files()
+                            Useful to avoid saturating disk storage (caches are only deleted when exiting with --disable_caching)
+    --metrics=<path>        Path to save the metrics in JSON and TeX format (only applicable with --test)
+    --test=<dataset>        Name of the test dataset
 """
 import warnings
 
@@ -33,7 +38,27 @@ from .search import Searcher, format_qrels_indices
 
 
 class Objective:
-    """Callable objective compatible with optuna."""
+    """
+    Callable objective compatible with optuna.
+    
+    Parameters
+    ----------
+    dataset: Dataset
+        Used to optimize hyperparameters
+    do_cache_relevant: bool,
+        Whether to cache relevant results are not.
+    metric_for_best_model: str, optional
+        Metric used to evaluate the model. Defaults to "mrr@{self.searcher.k}" (e.g. "mrr@100")
+    eval_dataset: Dataset, optional
+        Used to evaluated after optimization
+    map_kwargs, fn_kwargs: dict, optional
+        Passed to self.dataset.map
+    cleanup_cache_files: bool, optional
+        Clean up all cache files in the dataset cache directory, 
+        excepted the currently used one, see Dataset.cleanup_cache_files()
+    **kwargs:
+        passed to Searcher
+    """
     def __init__(self, dataset, do_cache_relevant, metric_for_best_model=None, eval_dataset=None,
                  map_kwargs={}, fn_kwargs={}, cleanup_cache_files=False, **kwargs):
         self.dataset = dataset
@@ -51,6 +76,11 @@ class Objective:
         self.cleanup_cache_files = cleanup_cache_files
 
     def __call__(self, trial):
+        """
+        Tries value suggested by trial, 
+        runs self.dataset through self.searcher.fuse_and_compute_metrics 
+        and evaluates the results
+        """
         pass
 
     def evaluate(self, best_params):
@@ -84,6 +114,7 @@ class Objective:
         return batch
     
     def cache_relevant_dataset(self, do_copy=False):
+        """Maps self.dataset through self.cache_relevant and handles KB"""
         self.dataset.map(self.cache_relevant, batched=True, fn_kwargs=dict(do_copy=do_copy), **self.map_kwargs)
         self.keep_reference_kb = self.searcher.reference_kb
         # so that subsequent calls to searcher.fuse_and_compute_metrics will not call find_relevant_batch
@@ -91,6 +122,15 @@ class Objective:
 
 
 class FusionObjective(Objective):
+    """
+    Used to optimize hyperparameters of fusion.
+    
+    Parameters
+    ----------
+    hyp_hyp: dict, optional
+        Contains hyper-hyperparameters: the bounds and steps of grid search for each searcher.
+        Defaults to ``{"bounds": (0, 1.1), "step": 0.1}``, for each searcher.
+    """
     def __init__(self, *args, hyp_hyp=None, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -164,6 +204,18 @@ class FusionObjective(Objective):
 
 
 class BM25Objective(Objective):
+    """
+    Used to optimize hyperparameters of BM25.
+    
+    Parameters
+    ----------
+    hyp_hyp: dict, optional
+        Contains hyper-hyperparameters: the bounds and steps of grid search.
+        Defaults to ``{"bounds": (0, 1.1), "step": 0.1}``
+    settings: dict, optional
+        settings that will be filled with tried values before being fed to self.es_client.indices.put_settings
+        Defaults to ``{'similarity': {'karpukhin': {'b': 0.75, 'k1': 1.2}}}``
+    """
     def __init__(self, *args, hyp_hyp=None, settings=None, **kwargs):                 
         super().__init__(*args, **kwargs)
         # default parameters
@@ -253,6 +305,25 @@ class BM25Objective(Objective):
 
 
 def get_objective(objective_type, train_dataset, **objective_kwargs):
+    """
+    Instantiates Objective.
+    
+    Parameters
+    ----------
+    objective_type: str
+        'fusion'|'bm25' to use FusionObjective or BM25Objective, respectively.
+        FusionObjective caches relevant results while BM25Objective recomputes relevant results every time
+    train_dataset: Dataset
+    **objective_kwargs:
+        passed to Objective
+        
+    Returns
+    -------
+    objective: Objective
+    default_study_kwargs: dict
+        Default sampler (GridSampler) and direction ('maximize'), 
+        passed to optuna.create_study if not overwritten.
+    """
     if objective_type == 'fusion':
         objective = FusionObjective(train_dataset, do_cache_relevant=True, **objective_kwargs)
         if objective.searcher.fusion_method == 'interpolation':
@@ -278,6 +349,27 @@ def get_objective(objective_type, train_dataset, **objective_kwargs):
 
 def hyperparameter_search(study_name=None, storage=None, metric_save_path=None,
                           optimize_kwargs={}, study_kwargs={}, cleanup_cache_files=False, **objective_kwargs):
+    """
+    Main function that loads data, caches relevant results according to objective.do_cache_relevant,
+    runs the optimization and saves the results.
+    
+    Parameters
+    ----------
+    study_name, storage: 
+        see optuna.create_study
+    metric_save_path: str, optional
+        Path to the directory where to save the results qrels, runs and metrics of eval_dataset.
+        Defaults not to save.
+    optimize_kwargs: dict, optional
+        Passed to Study.optimize
+    study_kwargs: dict, optional
+        Passed to optuna.create_study, default is defined in ``get_objective``
+    cleanup_cache_files: bool, optional
+        Clean up all cache files in the dataset cache directory, 
+        excepted the currently used one, see Dataset.cleanup_cache_files()
+    **objective_kwargs:
+        Passed to Objective
+    """
     objective, default_study_kwargs = get_objective(cleanup_cache_files=cleanup_cache_files, **objective_kwargs)
     default_study_kwargs.update(study_kwargs)
     sampler = default_study_kwargs.get('sampler')

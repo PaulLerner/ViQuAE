@@ -1,12 +1,17 @@
-"""Both dense and sparse information retrieval is done via HF-Datasets, using FAISS and ElasticSearch, respectively
+"""
+Script and classes to search. Built upon datasets (itself wrapping FAISS and ElasticSearch).
 
 Usage:
 search.py <dataset> <config> [--k=<k> --disable_caching --metrics=<path>]
 
+Positional arguments:
+    1. <dataset>   Path to the dataset  
+    2. <config>    Path to the JSON configuration file (passed as kwargs)
+    
 Options:
---k=<k>                 Hyperparameter to search for the k nearest neighbors [default: 100].
---disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
---metrics=<path>        Path to the directory to save the results of the run and evaluation
+    --k=<k>                 Hyperparameter to search for the k nearest neighbors [default: 100].
+    --disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
+    --metrics=<path>        Path to the directory to save the results of the run and evaluation
 """
 import warnings
 
@@ -29,6 +34,18 @@ from ..data.utils import json_integer_keys
 
 
 def scores2dict(scores_batch, indices_batch):
+    """
+    Zips a batch of scores and indices into a batch of dict.
+    
+    Parameters
+    ----------
+    scores_batch: List[List[float]]
+    indices_batch: List[List[int]]
+    
+    Returns
+    -------
+    scores_dicts: List[dict[int, float]]
+    """
     scores_dicts = []
     for scores, indices in zip(scores_batch, indices_batch):
         scores_dicts.append(dict(zip(indices, scores)))
@@ -36,13 +53,25 @@ def scores2dict(scores_batch, indices_batch):
 
 
 def dict2scores(scores_dict, k=100):
-    """sort in desc. order and keep top-k"""
+    """
+    Sorts in desc. order and keeps top-k.
+    
+    Parameters
+    ----------
+    scores_dict: dict[int, float]
+    
+    Returns
+    -------
+    scores: List[float]
+    indice: List[int]
+    """
     indices = sorted(scores_dict, key=scores_dict.get, reverse=True)[:k]
     scores = [scores_dict[index] for index in indices]
     return scores, indices
 
 
 def dict_batch2scores(scores_dicts, k=100):
+    """Reverses ``scores2dict``. Additionnally sorts in desc. order and keeps top-k."""
     scores_batch, indices_batch = [], []
     for scores_dict in scores_dicts:
         scores, indices = dict2scores(scores_dict, k=k)
@@ -52,10 +81,38 @@ def dict_batch2scores(scores_dicts, k=100):
 
 
 def norm_mean_std(scores_batch, mean, std):
+    """
+    Scales input data.
+    
+    Parameters
+    ----------
+    scores_batch: List[List[float]]
+    mean: float
+    std: float
+    
+    Returns
+    -------
+    scores_batch: List[np.ndarray]
+    """
     return [(np.array(scores)-mean)/std for scores in scores_batch]
 
 
 def normalize(scores_batch, method, **kwargs):
+    """
+    Switch function for different normalization methods.
+    
+    Parameters
+    ----------
+    scores_batch: List[List[float]]
+    method: str
+        Name of the normalization method
+    **kwargs:
+        Passed to the normalization method
+    
+    Returns
+    -------
+    scores_batch
+    """
     methods = {
         "normalize": norm_mean_std
     }
@@ -78,7 +135,26 @@ class IndexKind(enum.Enum):
 
 class Index:
     """
-    N. B. difficult to create a hierarchy like FaissIndex and ESIndex since public methods, 
+    Dataclass to hold information about an index (either FaissIndex or ESIndex)
+    
+    Parameters
+    ----------
+    key: str
+        Associated key in the dataset where the queries are stored
+    kind_str: str, optional
+        One of IndexKind
+    es: bool, optional
+        Linked to an ESIndex or FaissIndex
+    do_L2norm: bool, optional
+        Whether to apply ``L2norm`` to the queries
+    normalization: str, optional
+        If not None, applies this kind of ``normalize`` to the results scores
+    interpolation_weight: float, optional
+        Used to fuse the results of multiple Indexes
+        
+    Notes
+    -----
+    Difficult to create a hierarchy like FaissIndex and ESIndex since public methods, 
     such as search_batch, are defined in Dataset and take as input the index name.
     """
     def __init__(self, key, kind_str=None, es=False, do_L2norm=False, normalization=None, interpolation_weight=None):
@@ -94,8 +170,23 @@ class Index:
 
 
 class KnowledgeBase:
-    """A KB can be indexed by several indexes."""
-    def __init__(self, kb_path=None, index_mapping_path=None, index_kwargs={}, es_client=None, load_dataset=True):
+    """
+    A KB can be indexed by several indexes.
+    
+    Parameters
+    ----------
+    kb_path: str, optional
+        Path to the Dataset holding the KB
+    index_mapping_path: str, optional
+        Path to the JSON file mapping KB articles to its corresponding passages indices
+    index_kwargs: dict, optional
+        Each key identifies an Index and each value is passed to ``add_or_load_index``
+    es_client: Elasticsearch, optional
+    load_dataset: bool, optional
+        This is useful for hyperparameter search if you want to use pre-computed results (see ir.hp)
+    """
+    def __init__(self, kb_path=None, index_mapping_path=None, index_kwargs={}, 
+                 es_client=None, load_dataset=True):
         if load_dataset:
             self.dataset = load_from_disk(kb_path)
         # This is useful for hyperparameter search if you want to use pre-computed results (see ir.hp).
@@ -127,6 +218,7 @@ class KnowledgeBase:
         return self.dataset.search_batch(index_name, queries, k=k)
 
     def search_batch_if_not_None(self, index_name, queries, k=100):
+        """Filters out queries that are None and runs ``search_batch`` for the rest."""
         # 1. filter out queries that are None
         scores_batch, indices_batch = [], []
         not_None_queries, not_None_queries_indices = [], []
@@ -159,6 +251,8 @@ class KnowledgeBase:
 
         If k is not None, keep only the top-k (might have exceeded in case of 1-many mapping)
 
+        Notes
+        -----
         Beware 'index'/'indices' here refers to integers outputs from the search. 
         Nothing to do with the Index class or self.dataset._indexes
         """
@@ -182,6 +276,23 @@ class KnowledgeBase:
 
     def add_or_load_index(self, column=None, index_name=None, es=False, kind_str=None, key=None,
                           normalization=None, interpolation_weight=None, **index_kwarg):
+        """
+        Calls either ``add_or_load_elasticsearch_index`` or ``add_or_load_faiss_index``according to es.
+        Unless column is None, then it does not actually add the index. 
+        This is useful for hyperparameter search if you want to use pre-computed results (see ir.hp).
+        
+        Parameters
+        ----------
+        column: str, optional
+            Name/key of the column that holds the pre-computed embeddings.
+        index_name: str, optional
+            Index identifier. Defaults to ``column``
+        es: bool, optional
+        kind_str, key, normalization, interpolation_weight: 
+            see Index
+        **index_kwarg:
+            Passed to ``add_or_load_elasticsearch_index`` or ``add_or_load_faiss_index``
+        """
         # do not actually add the index. 
         # This is useful for hyperparameter search if you want to use pre-computed results (see ir.hp).
         if column is None:
@@ -198,6 +309,28 @@ class KnowledgeBase:
         self.indexes[index_name] = index
 
     def add_or_load_faiss_index(self, column, index_name=None, load=False, save_path=None, string_factory=None, device=None, **kwargs):
+        """
+        Parameters
+        ----------
+        column, index_name: 
+            see add_or_load_index
+        load: bool, optional
+            Whether to ``load_faiss_index`` or ``add_faiss_index``
+        save_path: str, optional
+            Save index using ``self.dataset.save_faiss_index``
+            Defaults not to save.
+        string_factory: str, optional
+            see ``Dataset.add_faiss_index`` and https://github.com/facebookresearch/faiss/wiki/The-index-factory
+        device: int, optional
+            see ``Dataset.add_faiss_index``
+        **kwargs:
+            Passed to ``load_faiss_index`` or ``add_faiss_index``
+        
+        Returns
+        -------
+        do_L2norm: bool
+            Inferred from string_factory. See Index.
+        """
         if string_factory is not None and 'L2norm' in string_factory:
             do_L2norm = True
         else:
@@ -220,6 +353,18 @@ class KnowledgeBase:
         return do_L2norm
 
     def add_or_load_elasticsearch_index(self, column, index_name=None, load=False, **kwargs):
+        """
+        When loading, it will also check the settings and eventually update them (using put_settings)
+        
+        Parameters
+        ----------
+        column, index_name: 
+            see add_or_load_index
+        load: bool, optional
+            Whether to ``load_elasticsearch_index`` or ``add_elasticsearch_index``
+        **kwargs:
+            Passed to ``load_elasticsearch_index`` or ``add_elasticsearch_index``
+        """
         if load:
             self.dataset.load_elasticsearch_index(index_name=index_name, es_client=self.es_client, **kwargs)
             # fix: settings are not actually used when loading an existing ES index
@@ -267,6 +412,31 @@ class Searcher:
     Aggregates several KnowledgeBases (KBs). 
     Searches through a dataset using all the indexes of all KnowledgeBases.
     Fuses results of search with multiple indexes and compute metrics.
+    
+    Parameters
+    ----------
+    kb_kwargs: dict
+        Each key identifies a KB and each valye is passed to KnowledgeBase
+    k: int, optional
+        Searches for the top-k results
+    reference_kb_path: str, optional
+        Path to the Dataset that hold the reference KB, used to evaluate the results.
+        If it is one of self.kbs, it will only get loaded once.
+        Defaults to evaluate only from the cached 'provenance_indices' in the dataset (not recommanded).
+    reference_key: str,
+        Used to get the reference field in kb
+        Defaults to 'passage'
+    request_timeout: int, optional
+        Timeout for Elasticsearch
+    es_client_kwargs: dict, optional
+        Passed to Elasticsearch
+    fusion_kwargs: dict, optional
+        Passed to the fusion method (see fuse). Default method is interpolation_fusion.
+    metrics_kwargs: dict, optional
+        Passed to ranx.compare. Defaults to "mrr", "precision", "hit_rate" at ranks [1, 5, 10, 20, 100]
+    save_in_dataset: bool, optional
+        Whether to save the dataset after searching (which will hold the results)
+        or rely only on ranx to save.
     """
     def __init__(self, kb_kwargs, k=100, reference_kb_path=None, reference_key='passage', request_timeout=1000,
                  es_client_kwargs={}, fusion_kwargs={}, metrics_kwargs={}, save_in_dataset=True):
@@ -383,6 +553,7 @@ class Searcher:
         return batch
 
     def fuse_and_compute_metrics(self, batch):
+        """First calls fuse, then find_relevant_batch."""
         scores_batch, indices_batch = self.fuse(batch)
         batch['search_scores'], batch['search_indices'] = scores_batch, indices_batch
 
@@ -423,7 +594,7 @@ class Searcher:
     def interpolation_fusion(self, batch, default_minimum=False):
         """
         Simple weighted sum, e.g. : fusion = w_1*score_1 + w_2*score_2 + w_3*score_3
-        The *default-minimum trick* is used in Ma et al. (2021, arXiv:2104.05740): 
+        The *default-minimum trick* is used in [1]_ 
         when combining results from systems A and B, it consists in giving the minimum score of A's results 
         if a given passage was only retrieved by system B, and vice-versa.
 
@@ -433,6 +604,11 @@ class Searcher:
             as parsed by datasets
         default_minimum: bool, optional
             Use the *default-minimum trick* (defaults to not to).
+            
+        References
+        ----------
+        .. [1] Ma, X., Sun, K., Pradeep, R., & Lin, J. (2021). A replication study of dense passage retriever. 
+           arXiv preprint arXiv:2104.05740. https://arxiv.org/abs/2104.05740
         """
         all_indices = self.union_results(batch)
         
@@ -463,6 +639,22 @@ class Searcher:
 
 
 def dataset_search(dataset, k=100, metric_save_path=None, map_kwargs={}, **kwargs):
+    """
+    Instantiates searcher, maps the dataset through it, then compute and saves metrics.
+    
+    Parameters
+    ----------
+    dataset: Dataset
+    k: int, optional
+        see Searcher
+    metric_save_path: str, optional
+        Path to the directory where to save the results qrels, runs and metrics of eval_dataset.
+        Defaults not to save.
+    map_kwargs: dict, optional
+        Passed to self.dataset.map
+    **kwargs:
+        Passed to Searcher
+    """
     searcher = Searcher(k=k, **kwargs)
 
     # HACK: sleep until elasticsearch is good to go

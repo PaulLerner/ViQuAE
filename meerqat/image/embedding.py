@@ -36,8 +36,12 @@ def get_nn_module(Class_name, *args, **kwargs):
 
 def from_pretrained(model_name='resnet50', imagenet=True, pretrained_model_path=None, **kwargs):
     """
-    N. B. for models trained on other dataset than imagenet, don’t forget to pass the right num_classes in kwargs
+    Notes
+    -----
+    For models trained on other dataset than imagenet, don’t forget to pass the right num_classes in kwargs
 
+    Examples
+    --------
     To load from a Places365 checkpoint, first process the state_dict as this:
     >>> checkpoint = torch.load("resnet50_places365.pth.tar", map_location="cpu")
     >>> state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
