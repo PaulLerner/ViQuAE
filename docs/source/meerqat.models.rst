@@ -4,37 +4,13 @@ meerqat.models package
 Submodules
 ----------
 
-meerqat.models.image module
----------------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: meerqat.models.image
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-meerqat.models.mm module
-------------------------
-
-.. automodule:: meerqat.models.mm
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-meerqat.models.qa module
-------------------------
-
-.. automodule:: meerqat.models.qa
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-meerqat.models.utils module
----------------------------
-
-.. automodule:: meerqat.models.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   meerqat.models.image
+   meerqat.models.mm
+   meerqat.models.qa
+   meerqat.models.utils
 
 Module contents
 ---------------

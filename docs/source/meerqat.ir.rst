@@ -4,37 +4,13 @@ meerqat.ir package
 Submodules
 ----------
 
-meerqat.ir.embedding module
----------------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: meerqat.ir.embedding
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-meerqat.ir.hp module
---------------------
-
-.. automodule:: meerqat.ir.hp
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-meerqat.ir.metrics module
--------------------------
-
-.. automodule:: meerqat.ir.metrics
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-meerqat.ir.search module
-------------------------
-
-.. automodule:: meerqat.ir.search
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   meerqat.ir.embedding
+   meerqat.ir.hp
+   meerqat.ir.metrics
+   meerqat.ir.search
 
 Module contents
 ---------------
