@@ -17,8 +17,6 @@ def retrieval(eval_prediction, ignore_index=-100):
         Labels with this value are not taken into account when computing metrics.
         Defaults to -100
     """
-    print(f"eval_prediction.predictions.shape: {eval_prediction.predictions.shape}")
-    print(f"               .label_ids.shape: {eval_prediction.label_ids.shape}")
     metrics = {}
 
     log_probs = eval_prediction.predictions

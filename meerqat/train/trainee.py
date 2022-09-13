@@ -1,3 +1,11 @@
+"""
+Trainee is a nn.Module that computes the loss and returns it either as:
+    - first element of a tuple 
+    - in the loss key of a dict or ModelOutput
+so it is compatible with Trainer.
+Exception is made for BiEncoder that simply wraps both encoders outputs
+so it is compatible with DPRBiEncoderTrainer (and subclasses).
+"""
 from dataclasses import dataclass
 from typing import Optional, Tuple
 from functools import partial
@@ -49,6 +57,7 @@ class MultiPassageBERTOutput(QuestionAnsweringModelOutput):
 
 @dataclass 
 class BiEncoderOutput(ModelOutput):
+    """Simply wraps both encoders output in one."""
     question_pooler_output: Optional[torch.FloatTensor] = None
     context_pooler_output: Optional[torch.FloatTensor] = None
 
@@ -68,18 +77,24 @@ class DPRBiEncoderOutput(BiEncoderOutput):
 
 
 class BiEncoder(nn.Module):
+    """    
+    Parameters
+    ----------
+    question_model, context_model: nn.Module
+    """
     supports_gradient_checkpointing = True
     def __init__(self, question_model, context_model):
-        """
-        Parameters
-        ----------
-        question_model, context_model: nn.Module
-        """
         super().__init__()
         self.question_model = question_model
         self.context_model = context_model
 
     def forward(self, question_inputs, context_inputs):
+        """        
+        Parameters
+        ----------
+        question_inputs, context_inputs: dict
+            passed to the respective encoder
+        """
         # embed questions and contexts
         question_outputs = self.question_model(**question_inputs)
         context_outputs = self.context_model(**context_inputs)
@@ -140,10 +155,10 @@ class DPRBiEncoder(BiEncoder):
         """
         Embeds questions and contexts with their respective model and returns the embeddings.
         
-        N - number of questions in a batch
-        M - number of passages per questions
-        L - sequence length
-        d - dimension of the model/embeddings
+        * N - number of questions in a batch
+        * M - number of passages per questions
+        * L - sequence length
+        * d - dimension of the model/embeddings
         
         Parameters
         ----------
@@ -227,7 +242,7 @@ class DPRReaderForQuestionAnswering(Trainee):
 
 class MultiPassageBERT(BertForQuestionAnswering):
     """
-    PyTorch/Transformers implementation of Multi-passage BERT by Wang et. al (based on the global normalization by Clark et. al)
+    PyTorch/Transformers implementation of Multi-passage BERT [1]_ (based on the global normalization [2]_)
     i.e. groups passages per question before computing the softmax (and the NLL loss)
     so that spans scores are comparable across passages
 
@@ -235,40 +250,21 @@ class MultiPassageBERT(BertForQuestionAnswering):
     and https://github.com/allenai/document-qa/blob/master/docqa/nn/span_prediction.py
 
     N. B. differences with DPRReaderForQuestionAnswering:
-    * no projection layer between BERT and QA-extraction
-    * no re-ranking (TODO implement MultiPassageDPRReader?)
-    * global normalization
+        * no projection layer between BERT and QA-extraction
+        * no re-ranking (TODO implement MultiPassageDPRReader?)
+        * global normalization
 
     References
     ----------
-    @inproceedings{wang_multi-passage_2019,
-        address = {Hong Kong, China},
-        title = {Multi-passage {BERT}: {A} {Globally} {Normalized} {BERT} {Model} for {Open}-domain {Question} {Answering}},
-        shorttitle = {Multi-passage {BERT}},
-        url = {https://www.aclweb.org/anthology/D19-1599},
-        doi = {10.18653/v1/D19-1599},
-        urldate = {2021-06-14},
-        booktitle = {Proceedings of the 2019 {Conference} on {Empirical} {Methods} in {Natural} {Language} {Processing} and the 9th {International} {Joint} {Conference} on {Natural} {Language} {Processing} ({EMNLP}-{IJCNLP})},
-        publisher = {Association for Computational Linguistics},
-        author = {Wang, Zhiguo and Ng, Patrick and Ma, Xiaofei and Nallapati, Ramesh and Xiang, Bing},
-        month = nov,
-        year = {2019},
-        pages = {5878--5882}
-    }
+    .. [1] Zhiguo Wang, Patrick Ng, Xiaofei Ma, Ramesh Nallapati, and Bing Xiang. 
+       2019. Multi-passage BERT: A Globally Normalized BERT Model for Open-domain Question Answering. 
+       In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing 
+       and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP), 
+       pages 5878–5882, Hong Kong, China. Association for Computational Linguistics.
 
-    @inproceedings{clark_simple_2018,
-        address = {Melbourne, Australia},
-        title = {Simple and {Effective} {Multi}-{Paragraph} {Reading} {Comprehension}},
-        url = {https://aclanthology.org/P18-1078},
-        doi = {10.18653/v1/P18-1078},
-        urldate = {2021-07-08},
-        booktitle = {Proceedings of the 56th {Annual} {Meeting} of the {Association} for {Computational} {Linguistics} ({Volume} 1: {Long} {Papers})},
-        publisher = {Association for Computational Linguistics},
-        author = {Clark, Christopher and Gardner, Matt},
-        month = jul,
-        year = {2018},
-        pages = {845--855},
-    }
+    .. [2] Christopher Clark and Matt Gardner. 2018. Simple and Effective Multi-Paragraph Reading Comprehension. 
+       In Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), 
+       pages 845–855, Melbourne, Australia. Association for Computational Linguistics.
     """
 
     def __init__(self, *args, **kwargs):
@@ -281,9 +277,9 @@ class MultiPassageBERT(BertForQuestionAnswering):
                 return_dict=None, **kwargs):
         """
         notations: 
-            N - number of distinct questions
-            M - number of passages per question in a batch
-            L - sequence length
+           * N - number of distinct questions
+           * M - number of passages per question in a batch
+           * L - sequence length
 
         Parameters
         ----------

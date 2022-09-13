@@ -1,8 +1,11 @@
 """
 Usage: split_biencoder.py <config> [--bert]
 
+Positional arguments:
+    <config>    Path to the JSON configuration file (passed as kwargs)
+
 Options:
---bert              Save BertModel instead of DPRQuestionEncoder|DPRContextEncoder
+    --bert      Save BertModel instead of question_model and context_model
 """
 from pathlib import Path
 from docopt import docopt
@@ -15,7 +18,21 @@ from ..data.loading import load_pretrained_in_kwargs
 
 
 def split_biencoder(trainee, checkpoint, bert=False):
-    """Utility function to split a DPRBiEncoder in DPRQuestionEncoder and DPRContextEncoder"""
+    """
+    Utility function to split a DPRBiEncoder in DPRQuestionEncoder and DPRContextEncoder
+    
+    Parameters
+    ----------
+    trainee: BiEncoder
+        must have attributes:
+            - question_model: PreTrainedModel
+            - context_model: PreTrainedModel
+    checkpoint: str
+        Path to the directory where the pytorch checkpoint is stored under WEIGHTS_NAME ("pytorch_model.bin")
+    bert: bool, optional
+        Save BertModel instead of question_model and context_model (which then must have bert_model attribute).
+        Defaults to False.        
+    """
     checkpoint_path = Path(checkpoint['resume_from_checkpoint'])
     state_dict = torch.load(checkpoint_path/WEIGHTS_NAME, map_location='cpu')
     trainee.load_state_dict(state_dict)

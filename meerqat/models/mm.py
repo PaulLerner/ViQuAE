@@ -41,7 +41,8 @@ class MMConfig(BertConfig):
         """
         Parameters
         ----------
-        *args, **kwargs: additionnal arguments are passed to BertConfig.
+        *args, **kwargs: 
+            additionnal arguments are passed to BertConfig.
         n_faces: int, optional
             Number of faces that the multimodal model should take as input. Defaults to 4.
         face_kwargs: dict, optional
@@ -81,10 +82,8 @@ class MMConfig(BertConfig):
 class DMREncoder(PreTrainedModel):
     """
     Text and image are fused by concatenating them at the sequence-level then feeding them to BERT, à la UNITER [1]_
-    
-      one face ≃ one token  
-      
-      one image ≃ one token
+        - one face ≃ one token  
+        - one image ≃ one token
 
     The multimodal representation is obtained from the "[CLS]" token
 

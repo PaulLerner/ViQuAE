@@ -20,7 +20,8 @@ def map_if_not_None(values, function, *args, default_value=None, **kwargs):
     function: callable
     default_value: optional
         Defaults to None
-    *args, **kwargs: additionnal arguments are passed to function
+    *args, **kwargs: 
+        additionnal arguments are passed to function
 
     Returns
     -------

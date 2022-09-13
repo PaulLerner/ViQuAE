@@ -327,3 +327,8 @@ Used to manipulate the output of [Label Studio](https://labelstud.io/), see also
 - `merge` merges several LS outputs, also compute inter-annotator agreement and saves disagreements
 - `agree` merges the output of `merge` along with the corrected disagreements
 
+# Docs
+TODO add readthedocs
+
+Building the docs:
+`sphinx-build -b html docs/source/ docs/build/`

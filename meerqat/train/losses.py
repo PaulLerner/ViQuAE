@@ -1,3 +1,4 @@
+"""Loss functions."""
 import torch
 
 def _calc_mml(loss_tensor):

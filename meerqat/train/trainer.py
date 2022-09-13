@@ -1,4 +1,11 @@
-"""Usage: trainer.py <config>"""
+"""
+Main training script based on transformers. Also holds Trainer subclasses.
+
+Usage: trainer.py <config>
+
+Positional arguments:
+    <config>    Path to the JSON configuration file (passed as kwargs)
+"""
 from docopt import docopt
 import json
 from pathlib import Path
@@ -46,6 +53,20 @@ logger = logging.getLogger(__name__)
 
 
 def max_memory_usage(human=False):
+    """
+    Gets max_memory_allocated per GPU.
+    
+    Parameters
+    ----------
+    human: bool, optional
+        make memory usage human-readable.
+        Defaults to machine-readable.
+    
+    Returns
+    -------
+    logs: dict
+        {GPU device: max_memory_allocated}
+    """
     logs = {}
     for i in range(torch.cuda.device_count()):
         device = f"cuda:{i}"
@@ -57,7 +78,20 @@ def max_memory_usage(human=False):
 
 
 class MeerqatTrainer(Trainer):
-    """Base class for all trainers. Should be very similar to Trainer"""
+    """
+    Base class for all trainers. Provides only minimal changes to Trainer
+    
+    Parameters
+    ----------
+    *args, **kwargs: 
+        additionnal arguments are passed to Trainer.
+    model: nn.Module
+        see Trainer
+    freeze: str, optional
+        represents a regex used to match the model parameters to freeze
+        (i.e. set `requires_grad = False`).
+        Defaults to None (keep model fully-trainable)
+    """
     def __init__(self, model, *args, freeze=None, **kwargs):
         if freeze is not None:
             model = self.freeze(model, freeze)
@@ -68,14 +102,14 @@ class MeerqatTrainer(Trainer):
     def freeze(self, model, regex):
         regex = re.compile(regex)
         total, frozen = 0, 0
-        logger.debug("Model parameters:\t\t\t\tName\t#Trainable\t#Total")
+        logger.debug("Model parameters:\n"+"Name".ljust(120)+"\t#Trainable\t#Total")
         for name, param in model.named_parameters():
             numel = param.numel()
             if regex.match(name):
                 param.requires_grad = False
                 frozen += numel
             total += numel
-            logger.debug(f"{name}\t\t{(numel if param.requires_grad else 0):,d}\t{numel:,d}")
+            logger.debug(f"{name.ljust(120)}\t{(numel if param.requires_grad else 0):,d}\t{numel:,d}")
         logger.info(f"Froze {frozen:,d} parameters out of {total:,d}")
         return model
         
@@ -100,17 +134,16 @@ class MeerqatTrainer(Trainer):
 class QuestionAnsweringTrainer(MeerqatTrainer):
     """
     Base class for Question Answering trainers. Should work for both IR and RC.
-
-        Overrides some methods because we need to create the batch of questions and passages on-the-fly
-
+    Overrides some methods because we need to create the batch of questions and passages on-the-fly
     Because the inputs should be shaped like (N * M, L), where:
-            N - number of distinct questions
-            M - number of passages per question in a batch
-            L - sequence length
+        * N - number of distinct questions
+        * M - number of passages per question in a batch
+        * L - sequence length
 
     Parameters
     ----------
-    *args, **kwargs: additional arguments are passed to MeerqatTrainer
+    *args, **kwargs: 
+        additional arguments are passed to MeerqatTrainer
     kb: str, optional
         path towards the knowledge base (Dataset) used to get the passages
         Optional because not needed in ICTTrainer, mandatory for the other trainers.
@@ -154,6 +187,21 @@ class QuestionAnsweringTrainer(MeerqatTrainer):
             self.args.remove_unused_columns = False
 
     def get_training_passages(self, item):
+        """
+        Parameters
+        ----------
+        item: dict
+            item (e.g. question) from self.train_dataset or self.eval_dataset.
+        
+        Returns
+        -------
+        relevant_passages, irrelevant_passages: list[dict]
+            List of relevant and irrelevant passages selected from self.kb
+            according to:
+                - self.n_relevant_passages
+                - self.M
+                - self.search_key
+        """
         relevant_passages = []
         all_relevant_indices = item[self.search_key+"_provenance_indices"]
         n_relevant = min(len(all_relevant_indices), self.n_relevant_passages)
@@ -174,6 +222,21 @@ class QuestionAnsweringTrainer(MeerqatTrainer):
 
 
 class DPRBiEncoderTrainer(QuestionAnsweringTrainer):
+    """
+    Model should be a BiEncoder (or subclass). 
+    Loss is computed in `compute_loss` (and not in model, like usually in Trainer).
+    
+    The training objective is to minimize the negative log-likelihood of the similarities (dot product)
+    between the questions and the passages embeddings, as described in [3]_.
+    Therefore there should be only one relevant passage per question (i.e. `self.n_relevant_passages == 1`)
+    This objective is also used in subclasses for visual questions and visual passages.
+    
+    References
+    ----------
+    .. [3] Vladimir Karpukhin, Barlas Oguz, Sewon Min, Patrick Lewis, Ledell Wu, Sergey Edunov, Danqi Chen, Wen-tau Yih. 
+       Dense Passage Retrieval for Open-Domain Question Answering. 
+       Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 6769–6781, 2020.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.log_softmax = nn.LogSoftmax(1)
@@ -185,22 +248,24 @@ class DPRBiEncoderTrainer(QuestionAnsweringTrainer):
         Collate batch so that each question is associate with n_relevant_passages and M-n irrelevant ones.
         Also tokenizes input strings
 
-        N - number of questions in a batch
-        M - number of passages per questions
-        d - dimension of the model/embeddings
+            * N - number of questions in a batch
+            * M - number of passages per questions
+            * d - dimension of the model/embeddings
 
         Returns (a dict of)
         -------------------
         question_inputs: dict[torch.LongTensor]
             input_ids: torch.LongTensor
                 shape (N, L)
-            **kwargs: more tensors depending on the tokenizer, e.g. attention_mask
+            **kwargs: 
+                more tensors depending on the tokenizer, e.g. attention_mask
         context_inputs: dict[torch.LongTensor]
             input_ids: torch.LongTensor
                 shape (N*M, L)
                 The first N rows correspond to the relevant contexts for the N questions
                 The rest N*(M-1) rows are irrelevant contexts for all questions.
-            **kwargs: idem
+            **kwargs: 
+                idem
         """
         n_irrelevant_passages = self.M-self.n_relevant_passages
         questions, relevant_passages, irrelevant_passages, labels = [], [], [], []
@@ -305,8 +370,15 @@ class DPRBiEncoderTrainer(QuestionAnsweringTrainer):
 
 class MMTrainer(DPRBiEncoderTrainer):
     """
-    --> loads pre-computed image features along with text 
-    --> overrides collate_fn
+        - loads pre-computed image features along with text 
+        - => overrides collate_fn
+    
+    `model` sohuld be a BiEncoder and its question_model and context_model 
+    should have a MMConfig config attribute to be able to infer:
+        - n_faces: int
+        - face_dim: int
+        - bbox_dim: int
+        - image_dims: dict[str, int]
     
     Parameters
     ----------
@@ -339,6 +411,18 @@ class MMTrainer(DPRBiEncoderTrainer):
         assert(self.bbox_dim == self.model.context_model.config.face_kwargs['bbox_dim'])
 
     def get_face_inputs(self, items):
+        """
+        Formats pre-computed face features in nice square tensors.
+        
+        Returns
+        -------
+        face_inputs: dict[str, Tensor]
+            {
+               * face: Tensor(batch_size, self.n_faces, self.face_dim)
+               * bbox: Tensor(batch_size, self.n_faces, self.bbox_dim)
+               * attention_mask: Tensor(batch_size, self.n_faces)
+            }
+        """
         # trim or pad, and convert to tensor
         face_embeddings = torch.zeros((len(items), self.n_faces, self.face_dim))
         face_boxes = torch.zeros((len(items), self.n_faces, self.bbox_dim))
@@ -370,6 +454,18 @@ class MMTrainer(DPRBiEncoderTrainer):
         return face_inputs
 
     def get_image_inputs(self, items):
+        """
+        Formats pre-computed full-image features in nice square tensors.
+        
+        Returns
+        -------
+        image_inputs: dict[str, dict[str,Tensor]]
+            one key per image feature
+            {
+               * input: Tensor(batch_size, ?)
+               * attention_mask: Tensor(batch_size, )
+            }
+        """
         image_inputs = {}
         for name in self.image_embeddings_keys: 
             features = torch.zeros(len(items), self.image_dims[name])
@@ -389,6 +485,7 @@ class MMTrainer(DPRBiEncoderTrainer):
         return image_inputs               
                                    
     def add_image_features(self, passages):
+        """Add image features to passages from self.image_kb"""
         if len(passages) < 1:
             return passages
         features = ({"face_box", "face_embedding"} | self.image_embeddings_keys)
@@ -450,7 +547,7 @@ class MMTrainer(DPRBiEncoderTrainer):
 
 class ICTTrainer(MMTrainer):
     """
-    Extends the Inverse Cloze Task (ICT, lee_latent_2019) to multimodal documents.
+    Extends the Inverse Cloze Task (ICT, [4]_) to multimodal documents.
     Given a wikipedia section, one sentence is considered as a pseudo-question/query and the nearby sentences as a pseudo-target/relevant passage.
     In this multimodal setting, we also consider the image of the section in the query and the infobox/main image of the article in the target.
 
@@ -462,18 +559,9 @@ class ICTTrainer(MMTrainer):
 
     References
     ----------
-    @inproceedings{lee_latent_2019,
-        address = {Florence, Italy},
-        title = {Latent {Retrieval} for {Weakly} {Supervised} {Open} {Domain} {Question} {Answering}},
-        url = {https://aclanthology.org/P19-1612},
-        doi = {10.18653/v1/P19-1612},
-        booktitle = {Proceedings of the 57th {Annual} {Meeting} of the {Association} for {Computational} {Linguistics}},
-        publisher = {Association for Computational Linguistics},
-        author = {Lee, Kenton and Chang, Ming-Wei and Toutanova, Kristina},
-        month = jul,
-        year = {2019},
-        pages = {6086--6096}
-    }
+    .. [4] Kenton Lee, Ming-Wei Chang, and Kristina Toutanova. 2019. Latent Retrieval for Weakly Supervised Open Domain Question Answering. 
+       In Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics, 
+       pages 6086–6096, Florence, Italy. Association for Computational Linguistics.
     """
     def __init__(self, *args, sentences_per_target=4, prepend_title=False, 
                  text_mask_rate=1.0, image_mask_rate=1.0, **kwargs):
@@ -532,6 +620,10 @@ class ICTTrainer(MMTrainer):
         return query, target
 
     def _get_eval_sampler(self, eval_dataset):
+        """
+        It’s important to shuffle even the evaluation set because the examples 
+        get really hard (even false negatives) if they come from the same Wikipedia article.
+        """
         if self.args.use_legacy_prediction_loop:
             raise NotImplementedError()
         # Build the sampler.
@@ -603,7 +695,8 @@ class MultiPassageBERTTrainer(QuestionAnsweringTrainer):
 
     Parameters
     ----------
-    *args, **kwargs: additional arguments are passed to QuestionAnsweringTrainer
+    *args, **kwargs: 
+        additional arguments are passed to QuestionAnsweringTrainer
     max_n_answers: int, optional
         The answer might be found several time in the same passage, this is a threshold to enable batching
         Defaults to 10.
@@ -980,6 +1073,19 @@ class MultiPassageBERTTrainer(QuestionAnsweringTrainer):
 
 
 def get_checkpoint(resume_from_checkpoint: str, *args, **kwargs):
+    """
+    Utility function. 
+    
+    Parameters
+    ----------
+    resume_from_checkpoint: str, optional
+        Path (possibly regex) to the directory(ies) checkpointed during training (that hold `pytorch_model.bin` etc.)
+    
+    Returns
+    -------
+    resume_from_checkpoints: list[Path]
+        List of path to the checkpoints, sorted by ascending training step.
+    """
     if resume_from_checkpoint is None:
         return [None]
     if args or kwargs:
@@ -993,6 +1099,19 @@ def get_checkpoint(resume_from_checkpoint: str, *args, **kwargs):
 
 
 def subsample_dataset(dataset, num_shards):
+    """
+    Shuffles and shards the input dataset in num_shards.
+    
+    Parameters
+    ----------
+    dataset: Dataset
+    num_shards: int
+    
+    Returns
+    -------
+    dataset: Dataset
+        First shard.
+    """
     before_len = len(dataset)
     dataset = dataset.shuffle(seed=0)
     dataset = dataset.shard(num_shards, 0)
@@ -1002,6 +1121,21 @@ def subsample_dataset(dataset, num_shards):
 
 
 def filter_rels(dataset, search_key):
+    """
+    Filter out questions of the dataset without any relevant passages.
+    
+    
+    Parameters
+    ----------
+    dataset: Dataset
+    search_key: str
+        see QuestionAnsweringTrainer
+    
+    Returns
+    -------
+    dataset: Dataset
+        With at least one relevant passage for all questions.
+    """
     before_len = len(dataset)
     # FIXME: should also work when a ranx Run is used instead of search_key
     dataset = dataset.filter(lambda item: len(item[f"{search_key}_provenance_indices"]) > 0)
@@ -1016,7 +1150,39 @@ def instantiate_trainer(trainee, trainer_class="MultiPassageBERTTrainer", debug=
                         train_shards=None, eval_shards=None, 
                         filter_train_rels=False, filter_eval_rels=False,
                         search_key=None, **kwargs):
-    """Additional arguments are passed to Trainer"""
+    """
+    Instantiates Trainer and TrainingArguments, loads and processes data
+    
+    Parameters
+    ----------
+    trainee: nn.Module
+        see meerqat.train.trainee
+    trainer_class: str, optional
+        Name of one of the classes defined above.
+    debug: bool, optional
+        see torch.autograd.detect_anomaly
+    train_dataset, eval_dataset: str, optional
+        Path to the train or eval datasets
+    metric: str, optional
+        Name of a metric defined in meerqat.train.metrics or in datasets
+    training_kwargs: dict, optional
+        Passed to TrainingArguments
+    callbacks_args: list[dict], optional
+        Added to trainer with Trainer.add_callback
+    train_shards, eval_shards: int, optional
+        see subsample_dataset
+    filter_train_rels, filter_eval_rels: bool, optional
+        see filter_rels
+    search_key: str, optional
+        see QuestionAnsweringTrainer
+    **kwargs:
+        Passed to Trainer
+        
+    Returns
+    -------
+    trainer: Trainer
+    training_args: TrainingArguments
+    """
     # debug (see torch.autograd.detect_anomaly)
     set_detect_anomaly(debug)
 

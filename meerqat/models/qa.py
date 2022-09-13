@@ -9,11 +9,9 @@ def get_best_spans(start_probs, end_probs, weights=None, cannot_be_first_token=T
     Get the best scoring spans from start and end probabilities
 
     notations:
-        N - number of distinct questions
-        
-        M - number of passages per question in a batch
-        
-        L - sequence length
+        - N - number of distinct questions
+        - M - number of passages per question in a batch
+        - L - sequence length
 
     Parameters
     ----------
