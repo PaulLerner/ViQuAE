@@ -1,6 +1,11 @@
 meerqat.ir package
 ==================
 
+.. automodule:: meerqat.ir
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -11,11 +16,3 @@ Submodules
    meerqat.ir.hp
    meerqat.ir.metrics
    meerqat.ir.search
-
-Module contents
----------------
-
-.. automodule:: meerqat.ir
-   :members:
-   :undoc-members:
-   :show-inheritance:

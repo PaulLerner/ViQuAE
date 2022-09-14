@@ -1,5 +1,111 @@
 # coding: utf-8
-"""Usage:
+"""
+======
+Usages
+======
+Gathers data about entities mentioned in questions via Wikidata, Wikimedia Commons SPARQL services and Wikimedia REST API.
+
+You should run all of these in this order to get the whole cake:
+
+-----------------
+``data entities``
+-----------------
+
+**input/output**: ``entities.json`` (output of ``kilt2vqa.py count_entities``)  
+queries many different attributes for all entities in the questions 
+
+Also sets a 'reference image' to the entity using Wikidata properties in the following order of preference:
+    - P18 ‘image’ (it is roughly equivalent to the infobox image in Wikipedia articles)
+    - P154 ‘logo image’
+    - P41 ‘flag image’
+    - P94 ‘coat of arms image’
+    - P2425 ‘service ribbon image’
+
+-----------------
+``data feminine``
+-----------------
+**input**: ``entities.json``  
+**output**: ``feminine_labels.json``  
+gets feminine labels for classes and occupations of these entities
+
+---------------------
+``data superclasses``
+---------------------
+**input**: ``entities.json``  
+**output**: ``<n>_superclasses.json``  
+
+gets the superclasses of the entities classes up ``n`` level (defaults to 'all', i.e. up to the root)
+
+---------------------
+Depictions (optional)
+---------------------
+we found that heuristics/images based on depictions were not that discriminative
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+``commons sparql depicts``
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+**input/output**: ``entities.json``  
+Find all images in Commons that *depict* the entities
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``commons sparql depicted``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**input**: ``entities.json``  
+**output**: ``depictions.json``  
+Find all entities depicted in the previously gathered step
+
+^^^^^^^^^^^^^^^^^
+``data depicted``
+^^^^^^^^^^^^^^^^^
+**input**: ``entities.json``, ``depictions.json``   
+**output**: ``entities.json``  
+Gathers the same data as in ``wiki.py data entities <subset>`` for *all* entities depicted in any of the depictions  
+Then apply a heuristic to tell whether an image depicts the entity prominently or not:
+*the depiction is prominent if the entity is the only one of its class*, e.g.:
+    - *pic of Barack Obama and Joe Biden* -> not prominent  
+    - *pic of Barack Obama and the Eiffel Tower* -> prominent  
+
+Note this heuristic is not used in ``commons heuristics``
+
+
+----------
+``filter``
+----------
+**input/output**: ``entities.json``  
+Filters entities w.r.t. to their class/nature/"instance of" and date of death, see ``wiki.py`` docstring for option usage (TODO share concrete_entities/abstract_entities)
+Also entities with a ‘sex or gender’ (P21) or ‘occupation’ (P106) are kept by default.
+
+Note this deletes data so maybe save it if you're unsure about the filter.
+
+----------------
+``commons rest``
+----------------
+**input/output**: ``entities.json``  
+
+Gathers images and subcategories recursively from the entity root commons-category
+
+Except if you have a very small dataset you should probably set ``--max_images=0`` to query only categories and use ``wikidump.py`` to gather images from those.  
+``--max_categories`` defaults to 100.
+
+
+----------------------
+``commons heuristics``
+----------------------
+**input/output**: ``entities.json``  
+Run ``wikidump.py`` first to gather images.  
+Compute heuristics for the image (control with ``<heuristic>``, default to all):
+    - ``categories``: the entity label should be included in *all* of the image category
+    - ``description``: the entity label should be included in the image description
+    - ``title``: the entity label should be included in the image title/file name
+    - ``depictions``: the image should be tagged as *depicting* the entity (gathered in ``commons sparql depicts``)
+
+
+==============
+For ``docopt``
+==============
+
+
+Usage:
 wiki.py data entities <subset> [--skip=<attribute>]
 wiki.py data feminine <subset>
 wiki.py data depicted <subset>
@@ -24,6 +130,10 @@ Options:
 --deceased=<year>                Remove humans (Q5) that are alive or deceased after <year> (might avoid trouble with GDPR)
 <classes_to_exclude>...          Additional classes to exclude in the negative_filter (e.g. "Q5 Q82794")
                                     Note that you can use this option even without --negative i.e. specifying your own "abstract_entities"
+
+=========
+Functions
+=========
 """
 import re
 import time

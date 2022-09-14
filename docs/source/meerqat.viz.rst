@@ -1,6 +1,11 @@
 meerqat.viz package
 ===================
 
+.. automodule:: meerqat.viz
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -10,11 +15,3 @@ Submodules
    meerqat.viz.html
    meerqat.viz.stats
    meerqat.viz.umap
-
-Module contents
----------------
-
-.. automodule:: meerqat.viz
-   :members:
-   :undoc-members:
-   :show-inheritance:

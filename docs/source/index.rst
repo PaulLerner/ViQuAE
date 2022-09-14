@@ -4,17 +4,20 @@
    contain the root `toctree` directive.
 
 Welcome to meerqat's documentation!
-===================================
+***********************************
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
-
-
+	
 Indices and tables
 ==================
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+
+.. include:: ../../README.rst
+
+.. include:: ../../EXPERIMENTS.rst

@@ -1,12 +1,49 @@
 # coding: utf-8
 """
+======
+Usages
+======
+
+------------
+``passages``
+------------
+Segments Wikipedia articles (from the `kilt_wikipedia` dataset) into passages (e.g. paragraphs)
+Current options (passed in a JSON file) are:
+ - `prepend_title`: whether to prepend the title at the beginning of each passage like `"<title> [SEP] <passage>"`
+ - `special_fields`: removes the title, sections titles ("Section::::") and bullet-points ("BULLET::::")
+ - `uniform`: each passage is `n` tokens, without overlap. Tokenized with a `transformers` tokenizer
+ - `uniform_sents`: each article is first segmented into sentences using `spacy`. 
+                    Then sentences are grouped into passage s.t. each passage holds a maximum of `n` tokens 
+                    (`spacy` tokens here, not `transformers` like above)
+
+
+-------
+``map``
+-------
+Make a JSON file out of a `dataset` column for quick (and string) indexing.
+
+
+-------------
+``sentences``
+-------------
+Used in Inverse Cloze Task (ICT) to segment the text of a dataset in a list of sentences via spaCy.
+
+==============
+For ``docopt``
+==============
+
 Usage:
 loading.py passages <input> <output> [<config> --disable_caching]
 loading.py map <dataset> <key> <output> [--inverse --one2many --disable_caching]
 loading.py sentences <dataset>
 
 Options:
---disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
+    --disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
+
+
+=========
+Functions
+=========
 """
 
 from pathlib import Path

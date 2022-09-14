@@ -1,5 +1,11 @@
 # coding: utf-8
-"""Usage: wikidump.py <subset>"""
+"""
+**input/output**: ``entities.json``  
+Parses the dump (should be downloaded first, TODO add instructions), gathers images and assign them to the relevant entity given its common categories (retrieved in ``wiki.py commons rest``)  
+Note that the wikicode is parsed very lazily and might need a second run depending on your application, e.g. templates are not expanded...
+
+Usage: wikidump.py <subset>
+"""
 import bz2
 import xml.etree.ElementTree as ET
 from tqdm import tqdm

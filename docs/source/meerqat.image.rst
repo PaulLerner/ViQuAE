@@ -1,6 +1,11 @@
 meerqat.image package
 =====================
 
+.. automodule:: meerqat.image
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -12,11 +17,3 @@ Submodules
    meerqat.image.face_detection
    meerqat.image.face_recognition
    meerqat.image.resize
-
-Module contents
----------------
-
-.. automodule:: meerqat.image
-   :members:
-   :undoc-members:
-   :show-inheritance:

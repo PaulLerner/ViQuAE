@@ -1,13 +1,21 @@
 # coding: utf-8
-"""Usage:
+"""
+Used to manipulate the output of `Label Studio <https://labelstud.io/>`_, see also ANNOTATION.md
+    - ``assign`` takes annotations out of the TODO list in a ``tasks.json`` file (input to LS)
+    - ``save images`` similar to ``kilt2vqa download``, not used for the final dataset
+    - ``merge`` merges several LS outputs, also compute inter-annotator agreement and saves disagreements
+    - ``agree`` merges the output of ``merge`` along with the corrected disagreements
+
+
+Usage:
 labelstudio.py save images <path>...
 labelstudio.py merge <output> <path>...
 labelstudio.py assign <output> <todo> <start> <end> [--overlap=<n> --zip <config>...]
 labelstudio.py agree <dataset> <agreements>
 
 Options:
---overlap=<n>           Number of questions to leave in todo [default: 0].
---zip                   Whether to zip the output directory
+    --overlap=<n>           Number of questions to leave in todo [default: 0].
+    --zip                   Whether to zip the output directory
 """
 
 import json

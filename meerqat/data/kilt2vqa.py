@@ -1,5 +1,80 @@
 # coding: utf-8
-"""Usage:
+"""
+========
+Overview
+========
+.. image:: ../../docs/kilt2vqa_big_picture.png
+
+All the data should be stored in the `data` folder, at the root of this repo.
+
+The goal is to generate questions suitable for VQA by replacing explicit entity mentions in existing textual QA datasets
+by an ambiguous one and illustrate the question with an image (that depicts the entity).
+
+
+-------
+``ner``
+-------
+.. image:: ../../docs/kilt2vqa_nlp.png
+
+Slight misnomer, does a bit more than NER, i.e. dependency parsing.  
+Detected entities with valid type and dependency are replaced by a placeholder along with its syntactic children.  
+e.g. 'Who wrote *the opera **Carmen***?' &rarr; 'Who wrote `{mention}`'  
+Note that, not only the entity mention ('Carmen') but its syntactic children ('the opera')
+are replaced by the placeholder.
+    
+
+-------
+``ner``
+-------
+.. image:: ../../docs/kilt2vqa_nlp.png
+
+Disambiguate entity mentions using Wikipedia pages provided in KILT.  
+TriviaQA was originally framed as a reading-comprehension problem so the authors applied off-the-shelf NED and filtered
+out pages that didn't contain the answer.  
+For every entity mention we compute Word Error Rate (WER, i.e. word-level Levenshtein distance) for every wikipedia title
+and aliases. We save the minimal match and WER and recommand filtering out WER > 0.5  
+More data about these entities is gathered in `wiki.py`, 
+just run `kilt2vqa.py count_entities` first to save a dict with all disambiguated entities (outputs `entities.json`).
+
+---------------------
+``generate mentions``
+---------------------
+.. image:: ../../docs/kilt2vqa_mentiong_gen.png
+
+Generate ambiguous entity mentions that can be used to replace the placeholder 
+in the input question (you need to run `wiki.py data` first):  
+    - if the gender is available (not animal sex):
+        - 'this man' or 'this woman' (respecting transgender)
+        - 'he/him/his' or 'she/her/hers' w.r.t mention dependency              
+    - if human and occupation is available : 'this `{occupation}`' (respecting gender if relevant, e.g. for 'actress')
+    - else if non-human:
+        - if a taxon : 'this `{taxon rank}`' (e.g. 'species') 
+        - else 'this `{class}`' (e.g. 'this tower')   
+    
+---------------
+``generate vq``
+---------------  
+Make the VQA triple by choosing:  
+    - uniformly a mention type and a mention from this mention type (generated in the previous step)  
+    - the image with the best score (according to the heuristics computed in `wiki.py commons heuristics`).
+      Tries to use a unique image per entity.
+
+---------------
+``labelstudio``
+---------------
+First calls `generate vq` i.e. no need to call both!  
+The dataset is then converted to the Label Studio JSON format so you can annotate and convert the errors of the automatic pipeline (see [`ANNOTATION.md`](./ANNOTATION.md)).
+
+------------
+``download``
+------------
+Downloads images (set in `meerqat.data.wiki data entities`) from Wikimedia Commons using `meerqat.data.wiki.save_image`.  
+This might take a while (thus the sharding options), any help/advice is appreciated :)
+    
+==============
+For ``docopt``
+==============
+Usage:
 kilt2vqa.py ner <subset> [--disable_caching]
 kilt2vqa.py ned <subset> [--map_kwargs=<path> --disable_caching]
 kilt2vqa.py generate mentions <subset> [--threshold=<threshold> --disable_caching]
@@ -17,6 +92,10 @@ Options:
 --disable_caching               Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
 --num_shards=<n>                Shard the dataset in n parts when downloading images
 --shard_index=<n>               Index of the desired shard when downloading images (use along with --num_shards)
+
+=========
+Functions
+=========
 """
 
 import json

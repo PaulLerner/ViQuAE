@@ -1,6 +1,11 @@
 meerqat package
 ===============
 
+.. automodule:: meerqat
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Subpackages
 -----------
 
@@ -13,11 +18,3 @@ Subpackages
    meerqat.models
    meerqat.train
    meerqat.viz
-
-Module contents
----------------
-
-.. automodule:: meerqat
-   :members:
-   :undoc-members:
-   :show-inheritance:

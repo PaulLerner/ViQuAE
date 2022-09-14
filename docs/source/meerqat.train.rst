@@ -1,6 +1,11 @@
 meerqat.train package
 =====================
 
+.. automodule:: meerqat.train
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -12,11 +17,3 @@ Submodules
    meerqat.train.split_biencoder
    meerqat.train.trainee
    meerqat.train.trainer
-
-Module contents
----------------
-
-.. automodule:: meerqat.train
-   :members:
-   :undoc-members:
-   :show-inheritance:
