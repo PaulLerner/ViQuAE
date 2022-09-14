@@ -1,0 +1,987 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>meerqat.ir.search &#8212; meerqat v3.0.0-alpha documentation</title>
+  <script>
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+
+  
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/6.1.2/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b">
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/meerqat/ir/search';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="docsearch:language" content="en">
+  </head>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__primary" id="__primary">
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__secondary" id="__secondary">
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+      
+<form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+    </div>
+  </div>
+
+  
+  <nav class="bd-header navbar navbar-expand-lg bd-navbar" id="navbar-main"><div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+      <span class="fas fa-bars"></span>
+  </label>
+  <div id="navbar-start">
+    
+    
+  
+
+
+<a class="navbar-brand logo" href="../../../index.html">
+
+  
+  
+  
+  
+  
+  
+  
+
+  
+  
+    <p class="title logo__title">meerqat v3.0.0-alpha documentation</p>
+  
+</a>
+    
+  </div>
+
+  
+  <div class="col-lg-9 navbar-header-items">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+    </ul>
+</nav>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      <div class="navbar-end-item navbar-end__search-button-container">
+        
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+
+
+  
+  <div class="search-button-container--mobile">
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+  </div>
+
+  
+  <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fas fa-outdent"></span>
+  </label>
+  
+
+</div>
+  </nav>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+    </ul>
+</nav>
+      </div>
+      
+      </div>
+    
+
+    
+    
+    <div class="sidebar-header-items__end">
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+    
+  </div>
+
+  
+
+  
+  <div class="sidebar-end-items sidebar-primary__section">
+    <div class="sidebar-end-items__item">
+    </div>
+  </div>
+
+      </div>
+      <main class="bd-main">
+        
+        
+        <div class="bd-content">
+          <div class="bd-article-container">
+            
+            <div class="bd-header-article">
+                
+            </div>
+            
+            
+            <article class="bd-article" role="main">
+              
+  <h1>Source code for meerqat.ir.search</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Script and classes to search. Built upon datasets (itself wrapping FAISS and ElasticSearch).</span>
+
+<span class="sd">Usage:</span>
+<span class="sd">search.py &lt;dataset&gt; &lt;config&gt; [--k=&lt;k&gt; --disable_caching --metrics=&lt;path&gt;]</span>
+
+<span class="sd">Positional arguments:</span>
+<span class="sd">    1. &lt;dataset&gt;   Path to the dataset  </span>
+<span class="sd">    2. &lt;config&gt;    Path to the JSON configuration file (passed as kwargs)</span>
+<span class="sd">    </span>
+<span class="sd">Options:</span>
+<span class="sd">    --k=&lt;k&gt;                 Hyperparameter to search for the k nearest neighbors [default: 100].</span>
+<span class="sd">    --disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()</span>
+<span class="sd">    --metrics=&lt;path&gt;        Path to the directory to save the results of the run and evaluation</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">from</span> <span class="nn">docopt</span> <span class="kn">import</span> <span class="n">docopt</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Counter</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">enum</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">elasticsearch</span> <span class="kn">import</span> <span class="n">Elasticsearch</span>
+<span class="kn">from</span> <span class="nn">datasets</span> <span class="kn">import</span> <span class="n">load_from_disk</span><span class="p">,</span> <span class="n">set_caching_enabled</span>
+<span class="kn">from</span> <span class="nn">datasets.search</span> <span class="kn">import</span> <span class="n">ElasticSearchIndex</span><span class="p">,</span> <span class="n">FaissIndex</span>
+<span class="kn">import</span> <span class="nn">ranx</span>
+
+<span class="kn">from</span> <span class="nn">.metrics</span> <span class="kn">import</span> <span class="n">find_relevant_batch</span>
+<span class="kn">from</span> <span class="nn">..data.utils</span> <span class="kn">import</span> <span class="n">json_integer_keys</span>
+
+
+<div class="viewcode-block" id="scores2dict"><a class="viewcode-back" href="../../../meerqat.ir.search.html#meerqat.ir.search.scores2dict">[docs]</a><span class="k">def</span> <span class="nf">scores2dict</span><span class="p">(</span><span class="n">scores_batch</span><span class="p">,</span> <span class="n">indices_batch</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Zips a batch of scores and indices into a batch of dict.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    scores_batch: List[List[float]]</span>
+<span class="sd">    indices_batch: List[List[int]]</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    scores_dicts: List[dict[int, float]]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">scores_dicts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">scores</span><span class="p">,</span> <span class="n">indices</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">scores_batch</span><span class="p">,</span> <span class="n">indices_batch</span><span class="p">):</span>
+        <span class="n">scores_dicts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">scores</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">scores_dicts</span></div>
+
+
+<div class="viewcode-block" id="dict2scores"><a class="viewcode-back" href="../../../meerqat.ir.search.html#meerqat.ir.search.dict2scores">[docs]</a><span class="k">def</span> <span class="nf">dict2scores</span><span class="p">(</span><span class="n">scores_dict</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sorts in desc. order and keeps top-k.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    scores_dict: dict[int, float]</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    scores: List[float]</span>
+<span class="sd">    indice: List[int]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">scores_dict</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">scores_dict</span><span class="o">.</span><span class="n">get</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)[:</span><span class="n">k</span><span class="p">]</span>
+    <span class="n">scores</span> <span class="o">=</span> <span class="p">[</span><span class="n">scores_dict</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">scores</span><span class="p">,</span> <span class="n">indices</span></div>
+
+
+<div class="viewcode-block" id="dict_batch2scores"><a class="viewcode-back" href="../../../meerqat.ir.search.html#meerqat.ir.search.dict_batch2scores">[docs]</a><span class="k">def</span> <span class="nf">dict_batch2scores</span><span class="p">(</span><span class="n">scores_dicts</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reverses ``scores2dict``. Additionnally sorts in desc. order and keeps top-k.&quot;&quot;&quot;</span>
+    <span class="n">scores_batch</span><span class="p">,</span> <span class="n">indices_batch</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">scores_dict</span> <span class="ow">in</span> <span class="n">scores_dicts</span><span class="p">:</span>
+        <span class="n">scores</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="n">dict2scores</span><span class="p">(</span><span class="n">scores_dict</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">)</span>
+        <span class="n">scores_batch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+        <span class="n">indices_batch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">scores_batch</span><span class="p">,</span> <span class="n">indices_batch</span></div>
+
+
+<div class="viewcode-block" id="norm_mean_std"><a class="viewcode-back" href="../../../meerqat.ir.search.html#meerqat.ir.search.norm_mean_std">[docs]</a><span class="k">def</span> <span class="nf">norm_mean_std</span><span class="p">(</span><span class="n">scores_batch</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Scales input data.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    scores_batch: List[List[float]]</span>
+<span class="sd">    mean: float</span>
+<span class="sd">    std: float</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    scores_batch: List[np.ndarray]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span><span class="o">-</span><span class="n">mean</span><span class="p">)</span><span class="o">/</span><span class="n">std</span> <span class="k">for</span> <span class="n">scores</span> <span class="ow">in</span> <span class="n">scores_batch</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="normalize"><a class="viewcode-back" href="../../../meerqat.ir.search.html#meerqat.ir.search.normalize">[docs]</a><span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="n">scores_batch</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Switch function for different normalization methods.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    scores_batch: List[List[float]]</span>
+<span class="sd">    method: str</span>
+<span class="sd">        Name of the normalization method</span>
+<span class="sd">    **kwargs:</span>
+<span class="sd">        Passed to the normalization method</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    scores_batch</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">methods</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;normalize&quot;</span><span class="p">:</span> <span class="n">norm_mean_std</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">methods</span><span class="p">[</span><span class="n">method</span><span class="p">](</span><span class="n">scores_batch</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="L2norm"><a class="viewcode-back" href="../../../meerqat.ir.search.html#meerqat.ir.search.L2norm">[docs]</a><span class="k">def</span> <span class="nf">L2norm</span><span class="p">(</span><span class="n">queries</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Normalize each query to have a unit-norm. Expects a batch of vectors of the same dimension&quot;&quot;&quot;</span>
+    <span class="n">norms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">queries</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">queries</span><span class="o">/</span><span class="n">norms</span></div>
+
+
+<div class="viewcode-block" id="IndexKind"><a class="viewcode-back" href="../../../meerqat.ir.search.html#meerqat.ir.search.IndexKind">[docs]</a><span class="k">class</span> <span class="nc">IndexKind</span><span class="p">(</span><span class="n">enum</span><span class="o">.</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Will be used later on for data-specific fusion&quot;&quot;&quot;</span>
+    <span class="n">TEXT</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">FACE</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="c1"># short for &quot;full-image&quot;, as opposed to &quot;FACE&quot;</span>
+    <span class="n">IMAGE</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Index"><a class="viewcode-back" href="../../../meerqat.ir.search.html#meerqat.ir.search.Index">[docs]</a><span class="k">class</span> <span class="nc">Index</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dataclass to hold information about an index (either FaissIndex or ESIndex)</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    key: str</span>
+<span class="sd">        Associated key in the dataset where the queries are stored</span>
+<span class="sd">    kind_str: str, optional</span>
+<span class="sd">        One of IndexKind</span>
+<span class="sd">    es: bool, optional</span>
+<span class="sd">        Linked to an ESIndex or FaissIndex</span>
+<span class="sd">    do_L2norm: bool, optional</span>
+<span class="sd">        Whether to apply ``L2norm`` to the queries</span>
+<span class="sd">    normalization: str, optional</span>
+<span class="sd">        If not None, applies this kind of ``normalize`` to the results scores</span>
+<span class="sd">    interpolation_weight: float, optional</span>
+<span class="sd">        Used to fuse the results of multiple Indexes</span>
+<span class="sd">        </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Difficult to create a hierarchy like FaissIndex and ESIndex since public methods, </span>
+<span class="sd">    such as search_batch, are defined in Dataset and take as input the index name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">kind_str</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">es</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">do_L2norm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">normalization</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interpolation_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="k">if</span> <span class="n">kind_str</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kind</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kind</span> <span class="o">=</span> <span class="n">IndexKind</span><span class="p">[</span><span class="n">kind_str</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">es</span> <span class="o">=</span> <span class="n">es</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">do_L2norm</span> <span class="o">=</span> <span class="n">do_L2norm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normalization</span> <span class="o">=</span> <span class="n">normalization</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interpolation_weight</span> <span class="o">=</span> <span class="n">interpolation_weight</span></div>
+
+
+<div class="viewcode-block" id="KnowledgeBase"><a class="viewcode-back" href="../../../meerqat.ir.search.html#meerqat.ir.search.KnowledgeBase">[docs]</a><span class="k">class</span> <span class="nc">KnowledgeBase</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A KB can be indexed by several indexes.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    kb_path: str, optional</span>
+<span class="sd">        Path to the Dataset holding the KB</span>
+<span class="sd">    index_mapping_path: str, optional</span>
+<span class="sd">        Path to the JSON file mapping KB articles to its corresponding passages indices</span>
+<span class="sd">    index_kwargs: dict, optional</span>
+<span class="sd">        Each key identifies an Index and each value is passed to ``add_or_load_index``</span>
+<span class="sd">    es_client: Elasticsearch, optional</span>
+<span class="sd">    load_dataset: bool, optional</span>
+<span class="sd">        This is useful for hyperparameter search if you want to use pre-computed results (see ir.hp)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kb_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">index_mapping_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">index_kwargs</span><span class="o">=</span><span class="p">{},</span> 
+                 <span class="n">es_client</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">load_dataset</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">load_dataset</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">load_from_disk</span><span class="p">(</span><span class="n">kb_path</span><span class="p">)</span>
+        <span class="c1"># This is useful for hyperparameter search if you want to use pre-computed results (see ir.hp).</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">es_client</span> <span class="o">=</span> <span class="n">es_client</span>
+
+        <span class="c1"># N. B. this dict[Index] holds extra informations about the indexes. </span>
+        <span class="c1"># to access actual HF indexes, use self.dataset._indexes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">indexes</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">index_mapping_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">index_mapping</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">index_mapping_path</span><span class="p">,</span> <span class="s1">&#39;rt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="c1"># convert all keys to int (JSON unfortunately does not support integer keys)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">index_mapping</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">object_hook</span><span class="o">=</span><span class="n">json_integer_keys</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">index_name</span><span class="p">,</span> <span class="n">index_kwarg</span> <span class="ow">in</span> <span class="n">index_kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_or_load_index</span><span class="p">(</span><span class="n">index_name</span><span class="o">=</span><span class="n">index_name</span><span class="p">,</span> <span class="o">**</span><span class="n">index_kwarg</span><span class="p">)</span>
+
+<div class="viewcode-block" id="KnowledgeBase.search_batch"><a class="viewcode-back" href="../../../meerqat.ir.search.html#meerqat.ir.search.KnowledgeBase.search_batch">[docs]</a>    <span class="k">def</span> <span class="nf">search_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index_name</span><span class="p">,</span> <span class="n">queries</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Pre-process queries according to index before computing self.dataset.search_batch&quot;&quot;&quot;</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">indexes</span><span class="p">[</span><span class="n">index_name</span><span class="p">]</span>
+        <span class="c1"># N. B. should be equivalent to isinstance(self.dataset._indexes[index_name], FaissIndex)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">index</span><span class="o">.</span><span class="n">es</span><span class="p">:</span>
+            <span class="n">queries</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">queries</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">index</span><span class="o">.</span><span class="n">do_L2norm</span><span class="p">:</span>
+                <span class="n">queries</span> <span class="o">=</span> <span class="n">L2norm</span><span class="p">(</span><span class="n">queries</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">search_batch</span><span class="p">(</span><span class="n">index_name</span><span class="p">,</span> <span class="n">queries</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="KnowledgeBase.search_batch_if_not_None"><a class="viewcode-back" href="../../../meerqat.ir.search.html#meerqat.ir.search.KnowledgeBase.search_batch_if_not_None">[docs]</a>    <span class="k">def</span> <span class="nf">search_batch_if_not_None</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index_name</span><span class="p">,</span> <span class="n">queries</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Filters out queries that are None and runs ``search_batch`` for the rest.&quot;&quot;&quot;</span>
+        <span class="c1"># 1. filter out queries that are None</span>
+        <span class="n">scores_batch</span><span class="p">,</span> <span class="n">indices_batch</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="n">not_None_queries</span><span class="p">,</span> <span class="n">not_None_queries_indices</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">query</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">queries</span><span class="p">):</span>
+            <span class="c1"># default to empty (i.e. no result with None query)</span>
+            <span class="c1"># will be overwritten for not_None_queries</span>
+            <span class="n">scores_batch</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+            <span class="n">indices_batch</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+            <span class="k">if</span> <span class="n">query</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">not_None_queries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+                <span class="n">not_None_queries_indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">not_None_queries</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">scores_batch</span><span class="p">,</span> <span class="n">indices_batch</span>
+                
+        <span class="c1"># 2. search as usual for queries that are not None</span>
+        <span class="n">not_None_scores_batch</span><span class="p">,</span> <span class="n">not_None_indices_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_batch</span><span class="p">(</span><span class="n">index_name</span><span class="p">,</span> <span class="n">not_None_queries</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">)</span>
+
+        <span class="c1"># 3. return the results in a list of list with proper indices</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">not_None_queries_indices</span><span class="p">):</span>
+            <span class="n">scores_batch</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">not_None_scores_batch</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">indices_batch</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">not_None_indices_batch</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">scores_batch</span><span class="p">,</span> <span class="n">indices_batch</span></div>
+
+<div class="viewcode-block" id="KnowledgeBase.map_indices"><a class="viewcode-back" href="../../../meerqat.ir.search.html#meerqat.ir.search.KnowledgeBase.map_indices">[docs]</a>    <span class="k">def</span> <span class="nf">map_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scores_batch</span><span class="p">,</span> <span class="n">indices_batch</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Maps indices using self.index_mapping if it is not None. </span>
+<span class="sd">        Else returns the input (scores_batch, indices_batch)</span>
+
+<span class="sd">        Also takes scores as argument to align scores and indices in case of 1-many mapping</span>
+
+<span class="sd">        If k is not None, keep only the top-k (might have exceeded in case of 1-many mapping)</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Beware &#39;index&#39;/&#39;indices&#39; here refers to integers outputs from the search. </span>
+<span class="sd">        Nothing to do with the Index class or self.dataset._indexes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapping</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">scores_batch</span><span class="p">,</span> <span class="n">indices_batch</span>
+        <span class="n">new_scores_batch</span><span class="p">,</span> <span class="n">new_indices_batch</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">scores</span><span class="p">,</span> <span class="n">indices</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">scores_batch</span><span class="p">,</span> <span class="n">indices_batch</span><span class="p">):</span>
+            <span class="n">new_scores</span><span class="p">,</span> <span class="n">new_indices</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">score</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+                <span class="c1"># extend because it can be a 1-many mapping (e.g. document/image to passage)</span>
+                <span class="n">new_indices</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index_mapping</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index_mapping</span><span class="p">[</span><span class="n">index</span><span class="p">])):</span>
+                    <span class="c1"># add a slightly decreasing number so that the order of passage in document is preserved</span>
+                    <span class="c1"># this is to prevent the downstream buggy sort of ranx, see https://github.com/AmenRa/ranx/issues/9</span>
+                    <span class="n">new_scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">score</span><span class="o">-</span><span class="n">i</span><span class="o">*</span><span class="mf">1e-6</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_indices</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">k</span><span class="p">:</span>
+                    <span class="k">break</span>
+            <span class="n">new_scores_batch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_scores</span><span class="p">)</span>
+            <span class="n">new_indices_batch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_indices</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_scores_batch</span><span class="p">,</span> <span class="n">new_indices_batch</span></div>
+
+<div class="viewcode-block" id="KnowledgeBase.add_or_load_index"><a class="viewcode-back" href="../../../meerqat.ir.search.html#meerqat.ir.search.KnowledgeBase.add_or_load_index">[docs]</a>    <span class="k">def</span> <span class="nf">add_or_load_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">index_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">es</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">kind_str</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                          <span class="n">normalization</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interpolation_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">index_kwarg</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calls either ``add_or_load_elasticsearch_index`` or ``add_or_load_faiss_index``according to es.</span>
+<span class="sd">        Unless column is None, then it does not actually add the index. </span>
+<span class="sd">        This is useful for hyperparameter search if you want to use pre-computed results (see ir.hp).</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        column: str, optional</span>
+<span class="sd">            Name/key of the column that holds the pre-computed embeddings.</span>
+<span class="sd">        index_name: str, optional</span>
+<span class="sd">            Index identifier. Defaults to ``column``</span>
+<span class="sd">        es: bool, optional</span>
+<span class="sd">        kind_str, key, normalization, interpolation_weight: </span>
+<span class="sd">            see Index</span>
+<span class="sd">        **index_kwarg:</span>
+<span class="sd">            Passed to ``add_or_load_elasticsearch_index`` or ``add_or_load_faiss_index``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># do not actually add the index. </span>
+        <span class="c1"># This is useful for hyperparameter search if you want to use pre-computed results (see ir.hp).</span>
+        <span class="k">if</span> <span class="n">column</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">do_L2norm</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">index_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">index_name</span> <span class="o">=</span> <span class="n">column</span>
+            <span class="k">if</span> <span class="n">es</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_or_load_elasticsearch_index</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">index_name</span><span class="o">=</span><span class="n">index_name</span><span class="p">,</span> <span class="o">**</span><span class="n">index_kwarg</span><span class="p">)</span>
+                <span class="n">do_L2norm</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>                
+                <span class="n">do_L2norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_or_load_faiss_index</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">index_name</span><span class="o">=</span><span class="n">index_name</span><span class="p">,</span> <span class="o">**</span><span class="n">index_kwarg</span><span class="p">)</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">Index</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">kind_str</span><span class="o">=</span><span class="n">kind_str</span><span class="p">,</span> <span class="n">es</span><span class="o">=</span><span class="n">es</span><span class="p">,</span> <span class="n">do_L2norm</span><span class="o">=</span><span class="n">do_L2norm</span><span class="p">,</span> <span class="n">normalization</span><span class="o">=</span><span class="n">normalization</span><span class="p">,</span> <span class="n">interpolation_weight</span><span class="o">=</span><span class="n">interpolation_weight</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">indexes</span><span class="p">[</span><span class="n">index_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">index</span></div>
+
+<div class="viewcode-block" id="KnowledgeBase.add_or_load_faiss_index"><a class="viewcode-back" href="../../../meerqat.ir.search.html#meerqat.ir.search.KnowledgeBase.add_or_load_faiss_index">[docs]</a>    <span class="k">def</span> <span class="nf">add_or_load_faiss_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">index_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">load</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">string_factory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        column, index_name: </span>
+<span class="sd">            see add_or_load_index</span>
+<span class="sd">        load: bool, optional</span>
+<span class="sd">            Whether to ``load_faiss_index`` or ``add_faiss_index``</span>
+<span class="sd">        save_path: str, optional</span>
+<span class="sd">            Save index using ``self.dataset.save_faiss_index``</span>
+<span class="sd">            Defaults not to save.</span>
+<span class="sd">        string_factory: str, optional</span>
+<span class="sd">            see ``Dataset.add_faiss_index`` and https://github.com/facebookresearch/faiss/wiki/The-index-factory</span>
+<span class="sd">        device: int, optional</span>
+<span class="sd">            see ``Dataset.add_faiss_index``</span>
+<span class="sd">        **kwargs:</span>
+<span class="sd">            Passed to ``load_faiss_index`` or ``add_faiss_index``</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        do_L2norm: bool</span>
+<span class="sd">            Inferred from string_factory. See Index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">string_factory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s1">&#39;L2norm&#39;</span> <span class="ow">in</span> <span class="n">string_factory</span><span class="p">:</span>
+            <span class="n">do_L2norm</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">do_L2norm</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">load</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">load_faiss_index</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># HACK: fix L2-normalisation on GPU https://github.com/facebookresearch/faiss/issues/2010</span>
+            <span class="k">if</span> <span class="n">do_L2norm</span> <span class="ow">and</span> <span class="n">device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># normalize the vectors</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">batch</span><span class="p">:</span> <span class="p">{</span><span class="n">column</span><span class="p">:</span> <span class="n">L2norm</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="n">column</span><span class="p">])},</span> <span class="n">batched</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="c1"># remove &quot;L2norm&quot; from string_factory</span>
+                <span class="n">string_factory</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(,L2norm|L2norm[,]?)&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">string_factory</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">string_factory</span><span class="p">:</span>
+                    <span class="n">string_factory</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">add_faiss_index</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">index_name</span><span class="o">=</span><span class="n">index_name</span><span class="p">,</span> <span class="n">string_factory</span><span class="o">=</span><span class="n">string_factory</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="c1"># save FAISS index (so it can be loaded later)</span>
+            <span class="k">if</span> <span class="n">save_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">save_faiss_index</span><span class="p">(</span><span class="n">index_name</span><span class="p">,</span> <span class="n">save_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">do_L2norm</span></div>
+
+<div class="viewcode-block" id="KnowledgeBase.add_or_load_elasticsearch_index"><a class="viewcode-back" href="../../../meerqat.ir.search.html#meerqat.ir.search.KnowledgeBase.add_or_load_elasticsearch_index">[docs]</a>    <span class="k">def</span> <span class="nf">add_or_load_elasticsearch_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">index_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">load</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        When loading, it will also check the settings and eventually update them (using put_settings)</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        column, index_name: </span>
+<span class="sd">            see add_or_load_index</span>
+<span class="sd">        load: bool, optional</span>
+<span class="sd">            Whether to ``load_elasticsearch_index`` or ``add_elasticsearch_index``</span>
+<span class="sd">        **kwargs:</span>
+<span class="sd">            Passed to ``load_elasticsearch_index`` or ``add_elasticsearch_index``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">load</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">load_elasticsearch_index</span><span class="p">(</span><span class="n">index_name</span><span class="o">=</span><span class="n">index_name</span><span class="p">,</span> <span class="n">es_client</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">es_client</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="c1"># fix: settings are not actually used when loading an existing ES index</span>
+            <span class="c1"># TODO open an issue on HF to fix it upstream</span>
+            <span class="n">settings</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;es_index_config&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;settings&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">settings</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">es_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">_indexes</span><span class="p">[</span><span class="n">index_name</span><span class="p">]</span>
+                <span class="n">es_index_name</span> <span class="o">=</span> <span class="n">es_index</span><span class="o">.</span><span class="n">es_index_name</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">es_client</span><span class="o">.</span><span class="n">indices</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">es_index_name</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">es_client</span><span class="o">.</span><span class="n">indices</span><span class="o">.</span><span class="n">put_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">es_index_name</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">es_client</span><span class="o">.</span><span class="n">indices</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">es_index_name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">add_elasticsearch_index</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">index_name</span><span class="o">=</span><span class="n">index_name</span><span class="p">,</span> <span class="n">es_client</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">es_client</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="format_run_indices"><a class="viewcode-back" href="../../../meerqat.ir.search.html#meerqat.ir.search.format_run_indices">[docs]</a><span class="k">def</span> <span class="nf">format_run_indices</span><span class="p">(</span><span class="n">indices_batch</span><span class="p">,</span> <span class="n">scores_batch</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Identifiers in ranx should be str, not int. Also, list cannot be empty because of Numba&quot;&quot;&quot;</span>
+    <span class="n">str_indices_batch</span><span class="p">,</span> <span class="n">non_empty_scores</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">indices</span><span class="p">,</span> <span class="n">scores</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">indices_batch</span><span class="p">,</span> <span class="n">scores_batch</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">str_indices_batch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">indices</span><span class="p">)))</span>
+            <span class="n">non_empty_scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">str_indices_batch</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s2">&quot;DUMMY_RUN&quot;</span><span class="p">])</span>
+            <span class="n">non_empty_scores</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">str_indices_batch</span><span class="p">,</span> <span class="n">non_empty_scores</span></div>
+
+
+<div class="viewcode-block" id="format_qrels_indices"><a class="viewcode-back" href="../../../meerqat.ir.search.html#meerqat.ir.search.format_qrels_indices">[docs]</a><span class="k">def</span> <span class="nf">format_qrels_indices</span><span class="p">(</span><span class="n">indices_batch</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Identifiers in ranx should be str, not int. Also, list cannot be empty because of Numba&quot;&quot;&quot;</span>
+    <span class="n">str_indices_batch</span><span class="p">,</span> <span class="n">non_empty_scores</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">indices</span> <span class="ow">in</span> <span class="n">indices_batch</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">str_indices_batch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">indices</span><span class="p">)))</span>
+            <span class="c1"># relevance score should always be 1, see https://github.com/AmenRa/ranx/issues/5</span>
+            <span class="n">non_empty_scores</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">str_indices_batch</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s2">&quot;DUMMY_QREL&quot;</span><span class="p">])</span>
+            <span class="n">non_empty_scores</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">str_indices_batch</span><span class="p">,</span> <span class="n">non_empty_scores</span></div>
+
+
+<div class="viewcode-block" id="Searcher"><a class="viewcode-back" href="../../../meerqat.ir.search.html#meerqat.ir.search.Searcher">[docs]</a><span class="k">class</span> <span class="nc">Searcher</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Aggregates several KnowledgeBases (KBs). </span>
+<span class="sd">    Searches through a dataset using all the indexes of all KnowledgeBases.</span>
+<span class="sd">    Fuses results of search with multiple indexes and compute metrics.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    kb_kwargs: dict</span>
+<span class="sd">        Each key identifies a KB and each valye is passed to KnowledgeBase</span>
+<span class="sd">    k: int, optional</span>
+<span class="sd">        Searches for the top-k results</span>
+<span class="sd">    reference_kb_path: str, optional</span>
+<span class="sd">        Path to the Dataset that hold the reference KB, used to evaluate the results.</span>
+<span class="sd">        If it is one of self.kbs, it will only get loaded once.</span>
+<span class="sd">        Defaults to evaluate only from the cached &#39;provenance_indices&#39; in the dataset (not recommanded).</span>
+<span class="sd">    reference_key: str,</span>
+<span class="sd">        Used to get the reference field in kb</span>
+<span class="sd">        Defaults to &#39;passage&#39;</span>
+<span class="sd">    request_timeout: int, optional</span>
+<span class="sd">        Timeout for Elasticsearch</span>
+<span class="sd">    es_client_kwargs: dict, optional</span>
+<span class="sd">        Passed to Elasticsearch</span>
+<span class="sd">    fusion_kwargs: dict, optional</span>
+<span class="sd">        Passed to the fusion method (see fuse). Default method is interpolation_fusion.</span>
+<span class="sd">    metrics_kwargs: dict, optional</span>
+<span class="sd">        Passed to ranx.compare. Defaults to &quot;mrr&quot;, &quot;precision&quot;, &quot;hit_rate&quot; at ranks [1, 5, 10, 20, 100]</span>
+<span class="sd">    save_in_dataset: bool, optional</span>
+<span class="sd">        Whether to save the dataset after searching (which will hold the results)</span>
+<span class="sd">        or rely only on ranx to save.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kb_kwargs</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">reference_kb_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">reference_key</span><span class="o">=</span><span class="s1">&#39;passage&#39;</span><span class="p">,</span> <span class="n">request_timeout</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+                 <span class="n">es_client_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">fusion_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">metrics_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">save_in_dataset</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">k</span> <span class="o">=</span> <span class="n">k</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kbs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qrels</span> <span class="o">=</span> <span class="n">ranx</span><span class="o">.</span><span class="n">Qrels</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">runs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># FIXME maybe check if ES is needed before instantiating client?</span>
+        <span class="c1"># this does not require ES to run anyway</span>
+        <span class="n">es_client</span> <span class="o">=</span> <span class="n">Elasticsearch</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">request_timeout</span><span class="p">,</span> <span class="o">**</span><span class="n">es_client_kwargs</span><span class="p">)</span>
+        <span class="c1"># load KBs used to search and index them</span>
+        <span class="n">resolved_kb_paths</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">kb_path</span><span class="p">,</span> <span class="n">kb_kwarg</span> <span class="ow">in</span> <span class="n">kb_kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">resolved_kb_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">kb_path</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">resolved_kb_path</span> <span class="ow">in</span> <span class="n">resolved_kb_paths</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">kb_path</span><span class="si">}</span><span class="s2">&#39; and &#39;</span><span class="si">{</span><span class="n">resolved_kb_paths</span><span class="p">[</span><span class="n">resolved_kb_path</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39; resolve to the same path&quot;</span><span class="p">)</span>
+            <span class="n">resolved_kb_paths</span><span class="p">[</span><span class="n">resolved_kb_path</span><span class="p">]</span> <span class="o">=</span> <span class="n">kb_path</span>
+
+            <span class="n">kb</span> <span class="o">=</span> <span class="n">KnowledgeBase</span><span class="p">(</span><span class="n">kb_path</span><span class="p">,</span> <span class="n">es_client</span><span class="o">=</span><span class="n">es_client</span><span class="p">,</span> <span class="o">**</span><span class="n">kb_kwarg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kbs</span><span class="p">[</span><span class="n">kb_path</span><span class="p">]</span> <span class="o">=</span> <span class="n">kb</span>
+            <span class="c1"># same as kb.dataset._indexes.keys()</span>
+            <span class="n">index_names</span> <span class="o">=</span> <span class="n">kb</span><span class="o">.</span><span class="n">indexes</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="k">assert</span> <span class="ow">not</span> <span class="p">(</span><span class="n">index_names</span> <span class="o">&amp;</span> <span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="s2">&quot;All KBs should have unique index names&quot;</span>
+            <span class="k">for</span> <span class="n">index_name</span> <span class="ow">in</span> <span class="n">index_names</span><span class="p">:</span>
+                <span class="n">run</span> <span class="o">=</span> <span class="n">ranx</span><span class="o">.</span><span class="n">Run</span><span class="p">()</span>
+                <span class="n">run</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">index_name</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="p">[</span><span class="n">index_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">run</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="p">({</span><span class="s1">&#39;search&#39;</span><span class="p">,</span> <span class="s1">&#39;fusion&#39;</span><span class="p">}</span> <span class="o">&amp;</span> <span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="s2">&quot;&#39;search&#39;, &#39;fusion&#39; are reserved names&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">do_fusion</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">run</span> <span class="o">=</span> <span class="n">ranx</span><span class="o">.</span><span class="n">Run</span><span class="p">()</span>
+            <span class="n">run</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;fusion&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="p">[</span><span class="s2">&quot;fusion&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">run</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">save_in_dataset</span><span class="p">:</span>
+                <span class="n">save_in_dataset</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;setting save_in_dataset=True to be able to fuse results&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">do_fusion</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_in_dataset</span> <span class="o">=</span> <span class="n">save_in_dataset</span>
+
+        <span class="c1"># no reference KB</span>
+        <span class="k">if</span> <span class="n">reference_kb_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Didn&#39;t get a reference KB &quot;</span>
+                          <span class="s2">&quot;-&gt; will not be able to extend the annotation coverage &quot;</span>
+                          <span class="s2">&quot;so results should be interpreted carefully.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reference_kb</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># reference KB already loaded in KBs used to search</span>
+        <span class="k">elif</span> <span class="n">reference_kb_path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kbs</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">kbs</span><span class="p">[</span><span class="n">reference_kb_path</span><span class="p">]</span><span class="o">.</span><span class="n">dataset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reference_kb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kbs</span><span class="p">[</span><span class="n">reference_kb_path</span><span class="p">]</span><span class="o">.</span><span class="n">dataset</span>
+        <span class="c1"># reference-only KB (not used to search) so we have to load it</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reference_kb</span> <span class="o">=</span> <span class="n">load_from_disk</span><span class="p">(</span><span class="n">reference_kb_path</span><span class="p">)</span>
+        <span class="c1"># N. B. the &#39;reference_kb&#39; term is not so appropriate</span>
+        <span class="c1"># it is not an instance of KnowledgeBase but Dataset !</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reference_key</span> <span class="o">=</span> <span class="n">reference_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fusion_method</span> <span class="o">=</span> <span class="n">fusion_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;method&#39;</span><span class="p">,</span> <span class="s1">&#39;interpolation&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fusion_kwargs</span> <span class="o">=</span> <span class="n">fusion_kwargs</span>
+        <span class="c1"># I advise against using any kind of metric that uses recall (mAP, R-Precision, …) since we estimate</span>
+        <span class="c1"># relevant document on the go so the number of relevant documents will *depend on the systemS* you use</span>
+        <span class="n">ks</span> <span class="o">=</span> <span class="n">metrics_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;ks&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">100</span><span class="p">])</span>
+        <span class="n">default_metrics_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;mrr&quot;</span><span class="p">,</span> <span class="s2">&quot;precision&quot;</span><span class="p">,</span> <span class="s2">&quot;hit_rate&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ks</span><span class="p">])</span>
+        <span class="n">default_metrics_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">metrics_kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metrics_kwargs</span> <span class="o">=</span> <span class="n">default_metrics_kwargs</span>
+    
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Search using all indexes of all KBs registered in self.kbs&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">kb</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kbs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">index_name</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">kb</span><span class="o">.</span><span class="n">indexes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">queries</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">key</span><span class="p">]</span>
+                <span class="c1"># N. B. cannot use `None in queries` because </span>
+                <span class="c1"># &quot;The truth value of an array with more than one element is ambiguous.&quot;</span>
+                <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">query</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">query</span> <span class="ow">in</span> <span class="n">queries</span><span class="p">):</span>
+                    <span class="n">scores_batch</span><span class="p">,</span> <span class="n">indices_batch</span> <span class="o">=</span> <span class="n">kb</span><span class="o">.</span><span class="n">search_batch_if_not_None</span><span class="p">(</span><span class="n">index_name</span><span class="p">,</span> <span class="n">queries</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">scores_batch</span><span class="p">,</span> <span class="n">indices_batch</span> <span class="o">=</span> <span class="n">kb</span><span class="o">.</span><span class="n">search_batch</span><span class="p">(</span><span class="n">index_name</span><span class="p">,</span> <span class="n">queries</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="p">)</span>
+                <span class="c1"># indices might need to be mapped so that all KBs refer to the same semantic index</span>
+                <span class="n">scores_batch</span><span class="p">,</span> <span class="n">indices_batch</span> <span class="o">=</span> <span class="n">kb</span><span class="o">.</span><span class="n">map_indices</span><span class="p">(</span><span class="n">scores_batch</span><span class="p">,</span> <span class="n">indices_batch</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="p">)</span>
+
+                <span class="c1"># eventually normalize the scores before fusing</span>
+                <span class="k">if</span> <span class="n">index</span><span class="o">.</span><span class="n">normalization</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">scores_batch</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">scores_batch</span><span class="p">,</span> <span class="o">**</span><span class="n">index</span><span class="o">.</span><span class="n">normalization</span><span class="p">)</span>
+
+                <span class="c1"># store result in the dataset</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_in_dataset</span><span class="p">:</span>
+                    <span class="n">batch</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">index_name</span><span class="si">}</span><span class="s1">_scores&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">scores_batch</span>
+                    <span class="n">batch</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">index_name</span><span class="si">}</span><span class="s1">_indices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">indices_batch</span>
+
+                <span class="c1"># store results in the run</span>
+                <span class="n">str_indices_batch</span><span class="p">,</span> <span class="n">non_empty_scores</span> <span class="o">=</span> <span class="n">format_run_indices</span><span class="p">(</span><span class="n">indices_batch</span><span class="p">,</span> <span class="n">scores_batch</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="p">[</span><span class="n">index_name</span><span class="p">]</span><span class="o">.</span><span class="n">add_multi</span><span class="p">(</span>
+                    <span class="n">q_ids</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span>
+                    <span class="n">doc_ids</span><span class="o">=</span><span class="n">str_indices_batch</span><span class="p">,</span>
+                    <span class="n">scores</span><span class="o">=</span><span class="n">non_empty_scores</span>
+                <span class="p">)</span>
+
+                <span class="c1"># are the retrieved documents relevant ?</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_kb</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># extend relevant documents with the retrieved</span>
+                    <span class="c1"># /!\ this means you should not compute/interpret recall as it will vary depending on the run/system</span>
+                    <span class="n">find_relevant_batch</span><span class="p">(</span><span class="n">indices_batch</span><span class="p">,</span> <span class="n">batch</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_kb</span><span class="p">,</span>
+                                        <span class="n">reference_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reference_key</span><span class="p">,</span> <span class="n">relevant_batch</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="s1">&#39;provenance_indices&#39;</span><span class="p">])</span>
+
+        <span class="c1"># fuse the results of the searches</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">do_fusion</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fuse_and_compute_metrics</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+
+        <span class="c1"># add Qrels scores depending on the documents retrieved by the systems</span>
+        <span class="n">str_indices_batch</span><span class="p">,</span> <span class="n">non_empty_scores</span> <span class="o">=</span> <span class="n">format_qrels_indices</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s1">&#39;provenance_indices&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qrels</span><span class="o">.</span><span class="n">add_multi</span><span class="p">(</span>
+            <span class="n">q_ids</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span>
+            <span class="n">doc_ids</span><span class="o">=</span><span class="n">str_indices_batch</span><span class="p">,</span>
+            <span class="n">scores</span><span class="o">=</span><span class="n">non_empty_scores</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">batch</span>
+
+<div class="viewcode-block" id="Searcher.fuse_and_compute_metrics"><a class="viewcode-back" href="../../../meerqat.ir.search.html#meerqat.ir.search.Searcher.fuse_and_compute_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">fuse_and_compute_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;First calls fuse, then find_relevant_batch.&quot;&quot;&quot;</span>
+        <span class="n">scores_batch</span><span class="p">,</span> <span class="n">indices_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fuse</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+        <span class="n">batch</span><span class="p">[</span><span class="s1">&#39;search_scores&#39;</span><span class="p">],</span> <span class="n">batch</span><span class="p">[</span><span class="s1">&#39;search_indices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">scores_batch</span><span class="p">,</span> <span class="n">indices_batch</span>
+
+        <span class="c1"># store results in the run</span>
+        <span class="n">str_indices_batch</span><span class="p">,</span> <span class="n">non_empty_scores</span> <span class="o">=</span> <span class="n">format_run_indices</span><span class="p">(</span><span class="n">indices_batch</span><span class="p">,</span> <span class="n">scores_batch</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="p">[</span><span class="s2">&quot;fusion&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">add_multi</span><span class="p">(</span>
+            <span class="n">q_ids</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span>
+            <span class="n">doc_ids</span><span class="o">=</span><span class="n">str_indices_batch</span><span class="p">,</span>
+            <span class="n">scores</span><span class="o">=</span><span class="n">non_empty_scores</span>
+        <span class="p">)</span>
+
+        <span class="c1"># are the retrieved documents relevant ?</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_kb</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># extend relevant documents with the retrieved</span>
+            <span class="c1"># /!\ this means you should not compute/interpret recall as it will vary depending on the run/system</span>
+            <span class="n">find_relevant_batch</span><span class="p">(</span><span class="n">indices_batch</span><span class="p">,</span> <span class="n">batch</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_kb</span><span class="p">,</span>
+                                <span class="n">reference_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reference_key</span><span class="p">,</span> <span class="n">relevant_batch</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="s1">&#39;provenance_indices&#39;</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">batch</span></div>
+
+<div class="viewcode-block" id="Searcher.fuse"><a class="viewcode-back" href="../../../meerqat.ir.search.html#meerqat.ir.search.Searcher.fuse">[docs]</a>    <span class="k">def</span> <span class="nf">fuse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Should return a (scores, indices) tuples the same way as Dataset.search_batch&quot;&quot;&quot;</span>
+        <span class="n">fusions</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">interpolation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interpolation_fusion</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fusions</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">fusion_method</span><span class="p">](</span><span class="n">batch</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">fusion_kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Searcher.union_results"><a class="viewcode-back" href="../../../meerqat.ir.search.html#meerqat.ir.search.Searcher.union_results">[docs]</a>    <span class="k">def</span> <span class="nf">union_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;make union of all search results&quot;&quot;&quot;</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">batch</span><span class="o">.</span><span class="n">values</span><span class="p">())))</span>
+
+        <span class="n">all_indices</span> <span class="o">=</span> <span class="p">[</span><span class="nb">set</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">kb</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kbs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">index_name</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">kb</span><span class="o">.</span><span class="n">indexes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">batch_indices</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">index_name</span><span class="si">}</span><span class="s1">_indices&#39;</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">indices</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">batch_indices</span><span class="p">):</span>
+                    <span class="n">all_indices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">|=</span> <span class="nb">set</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">all_indices</span></div>
+
+<div class="viewcode-block" id="Searcher.interpolation_fusion"><a class="viewcode-back" href="../../../meerqat.ir.search.html#meerqat.ir.search.Searcher.interpolation_fusion">[docs]</a>    <span class="k">def</span> <span class="nf">interpolation_fusion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">default_minimum</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Simple weighted sum, e.g. : fusion = w_1*score_1 + w_2*score_2 + w_3*score_3</span>
+<span class="sd">        The *default-minimum trick* is used in [1]_ </span>
+<span class="sd">        when combining results from systems A and B, it consists in giving the minimum score of A&#39;s results </span>
+<span class="sd">        if a given passage was only retrieved by system B, and vice-versa.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        batch: dict</span>
+<span class="sd">            as parsed by datasets</span>
+<span class="sd">        default_minimum: bool, optional</span>
+<span class="sd">            Use the *default-minimum trick* (defaults to not to).</span>
+<span class="sd">            </span>
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        .. [1] Ma, X., Sun, K., Pradeep, R., &amp; Lin, J. (2021). A replication study of dense passage retriever. </span>
+<span class="sd">           arXiv preprint arXiv:2104.05740. https://arxiv.org/abs/2104.05740</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">all_indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">union_results</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+        
+        <span class="c1"># init scores</span>
+        <span class="n">scores_dicts</span> <span class="o">=</span> <span class="p">[{</span><span class="n">i</span><span class="p">:</span> <span class="mf">0.</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">}</span> <span class="k">for</span> <span class="n">indices</span> <span class="ow">in</span> <span class="n">all_indices</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">kb</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">kbs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">index_name</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">kb</span><span class="o">.</span><span class="n">indexes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">weight</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">interpolation_weight</span>
+                <span class="k">assert</span> <span class="n">weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> \
+                    <span class="s2">&quot;You should set &#39;interpolation_weight&#39; for each index to use interpolation_fusion&quot;</span>
+                <span class="c1"># search results using index (computed previously)</span>
+                <span class="n">index_scores_dicts</span> <span class="o">=</span> <span class="n">scores2dict</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">index_name</span><span class="si">}</span><span class="s1">_scores&#39;</span><span class="p">],</span> <span class="n">batch</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">index_name</span><span class="si">}</span><span class="s1">_indices&#39;</span><span class="p">])</span>
+                <span class="c1"># iterate over *all* retrieved indices (-&gt; passages), not only those retrieved using this index</span>
+                <span class="k">for</span> <span class="n">indices</span><span class="p">,</span> <span class="n">scores_dict</span><span class="p">,</span> <span class="n">index_scores_dict</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">all_indices</span><span class="p">,</span> <span class="n">scores_dicts</span><span class="p">,</span> <span class="n">index_scores_dicts</span><span class="p">):</span>
+                    <span class="c1"># can happen, e.g. for a face index when no face was detected</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">index_scores_dict</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="c1"># follow Ma et al. (2021, arXiv:2104.05740) by using minimal score </span>
+                    <span class="c1"># when the document was retrieved only by one system</span>
+                    <span class="n">min_index_score</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">index_scores_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="k">if</span> <span class="n">default_minimum</span> <span class="k">else</span> <span class="mf">0.</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+                        <span class="n">score</span> <span class="o">=</span> <span class="n">index_scores_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">min_index_score</span><span class="p">)</span>
+                        <span class="n">scores_dict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">weight</span> <span class="o">*</span> <span class="n">score</span>
+
+        <span class="n">scores_batch</span><span class="p">,</span> <span class="n">indices_batch</span> <span class="o">=</span> <span class="n">dict_batch2scores</span><span class="p">(</span><span class="n">scores_dicts</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">scores_batch</span><span class="p">,</span> <span class="n">indices_batch</span></div></div>
+
+
+<div class="viewcode-block" id="dataset_search"><a class="viewcode-back" href="../../../meerqat.ir.search.html#meerqat.ir.search.dataset_search">[docs]</a><span class="k">def</span> <span class="nf">dataset_search</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">metric_save_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">map_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Instantiates searcher, maps the dataset through it, then compute and saves metrics.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dataset: Dataset</span>
+<span class="sd">    k: int, optional</span>
+<span class="sd">        see Searcher</span>
+<span class="sd">    metric_save_path: str, optional</span>
+<span class="sd">        Path to the directory where to save the results qrels, runs and metrics of eval_dataset.</span>
+<span class="sd">        Defaults not to save.</span>
+<span class="sd">    map_kwargs: dict, optional</span>
+<span class="sd">        Passed to self.dataset.map</span>
+<span class="sd">    **kwargs:</span>
+<span class="sd">        Passed to Searcher</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">searcher</span> <span class="o">=</span> <span class="n">Searcher</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c1"># HACK: sleep until elasticsearch is good to go</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span>
+
+    <span class="c1"># search expects a batch as input</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">searcher</span><span class="p">,</span> <span class="n">batched</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">map_kwargs</span><span class="p">)</span>
+
+    <span class="c1"># save qrels, metrics (in JSON and LaTeX), statistical tests, and runs.</span>
+    <span class="k">if</span> <span class="n">metric_save_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">metric_save_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">searcher</span><span class="o">.</span><span class="n">qrels</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">metric_save_path</span><span class="o">/</span><span class="s2">&quot;qrels.trec&quot;</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;trec&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">index_name</span><span class="p">,</span> <span class="n">run</span> <span class="ow">in</span> <span class="n">searcher</span><span class="o">.</span><span class="n">runs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">run</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">metric_save_path</span><span class="o">/</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">index_name</span><span class="si">}</span><span class="s2">.trec&quot;</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;trec&#39;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">searcher</span><span class="o">.</span><span class="n">save_in_dataset</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dataset</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">docopt</span><span class="p">(</span><span class="vm">__doc__</span><span class="p">)</span>
+    <span class="n">dataset_path</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;&lt;dataset&gt;&#39;</span><span class="p">]</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">load_from_disk</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">)</span>
+    <span class="n">set_caching_enabled</span><span class="p">(</span><span class="ow">not</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;--disable_caching&#39;</span><span class="p">])</span>
+    <span class="n">config_path</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;&lt;config&gt;&#39;</span><span class="p">]</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="n">format_kwargs</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;format&#39;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">dataset</span><span class="o">.</span><span class="n">set_format</span><span class="p">(</span><span class="o">**</span><span class="n">format_kwargs</span><span class="p">)</span>
+
+    <span class="n">k</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;--k&#39;</span><span class="p">])</span>
+
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset_search</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span>
+                             <span class="n">metric_save_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;--metrics&#39;</span><span class="p">]),</span>
+                             <span class="o">**</span><span class="n">config</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dataset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">save_to_disk</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">)</span>
+</pre></div>
+
+            </article>
+            
+            
+            
+            <footer class="bd-footer-article">
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+            </footer>
+            
+          </div>
+          
+          
+          
+            <div class="bd-sidebar-secondary bd-toc">
+              
+<div class="toc-item">
+  
+</div>
+
+<div class="toc-item">
+  
+</div>
+
+            </div>
+          
+          
+        </div>
+        <footer class="bd-footer-content">
+          <div class="bd-footer-content__inner">
+            
+          </div>
+        </footer>
+        
+      </main>
+    </div>
+  </div>
+
+  
+    
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b"></script>
+
+  <footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    
+<p class="copyright">
+
+    &copy; Copyright 2022, CNRS.<br>
+
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+<p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.1.1.<br>
+</p>
+
+  </div>
+  
+</div>
+  </footer>
+  </body>
+</html>

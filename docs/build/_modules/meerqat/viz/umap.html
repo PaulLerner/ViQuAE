@@ -1,0 +1,231 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>meerqat.viz.umap &#8212; meerqat v3.0.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for meerqat.viz.umap</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="sd">&quot;&quot;&quot;Usage: umap.py &lt;dataset&gt; &lt;key&gt; &lt;output&gt; [&lt;config&gt;]&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">docopt</span> <span class="kn">import</span> <span class="n">docopt</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">umap</span>
+
+<span class="kn">from</span> <span class="nn">bokeh.plotting</span> <span class="kn">import</span> <span class="n">figure</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">save</span>
+<span class="kn">from</span> <span class="nn">bokeh.models</span> <span class="kn">import</span> <span class="n">HoverTool</span><span class="p">,</span> <span class="n">ColumnDataSource</span><span class="p">,</span> <span class="n">LinearColorMapper</span><span class="p">,</span> <span class="n">ColorBar</span>
+
+<span class="kn">from</span> <span class="nn">datasets</span> <span class="kn">import</span> <span class="n">load_from_disk</span>
+
+<span class="kn">import</span> <span class="nn">ranx</span>
+
+<span class="kn">import</span> <span class="nn">urllib</span>
+<span class="kn">from</span> <span class="nn">..data.wiki</span> <span class="kn">import</span> <span class="n">thumbnail_to_file_name</span><span class="p">,</span> <span class="n">file_name_to_thumbnail</span>
+
+
+<div class="viewcode-block" id="reduce"><a class="viewcode-back" href="../../../meerqat.viz.html#meerqat.viz.umap.reduce">[docs]</a><span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;cosine&#39;</span><span class="p">):</span>    
+    <span class="n">reducer</span> <span class="o">=</span> <span class="n">umap</span><span class="o">.</span><span class="n">UMAP</span><span class="p">(</span><span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">)</span>
+    <span class="n">reducer</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">embeddings</span><span class="p">)</span>
+    <span class="n">reduced_embeddings</span> <span class="o">=</span> <span class="n">reducer</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">embeddings</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">reduced_embeddings</span></div>
+
+
+<div class="viewcode-block" id="fplot"><a class="viewcode-back" href="../../../meerqat.viz.html#meerqat.viz.umap.fplot">[docs]</a><span class="k">def</span> <span class="nf">fplot</span><span class="p">(</span><span class="n">reduced_embeddings</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="mi">20</span><span class="p">),</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">reduced_embeddings</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">reduced_embeddings</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">s</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fig</span></div>
+
+
+<div class="viewcode-block" id="iplot"><a class="viewcode-back" href="../../../meerqat.viz.html#meerqat.viz.umap.iplot">[docs]</a><span class="k">def</span> <span class="nf">iplot</span><span class="p">(</span><span class="n">reduced_embeddings</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">urls</span><span class="p">,</span> <span class="n">input_key</span><span class="o">=</span><span class="s1">&#39;input&#39;</span><span class="p">,</span> <span class="n">thumb_width</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;UMAP projection&#39;</span><span class="p">,</span>
+          <span class="n">plot_width</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">plot_height</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;pan, wheel_zoom, reset&#39;</span><span class="p">),</span>
+          <span class="n">line_alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">fill_alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="s1">&#39;Viridis256&#39;</span><span class="p">):</span>
+    <span class="n">thumbnails</span> <span class="o">=</span> <span class="p">[</span><span class="n">file_name_to_thumbnail</span><span class="p">(</span><span class="n">thumbnail_to_file_name</span><span class="p">(</span><span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">url</span><span class="p">)),</span> <span class="n">thumb_width</span><span class="p">)</span> <span class="k">for</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">urls</span><span class="p">]</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">reduced_embeddings</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">input_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="n">input_key</span><span class="p">]</span>
+    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">thumbnails</span>
+    <span class="k">if</span> <span class="n">metric</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">df</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span>
+        <span class="n">cmap</span> <span class="o">=</span> <span class="n">LinearColorMapper</span><span class="p">(</span><span class="n">palette</span><span class="o">=</span><span class="n">palette</span><span class="p">,</span> <span class="n">low</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">high</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+        <span class="n">fill_color</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;field&#39;</span><span class="p">:</span> <span class="n">metric</span><span class="p">,</span> <span class="s1">&#39;transform&#39;</span><span class="p">:</span> <span class="n">cmap</span><span class="p">}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fill_color</span> <span class="o">=</span> <span class="s1">&#39;gray&#39;</span>
+        <span class="n">cmap</span> <span class="o">=</span> <span class="kc">None</span>
+    
+    <span class="n">datasource</span> <span class="o">=</span> <span class="n">ColumnDataSource</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+    
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">figure</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span> <span class="n">plot_width</span><span class="o">=</span><span class="n">plot_width</span><span class="p">,</span> <span class="n">plot_height</span><span class="o">=</span><span class="n">plot_height</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="n">tools</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">add_tools</span><span class="p">(</span><span class="n">HoverTool</span><span class="p">(</span><span class="n">tooltips</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    &lt;div&gt;</span>
+<span class="s2">        &lt;div&gt;</span>
+<span class="s2">            &lt;img src=&#39;@image&#39; style=&#39;float: left; margin: 5px 5px 5px 5px&#39;/&gt;</span>
+<span class="s2">        &lt;/div&gt;</span>
+<span class="s2">        &lt;div&gt;</span>
+<span class="s2">            &lt;span style=&#39;font-size: 10px&#39;&gt;@text&lt;/span&gt;</span>
+<span class="s2">        &lt;/div&gt;</span>
+<span class="s2">    &lt;/div&gt;</span>
+<span class="s2">    &quot;&quot;&quot;</span><span class="p">))</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">circle</span><span class="p">(</span>
+        <span class="s1">&#39;x&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;y&#39;</span><span class="p">,</span>
+        <span class="n">source</span><span class="o">=</span><span class="n">datasource</span><span class="p">,</span>
+        <span class="n">line_alpha</span><span class="o">=</span><span class="n">line_alpha</span><span class="p">,</span>
+        <span class="n">fill_alpha</span><span class="o">=</span><span class="n">fill_alpha</span><span class="p">,</span>
+        <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
+        <span class="n">fill_color</span><span class="o">=</span><span class="n">fill_color</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">cmap</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cb</span> <span class="o">=</span> <span class="n">ColorBar</span><span class="p">(</span><span class="n">color_mapper</span> <span class="o">=</span> <span class="n">cmap</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">add_layout</span><span class="p">(</span><span class="n">cb</span><span class="p">,</span> <span class="s1">&#39;right&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fig</span></div>
+
+
+<div class="viewcode-block" id="get_ranx_run"><a class="viewcode-back" href="../../../meerqat.viz.html#meerqat.viz.umap.get_ranx_run">[docs]</a><span class="k">def</span> <span class="nf">get_ranx_run</span><span class="p">(</span><span class="n">qrels_path</span><span class="p">,</span> <span class="n">run_path</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;mrr&#39;</span><span class="p">):</span>
+    <span class="n">qrels</span> <span class="o">=</span> <span class="n">ranx</span><span class="o">.</span><span class="n">Qrels</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">qrels_path</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;trec&#39;</span><span class="p">)</span>
+    <span class="n">run</span> <span class="o">=</span> <span class="n">ranx</span><span class="o">.</span><span class="n">Run</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">run_path</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;trec&#39;</span><span class="p">)</span>
+    <span class="n">ranx</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">qrels</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="n">metric</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">run</span><span class="p">,</span> <span class="n">metric</span></div>
+
+    
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../meerqat.viz.html#meerqat.viz.umap.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">image_kb</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shard</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">url_key</span><span class="o">=</span><span class="s1">&#39;url&#39;</span><span class="p">,</span>
+         <span class="n">reduce_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">fplot_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">iplot_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">ranx_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">face</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">output_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">shard</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">shard</span><span class="p">(</span><span class="n">shard</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">face</span><span class="p">:</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="n">input_columns</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+        <span class="n">embeddings</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">dataset</span><span class="p">[</span><span class="n">key</span><span class="p">]])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">embeddings</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+    <span class="c1"># add features from the image KB</span>
+    <span class="k">if</span> <span class="n">image_kb</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">image_kb</span> <span class="o">=</span> <span class="n">load_from_disk</span><span class="p">(</span><span class="n">image_kb</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">image_kb</span><span class="p">)</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">))</span>
+        <span class="n">urls</span> <span class="o">=</span> <span class="n">image_kb</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">indices</span><span class="p">)[</span><span class="n">url_key</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">urls</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">urls</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="n">url_key</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">ranx_kwargs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ranx_run</span><span class="p">,</span> <span class="n">metric</span> <span class="o">=</span> <span class="n">get_ranx_run</span><span class="p">(</span><span class="o">**</span><span class="n">ranx_kwargs</span><span class="p">)</span>   
+        <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="p">{</span><span class="n">metric</span><span class="p">:</span> <span class="n">ranx_run</span><span class="o">.</span><span class="n">scores</span><span class="p">[</span><span class="n">metric</span><span class="p">][</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]]})</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ranx_run</span><span class="p">,</span> <span class="n">metric</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="n">reduced_embeddings</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="o">**</span><span class="n">reduce_kwargs</span><span class="p">)</span>
+    <span class="n">ffig</span> <span class="o">=</span> <span class="n">fplot</span><span class="p">(</span><span class="n">reduced_embeddings</span><span class="p">,</span> <span class="o">**</span><span class="n">fplot_kwargs</span><span class="p">)</span>
+    <span class="n">ffig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_path</span><span class="o">/</span><span class="sa">f</span><span class="s2">&quot;umap_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">)</span>
+    <span class="n">ifig</span> <span class="o">=</span> <span class="n">iplot</span><span class="p">(</span><span class="n">reduced_embeddings</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">urls</span><span class="o">=</span><span class="n">urls</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span> <span class="o">**</span><span class="n">iplot_kwargs</span><span class="p">)</span>
+    <span class="n">output_file</span><span class="p">(</span><span class="n">output_path</span><span class="o">/</span><span class="sa">f</span><span class="s2">&quot;umap_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">.html&quot;</span><span class="p">)</span>
+    <span class="n">save</span><span class="p">(</span><span class="n">ifig</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">docopt</span><span class="p">(</span><span class="vm">__doc__</span><span class="p">)</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">load_from_disk</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;&lt;dataset&gt;&#39;</span><span class="p">])</span>
+    <span class="n">config_path</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;&lt;config&gt;&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">config_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="s1">&#39;rt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;&lt;output&gt;&#39;</span><span class="p">])</span>
+    <span class="n">main</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;&lt;key&gt;&#39;</span><span class="p">],</span> <span class="n">output_path</span><span class="p">,</span> <span class="o">**</span><span class="n">config</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">meerqat</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Paul Lerner.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

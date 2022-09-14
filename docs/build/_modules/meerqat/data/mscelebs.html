@@ -1,0 +1,182 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>meerqat.data.mscelebs &#8212; meerqat v3.0.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for meerqat.data.mscelebs</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding: utf-8</span>
+<span class="sd">&quot;&quot;&quot;Usage:</span>
+<span class="sd">mscelebs.py entities &lt;subset&gt;</span>
+<span class="sd">mscelebs.py extract</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">base64</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span> <span class="nn">docopt</span> <span class="kn">import</span> <span class="n">docopt</span>
+
+<span class="kn">from</span> <span class="nn">.loading</span> <span class="kn">import</span> <span class="n">DATA_ROOT_PATH</span>
+
+
+<span class="n">TOTAL_LINES</span> <span class="o">=</span> <span class="mi">8456240</span>
+
+<div class="viewcode-block" id="wikidata2freebase"><a class="viewcode-back" href="../../../meerqat.data.html#meerqat.data.mscelebs.wikidata2freebase">[docs]</a><span class="k">def</span> <span class="nf">wikidata2freebase</span><span class="p">(</span><span class="n">mid</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;For some reason the mid format on Wikidata is &#39;/m/0xxx&#39; but on Freebase it&#39;s &#39;m.0xxx&#39;&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;m.&quot;</span> <span class="o">+</span> <span class="n">mid</span><span class="p">[</span><span class="mi">3</span><span class="p">:]</span></div>
+
+
+<div class="viewcode-block" id="freebase2wikidata"><a class="viewcode-back" href="../../../meerqat.data.html#meerqat.data.mscelebs.freebase2wikidata">[docs]</a><span class="k">def</span> <span class="nf">freebase2wikidata</span><span class="p">(</span><span class="n">entities</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Map entities in a {mid: qid} dict&quot;&quot;&quot;</span>
+    <span class="n">mapping</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">qid</span><span class="p">,</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">mid</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;freebase&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">mid</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">mid</span> <span class="o">=</span> <span class="n">wikidata2freebase</span><span class="p">(</span><span class="n">mid</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">])</span>
+        <span class="n">mapping</span><span class="p">[</span><span class="n">mid</span><span class="p">]</span> <span class="o">=</span> <span class="n">qid</span>
+    <span class="k">return</span> <span class="n">mapping</span></div>
+
+
+<div class="viewcode-block" id="count_entities"><a class="viewcode-back" href="../../../meerqat.data.html#meerqat.data.mscelebs.count_entities">[docs]</a><span class="k">def</span> <span class="nf">count_entities</span><span class="p">(</span><span class="n">entities</span><span class="p">,</span> <span class="n">mscelebs_path</span><span class="p">):</span>
+    <span class="n">fb2wd</span> <span class="o">=</span> <span class="n">freebase2wikidata</span><span class="p">(</span><span class="n">entities</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">mscelebs_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">reader</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Reading MS-Celebs&quot;</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="n">TOTAL_LINES</span><span class="p">):</span>
+            <span class="n">mid</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">qid</span> <span class="o">=</span> <span class="n">fb2wd</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">mid</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">qid</span><span class="p">:</span>
+                <span class="n">entities</span><span class="p">[</span><span class="n">qid</span><span class="p">]</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;mscelebs&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="n">entities</span><span class="p">[</span><span class="n">qid</span><span class="p">][</span><span class="s2">&quot;mscelebs&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">entities</span></div>
+
+
+<div class="viewcode-block" id="extract"><a class="viewcode-back" href="../../../meerqat.data.html#meerqat.data.mscelebs.extract">[docs]</a><span class="k">def</span> <span class="nf">extract</span><span class="p">(</span><span class="n">mscelebs_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Based on https://github.com/cmusatyalab/openface/blob/master/data/ms-celeb-1m/extract.py&quot;&quot;&quot;</span>
+    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">mscelebs_path</span><span class="o">.</span><span class="n">parent</span><span class="o">/</span><span class="s2">&quot;jpgs&quot;</span>
+    <span class="n">output_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">mscelebs_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">tsv</span><span class="p">:</span>
+        <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">tsv</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">reader</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Extracting images&quot;</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="n">TOTAL_LINES</span><span class="p">):</span>
+            <span class="n">mid</span><span class="p">,</span> <span class="n">imgSearchRank</span><span class="p">,</span> <span class="n">faceID</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+            <span class="n">entity_dir</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="n">mid</span>
+            <span class="n">entity_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">output_path</span> <span class="o">=</span> <span class="n">entity_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">imgSearchRank</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">faceID</span><span class="si">}</span><span class="s2">.jpg&quot;</span>
+
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">jpg</span><span class="p">:</span>
+                <span class="n">jpg</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c1"># parse arguments</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">docopt</span><span class="p">(</span><span class="vm">__doc__</span><span class="p">)</span>
+    <span class="n">subset</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;&lt;subset&gt;&#39;</span><span class="p">]</span>
+
+    <span class="n">mscelebs_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">DATA_ROOT_PATH</span><span class="p">,</span> <span class="s2">&quot;MS-Celeb-1M/data/croped_face_images/FaceImageCroppedWithOutAlignment.tsv&quot;</span><span class="p">)</span>
+    <span class="n">subset_path</span> <span class="o">=</span> <span class="n">DATA_ROOT_PATH</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;meerqat_</span><span class="si">{</span><span class="n">subset</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">entities_path</span> <span class="o">=</span> <span class="n">subset_path</span> <span class="o">/</span> <span class="s2">&quot;entities.json&quot;</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;extract&#39;</span><span class="p">]:</span>
+        <span class="n">extract</span><span class="p">(</span><span class="n">mscelebs_path</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;entities&#39;</span><span class="p">]:</span>
+        <span class="c1"># load data</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">entities_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">entities</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="n">entities</span> <span class="o">=</span> <span class="n">count_entities</span><span class="p">(</span><span class="n">entities</span><span class="p">,</span> <span class="n">mscelebs_path</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">entities_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">entities</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">meerqat</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Paul Lerner.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

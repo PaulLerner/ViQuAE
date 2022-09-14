@@ -1,0 +1,205 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>meerqat.viz.html &#8212; meerqat v3.0.0-alpha documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for meerqat.viz.html</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Usage: html.py &lt;dataset&gt; &lt;output&gt; [--n=&lt;n&gt; --width=&lt;width&gt; --config=&lt;path&gt;]</span>
+
+<span class="sd">Options:</span>
+<span class="sd">--n=&lt;n&gt;                 Number of examples to output after shuffling. Defaults to all without shuffling.</span>
+<span class="sd">--width=&lt;width&gt;         Width of the image in HTML [default: 400]. </span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">datasets</span> <span class="kn">import</span> <span class="n">load_from_disk</span>
+<span class="kn">from</span> <span class="nn">docopt</span> <span class="kn">import</span> <span class="n">docopt</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">ranx</span> <span class="kn">import</span> <span class="n">Run</span>
+
+
+<span class="n">HTML_TEMPLATE</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;&lt;html&gt;</span>
+<span class="s2">&lt;head&gt;</span>
+<span class="s2">    &lt;link rel=&quot;stylesheet&quot; href=&quot;./styles.css&quot;&gt;</span>
+<span class="s2">&lt;/head&gt;</span>
+<span class="s2">&lt;table&gt;</span>
+<span class="s2">    </span><span class="si">{headers}</span><span class="s2"></span>
+<span class="s2">    </span><span class="si">{rows}</span><span class="s2"></span>
+<span class="s2">&lt;tr&gt;&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="get_top_1"><a class="viewcode-back" href="../../../meerqat.viz.html#meerqat.viz.html.get_top_1">[docs]</a><span class="k">def</span> <span class="nf">get_top_1</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">run</span><span class="p">):</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">run</span><span class="o">.</span><span class="n">run</span><span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]]</span>
+    <span class="n">top1</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">results</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">top1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="format_html"><a class="viewcode-back" href="../../../meerqat.viz.html#meerqat.viz.html.format_html">[docs]</a><span class="k">def</span> <span class="nf">format_html</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> 
+                <span class="n">passages_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wiki_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">search_run</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">other_search_run</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># complete template according to parameters</span>
+    <span class="k">if</span> <span class="n">search_run</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">search_run</span> <span class="o">=</span> <span class="n">Run</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">search_run</span><span class="p">,</span> <span class="s1">&#39;trec&#39;</span><span class="p">)</span>
+        <span class="n">search_headers</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;&lt;th&gt;Visual&lt;/th&gt;</span>
+<span class="s2">        &lt;th&gt;Passage (</span><span class="si">{</span><span class="n">search_run</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">)&lt;/th&gt;&quot;&quot;&quot;</span>
+        <span class="n">search_row_template</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;&lt;td&gt;&lt;img src=&quot;</span><span class="si">{passage_url}</span><span class="s2">&quot; width=&quot;</span><span class="si">{width}</span><span class="s2">&quot;&gt;&lt;/td&gt;</span>
+<span class="s2">        &lt;td&gt;</span><span class="si">{passage_text}</span><span class="s2">&lt;/td&gt;&quot;&quot;&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">search_headers</span><span class="p">,</span> <span class="n">search_row_template</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">other_search_run</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">other_search_run</span> <span class="o">=</span> <span class="n">Run</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">other_search_run</span><span class="p">,</span> <span class="s1">&#39;trec&#39;</span><span class="p">)</span>
+        <span class="n">other_search_headers</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;&lt;th&gt;Other Visual&lt;/th&gt;</span>
+<span class="s2">        &lt;th&gt;Passage (</span><span class="si">{</span><span class="n">other_search_run</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">)&lt;/th&gt;&quot;&quot;&quot;</span>
+        <span class="n">other_search_row_template</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;&lt;td&gt;&lt;img src=&quot;</span><span class="si">{other_passage_url}</span><span class="s2">&quot; width=&quot;</span><span class="si">{width}</span><span class="s2">&quot;&gt;&lt;/td&gt;</span>
+<span class="s2">        &lt;td&gt;</span><span class="si">{other_passage_text}</span><span class="s2">&lt;/td&gt;&quot;&quot;&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">other_search_headers</span><span class="p">,</span> <span class="n">other_search_row_template</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">headers</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;&lt;tr&gt;</span>
+<span class="s2">        &lt;th&gt;Visual&lt;/th&gt;</span>
+<span class="s2">        &lt;th&gt;Question&lt;/th&gt;</span>
+<span class="s2">        &lt;th&gt;Answer&lt;/th&gt;</span>
+<span class="s2">        </span><span class="si">%s</span><span class="s2"></span>
+<span class="s2">        </span><span class="si">%s</span><span class="s2"></span>
+<span class="s2">    &lt;/tr&gt;&quot;&quot;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">search_headers</span><span class="p">,</span> <span class="n">other_search_headers</span><span class="p">)</span>
+    <span class="n">row_template</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;&lt;tr&gt;</span>
+<span class="s2">        &lt;td&gt;&lt;img src=&quot;</span><span class="si">{url}</span><span class="s2">&quot; width=&quot;</span><span class="si">{width}</span><span class="s2">&quot;&gt;&lt;/td&gt;</span>
+<span class="s2">        &lt;td&gt;</span><span class="si">{question}</span><span class="s2">&lt;/td&gt;</span>
+<span class="s2">        &lt;td&gt;</span><span class="si">{answer}</span><span class="s2">&lt;/td&gt;</span>
+<span class="s2">        </span><span class="si">%s</span><span class="s2"></span>
+<span class="s2">        </span><span class="si">%s</span><span class="s2"></span>
+<span class="s2">    &lt;/tr&gt;&quot;&quot;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">search_row_template</span><span class="p">,</span> <span class="n">other_search_row_template</span><span class="p">)</span>
+    
+    <span class="c1"># load data</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">load_from_disk</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">shuffle</span><span class="p">()</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">passages_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">passages</span> <span class="o">=</span> <span class="n">load_from_disk</span><span class="p">(</span><span class="n">passages_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">wiki_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">wiki</span> <span class="o">=</span> <span class="n">load_from_disk</span><span class="p">(</span><span class="n">wiki_path</span><span class="p">)</span>
+    
+    <span class="c1"># do the actual formatting</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">dataset</span><span class="p">:</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+                <span class="n">url</span><span class="o">=</span><span class="n">item</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">],</span>
+                <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span>
+                <span class="n">question</span><span class="o">=</span><span class="n">item</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">],</span>
+                <span class="n">answer</span><span class="o">=</span><span class="n">item</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">][</span><span class="s1">&#39;original_answer&#39;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">search_run</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">get_top_1</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">search_run</span><span class="p">)</span>
+            <span class="n">passage</span> <span class="o">=</span> <span class="n">passages</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">article</span> <span class="o">=</span> <span class="n">wiki</span><span class="p">[</span><span class="n">passage</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">]]</span>
+            <span class="n">row</span><span class="p">[</span><span class="s1">&#39;passage_url&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">article</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">]</span>
+            <span class="n">row</span><span class="p">[</span><span class="s1">&#39;passage_text&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">passage</span><span class="p">[</span><span class="s1">&#39;passage&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">other_search_run</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">get_top_1</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">other_search_run</span><span class="p">)</span>
+            <span class="n">passage</span> <span class="o">=</span> <span class="n">passages</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">article</span> <span class="o">=</span> <span class="n">wiki</span><span class="p">[</span><span class="n">passage</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">]]</span>
+            <span class="n">row</span><span class="p">[</span><span class="s1">&#39;other_passage_url&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">article</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">]</span>
+            <span class="n">row</span><span class="p">[</span><span class="s1">&#39;other_passage_text&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">passage</span><span class="p">[</span><span class="s1">&#39;passage&#39;</span><span class="p">]</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">row</span><span class="p">))</span>
+    <span class="n">html_str</span> <span class="o">=</span> <span class="n">HTML_TEMPLATE</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">rows</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rows</span><span class="p">))</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s1">&#39;wt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">html_str</span><span class="p">)</span></div>
+    
+    
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">docopt</span><span class="p">(</span><span class="vm">__doc__</span><span class="p">)</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;--n&#39;</span><span class="p">])</span> <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;--n&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;--config&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;--config&#39;</span><span class="p">],</span> <span class="s1">&#39;rt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="n">format_html</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;&lt;dataset&gt;&#39;</span><span class="p">],</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;&lt;output&gt;&#39;</span><span class="p">],</span> <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;--width&#39;</span><span class="p">]),</span> <span class="o">**</span><span class="n">config</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">meerqat</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Paul Lerner.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
