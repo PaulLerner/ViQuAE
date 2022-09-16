@@ -20,3 +20,4 @@ Submodules
    meerqat.data.utils
    meerqat.data.wiki
    meerqat.data.wikidump
+   meerqat.data.wit
