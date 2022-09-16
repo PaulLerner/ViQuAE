@@ -1,15 +1,16 @@
-ViQuAE
-======
+``meerqat``
+===========
 
-Source code and data used in the paper `ViQuAE, a Dataset for
-Knowledge-based Visual Question Answering about Named
-Entities <https://hal.archives-ouvertes.fr/hal-03650618>`__, Lerner et
-al., SIGIR’22.
+Source code and data used in the papers:
+    - `ViQuAE, a Dataset for Knowledge-based Visual Question Answering about Named Entities <https://hal.archives-ouvertes.fr/hal-03650618>`__ 
+      (Lerner et al., SIGIR’22) 
+    - "Multimodal Inverse Cloze Task for Knowledge-based Visual Question Answering" 
+      (Lerner et al., submitted to ECIR 2023) TODO: add link or preprint.
 
 See also `MEERQAT project <https://www.meerqat.fr/>`__.
 
-Getting the dataset and KB
-==========================
+Getting the ViQuAE dataset and KB
+=================================
 
 The data is provided in two formats: HF’s ``datasets`` (based on Apache
 Arrow) and plain-text JSONL files (one JSON object per line). Both
@@ -161,12 +162,25 @@ To format the articles into text passages, follow instructions at
 `EXPERIMENTS.rst <./EXPERIMENTS.rst>`__ (Preprocessing passages section).
 Alternatively, get them from
 https://huggingface.co/datasets/PaulLerner/viquae_passages
-(``load_dataset('PaulLerner/viquae_passages')``)
+(``load_dataset('PaulLerner/viquae_passages')``). 
+FIXME: passages of 'PaulLerner/viquae_passages' contain one extra article (less than 10 passages)
+compared to 'PaulLerner/viquae_wikipedia'. Experiments in MICT fixed this but indices of the provided
+ViQuAE runs correspond to 'PaulLerner/viquae_passages' so they won’t match the new version.
 
-Annotation of the data
-======================
+Formatting WIT for multimodal ICT
+=================================
 
-Please refer to ```ANNOTATION.md`` <./ANNOTATION.md>`__ for the
+WIT (Srinavasan et al. http://arxiv.org/abs/2103.01913) is available at https://github.com/google-research-datasets/wit.
+(By any chance, if you have access to Jean Zay, it is available at ``$DSDIR/WIT``).
+
+TODO add instructions to format WIT or upload the dataset to huggingface.
+
+Images should be resized to have a maximum height or width of 512 pixels using ``meerqat.image.resize``.
+
+Annotation of the ViQuAE data
+=============================
+
+Please refer to `ANNOTATION.md <./ANNOTATION.md>`__ for the
 annotation instructions
 
 Experiments

@@ -19,6 +19,14 @@ We train the models based on HF ``transformers.Trainer``, itself based
 on ``torch``. Even when not training models, all of our code is based on
 ``torch``.
 
+Instructions specific to the ECIR-submitted Multimodal ICT paper are marked with "(MICT)",
+while the instructions specific to the SIGIR ViQuAE dataset paper are marqued with "(ViQuAE)".
+Note that, while face detection (MTCNN) and recognition (ArcFace) are not specific to ViQuAE,
+they did not give promising results with MICT.
+
+DMR was renamed "ECA" during the writing of the paper. For now, it is still called "DMR"
+in the code and documentation.
+
 
 Preprocessing passages
 ----------------------
@@ -80,7 +88,7 @@ code snippet:
    def keep_relevant_search_wrt_original_in_priority(item, kb):
        # this contains the latest result of the fusion
        # to reproduce the results of the paper:
-       # - use DPR+Image as IR to train the reader
+       # - use DPR+Image as IR to train the reader or fine-tune DMR/ECA/ILF
        # - use BM25 as IR to train DPR (then save in 'BM25_provenance_indices'/'BM25_irrelevant_indices')
        indices = item['search_indices']
        relevant_indices, _ = find_relevant(indices, item['output']['original_answer'], [], kb)
@@ -99,14 +107,18 @@ Image
 
 This will be applied on both the QA dataset and the KB.
 
+TODO add instructions for WIT.
+
 Global image embedding
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Obtained using ResNet-50: - one pre-trained on ImageNet, pooled with
-max-pooling. You can tweak the pooling layer and the backbone in the
-config file, as long as it is a ``nn.Module`` and
-``torchvision.models``, respectively. - the other trained using
-`CLIP <https://github.com/openai/CLIP>`__ (install it from their repo)
+Obtained using ResNet-50:
+ - one pre-trained on ImageNet, pooled with
+   max-pooling. You can tweak the pooling layer and the backbone in the
+   config file, as long as it is a ``nn.Module`` and
+   ``torchvision.models``, respectively.
+ - the other trained using
+   `CLIP <https://github.com/openai/CLIP>`__ (install it from their repo)
 
 Obviously you can also tweak the batch size.
 
@@ -202,6 +214,126 @@ visualization <http://meerqat.fr/arcface-viquae.html>`__ (takes a while
 to load), trained on the whole KB faces (but displaying only 10K to get
 a reasonable HTML size).
 
+Bounding box engineering (MICT)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Again, this is provided for the sake of archival but does not provide better results
+than MICT models based on CLIP only (no faces).
+
+We follow UNITER (Chen et al.) and represent bounding box features like:
+:math:`(x_1, y_1, x_2, y_2, w, h, a)`, where :math:`(x_1, y_1)` and :math:`(x_2, y_2)`
+are the top-left and bottom-right coordinates, respectively, both scaled between [0, 1],
+:math:`w = x_2-x_1` is the width,  :math:`h = y_2-y_1` is the height, and :math:`a = w \times h` is the area.
+
+To achieve this, simply run: ``meerqat.image.face_box <dataset>``.
+Be sure to run it **after** ``meerqat.image.face_recognition`` since it scales bounding boxes and landmarks to [0, 1].
+
+Training dual encoders (e.g. DPR)
+---------------------------------
+DPR
+~~~
+
+We use the same hyperparameters as `Karpukinh et
+al. <https://github.com/facebookresearch/DPR>`__. We train DPR using 4
+V100 GPUs of 32GB, allowing a total batch size of 256 (32 questions \* 2
+passages each \* 4 GPUs). This is crucial because each question uses all
+passages paired with other questions in the batch as negative examples.
+Each question is paired with 1 relevant passage and 1 irrelevant passage
+mined with BM25.
+
+Both the question and passage encoder are initialized from
+``"bert-base-uncased"``.
+
+To launch the script with multiple GPUs you should you use
+``torch.distributed.launch --nproc_per_node=<number of GPUs>``. This is
+omitted in the following commands.
+
+Pre-training on TriviaQA
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can skip this step and use our pre-trained models: 
+    - question model: https://huggingface.co/PaulLerner/dpr_question_encoder_triviaqa_without_viquae
+    - context/passage model: https://huggingface.co/PaulLerner/dpr_context_encoder_triviaqa_without_viquae
+
+To be used with ``transformers``'s ``DPRQuestionEncoder`` and
+``DPRContextEncoder``, respectively.
+
+Given the small size of ViQuAE, DPR is pre-trained on TriviaQA: 
+    - filtered out of all questions used for ViQuAE for training 
+    - on questions used to generate ViQuAE’s validation set for validation
+
+Get TriviaQA with these splits from:
+https://huggingface.co/datasets/PaulLerner/triviaqa_for_viquae (or
+``load_dataset("triviaqa_for_viquae")``)
+
+In this step we use the complete ``kilt_wikipedia`` instead of
+``viquae_wikipedia``.
+
+``python -m meerqat.train.trainer experiments/dpr/triviaqa/config.json``
+
+The best checkpoint should be ``checkpoint-13984``.
+
+Fine-tuning on ViQuAE
+^^^^^^^^^^^^^^^^^^^^^
+
+We use exactly the same hyperparameters as for pre-training.
+
+Once you’ve decided on a TriviaQA checkpoint, (step 13984 in our case) 
+you need to split it in two with ``meerqat.train.split_biencoder``, 
+then set the path as in the provided config file.
+**Do not** simply set "resume_from_checkpoint=/path/to/triviaqa/pretraing" else
+the trainer will also load the optimizer and other training stuffs.
+
+Alternatively, if you want to start training from our pre-trained model,
+set "PaulLerner/dpr_question_encoder_triviaqa_without_viquae" and "PaulLerner/dpr_context_encoder_triviaqa_without_viquae"
+in the config file.
+
+``python -m meerqat.train.trainer experiments/dpr/viquae/config.json``
+
+The best checkpoint should be ``checkpoint-40``. Run
+``python -m meerqat.train.split_biencoder experiments/dpr/viquae/checkpoint-40``
+to split DPR in a DPRQuestionEncoder and DPRContextEncoder. We’ll use
+both to embed questions and passages below.
+
+
+Multimodal Inverse Cloze Task (MICT)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Starting from DPR training on TriviaQA, we will train ECA/DMR and ILF for MICT on WIT.
+
+You should change DPR’s config file so it is like the config files provided in 
+``ict/*/question_model_config.json`` and ``ict/*/context_model_config.json``,
+i.e. with the "image_kwargs" and "n_faces" parameters.
+
+Unlike the above DPR pre-training, here we use a single NVIDIA V100 GPU with 32 GB of RAM,
+but using gradient checkpointing.
+
+TODO provide pre-trained models.
+
+ILF
+^^^
+Notice how ILF fully freezes BERT during this stage with the regex ``".*dpr_encoder.*"``
+``python -m meerqat.train.trainer experiments/ict/ilf/config.json``
+
+DMR/ECA
+^^^^^^^
+DMR uses internally ``BertModel`` instead of ``DPR*Encoder`` so you need to run
+``meerqat.train.split_biencoder`` again, this time with the ``--bert`` option.
+
+Again, notice how the last six layers of BERT are frozen thanks to the regex.
+
+``python -m meerqat.train.trainer experiments/ict/dmr/config.json``
+
+Fine-tuning multimodal models on ViQuAE
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Almost the same as for DPR although some hyperparameters change, notably the model used
+to mine negative passage is here set as the late fusion of arcface, imagenet, clip, and dpr.
+We have tried to fine-tune DPR with the same hyperparameters and found no significant difference.
+Notice also that now we need a second KB that holds the pre-computed image features (viquae_wikipedia)
+
+Notice that all layers of the model are trainable during this stage.
+
+``python -m meerqat.train.trainer experiments/mm/ilf/config.json``
+``python -m meerqat.train.trainer experiments/mm/dmr/config.json``
+
 IR
 --
 
@@ -214,8 +346,8 @@ along with the multimodal Wikipedia.
 Hyperparameter tuning is done using grid search via ``optuna`` on the
 dev set to maximize MRR.
 
-BM25
-~~~~
+BM25 (ViQuAE)
+~~~~~~~~~~~~~
 
 Before running any of the commands below you should `launch the Elastic
 Search
@@ -242,84 +374,6 @@ re-use the index computed in the previous step.
 DPR
 ~~~
 
-We use the same hyperparameters as `Karpukinh et
-al. <https://github.com/facebookresearch/DPR>`__. We train DPR using 4
-V100 GPUs of 32GB, allowing a total batch size of 256 (32 questions \* 2
-passages each \* 4 GPUs). This is crucial because each question uses all
-passages paired with other questions in the batch as negative examples.
-Each question is paired with 1 relevant passage and 1 irrelevant passage
-mined with BM25.
-
-Both the question and passage encoder are initialized from
-``"bert-base-uncased"``.
-
-To launch the script with multiple GPUs you should you use
-``torch.distributed.launch --nproc_per_node=<number of GPUs>``. This is
-omitted in the following commands.
-
-Pre-training on TriviaQA
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-You can skip this step and use our pre-trained models: - question model:
-https://huggingface.co/PaulLerner/dpr_question_encoder_triviaqa_without_viquae
-- context/passage model:
-https://huggingface.co/PaulLerner/dpr_context_encoder_triviaqa_without_viquae
-
-To be used with ``transformers``\ ’s ``DPRQuestionEncoder`` and
-``DPRContextEncoder``, respectively.
-
-Given the small size of ViQuAE, DPR is pre-trained on TriviaQA: -
-filtered out of all questions used for ViQuAE for training - on
-questions used to generate ViQuAE’s validation set for validation
-
-Get TriviaQA with these splits from:
-https://huggingface.co/datasets/PaulLerner/triviaqa_for_viquae (or
-``load_dataset("triviaqa_for_viquae")``)
-
-In this step we use the complete ``kilt_wikipedia`` instead of
-``viquae_wikipedia``.
-
-``python -m meerqat.train.trainer experiments/dpr/triviaqa/config.json``
-
-The best checkpoint should be ``checkpoint-13984``.
-
-Fine-tuning on ViQuAE
-^^^^^^^^^^^^^^^^^^^^^
-
-We use exactly the same hyperparameters as for pre-training.
-
-This is kind of a hack but once you’ve decided on a TriviaQA checkpoint
-(step 13984 in our case) you want to be sure that HF won’t load the
-optimizer or any other training stuff except the model:
-
-.. code:: sh
-
-   mkdir experiments/dpr/triviaqa/checkpoint-13984/.keep
-   mv experiments/dpr/triviaqa/checkpoint-13984/optimizer.pt experiments/dpr/triviaqa/checkpoint-13984/scheduler.pt experiments/dpr/triviaqa/checkpoint-13984/training_args.pt experiments/dpr/triviaqa/checkpoint-13984/trainer_state.pt experiments/dpr/triviaqa/checkpoint-13984/.keep/
-
-Alternatively, if you want to start training from our pre-trained model,
-run:
-
-.. code:: py
-
-   import torch
-   from meerqat.train.trainee import DPRBiEncoder
-   question_model = transformers.DPRQuestionEncoder.from_pretrained("PaulLerner/dpr_question_encoder_triviaqa_without_viquae")
-   context_model = transformers.DPRContextEncoder.from_pretrained("PaulLerner/dpr_context_encoder_triviaqa_without_viquae")
-   dpr = DPRBiEncoder(question_model, context_model)
-   torch.save(dpr.state_dict(), "experiments/dpr/triviaqa/PaulLerner/pytorch_model.bin")
-
-And then set
-``resume_from_checkpoint="experiments/dpr/triviaqa/PaulLerner"`` in the
-config file.
-
-``python -m meerqat.train.trainer experiments/dpr/viquae/config.json``
-
-The best checkpoint should be ``checkpoint-40``. Run
-``python -m meerqat.train.split_DPR experiments/dpr/viquae/checkpoint-40``
-to split DPR in a DPRQuestionEncoder and DPRContextEncoder. We’ll use
-both to embed questions and passages below.
-
 Embedding questions and passages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -337,14 +391,16 @@ Like with BM25:
 
    python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/dpr/search/config.json --k=100 --metrics=experiments/ir/viquae/dpr/search/metrics --disable_caching
 
-ImageNet-ResNet and CLIP vs ArcFace-MS-Celeb
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ImageNet-ResNet and CLIP vs ArcFace-MS-Celeb (ViQuAE)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Do not do this for MICT, we want all representations for all images, 
+or use the ``face_and_image_are_exclusive`` option in the config file of the model*
 
-We trust the face detector, if it detects a face then: - the search is
-done on the human faces KB (``data/viquae_wikipedia/humans_with_faces``)
+We trust the face detector, if it detects a face then: 
+ - the search is done on the human faces KB (``data/viquae_wikipedia/humans_with_faces``)
 
-else: - the search is done on the non-human global images KB
-(``data/viquae_wikipedia/non_humans``)
+else:
+ - the search is done on the non-human global images KB (``data/viquae_wikipedia/non_humans``)
 
 To implement that we simply set the global image embedding to None when
 a face was detected:
@@ -367,8 +423,8 @@ L2-normalization then dot product).
 The results, corresponding to a KB entity/article are then mapped to the
 corresponding passages to allow fusion with BM25/DPR (next §)
 
-Text + Image
-~~~~~~~~~~~~
+Late fusion
+~~~~~~~~~~~
 
 Now in order to combine the text results of text and the image results
 we do two things: 1. normalize the scores so that they have zero-mean
@@ -383,13 +439,13 @@ The results are then re-ordered before evaluation. Each model has an
 interpolation hyperparameter. You can either tune-it on the dev set or
 use ours (more details below).
 
-BM25 + Image
-^^^^^^^^^^^^
+BM25 + ArcFace + CLIP + ImageNet (ViQuAE)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Tune hyperparameters
 ''''''''''''''''''''
 
-``python -m meerqat.ir.hp fusion data/viquae_dataset/validation experiments/ir/viquae/hp/bm25+image/config.json --k=100 --disable_caching --test=data/viquae_dataset/test --metrics=experiments/ir/viquae/hp/bm25+image/metrics``
+``python -m meerqat.ir.hp fusion data/viquae_dataset/validation experiments/ir/viquae/hp/bm25+arcface+clip+imagenet/config.json --k=100 --disable_caching --test=data/viquae_dataset/test --metrics=experiments/ir/viquae/hp/bm25+arcface+clip+imagenet/metrics``
 
 Run with the best hyperparameters
 '''''''''''''''''''''''''''''''''
@@ -398,10 +454,10 @@ If you don’t use the ``--test`` option above.
 
 .. code:: sh
 
-   python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/bm25+image/config.json --k=100 --metrics=experiments/ir/viquae/bm25+image/metrics
+   python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/bm25+arcface+clip+imagenet/config.json --k=100 --metrics=experiments/ir/viquae/bm25+arcface+clip+imagenet/metrics
 
-DPR + Image
-^^^^^^^^^^^
+DPR + ArcFace + CLIP + ImageNet (ViQuAE)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Same script, different config.
 
@@ -410,7 +466,7 @@ Same script, different config.
 Tune hyperparameters
 ''''''''''''''''''''
 
-``python -m meerqat.ir.hp fusion data/viquae_dataset/validation experiments/ir/viquae/hp/dpr+image/config.json --k=100 --disable_caching --test=data/viquae_dataset/test --metrics=experiments/ir/viquae/hp/dpr+image/metrics``
+``python -m meerqat.ir.hp fusion data/viquae_dataset/validation experiments/ir/viquae/hp/dpr+arcface+clip+imagenet/config.json --k=100 --disable_caching --test=data/viquae_dataset/test --metrics=experiments/ir/viquae/hp/dpr+arcface+clip+imagenet/metrics``
 
 .. _run-with-the-best-hyperparameters-1:
 
@@ -421,7 +477,41 @@ If you don’t use the ``--test`` option above.
 
 .. code:: sh
 
-   python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/dpr+image/config.json --k=100 --metrics=experiments/ir/viquae/dpr+image/metrics
+   python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/dpr+arcface+clip+imagenet/config.json --k=100 --metrics=experiments/ir/viquae/dpr+arcface+clip+imagenet/metrics
+
+DPR + CLIP (MICT)
+^^^^^^^^^^^^^^^^^
+For the late fusion baseline based only on DPR and CLIP, be sure to use CLIP on all images
+and do **not** run what’s above that sets CLIP=None when a face is detected.
+
+Then, you can do the same as above using:
+ - experiments/ir/viquae/hp/dpr+clip/config.json
+ - experiments/ir/viquae/dpr+clip/config.json
+
+Early Fusion (MICT)
+~~~~~~~~~~~~~~~~~~~
+Embedding visual questions and visual passages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Much like for DPR, you first need to split the BiEncoder in two once you picked a checkpoint using
+``meerqat.train.split_biencoder``. Then, set its path like in the provided config file.
+
+The important difference with DPR here, is again that you need to pass viquae_wikipedia
+which holds pre-computed image features of the visual passages.
+
+
+.. code:: sh
+
+   python -m meerqat.ir.embedding data/viquae_dataset experiments/ir/viquae/ilf/embedding/dataset_config.json
+   python -m meerqat.ir.embedding data/viquae_passages experiments/ir/viquae/ilf/embedding/kb_config.json --kb=data/viquae_wikipedia
+   python -m meerqat.ir.embedding data/viquae_dataset experiments/ir/viquae/dmr/embedding/dataset_config.json
+   python -m meerqat.ir.embedding data/viquae_passages experiments/ir/viquae/dmr/embedding/kb_config.json --kb=data/viquae_wikipedia
+
+Searching
+^^^^^^^^^
+This is exactly the same as for DPR, simply change "key" and "column" to "ILF_few_shot" or "DMR_few_shot".
+
+TODO provide ranx runs (.trec files). See also note in README on the different passages versions.
 
 Metrics
 ~~~~~~~
@@ -435,26 +525,25 @@ The above ``meerqat.ir.search`` saves results and qrels in format
 compatible with ``trec_eval`` if you prefer to use it.
 
 To compare different models (e.g. BM25+Image and DPR+Image), you should:
-- fuse the qrels (since relevant passages are estimated based on the
-model’s output):
-``python -m meerqat.ir.metrics qrels <qrels>... --output=experiments/ir/all_qrels.trec``
--
-``python -m meerqat.ir.metrics ranx <run>... --qrels=experiments/ir/all_qrels.trec --output=experiments/ir/comparison``
+    - fuse the qrels (since relevant passages are estimated based on the
+      model’s output):
+      ``python -m meerqat.ir.metrics qrels <qrels>... --output=experiments/ir/all_qrels.trec``
+    - ``python -m meerqat.ir.metrics ranx <run>... --qrels=experiments/ir/all_qrels.trec --output=experiments/ir/comparison``
 
 Beware that the ImageNet-ResNet and ArcFace results cannot be compared,
-neither between them nor with BM25/DPR because: - they are exclusive,
-roughly **half** the questions have a face -> ArcFace, other don’t ->
-ResNet, while BM25/DPR is applied to **all** questions - the mapping
-from image/document to passage is arbitrary, so the ordering of image
-results is not so meaningful until it is re-ordered with BM25/DPR
+neither between them nor with BM25/DPR because:
+ - they are exclusive, roughly **half** the questions have a face -> ArcFace, other don’t ->
+   ResNet, while BM25/DPR is applied to **all** questions
+ - the mapping from image/document to passage is arbitrary, so the ordering of image
+   results is not so meaningful until it is re-ordered with BM25/DPR
 
 If you’re interested in comparing only image representations, leaving
 downstream performance aside (e.g. comparing ImageNet-Resnet with
-another representation for the full image), you should: - ``filter`` the
-dataset so that you don’t evaluate on irrelevant questions (e.g. those
-were the search is done with ArcFace because a face was detected) -
-evaluate at the *document-level* instead of passage-level. To do so,
-maybe ``checkout`` the ``document`` branch (TODO merge in ``main``).
+another representation for the full image), you should:
+ - ``filter`` the dataset so that you don’t evaluate on irrelevant questions (e.g. those
+   were the search is done with ArcFace because a face was detected)
+ - evaluate at the *document-level* instead of passage-level. To do so,
+   maybe ``checkout`` the ``document`` branch (TODO merge in ``main``).
 
 Reading Comprehension
 ---------------------
@@ -485,8 +574,8 @@ be changed with the ``cannot_be_first_token`` flag).
 
 .. _pre-training-on-triviaqa-1:
 
-Pre-training on TriviaQA
-~~~~~~~~~~~~~~~~~~~~~~~~
+Pre-training on TriviaQA (ViQuAE)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you want to skip this step you can get our pretrained model at
 https://huggingface.co/PaulLerner/multi_passage_bert_triviaqa_without_viquae
@@ -521,12 +610,11 @@ The best checkpoint should be ``checkpoint-46000``.
 
 .. _fine-tuning-on-viquae-1:
 
-Fine-tuning on ViQuAE
-~~~~~~~~~~~~~~~~~~~~~
+Fine-tuning on ViQuAE (ViQuAE)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Here you don’t have to hack the checkpoint folder and can simply set
-``experiments/rc/triviaqa/train/checkpoint-46000`` as pre-trained model
-instead of ``bert-base-uncased``
+Simply set ``experiments/rc/triviaqa/train/checkpoint-46000`` 
+as pre-trained model instead of ``bert-base-uncased``
 (``PaulLerner/multi_passage_bert_triviaqa_without_viquae`` to use ours).
 
 Then you can fine-tune the model:
@@ -561,9 +649,18 @@ filter ``search_provenance_indices`` like above but setting
 ``item['search_provenance_indices'] = []`` when no relevant passages
 where retrieved by the IR system.
 
+Switching IR inputs at inference (MICT)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Simply set ``"run_path":"/path/to/run.trec"`` in experiments/rc/viquae/test/config.json
+and run ``meerqat.train.trainer`` again.
+
+
 References
 ==========
-
+Chen, Y.C., Li, L., Yu, L., El Kholy, A., Ahmed, F., Gan, Z., Cheng, Y., Liu, J.:
+Uniter: Universal image-text representation learning. In: European Conference on
+Computer Vision. pp. 104–120. https://openreview.net/forum?id=S1eL4kBYwr. Springer (2020)
+        
 Christopher Clark and Matt Gardner. 2018. Simple and Effective
 Multi-Paragraph Reading Comprehension. In Proceedings of the 56th Annual
 Meeting of the Association for Computational Linguistics (Volume 1: Long
@@ -572,7 +669,9 @@ Computational Linguistics.
 
 Jiankang Deng, Jia Guo, Niannan Xue, and Stefanos Zafeiriou. 2019.
 ArcFace: Additive Angular Margin Loss for Deep Face Recognition. pages
-4690–4699. Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina
+4690–4699. 
+
+Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina
 Toutanova. 2019. BERT: Pre-training of Deep Bidirectional Transformers
 for Language Understanding. arXiv:1810.04805 [cs]. ArXiv: 1810.04805.
 
@@ -590,7 +689,7 @@ pages 6769-6781. Https://github.com/facebookresearch/DPR.
 Zhiguo Wang, Patrick Ng, Xiaofei Ma, Ramesh Nallap- ati, and Bing Xiang.
 2019. Multi-passage BERT: A Globally Normalized BERT Model for Open-
 domain Question Answering. In Proceedings of the 2019 Conference on
-Empirical Methods in Natu- ral Language Processing and the 9th
+Empirical Methods in Natural Language Processing and the 9th
 International Joint Conference on Natural Language Processing
 (EMNLP-IJCNLP), pages 5878–5882, Hong Kong, China. Association for
 Computational Linguistics.
