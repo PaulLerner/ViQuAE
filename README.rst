@@ -173,9 +173,9 @@ Formatting WIT for multimodal ICT
 WIT (Srinavasan et al. http://arxiv.org/abs/2103.01913) is available at https://github.com/google-research-datasets/wit.
 (By any chance, if you have access to Jean Zay, it is available at ``$DSDIR/WIT``).
 
-TODO add instructions to format WIT or upload the dataset to huggingface.
+Follow instructions at ``meerqat.data.wit`` (see ``meerqat.data.wit.html``).
 
-Images should be resized to have a maximum height or width of 512 pixels using ``meerqat.image.resize``.
+TODO also upload the dataset to huggingface so it's easier.
 
 Annotation of the ViQuAE data
 =============================
