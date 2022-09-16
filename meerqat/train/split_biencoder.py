@@ -1,4 +1,8 @@
 """
+Splits a BiEncoder in two (e.g. DPRBiEncoder in DPRQuestionEncoder and DPRContextEncoder).
+The config file should be the same as for ``train.trainer`` in evaluation mode: 
+i.e. the path to the wanted checkpoint should be given in config['checkpoint']['resume_from_checkpoint'].
+
 Usage: split_biencoder.py <config> [--bert]
 
 Positional arguments:
@@ -19,7 +23,8 @@ from ..data.loading import load_pretrained_in_kwargs
 
 def split_biencoder(trainee, checkpoint, bert=False):
     """
-    Utility function to split a DPRBiEncoder in DPRQuestionEncoder and DPRContextEncoder
+    Utility function to split a BiEncoder in two 
+    (e.g. DPRBiEncoder in DPRQuestionEncoder and DPRContextEncoder)
     
     Parameters
     ----------
