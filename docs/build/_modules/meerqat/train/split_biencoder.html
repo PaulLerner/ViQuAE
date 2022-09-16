@@ -222,6 +222,10 @@
               
   <h1>Source code for meerqat.train.split_biencoder</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Splits a BiEncoder in two (e.g. DPRBiEncoder in DPRQuestionEncoder and DPRContextEncoder).</span>
+<span class="sd">The config file should be the same as for ``train.trainer`` in evaluation mode: </span>
+<span class="sd">i.e. the path to the wanted checkpoint should be given in config[&#39;checkpoint&#39;][&#39;resume_from_checkpoint&#39;].</span>
+
 <span class="sd">Usage: split_biencoder.py &lt;config&gt; [--bert]</span>
 
 <span class="sd">Positional arguments:</span>
@@ -242,7 +246,8 @@
 
 <div class="viewcode-block" id="split_biencoder"><a class="viewcode-back" href="../../../meerqat.train.split_biencoder.html#meerqat.train.split_biencoder.split_biencoder">[docs]</a><span class="k">def</span> <span class="nf">split_biencoder</span><span class="p">(</span><span class="n">trainee</span><span class="p">,</span> <span class="n">checkpoint</span><span class="p">,</span> <span class="n">bert</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Utility function to split a DPRBiEncoder in DPRQuestionEncoder and DPRContextEncoder</span>
+<span class="sd">    Utility function to split a BiEncoder in two </span>
+<span class="sd">    (e.g. DPRBiEncoder in DPRQuestionEncoder and DPRContextEncoder)</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>

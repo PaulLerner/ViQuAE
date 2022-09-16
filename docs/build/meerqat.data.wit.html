@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>meerqat.data package &#8212; meerqat v3.0.0-alpha documentation</title>
+    <title>meerqat.data.wit module &#8212; meerqat v3.0.0-alpha documentation</title>
   <script>
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
@@ -33,7 +33,7 @@
     <script src="_static/underscore.js"></script>
     <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'meerqat.data';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'meerqat.data.wit';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -207,7 +207,7 @@
   <div class="bd-toc-item navbar-nav">
     <ul class="current nav bd-sidenav">
  <li class="toctree-l1 current active has-children">
-  <a class="current reference internal" href="#">
+  <a class="reference internal" href="meerqat.data.html">
    meerqat.data package
   </a>
   <input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
@@ -215,7 +215,7 @@
    <i class="fas fa-chevron-down">
    </i>
   </label>
-  <ul>
+  <ul class="current">
    <li class="toctree-l2">
     <a class="reference internal" href="meerqat.data.kilt2vqa.html">
      meerqat.data.kilt2vqa module
@@ -256,8 +256,8 @@
      meerqat.data.wikidump module
     </a>
    </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.data.wit.html">
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
      meerqat.data.wit module
     </a>
    </li>
@@ -456,76 +456,101 @@
             
             <article class="bd-article" role="main">
               
-  <div class="section" id="module-meerqat.data">
-<span id="meerqat-data-package"></span><h1>meerqat.data package<a class="headerlink" href="#module-meerqat.data" title="Permalink to this heading">#</a></h1>
-<p>This should contain scripts to load the data, annotate it…</p>
-<p><code class="docutils literal notranslate"><span class="pre">loading</span></code> is probably the only submodule in <code class="docutils literal notranslate"><span class="pre">data</span></code> interesting for the users of the dataset.
-The rest of the submodules were used to <strong>annotate the dataset</strong>.</p>
-<div class="section" id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">#</a></h2>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="meerqat.data.kilt2vqa.html">meerqat.data.kilt2vqa module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="meerqat.data.kilt2vqa.html#overview">Overview</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="meerqat.data.kilt2vqa.html#ner"><code class="docutils literal notranslate"><span class="pre">ner</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="meerqat.data.kilt2vqa.html#id1"><code class="docutils literal notranslate"><span class="pre">ner</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="meerqat.data.kilt2vqa.html#generate-mentions"><code class="docutils literal notranslate"><span class="pre">generate</span> <span class="pre">mentions</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="meerqat.data.kilt2vqa.html#generate-vq"><code class="docutils literal notranslate"><span class="pre">generate</span> <span class="pre">vq</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="meerqat.data.kilt2vqa.html#labelstudio"><code class="docutils literal notranslate"><span class="pre">labelstudio</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="meerqat.data.kilt2vqa.html#download"><code class="docutils literal notranslate"><span class="pre">download</span></code></a></li>
+  <div class="section" id="module-meerqat.data.wit">
+<span id="meerqat-data-wit-module"></span><h1>meerqat.data.wit module<a class="headerlink" href="#module-meerqat.data.wit" title="Permalink to this heading">#</a></h1>
+<div class="section" id="wit-for-mict">
+<h2>WIT for MICT<a class="headerlink" href="#wit-for-mict" title="Permalink to this heading">#</a></h2>
+<dl class="simple">
+<dt>Generates the WIT subset for Multimodal Inverse Cloze Task as described in the ECIR-submitted paper:</dt><dd><ul class="simple">
+<li><p>english-only subset</p></li>
+<li><p>images paired with the sections</p></li>
+<li><p>filtering out images with irrelevant formats (e.g. .svg)</p></li>
+<li><p>splitting in train/validation/test without overlap between the articles</p></li>
+<li><p>splitting sections in sentences (<code class="docutils literal notranslate"><span class="pre">meerqat.data.loading</span> <span class="pre">sentences</span></code>)</p></li>
+<li><p>removing sections with a single sentence (DIY after)</p></li>
+<li><p>map the image url to its path (DIY after)</p></li>
 </ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="meerqat.data.kilt2vqa.html#for-docopt">For <code class="docutils literal notranslate"><span class="pre">docopt</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="meerqat.data.kilt2vqa.html#functions">Functions</a></li>
+</dd>
+<dt>You should end up with:</dt><dd><ul class="simple">
+<li><p>877,635 pairs in train</p></li>
+<li><p>48,271 pairs in validation</p></li>
+<li><p>48,815 pairs in test</p></li>
 </ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="meerqat.data.kvqa.html">meerqat.data.kvqa module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="meerqat.data.labelstudio.html">meerqat.data.labelstudio module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="meerqat.data.loading.html">meerqat.data.loading module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="meerqat.data.loading.html#usages">Usages</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="meerqat.data.loading.html#passages"><code class="docutils literal notranslate"><span class="pre">passages</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="meerqat.data.loading.html#map"><code class="docutils literal notranslate"><span class="pre">map</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="meerqat.data.loading.html#sentences"><code class="docutils literal notranslate"><span class="pre">sentences</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="meerqat.data.loading.html#for-docopt">For <code class="docutils literal notranslate"><span class="pre">docopt</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="meerqat.data.loading.html#functions">Functions</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="meerqat.data.mscelebs.html">meerqat.data.mscelebs module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="meerqat.data.utils.html">meerqat.data.utils module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="meerqat.data.wiki.html">meerqat.data.wiki module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="meerqat.data.wiki.html#usages">Usages</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="meerqat.data.wiki.html#data-entities"><code class="docutils literal notranslate"><span class="pre">data</span> <span class="pre">entities</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="meerqat.data.wiki.html#data-feminine"><code class="docutils literal notranslate"><span class="pre">data</span> <span class="pre">feminine</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="meerqat.data.wiki.html#data-superclasses"><code class="docutils literal notranslate"><span class="pre">data</span> <span class="pre">superclasses</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="meerqat.data.wiki.html#depictions-optional">Depictions (optional)</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="meerqat.data.wiki.html#commons-sparql-depicts"><code class="docutils literal notranslate"><span class="pre">commons</span> <span class="pre">sparql</span> <span class="pre">depicts</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="meerqat.data.wiki.html#commons-sparql-depicted"><code class="docutils literal notranslate"><span class="pre">commons</span> <span class="pre">sparql</span> <span class="pre">depicted</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="meerqat.data.wiki.html#data-depicted"><code class="docutils literal notranslate"><span class="pre">data</span> <span class="pre">depicted</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="meerqat.data.wiki.html#filter"><code class="docutils literal notranslate"><span class="pre">filter</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="meerqat.data.wiki.html#commons-rest"><code class="docutils literal notranslate"><span class="pre">commons</span> <span class="pre">rest</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="meerqat.data.wiki.html#commons-heuristics"><code class="docutils literal notranslate"><span class="pre">commons</span> <span class="pre">heuristics</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="meerqat.data.wiki.html#for-docopt">For <code class="docutils literal notranslate"><span class="pre">docopt</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="meerqat.data.wiki.html#functions">Functions</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="meerqat.data.wikidump.html">meerqat.data.wikidump module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="meerqat.data.wit.html">meerqat.data.wit module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="meerqat.data.wit.html#wit-for-mict">WIT for MICT</a></li>
-<li class="toctree-l2"><a class="reference internal" href="meerqat.data.wit.html#what-you-should-have-first">What you should have first</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="meerqat.data.wit.html#instructions-for-train-images-tsv">Instructions for train_images.tsv</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="meerqat.data.wit.html#docopt">Docopt</a></li>
-</ul>
-</li>
-</ul>
+</dd>
+</dl>
 </div>
+<div class="section" id="what-you-should-have-first">
+<h2>What you should have first<a class="headerlink" href="#what-you-should-have-first" title="Permalink to this heading">#</a></h2>
+<p>Downloaded from <a class="reference external" href="https://github.com/google-research-datasets/wit">https://github.com/google-research-datasets/wit</a></p>
+<p>(By any chance, if you have access to Jean Zay, it is available at <code class="docutils literal notranslate"><span class="pre">$DSDIR/WIT</span></code> with the right format).:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ tree WIT
+WIT/
+├── train
+│   ├── 00
+│   │   ├── 000004379cfea6d71f7c47180c2163ee40887b7b23798535435d9b2c0065cea5.png
+│   │   ├── 000004528fa952ab9e2212ff7c749dfb1f28eb0fae2f45bec768e3ba72265420.jpg
+│   │   ├── ...
+│   │   └── 00ffff77789c938b5c2ce004d09246d1d54ef5d325d831adf3611413794d757f.jpg
+│   ├── 01
+│   ├── ...
+│   └── ff
+├── train_images.tsv
+├── wit_v1.train.all-00000-of-00010.tsv
+├── wit_v1.train.all-00001-of-00010.tsv
+├── wit_v1.train.all-00002-of-00010.tsv
+├── wit_v1.train.all-00003-of-00010.tsv
+├── wit_v1.train.all-00004-of-00010.tsv
+├── wit_v1.train.all-00005-of-00010.tsv
+├── wit_v1.train.all-00006-of-00010.tsv
+├── wit_v1.train.all-00007-of-00010.tsv
+├── wit_v1.train.all-00008-of-00010.tsv
+└── wit_v1.train.all-00009-of-00010.tsv
+</pre></div>
+</div>
+<div class="section" id="instructions-for-train-images-tsv">
+<h3>Instructions for train_images.tsv<a class="headerlink" href="#instructions-for-train-images-tsv" title="Permalink to this heading">#</a></h3>
+<p>The images from WIT are stored in the “train” directory with the following naming convention:
+“train/&lt;xy&gt;/&lt;hash&gt;.&lt;ext&gt;” where</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>&lt;hash&gt; is the SHA256 hash of the image’s URL</p></li>
+<li><p>&lt;xy&gt; are the first two characters of the hash (which means there are 256 subfolders named “00” to “ff”)</p></li>
+<li><p>&lt;ext&gt; is the extension of the image.</p></li>
+</ul>
+</div></blockquote>
+<p>The file “train_images.tsv” contains all the URL of the images with their download status
+(“True” if the image could be downloaded, “False” otherwise) and the corresponding path.</p>
+<p>Once you’ve done this mapping you hsould add it rouself to the dataset.</p>
+<p>Sample from “train_images.tsv”::</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">url</span>     <span class="n">downloaded</span>      <span class="n">path</span>
+<span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">upload</span><span class="o">.</span><span class="n">wikimedia</span><span class="o">.</span><span class="n">org</span><span class="o">/</span><span class="n">wikipedia</span><span class="o">/</span><span class="n">ca</span><span class="o">/</span><span class="n">d</span><span class="o">/</span><span class="n">d4</span><span class="o">/</span><span class="n">Trobadores</span><span class="o">.</span><span class="n">jpeg</span>   <span class="kc">True</span>    <span class="n">train</span><span class="o">/</span><span class="mi">95</span><span class="o">/</span><span class="mi">953</span><span class="n">feec3651efda25c166841ec8c0cd8d2064bf59f668c8dcb62dc823963a385</span><span class="o">.</span><span class="n">jpg</span>
+<span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">upload</span><span class="o">.</span><span class="n">wikimedia</span><span class="o">.</span><span class="n">org</span><span class="o">/</span><span class="n">wikipedia</span><span class="o">/</span><span class="n">commons</span><span class="o">/</span><span class="mi">0</span><span class="o">/</span><span class="mi">00</span><span class="o">/%</span><span class="mi">2703</span><span class="o">-%</span><span class="mi">2705</span><span class="n">_Pontiac_Montana_Taxi</span><span class="o">.</span><span class="n">jpg</span> <span class="kc">True</span>    <span class="n">train</span><span class="o">/</span><span class="mi">35</span><span class="o">/</span><span class="mi">35</span><span class="n">bcbf0f09424126932707a702b152fac7ebd9c932a877a3f2515d9fe67bb44d</span><span class="o">.</span><span class="n">jpg</span>
+<span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">upload</span><span class="o">.</span><span class="n">wikimedia</span><span class="o">.</span><span class="n">org</span><span class="o">/</span><span class="n">wikipedia</span><span class="o">/</span><span class="n">commons</span><span class="o">/</span><span class="mi">0</span><span class="o">/</span><span class="mi">00</span><span class="o">/%</span><span class="mi">2755</span><span class="n">_Singer_4ADT_Roadster_</span><span class="o">%</span><span class="mi">28</span><span class="n">Hudson</span><span class="o">%</span><span class="mf">29.</span><span class="n">JPG</span>  <span class="kc">True</span>    <span class="n">train</span><span class="o">/</span><span class="n">dd</span><span class="o">/</span><span class="n">dd10ea054385d8fac82a7bca15202434b7ce0facb01519021980ba07c5e6f626</span><span class="o">.</span><span class="n">jpg</span>
+<span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">upload</span><span class="o">.</span><span class="n">wikimedia</span><span class="o">.</span><span class="n">org</span><span class="o">/</span><span class="n">wikipedia</span><span class="o">/</span><span class="n">commons</span><span class="o">/</span><span class="mi">0</span><span class="o">/</span><span class="mi">00</span><span class="o">/%</span><span class="mi">2768</span><span class="n">_Chevrolet_Biscayne_Coupe_</span><span class="o">%</span><span class="mi">28</span><span class="n">Centropolis_Laval_</span><span class="o">%</span><span class="mi">2710</span><span class="o">%</span><span class="mf">29.</span><span class="n">jpg</span>     <span class="kc">True</span>    <span class="n">train</span><span class="o">/</span><span class="mi">44</span><span class="o">/</span><span class="mi">44</span><span class="n">a11a487b09c8118e1066491880ad7045513379b5c16cdc9460321db113ad2d</span><span class="o">.</span><span class="n">jpg</span>
+<span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">upload</span><span class="o">.</span><span class="n">wikimedia</span><span class="o">.</span><span class="n">org</span><span class="o">/</span><span class="n">wikipedia</span><span class="o">/</span><span class="n">commons</span><span class="o">/</span><span class="mi">0</span><span class="o">/</span><span class="mi">00</span><span class="o">/%</span><span class="mi">2783</span><span class="n">_Buick_Century_Sedan</span><span class="o">.</span><span class="n">JPG</span>        <span class="kc">False</span>   <span class="n">HTTP</span> <span class="n">Error</span> <span class="mi">404</span><span class="p">:</span> <span class="n">Not</span> <span class="n">Found</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="docopt">
+<h2>Docopt<a class="headerlink" href="#docopt" title="Permalink to this heading">#</a></h2>
+<p>Usage:
+wit.py &lt;root_path&gt; &lt;output_path&gt;</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="meerqat.data.wit.check_encoding">
+<span class="sig-prename descclassname"><span class="pre">meerqat.data.wit.</span></span><span class="sig-name descname"><span class="pre">check_encoding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/data/wit.html#check_encoding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.data.wit.check_encoding" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="meerqat.data.wit.fill_wit_for_mict">
+<span class="sig-prename descclassname"><span class="pre">meerqat.data.wit.</span></span><span class="sig-name descname"><span class="pre">fill_wit_for_mict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wit_for_mict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/data/wit.html#fill_wit_for_mict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.data.wit.fill_wit_for_mict" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="meerqat.data.wit.dict_to_dataset">
+<span class="sig-prename descclassname"><span class="pre">meerqat.data.wit.</span></span><span class="sig-name descname"><span class="pre">dict_to_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/data/wit.html#dict_to_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.data.wit.dict_to_dataset" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
 </div>
 </div>
 
@@ -554,8 +579,25 @@ The rest of the submodules were used to <strong>annotate the dataset</strong>.</
 <nav id="bd-toc-nav" class="page-toc">
     <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#submodules">
-   Submodules
+  <a class="reference internal nav-link" href="#wit-for-mict">
+   WIT for MICT
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#what-you-should-have-first">
+   What you should have first
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#instructions-for-train-images-tsv">
+     Instructions for train_images.tsv
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#docopt">
+   Docopt
   </a>
  </li>
 </ul>
@@ -570,7 +612,7 @@ The rest of the submodules were used to <strong>annotate the dataset</strong>.</
 <div class="toc-item">
   
 <div class="tocsection sourcelink">
-    <a href="_sources/meerqat.data.rst.txt">
+    <a href="_sources/meerqat.data.wit.rst.txt">
         <i class="fas fa-file-alt"></i> Show Source
     </a>
 </div>

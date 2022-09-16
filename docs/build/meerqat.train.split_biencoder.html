@@ -453,6 +453,9 @@
               
   <div class="section" id="module-meerqat.train.split_biencoder">
 <span id="meerqat-train-split-biencoder-module"></span><h1>meerqat.train.split_biencoder module<a class="headerlink" href="#module-meerqat.train.split_biencoder" title="Permalink to this heading">#</a></h1>
+<p>Splits a BiEncoder in two (e.g. DPRBiEncoder in DPRQuestionEncoder and DPRContextEncoder).
+The config file should be the same as for <code class="docutils literal notranslate"><span class="pre">train.trainer</span></code> in evaluation mode:
+i.e. the path to the wanted checkpoint should be given in config[‘checkpoint’][‘resume_from_checkpoint’].</p>
 <p>Usage: split_biencoder.py &lt;config&gt; [–bert]</p>
 <dl>
 <dt>Positional arguments:</dt><dd><p>&lt;config&gt;    Path to the JSON configuration file (passed as kwargs)</p>
@@ -467,7 +470,8 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="meerqat.train.split_biencoder.split_biencoder">
 <span class="sig-prename descclassname"><span class="pre">meerqat.train.split_biencoder.</span></span><span class="sig-name descname"><span class="pre">split_biencoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trainee</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bert</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/split_biencoder.html#split_biencoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.split_biencoder.split_biencoder" title="Permalink to this definition">#</a></dt>
-<dd><p>Utility function to split a DPRBiEncoder in DPRQuestionEncoder and DPRContextEncoder</p>
+<dd><p>Utility function to split a BiEncoder in two
+(e.g. DPRBiEncoder in DPRQuestionEncoder and DPRContextEncoder)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
