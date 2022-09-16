@@ -1,0 +1,55 @@
+{
+    "kb_kwargs": {
+        "data/viquae_passages": {
+            "index_kwargs": {
+                "DPR_few_shot_dp": {
+                    "column": "DPR_few_shot",
+                    "es": false,
+                    "kind_str": "TEXT",
+                    "key": "DPR_few_shot",
+                    "normalization": {
+                      "method": "normalize",
+                      "mean": 71.3295,
+                      "std": 2.16671
+                    },
+                    "string_factory": "Flat",
+                    "load": false,
+                    "device": null,
+                    "metric_type": 0,
+                    "interpolation_weight": 0.5
+                }
+            }
+        },
+        "data/viquae_wikipedia": {
+            "index_mapping_path": "data/viquae_wikipedia/article2passage.json",
+            "index_kwargs": {               
+                "clip-RN50": {
+                    "column": "clip-RN50",
+                    "es": false,
+                    "kind_str": "IMAGE",
+                    "key": "clip-RN50",
+                    "string_factory": "L2norm,Flat",
+                    "load": false,
+                    "device": null,
+                    "metric_type": 0,
+                    "interpolation_weight": 0.5,
+                    "normalization": {
+                        "method": "normalize",
+                        "mean": 0.827869,
+                        "std": 0.0668424
+                    }
+                }
+            }
+        }
+    },
+    "reference_kb_path": "data/viquae_passages",
+    "map_kwargs": {
+        "batch_size": 256,
+        "desc": "searching"
+    },
+    "fusion_kwargs": {
+        "method": "interpolation",
+        "default_minimum": true
+    },
+    "format": {}
+}

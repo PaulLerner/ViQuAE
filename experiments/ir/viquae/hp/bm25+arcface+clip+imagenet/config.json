@@ -1,6 +1,6 @@
 {
     "study_name": "bm25+image",
-    "storage": "sqlite:///experiments/ir/viquae/hp/bm25+image/hp.db",
+    "storage": "sqlite:///experiments/ir/viquae/hp/bm25+arcface+clip+imagenet/hp.db",
     "kb_kwargs": {
         "data/meerqat_passages": {
             "load_dataset": true,

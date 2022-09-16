@@ -1,0 +1,21 @@
+{
+  "model": {
+    "class_name": "IntermediateLinearFusion",
+    "pretrained_model_name_or_path": "experiments/mm/ilf/checkpoint-72/question_model/"
+ },
+  "tokenizer": {
+    "class_name": "BertTokenizer",
+    "pretrained_model_name_or_path": "/gpfsstore/rech/fih/usl47jg/models/bert-base-uncased"
+  },
+  "tokenization_kwargs": {
+    "max_length": 256,
+    "padding": "longest"
+  },
+    "key": "input",
+    "save_as": "ILF_few_shot",
+    "output_key": "pooler_output",
+    "map_kwargs":
+    {
+        "batch_size": 512
+    }
+}

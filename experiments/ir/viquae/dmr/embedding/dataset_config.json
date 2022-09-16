@@ -1,0 +1,21 @@
+{
+  "model": {
+    "class_name": "DMREncoder",
+    "pretrained_model_name_or_path": "experiments/mm/dmr/checkpoint-36/question_model"
+ },
+  "tokenizer": {
+    "class_name": "BertTokenizer",
+    "pretrained_model_name_or_path": "bert-base-uncased"
+  },
+  "tokenization_kwargs": {
+    "max_length": 256,
+    "padding": "longest"
+  },
+    "key": "input",
+    "save_as": "DMR_few_shot",
+    "output_key": "pooler_output",
+    "map_kwargs":
+    {
+        "batch_size": 2048
+    }
+}

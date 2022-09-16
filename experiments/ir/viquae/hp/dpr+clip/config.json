@@ -1,6 +1,6 @@
 {
     "study_name": "dpr+image",
-    "storage": "sqlite:///experiments/ir/viquae/hp/dpr+image/hp.db",
+    "storage": "sqlite:///experiments/ir/viquae/hp/dpr+clip/hp.db",
     "kb_kwargs": {
         "data/viquae_passages": {
             "index_kwargs": {
@@ -22,25 +22,9 @@
                 }
             }
         },
-        "data/viquae_wikipedia/non_humans": {
+        "data/viquae_wikipedia/": {
             "index_mapping_path": null,
             "index_kwargs": {
-                "resnet": {
-                    "column": null,
-                    "es": false,
-                    "kind_str": "IMAGE",
-                    "key": "imagenet-RN50",
-                    "string_factory": "L2norm,Flat",
-                    "load": false,
-                    "device": null,
-                    "metric_type": 0,
-                    "interpolation_weight": null,
-                    "normalization": {
-                        "method": "normalize",
-                        "mean": 0.875486,
-                        "std": 0.0285142
-                    }
-                },
                 "clip-RN50": {
                     "column": null,
                     "es": false,
@@ -55,27 +39,6 @@
                         "method": "normalize",
                         "mean": 0.827869,
                         "std": 0.0668424
-                    }
-                }
-            }
-        },
-        "data/viquae_wikipedia/humans_with_faces": {
-            "index_mapping_path": null,
-            "index_kwargs": {
-                "arcface": {
-                    "column": null,
-                    "es": false,
-                    "kind_str": "FACE",
-                    "key": "face_embedding",
-                    "string_factory": "L2norm,Flat",
-                    "load": false,
-                    "device": null,
-                    "metric_type": 0,
-                    "interpolation_weight": null,
-                    "normalization": {
-                        "method": "normalize",
-                        "mean": 0.499674,
-                        "std": 0.159321
                     }
                 }
             }
