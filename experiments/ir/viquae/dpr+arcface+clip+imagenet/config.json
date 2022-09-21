@@ -61,10 +61,10 @@
             "index_mapping_path": "data/viquae_wikipedia/humans_with_faces/article2passage.json",
             "index_kwargs": {
                 "arcface": {
-                    "column": "face_embedding",
+                    "column": "first_face_embedding",
                     "es": false,
                     "kind_str": "FACE",
-                    "key": "face_embedding",
+                    "key": "first_face_embedding",
                     "string_factory": "L2norm,Flat",
                     "load": false,
                     "device": null,

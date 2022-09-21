@@ -107,8 +107,6 @@ Image
 
 This will be applied on both the QA dataset and the KB.
 
-TODO add instructions for WIT.
-
 Global image embedding
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -139,6 +137,9 @@ KB images and the whole dataset images, w.r.t. the entity type,
 `here <http://meerqat.fr/imagenet-viquae.html>`__ for ImageNet-ResNet50,
 and `there <http://meerqat.fr/clip-viquae.html>`__ for CLIP (takes a
 while to load).
+
+For WIT, you should change "save_as" and "image_key" in the config file by prepreding "context_"
+so that it matches the data format and works with the trainer.
 
 Face detection
 ~~~~~~~~~~~~~~
@@ -208,6 +209,15 @@ Finally we can run it!
 
    python -m meerqat.image.face_recognition data/viquae_dataset experiments/face_recognition/config.json --disable_caching
    python -m meerqat.image.face_recognition data/viquae_wikipedia/humans_with_faces experiments/face_recognition/config.json --disable_caching
+
+You can tweak the number of faces in the config file. We used 4 for MICT experiments.
+To reproduce ViQuAE experiments, you will want to consider only the most probable face so do something like:
+
+.. code:: py
+
+    d = load_from_disk('data/viquae_dataset')
+    d = d.map(lambda item: {'first_face_embedding': item['face_embedding'][0] if item['face_embedding'] is not None else None})
+    d.save_to_disk('data/viquae_dataset')
 
 Again, you can have a look at an `interactive UMAP
 visualization <http://meerqat.fr/arcface-viquae.html>`__ (takes a while
@@ -322,12 +332,24 @@ Again, notice how the last six layers of BERT are frozen thanks to the regex.
 
 ``python -m meerqat.train.trainer experiments/ict/dmr/config.json``
 
+
+As a sanity check, you can check the performance of the models on WIT’s test set.
+
+``python -m meerqat.train.trainer experiments/ict/dmr/test/config.json``
+``python -m meerqat.train.trainer experiments/ict/ilf/test/config.json``
+
+
 Fine-tuning multimodal models on ViQuAE
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Almost the same as for DPR although some hyperparameters change, notably the model used
 to mine negative passage is here set as the late fusion of arcface, imagenet, clip, and dpr.
 We have tried to fine-tune DPR with the same hyperparameters and found no significant difference.
 Notice also that now we need a second KB that holds the pre-computed image features (viquae_wikipedia)
+
+You can use the provided test config to split the BiEncoder:
+``python -m meerqat.train.split_biencoder experiments/ict/dmr/test/config.json``
+``python -m meerqat.train.split_biencoder experiments/ict/ilf/test/config.json``
+
 
 Notice that all layers of the model are trainable during this stage.
 

@@ -1,5 +1,6 @@
 {
   "map_kwargs": {
+    "max_n_faces": 4,
     "batch_size": 256
   }
 }

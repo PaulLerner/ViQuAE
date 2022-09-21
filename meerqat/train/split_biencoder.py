@@ -3,6 +3,9 @@ Splits a BiEncoder in two (e.g. DPRBiEncoder in DPRQuestionEncoder and DPRContex
 The config file should be the same as for ``train.trainer`` in evaluation mode: 
 i.e. the path to the wanted checkpoint should be given in config['checkpoint']['resume_from_checkpoint'].
 
+You might get a warning like "weights were not used", this comes from load_pretrained_in_kwargs, don’t worry:
+If the checkpoint does not match the model an exception will be raised.
+
 Usage: split_biencoder.py <config> [--bert]
 
 Positional arguments:
