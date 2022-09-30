@@ -1,10 +1,29 @@
 """Misc. utility functions."""
 import torch
+from torch import nn
 import numpy as np
 
 from transformers.tokenization_utils_base import BatchEncoding
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+class TanhGate(nn.Module):
+    """
+    Flamingo-style tanh gating (init at 0) [1]_
+    
+    References
+    ----------
+    .. [1] Jean-Baptiste Alayrac et al. (2022). 
+       Flamingo: a Visual Language Model for Few-Shot Learning. ArXiv:2204.14198.
+    """
+    def __init__(self):
+        super().__init__()
+        self.gate_param = nn.Parameter(torch.tensor([0.]))
+        self.tanh = nn.Tanh()
+        
+    def forward(self, x):
+        return x * self.tanh(self.gate_param)
 
 
 def map_if_not_None(values, function, *args, default_value=None, **kwargs):
