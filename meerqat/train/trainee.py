@@ -18,6 +18,7 @@ from transformers.modeling_outputs import QuestionAnsweringModelOutput, ModelOut
 from transformers import BertForQuestionAnswering
 
 from .losses import _calc_mml
+from ..models.mm import FlamantEncoder
 
 
 class Trainee(nn.Module):
@@ -108,7 +109,7 @@ class BiEncoder(nn.Module):
     
     # gradient checkpointing: taken from transformers
     def _set_gradient_checkpointing(self, module, value=False):
-        if isinstance(module, BertEncoder):
+        if isinstance(module, (BertEncoder, FlamantEncoder)):
             module.gradient_checkpointing = value
             
     def gradient_checkpointing_enable(self):
