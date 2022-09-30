@@ -112,10 +112,18 @@ class MeerqatTrainer(Trainer):
             logger.debug(f"{name.ljust(120)}\t{(numel if param.requires_grad else 0):,d}\t{numel:,d}")
         logger.info(f"Froze {frozen:,d} parameters out of {total:,d}")
         return model
-        
+    
+    def get_weights_to_log(self, model):
+        logs = {}
+        weights_to_log = getattr(model, 'weights_to_log', {})
+        for name, tensor in weights_to_log.items():
+            logs[name] = tensor.cpu().detach().item()
+        return logs
+
     def log(self, logs: dict) -> None:
-        """Adds memory usage to the logs"""
+        """Adds memory usage and maybe some weights to the logs"""
         logs.update(max_memory_usage())
+        logs.update(self.get_weights_to_log(self.model))
         return super().log(logs)
 
     def write_predictions(self, predictions, resume_from_checkpoint):
@@ -242,7 +250,19 @@ class DPRBiEncoderTrainer(QuestionAnsweringTrainer):
         self.log_softmax = nn.LogSoftmax(1)
         self.loss_fct = nn.NLLLoss(reduction='mean')
         assert self.n_relevant_passages == 1
+        
+    def log(self, logs: dict) -> None:
+        """Maybe add weights of question and context model to the logs"""
+        question_logs = self.get_weights_to_log(self.model.question_model)
+        # add "question_" prefix
+        logs.update({f"question_{k}": question_logs[k] for k in list(question_logs.keys())})
+        
+        context_logs = self.get_weights_to_log(self.model.context_model)
+        # add "context_" prefix
+        logs.update({f"context_{k}": context_logs[k] for k in list(context_logs.keys())})
 
+        return super().log(logs)
+        
     def collate_fn(self, items):
         """
         Collate batch so that each question is associate with n_relevant_passages and M-n irrelevant ones.

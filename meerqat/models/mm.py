@@ -376,6 +376,14 @@ class FlamantModel(BertPreTrainedModel):
             self.image_embeddings[name] = ImageEmbedding(embedding_dim=self.config.hidden_size,
                                                          dropout=self.config.hidden_dropout_prob,
                                                          **image_kwarg)
+        self.weights_to_log = {}
+        # add pointers to the gate parameters so that they are logged in trainer
+        if self.config.gating:
+            for i, layer_module in enumerate(self.encoder.layer):
+                if isinstance(layer_module, FlamantLayer):
+                    self.weights_to_log[f"attn_gate_{i}"] = layer_module.attn_gate.gate_param
+                    self.weights_to_log[f"ffw_gate_{i}"] = layer_module.ffw_gate.gate_param
+                    
         # FIXME: switch to post_init if update transformers
         self.init_weights()
         
@@ -508,6 +516,9 @@ class DMREncoder(PreTrainedModel):
         self.config = config
         # FIXME: set add_pooling_layer=False
         self.bert_model = BertModel(config)
+        # add pointers to the gate parameters so that they are logged in trainer
+        self.weights_to_log = {}
+
         if self.config.n_faces > 0:
             self.face_embedding = FaceEmbedding(embedding_dim=self.config.hidden_size,
                                                 dropout=self.config.hidden_dropout_prob,
@@ -515,6 +526,7 @@ class DMREncoder(PreTrainedModel):
                                                 **self.config.face_kwargs)
             if self.config.gating:
                 self.face_gate = TanhGate()
+                self.weights_to_log["face_gate"] = self.face_gate.gate_param
             else:
                 self.face_gate = nn.Identity()
         else:
@@ -526,6 +538,7 @@ class DMREncoder(PreTrainedModel):
                                                          **image_kwarg)
             if self.config.gating:
                 self.image_gates[name] = TanhGate()
+                self.weights_to_log[f"{name}_gate"] = self.image_gates[name].gate_param
             else:
                 self.image_gates[name] = nn.Identity()
                         
