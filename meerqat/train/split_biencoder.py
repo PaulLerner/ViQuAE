@@ -1,15 +1,17 @@
 """
 Splits a BiEncoder in two (e.g. DPRBiEncoder in DPRQuestionEncoder and DPRContextEncoder).
-The config file should be the same as for ``train.trainer`` in evaluation mode: 
-i.e. the path to the wanted checkpoint should be given in config['checkpoint']['resume_from_checkpoint'].
+The config file should be the same as for ``train.trainer``.
 
 You might get a warning like "weights were not used", this comes from load_pretrained_in_kwargs, don’t worry:
 If the checkpoint does not match the model an exception will be raised.
 
-Usage: split_biencoder.py <config> [--bert]
+Usage: split_biencoder.py <config> [<checkpoint> --bert]
 
 Positional arguments:
-    <config>    Path to the JSON configuration file (passed as kwargs)
+    <config>        Path to the JSON configuration file (passed as kwargs)
+    <checkpoint>    Path to the BiEncoder checkpoint, optional. 
+                    If not provided, should be in the config file under checkpoint.resume_from_checkpoint,
+                    like the eval mode of ``train.trainer`.                    
 
 Options:
     --bert      Save BertModel instead of question_model and context_model
@@ -41,7 +43,7 @@ def split_biencoder(trainee, checkpoint, bert=False):
         Save BertModel instead of question_model and context_model (which then must have bert_model attribute).
         Defaults to False.        
     """
-    checkpoint_path = Path(checkpoint['resume_from_checkpoint'])
+    checkpoint_path = Path(checkpoint)
     state_dict = torch.load(checkpoint_path/WEIGHTS_NAME, map_location='cpu')
     trainee.load_state_dict(state_dict)
     question_model = trainee.question_model
@@ -67,4 +69,5 @@ if __name__ == '__main__':
         config = load_pretrained_in_kwargs(json.load(file))
     
     bert = args['--bert']
-    split_biencoder(config['trainee'], config['checkpoint'], bert=bert)
+    checkpoint = args['<checkpoint>'] if args['<checkpoint>'] is not None else config['checkpoint']['resume_from_checkpoint']
+    split_biencoder(config['trainee'], checkpoint, bert=bert)
