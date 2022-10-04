@@ -20,7 +20,7 @@ import torch
 from datasets import load_from_disk, set_caching_enabled
 
 from ..models.utils import device, prepare_inputs
-from ..models import mm
+from ..models.mm import MMConfig
 from ..data.loading import load_pretrained_in_kwargs
 
 
@@ -142,8 +142,8 @@ def get_inputs(batch, model, tokenizer, tokenization_kwargs={}, key='passage', k
         Should hold image features and be mappable from batch['index']
     """
     text_inputs = tokenizer(batch[key], **tokenization_kwargs)
-    # FIXME this is not robust
-    if isinstance(model, (mm.DMREncoder, mm.IntermediateLinearFusion)):
+    model_config = getattr(model, "config", None)
+    if model_config is not None and isinstance(model_config, MMConfig):
         if kb is not None:
             features = {"face_embedding", "face_box"} | model.config.image_kwargs.keys()
             # /!\ do not modify batch, copy before (else all the features of the KB will be saved). 
