@@ -1,396 +1,39 @@
 """
-Main training script based on transformers. Also holds Trainer subclasses.
+usage: trainer.py [-h] [-c CONFIG] [--print_config [={comments,skip_null,skip_default}+]]
+        {fit,validate,test,predict,tune} ...
 
-Usage: trainer.py <config>
+Main training script based on pytorch lightning.
 
-Positional arguments:
-    <config>    Path to the JSON configuration file (passed as kwargs)
+optional arguments:
+-h, --help            Show this help message and exit.
+-c CONFIG, --config CONFIG
+                        Path to a configuration file in json or yaml format.
+--print_config [={comments,skip_null,skip_default}+]
+                        Print configuration and exit.
+
+subcommands:
+For more details of each subcommand add it as argument followed by --help.
+
+{fit,validate,test,predict,tune}
+    fit                 Runs the full optimization routine.
+    validate            Perform one evaluation epoch over the validation set.
+    test                Perform one evaluation epoch over the test set.
+    predict             Run inference on your data.
+    tune                Runs routines to tune hyperparameters before training.
 """
-from docopt import docopt
-import json
-from pathlib import Path
 import warnings
-from tqdm import tqdm
 import collections
-import sys
-import logging
-import humanize
-import re
 
 import numpy as np
 import torch
-from torch import nn
-from torch.autograd import set_detect_anomaly
-from torch.utils.data.dataset import IterableDataset
-from torch.utils.data import RandomSampler
-import torch.distributed as dist
 
-from transformers import Trainer, TrainingArguments, trainer_callback, logging as t_logging
-from transformers.trainer_callback import TrainerState
-from datasets import load_from_disk, load_metric
-from transformers.deepspeed import deepspeed_init
-from transformers.file_utils import WEIGHTS_NAME, is_torch_tpu_available
-from transformers.trainer_pt_utils import (
-    IterableDatasetShard,
-    find_batch_size,
-    nested_concat,
-    nested_numpify
-)
-from transformers.trainer_utils import EvalLoopOutput, denumpify_detensorize
-if is_torch_tpu_available():
-    import torch_xla.distributed.parallel_loader as pl
+import pytorch_lightning as pl
+from pytorch_lightning.cli import LightningCLI
 
-import ranx
-
-from ..data.loading import load_pretrained_in_kwargs
 from ..models.qa import get_best_spans, format_predictions_for_squad
-from ..models.utils import debug_shape
-from . import metrics as metric_functions
 
 
-logging.basicConfig()
-logger = logging.getLogger(__name__)
-
-
-def max_memory_usage(human=False):
-    """
-    Gets max_memory_allocated per GPU.
-    
-    Parameters
-    ----------
-    human: bool, optional
-        make memory usage human-readable.
-        Defaults to machine-readable.
-    
-    Returns
-    -------
-    logs: dict
-        {GPU device: max_memory_allocated}
-    """
-    logs = {}
-    for i in range(torch.cuda.device_count()):
-        device = f"cuda:{i}"
-        value = torch.cuda.max_memory_allocated(device)
-        if human:
-            value = humanize.naturalsize(value, gnu=True)
-        logs[f"max_memory_{device}"] = value
-    return logs
-
-
-class MeerqatTrainer(Trainer):
-    """
-    Base class for all trainers. Provides only minimal changes to Trainer
-    
-    Parameters
-    ----------
-    *args, **kwargs: 
-        additionnal arguments are passed to Trainer.
-    model: nn.Module
-        see Trainer
-    freeze: str, optional
-        represents a regex used to match the model parameters to freeze
-        (i.e. set ``requires_grad = False``).
-        Defaults to None (keep model fully-trainable)
-    """
-    def __init__(self, model, *args, freeze=None, **kwargs):
-        if freeze is not None:
-            model = self.freeze(model, freeze)
-        super().__init__(model, *args, **kwargs)
-        self.prediction_file_name = "predictions.json"
-        self.metrics_file_name = "metrics.json"
-    
-    def freeze(self, model, regex):
-        regex = re.compile(regex)
-        total, frozen = 0, 0
-        logger.debug("Model parameters:\n"+"Name".ljust(120)+"\t#Trainable\t#Total")
-        for name, param in model.named_parameters():
-            numel = param.numel()
-            if regex.match(name):
-                param.requires_grad = False
-                frozen += numel
-            total += numel
-            logger.debug(f"{name.ljust(120)}\t{(numel if param.requires_grad else 0):,d}\t{numel:,d}")
-        logger.info(f"Froze {frozen:,d} parameters out of {total:,d}")
-        return model
-    
-    def get_weights_to_log(self, model):
-        logs = {}
-        weights_to_log = getattr(model, 'weights_to_log', {})
-        for name, tensor in weights_to_log.items():
-            logs[name] = tensor.cpu().detach().item()
-        return logs
-
-    def log(self, logs: dict) -> None:
-        """Adds memory usage and maybe some weights to the logs"""
-        logs.update(max_memory_usage())
-        logs.update(self.get_weights_to_log(self.model))
-        return super().log(logs)
-
-    def write_predictions(self, predictions, resume_from_checkpoint):
-        if isinstance(predictions, (list, dict)):
-            with open(resume_from_checkpoint/self.prediction_file_name, "w") as file:
-                json.dump(predictions, file)
-        else:
-            raise NotImplementedError()
-
-    def write_metrics(self, metrics, resume_from_checkpoint):
-        print(metrics)
-        with open(resume_from_checkpoint/self.metrics_file_name, "w") as file:
-            json.dump(metrics, file)
-
-
-class QuestionAnsweringTrainer(MeerqatTrainer):
-    """
-    Base class for Question Answering trainers. Should work for both IR and RC.
-    Overrides some methods because we need to create the batch of questions and passages on-the-fly
-    Because the inputs should be shaped like (N * M, L), where:
-        * N - number of distinct questions
-        * M - number of passages per question in a batch
-        * L - sequence length
-
-    Parameters
-    ----------
-    *args, **kwargs: 
-        additional arguments are passed to MeerqatTrainer
-    kb: str, optional
-        path towards the knowledge base (Dataset) used to get the passages
-        Optional because not needed in ICTTrainer, mandatory for the other trainers.
-    M: int, optional
-        Number of passages (relevant or irrelevant) per question in a batch
-        Defaults to 24
-    n_relevant_passages: int, optional
-        Defaults to 1
-    search_key: str, optional
-        This column in the dataset suffixed by '_indices' and '_scores' should hold the result of information retrieval
-        used during evaluation (e.g. the output of ir.search)
-        Suffixed by "_provenance_indices" and "_irrelevant_indices" it should hold:
-            1. the union of relevant search and provenance_indices
-            2. irrelevant results from the search
-        used during training (according to M and n_relevant_passages)
-        Defaults to 'search'
-    tokenization_kwargs: dict, optional
-        To be passed to self.tokenizer
-    """
-    def __init__(self, *args, kb=None, M=24, n_relevant_passages=1, search_key='search', tokenization_kwargs=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        assert self.tokenizer is not None
-        if kb is not None:
-            self.kb = load_from_disk(kb)
-        else:
-            self.kb = None
-        self.M = M
-        assert n_relevant_passages <= M
-        self.n_relevant_passages = n_relevant_passages
-        self.search_key = search_key
-        default_tokenization_kwargs = dict(return_tensors='pt', padding='max_length', truncation=True)
-        if tokenization_kwargs is None:
-            tokenization_kwargs = {}
-        default_tokenization_kwargs.update(tokenization_kwargs)
-        self.tokenization_kwargs = default_tokenization_kwargs
-        self.data_collator = self.collate_fn
-
-        # we need those ‘un-used’ columns to actually create the batch the model will use
-        if self.args.remove_unused_columns:
-            warnings.warn(f'Setting args.remove_unused_columns to False')
-            self.args.remove_unused_columns = False
-
-    def get_training_passages(self, item):
-        """
-        Parameters
-        ----------
-        item: dict
-            item (e.g. question) from self.train_dataset or self.eval_dataset.
-        
-        Returns
-        -------
-        relevant_passages, irrelevant_passages: list[dict]
-            List of relevant and irrelevant passages selected from self.kb
-            according to:
-                - self.n_relevant_passages
-                - self.M
-                - self.search_key
-        """
-        relevant_passages = []
-        all_relevant_indices = item[self.search_key+"_provenance_indices"]
-        n_relevant = min(len(all_relevant_indices), self.n_relevant_passages)
-        if n_relevant > 0:
-            relevant_indices = np.random.choice(all_relevant_indices, n_relevant, replace=False)
-            if len(relevant_indices) > 0:
-                relevant_passages = self.kb.select(relevant_indices)
-        irrelevant_passages = []
-        all_irrelevant_indices = item[self.search_key+"_irrelevant_indices"]
-        n_irrelevant = min(len(all_irrelevant_indices), self.M-self.n_relevant_passages)
-        if n_irrelevant > 0:
-            irrelevant_indices = np.random.choice(all_irrelevant_indices, n_irrelevant, replace=False)
-            if len(irrelevant_indices) > 0:
-                irrelevant_passages = self.kb.select(irrelevant_indices)
-        elif n_relevant <= 0:
-            warnings.warn(f"Didn't find any passage for question {item['id']}")
-        return relevant_passages, irrelevant_passages
-
-
-class DPRBiEncoderTrainer(QuestionAnsweringTrainer):
-    """
-    Model should be a BiEncoder (or subclass). 
-    Loss is computed in ``compute_loss`` (and not in model, like usually in Trainer).
-    
-    The training objective is to minimize the negative log-likelihood of the similarities (dot product)
-    between the questions and the passages embeddings, as described in [1]_.
-    Therefore there should be only one relevant passage per question (i.e. ``self.n_relevant_passages == 1``)
-    This objective is also used in subclasses for visual questions and visual passages.
-    
-    References
-    ----------
-    .. [1] Vladimir Karpukhin, Barlas Oguz, Sewon Min, Patrick Lewis, Ledell Wu, Sergey Edunov, Danqi Chen, Wen-tau Yih. 
-       Dense Passage Retrieval for Open-Domain Question Answering. 
-       Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 6769–6781, 2020.
-    """
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.log_softmax = nn.LogSoftmax(1)
-        self.loss_fct = nn.NLLLoss(reduction='mean')
-        assert self.n_relevant_passages == 1
-        
-    def log(self, logs: dict) -> None:
-        """Maybe add weights of question and context model to the logs"""
-        question_logs = self.get_weights_to_log(self.model.question_model)
-        # add "question_" prefix
-        logs.update({f"question_{k}": question_logs[k] for k in list(question_logs.keys())})
-        
-        context_logs = self.get_weights_to_log(self.model.context_model)
-        # add "context_" prefix
-        logs.update({f"context_{k}": context_logs[k] for k in list(context_logs.keys())})
-
-        return super().log(logs)
-        
-    def collate_fn(self, items):
-        """
-        Collate batch so that each question is associate with n_relevant_passages and M-n irrelevant ones.
-        Also tokenizes input strings
-
-            * N - number of questions in a batch
-            * M - number of passages per questions
-            * d - dimension of the model/embeddings
-
-        Returns (a dict of)
-        -------------------
-        question_inputs: dict[torch.LongTensor]
-            input_ids: torch.LongTensor
-                shape (N, L)
-            **kwargs: 
-                more tensors depending on the tokenizer, e.g. attention_mask
-        context_inputs: dict[torch.LongTensor]
-            input_ids: torch.LongTensor
-                shape (N*M, L)
-                The first N rows correspond to the relevant contexts for the N questions
-                The rest N*(M-1) rows are irrelevant contexts for all questions.
-            **kwargs: 
-                idem
-        """
-        n_irrelevant_passages = self.M-self.n_relevant_passages
-        questions, relevant_passages, irrelevant_passages, labels = [], [], [], []
-        for i, item in enumerate(items):
-            relevant_passage, irrelevant_passage = self.get_training_passages(item)
-            relevant_passage, irrelevant_passage = [p['passage'] for p in relevant_passage], [p['passage'] for p in  irrelevant_passage]
-            if len(relevant_passage) < 1:
-                relevant_passage = ['']
-                labels.append(self.loss_fct.ignore_index)
-            else:
-                labels.append(i)
-            if len(irrelevant_passage) < n_irrelevant_passages:
-                irrelevant_passage.extend(['']*(n_irrelevant_passages-len(irrelevant_passage)))
-            questions.append(item['input'])
-            relevant_passages.extend(relevant_passage)
-            irrelevant_passages.extend(irrelevant_passage)
-
-        question_inputs = self.tokenizer(questions, **self.tokenization_kwargs)
-        context_inputs = self.tokenizer(relevant_passages + irrelevant_passages, **self.tokenization_kwargs)
-        labels = torch.tensor(labels)
-        batch = dict(question_inputs=question_inputs, context_inputs=context_inputs, labels=labels)
-        return batch
-
-    def compute_loss(self, model, inputs, return_outputs=False):
-        """
-        Calculates In-batch negatives schema loss and supports to run it in DDP mode by exchanging the representations across all the nodes.
-        Adapted from https://github.com/facebookresearch/DPR/blob/main/train_dense_encoder.py
-
-        Notes
-        -----
-        This means that the whole representations of questions and contexts, and their similarity matrix, must fit on a single GPU.
-        """
-        if self.label_smoother is not None:
-            raise NotImplementedError()
-
-        local_labels = inputs.pop('labels', None)  # (N, )
-
-        outputs = model(**inputs)
-
-        # Save past state if it exists
-        # TODO: this needs to be fixed and made cleaner later.
-        if self.args.past_index >= 0:
-            self._past = outputs[self.args.past_index]
-
-        if local_labels is None:
-            # FIXME: this returns representations and not similarities
-            return (None, outputs) if return_outputs else None
-
-        local_question_representations = outputs.question_pooler_output  # (N, d)
-        local_context_representations = outputs.context_pooler_output  # (N*M, d)
-        if self.args.world_size > 1:
-            # copies local representations (in DPR they are moved to CPU but I got a RuntimeError: "Tensors must be CUDA")
-            question_representations_to_send = torch.empty_like(local_question_representations).copy_(local_question_representations).detach_()
-            context_representations_to_send = torch.empty_like(local_context_representations).copy_(local_context_representations).detach_()
-            labels_to_send = torch.empty_like(local_labels).copy_(local_labels)
-
-            # gathers representations from other GPUs
-            question_representations_gatherer = [torch.empty_like(question_representations_to_send) for _ in range(self.args.world_size)]
-            context_representations_gatherer = [torch.empty_like(context_representations_to_send) for _ in range(self.args.world_size)]
-            labels_gatherer = [torch.empty_like(labels_to_send) for _ in range(self.args.world_size)]
-            dist.all_gather(question_representations_gatherer, question_representations_to_send)
-            dist.all_gather(context_representations_gatherer, context_representations_to_send)
-            dist.all_gather(labels_gatherer, labels_to_send)
-            
-            # keep local vector in the local_rank index (taken from DPR, to not loose the gradients?)
-            label_shift = 0
-            global_question_representations, global_context_representations, global_labels = [], [], []
-            gatherers = zip(question_representations_gatherer, context_representations_gatherer, labels_gatherer)
-            for i, (received_question_representations, received_context_representations, received_labels) in enumerate(gatherers):
-                # receiving representations from other GPUs
-                if i != self.args.local_rank:
-                    global_question_representations.append(received_question_representations.to(local_question_representations.device))
-                    global_context_representations.append(received_context_representations.to(local_context_representations.device))
-                    # labels are defined at the batch-level so we need to shift them when concatening batches
-                    received_labels[received_labels!=self.loss_fct.ignore_index] += label_shift
-                    label_shift += received_context_representations.shape[0]  # N*M
-                    global_labels.append(received_labels.to(local_labels.device))
-                # keep local representation
-                else:
-                    global_question_representations.append(local_question_representations)
-                    global_context_representations.append(local_context_representations)
-                    # labels are defined at the batch-level so we need to shift them when concatening batches
-                    local_labels[local_labels!=self.loss_fct.ignore_index] += label_shift
-                    label_shift += local_context_representations.shape[0]  # N*M
-                    global_labels.append(local_labels)
-            global_question_representations = torch.cat(global_question_representations, dim=0)
-            global_context_representations = torch.cat(global_context_representations, dim=0)
-            global_labels = torch.cat(global_labels, dim=0)
-        else:
-            global_question_representations = local_question_representations  # (N, d)
-            global_context_representations = local_context_representations  # (N*M, d)
-            global_labels = local_labels  # (N, )
-
-        # compute similarity
-        similarities = global_question_representations @ global_context_representations.T  # (N, N*M)
-        log_probs = self.log_softmax(similarities)
-
-        loss = self.loss_fct(log_probs, global_labels)
-
-        # beware of https://github.com/huggingface/transformers/blob/master/src/transformers/trainer.py#L2513 !!
-        # do NOT return log_probs outside of a dict else it will get truncated
-        return (loss, dict(log_probs=log_probs)) if return_outputs else loss
-
-
-class MMTrainer(DPRBiEncoderTrainer):
+class MMTrainer:
     """
         - loads pre-computed image features along with text 
         - => overrides collate_fn
@@ -412,6 +55,7 @@ class MMTrainer(DPRBiEncoderTrainer):
         Optional to ease inheritance
     """
     def __init__(self, *args, image_kb=None, **kwargs):
+        raise NotImplementedError("Compatible with transformers but not lightning")
         super().__init__(*args, **kwargs)
         if image_kb is not None:
             self.image_kb = load_from_disk(image_kb)
@@ -603,6 +247,7 @@ class ICTTrainer(MMTrainer):
     def __init__(self, *args, sentences_per_target=4, prepend_title=False, 
                  text_mask_rate=1.0, image_mask_rate=1.0, **kwargs):
         super().__init__(*args, **kwargs)
+        raise NotImplementedError("Compatible with transformers but not lightning")
         self.kb = None
         self.image_kb = None
         self.sentences_per_target = sentences_per_target
@@ -726,7 +371,7 @@ class ICTTrainer(MMTrainer):
         return batch
 
 
-class MultiPassageBERTTrainer(QuestionAnsweringTrainer):
+class MultiPassageBERTTrainer:
     """
     Specific for RC, more precisely MultiPassageBERT
     (will I manage to code an extra-level of abstraction, e.g. ReadingComprehensionTrainer?)
@@ -757,6 +402,7 @@ class MultiPassageBERTTrainer(QuestionAnsweringTrainer):
     """
     def __init__(self, *args, max_n_answers=10, ignore_keys=['answer_strings'], 
                  train_original_answer_only=True, oracle=False, run_path=None, **kwargs):
+        raise NotImplementedError("Compatible with transformers but not lightning")
         super().__init__(*args, **kwargs)
         self.max_n_answers = max_n_answers
         self.ignore_keys = ignore_keys
@@ -924,7 +570,7 @@ class MultiPassageBERTTrainer(QuestionAnsweringTrainer):
         prediction_loss_only: bool = None,
         ignore_keys: list = None,
         metric_key_prefix: str = "eval",
-    ) -> EvalLoopOutput:
+    ):
         """
         Same as Trainer.evaluation_loop but does not truncate output to the size of the dataset because
         there is M passages per question so the output is M times the size of the dataset
@@ -1108,225 +754,17 @@ class MultiPassageBERTTrainer(QuestionAnsweringTrainer):
                 metrics[f"{metric_key_prefix}_{key}"] = metrics.pop(key)
 
         return EvalLoopOutput(predictions=predictions, label_ids=None, metrics=metrics, num_samples=num_samples)
-
-
-def get_checkpoint(resume_from_checkpoint: str, *args, **kwargs):
-    """
-    Utility function. 
     
-    Parameters
-    ----------
-    resume_from_checkpoint: str, optional
-        Path (possibly regex) to the directory(ies) checkpointed during training (that hold ``pytorch_model.bin`` etc.)
-    
-    Returns
-    -------
-    resume_from_checkpoints: list[Path]
-        List of path to the checkpoints, sorted by ascending training step.
-    """
-    if resume_from_checkpoint is None:
-        return [None]
-    if args or kwargs:
-        warnings.warn(f"ignoring additional arguments:\n{args}\n{kwargs}")
-    cpt = Path(resume_from_checkpoint)
-    # weird trick to glob using pathlib
-    resume_from_checkpoints = cpt.parent.glob(cpt.name)
-    # sort by checkpoint number
-    resume_from_checkpoints = sorted(resume_from_checkpoints, key=lambda path: int(path.name.split('-')[-1]))
-    return resume_from_checkpoints
 
-
-def subsample_dataset(dataset, num_shards):
-    """
-    Shuffles and shards the input dataset in num_shards.
-    
-    Parameters
-    ----------
-    dataset: Dataset
-    num_shards: int
-    
-    Returns
-    -------
-    dataset: Dataset
-        First shard.
-    """
-    before_len = len(dataset)
-    dataset = dataset.shuffle(seed=0)
-    dataset = dataset.shard(num_shards, 0)
-    after_len = len(dataset)
-    logger.debug(f"Sharded the dataset from {before_len} to {after_len} items")
-    return dataset
-
-
-def filter_rels(dataset, search_key):
-    """
-    Filter out questions of the dataset without any relevant passages.
+def main():
+    cli = LightningCLI(
+        trainer_class=pl.Trainer, 
+        # same default as transformers although it is unlikely that the calls are in the exact same order
+        seed_everything_default=42, 
+        description='Main training script based on pytorch lightning.'
+    )
+    return cli
     
     
-    Parameters
-    ----------
-    dataset: Dataset
-    search_key: str
-        see QuestionAnsweringTrainer
-    
-    Returns
-    -------
-    dataset: Dataset
-        With at least one relevant passage for all questions.
-    """
-    before_len = len(dataset)
-    # FIXME: should also work when a ranx Run is used instead of search_key
-    dataset = dataset.filter(lambda item: len(item[f"{search_key}_provenance_indices"]) > 0)
-    after_len = len(dataset)
-    logger.debug(f"Filtered the dataset with empty '{search_key}_provenance_indices' from {before_len} to {after_len} items")
-    return dataset
-    
-    
-def instantiate_trainer(trainee, trainer_class="MultiPassageBERTTrainer", debug=False, 
-                        train_dataset=None, eval_dataset=None, metric='squad', 
-                        training_kwargs={}, callbacks_args=[], 
-                        train_shards=None, eval_shards=None, 
-                        filter_train_rels=False, filter_eval_rels=False,
-                        search_key=None, **kwargs):
-    """
-    Instantiates Trainer and TrainingArguments, loads and processes data
-    
-    Parameters
-    ----------
-    trainee: nn.Module
-        see meerqat.train.trainee
-    trainer_class: str, optional
-        Name of one of the classes defined above.
-    debug: bool, optional
-        see torch.autograd.detect_anomaly
-    train_dataset, eval_dataset: str, optional
-        Path to the train or eval datasets
-    metric: str, optional
-        Name of a metric defined in meerqat.train.metrics or in datasets
-    training_kwargs: dict, optional
-        Passed to TrainingArguments
-    callbacks_args: list[dict], optional
-        Added to trainer with Trainer.add_callback
-    train_shards, eval_shards: int, optional
-        see subsample_dataset
-    filter_train_rels, filter_eval_rels: bool, optional
-        see filter_rels
-    search_key: str, optional
-        see QuestionAnsweringTrainer
-    **kwargs:
-        Passed to Trainer
-        
-    Returns
-    -------
-    trainer: Trainer
-    training_args: TrainingArguments
-    """
-    # debug (see torch.autograd.detect_anomaly)
-    set_detect_anomaly(debug)
-
-    # data
-    if train_dataset is not None:
-        train_dataset = load_from_disk(train_dataset)
-        if train_shards is not None:
-            train_dataset = subsample_dataset(train_dataset, train_shards)
-        # filter questions without any relevant passages to train
-        if filter_train_rels:
-            train_dataset = filter_rels(train_dataset, search_key=search_key)
-    if eval_dataset is not None:
-        eval_dataset = load_from_disk(eval_dataset)
-        if eval_shards is not None:
-            eval_dataset = subsample_dataset(eval_dataset, eval_shards)
-        # filter questions without any relevant passages to train
-        if filter_eval_rels:
-            eval_dataset = filter_rels(eval_dataset, search_key=search_key)
-
-    # training
-    # revert the post-init that overrides do_eval
-    do_eval = training_kwargs.pop('do_eval', False)
-    training_args = TrainingArguments(**training_kwargs)
-    training_args.do_eval = do_eval
-
-    # metrics come in priority from meerqat.train.metrics
-    if metric is not None:
-        compute_metrics = getattr(metric_functions, metric, None)
-        # or from HF's datasets
-        if compute_metrics is None:
-            metric = load_metric(metric)
-            compute_metrics = metric.compute
-    else:
-        compute_metrics = None
-
-    TrainerClass = getattr(sys.modules[__name__], trainer_class)
-    trainer = TrainerClass(model=trainee, args=training_args,
-                           train_dataset=train_dataset, eval_dataset=eval_dataset,
-                           compute_metrics=compute_metrics, search_key=search_key, **kwargs)
-    # training callbacks
-    for callback in callbacks_args:
-        CallbackClass = getattr(trainer_callback, callback.pop("Class"))
-        trainer.add_callback(CallbackClass(**callback))
-
-    return trainer, training_args
-
-
 if __name__ == "__main__":
-    logger.debug(f"entering main {max_memory_usage(human=True)}")
-    # load and parse arguments
-    args = docopt(__doc__)
-    config_path = Path(args['<config>'])
-    with open(config_path, "r") as file:
-        config = load_pretrained_in_kwargs(json.load(file))
-
-    logger.debug(f"after loading pre-trained models {max_memory_usage(human=True)}")
-
-    verbosity = config.pop("verbosity", None)
-    if verbosity is not None:
-        t_logging.set_verbosity(verbosity)
-        logger.setLevel(verbosity)
-
-    checkpoint = config.pop("checkpoint", {})
-    trainer, training_args = instantiate_trainer(**config)
-    device = trainer.args.device
-    logger.debug(f"after instantiating trainer {max_memory_usage(human=True)}")
-    if training_args.do_train:
-        trainer.train(**checkpoint)
-    elif training_args.do_eval:
-        resume_from_checkpoints = get_checkpoint(**checkpoint)
-        for resume_from_checkpoint in tqdm(resume_from_checkpoints, desc="Evaluation"):
-            # zero-shot test
-            if resume_from_checkpoint is None:
-                metrics = trainer.evaluate()
-                print(metrics)
-                continue
-            # load state dict
-            state_dict_path = resume_from_checkpoint / WEIGHTS_NAME
-            if not state_dict_path.exists():
-                continue
-            state_dict = torch.load(state_dict_path, map_location=device)
-            trainer._load_state_dict_in_model(state_dict)
-
-            # optionally load trainer state for better logging
-            trainer_state = resume_from_checkpoint/"trainer_state.json"
-            if trainer_state.is_file():
-                trainer.state = TrainerState.load_from_json(trainer_state)
-            else:
-                warnings.warn("couldn't load trainer state, TB logging might use an inappropriate step")
-            metrics = trainer.evaluate()
-            trainer.write_metrics(metrics, resume_from_checkpoint)
-    elif training_args.do_predict:
-        resume_from_checkpoints = get_checkpoint(**checkpoint)
-        for resume_from_checkpoint in tqdm(resume_from_checkpoints, desc="Prediction"):
-            # load state dict
-            state_dict_path = resume_from_checkpoint / WEIGHTS_NAME
-            if not state_dict_path.exists():
-                continue
-            state_dict = torch.load(state_dict_path, map_location=device)
-            trainer._load_state_dict_in_model(state_dict)
-
-            # run model on evaluation dataset
-            prediction_output = trainer.predict(trainer.eval_dataset)
-            trainer.write_metrics(prediction_output.metrics, resume_from_checkpoint)
-            trainer.write_predictions(prediction_output.predictions, resume_from_checkpoint)
-    else:
-        warnings.warn("Did nothing except instantiate the trainer, "
-                      "you probably want to set do_train, do_eval or do_predict to True"
-                      f"see {training_args.__doc__}")
+    main()

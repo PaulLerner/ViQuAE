@@ -1,4 +1,7 @@
 """Metrics to be used in trainer."""
+import warnings
+
+# TODO https://torchmetrics.readthedocs.io/en/stable/retrieval/mrr.html
 
 def retrieval(eval_prediction, ignore_index=-100):
     """
@@ -17,7 +20,9 @@ def retrieval(eval_prediction, ignore_index=-100):
         Labels with this value are not taken into account when computing metrics.
         Defaults to -100
     """
-    metrics = {}
+    warnings.warn("Not implemented. Returning empty dict.")
+    metrics = {}    
+    return metrics
 
     log_probs = eval_prediction.predictions
     dataset_size, N_times_M = log_probs.shape

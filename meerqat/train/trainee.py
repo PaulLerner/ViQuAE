@@ -1,96 +1,152 @@
 """
-Trainee is a nn.Module that computes the loss and returns it either as:
-    - first element of a tuple 
-    - in the loss key of a dict or ModelOutput
-so it is compatible with Trainer.
-Exception is made for BiEncoder that simply wraps both encoders outputs
-so it is compatible with DPRBiEncoderTrainer (and subclasses).
+Trainee is a pl.LightningModule that computes the loss so it is compatible with Trainer.
 """
-from dataclasses import dataclass
-from typing import Optional, Tuple
 from functools import partial
+import re
 
 import torch.nn as nn
 import torch
-from transformers.models.dpr.modeling_dpr import DPRReaderOutput
+from torch.optim import AdamW
 from transformers.models.bert.modeling_bert import BertEncoder
-from transformers.modeling_outputs import QuestionAnsweringModelOutput, ModelOutput
 from transformers import BertForQuestionAnswering
+import pytorch_lightning as pl
 
-from .losses import _calc_mml
+from ..data.loading import get_pretrained
 from ..models.mm import FlamantEncoder
+from .optim import _calc_mml, LinearLRWithWarmup
+from .outputs import MultiPassageBERTOutput, BiEncoderOutput, DPRBiEncoderOutput
+from .metrics import retrieval
 
 
-class Trainee(nn.Module):
-    """Base class for all Trainee models (to be trained by a Trainer)
-    Should implement a forward function that returns loss between output and target (as a tuple, dict or ModelOutput)
-    The actual forward pass should be done using the model attribute
+class Trainee(pl.LightningModule):
     """
-    def __init__(self, model):
-        super().__init__()
-        self.model = model
-
-
-@dataclass
-class DPRReaderForQuestionAnsweringOutput(DPRReaderOutput):
+    Base class for all Trainee models (to be trained by a Trainer)
+    
+    Parameters
+    ----------    
+    freeze: str, optional
+        represents a regex used to match the model parameters to freeze
+        (i.e. set ``requires_grad = False``).
+        Defaults to None (keep model fully-trainable)
     """
-    Same as DPRReaderOutput with an extra loss attribute (or as QuestionAnsweringModelOutput with relevance_logits)
-
-    Notes
-    -----
-    Unfortunately we have to redefine everything so that loss is the first attribute
-    """
-    loss: Optional[torch.FloatTensor] = None
-    start_logits: torch.FloatTensor = None
-    end_logits: torch.FloatTensor = None
-    relevance_logits: torch.FloatTensor = None
-    hidden_states: Optional[Tuple[torch.FloatTensor]] = None
-    attentions: Optional[Tuple[torch.FloatTensor]] = None
-
-
-@dataclass
-class MultiPassageBERTOutput(QuestionAnsweringModelOutput):
-    """
-    Same as QuestionAnsweringModelOutput but with start and end log-probabilities
-
-    (equivalent to softmax(start_logits) when there is only one passage per question)
-    """
-    start_log_probs: torch.FloatTensor = None
-    end_log_probs: torch.FloatTensor = None
-
-
-@dataclass 
-class BiEncoderOutput(ModelOutput):
-    """Simply wraps both encoders output in one."""
-    question_pooler_output: Optional[torch.FloatTensor] = None
-    context_pooler_output: Optional[torch.FloatTensor] = None
-
-
-@dataclass 
-class DPRBiEncoderOutput(BiEncoderOutput):
-    """
-    Outputs from the question and context encoders 
-    (same as DPRQuestionEncoderOutput, DPRContextEncoderOutput with prefixes)
-    """
-    question_pooler_output: Optional[torch.FloatTensor] = None
-    question_hidden_states: Optional[Tuple[torch.FloatTensor]] = None
-    question_attentions: Optional[Tuple[torch.FloatTensor]] = None
-    context_pooler_output: Optional[torch.FloatTensor] = None
-    context_hidden_states: Optional[Tuple[torch.FloatTensor]] = None
-    context_attentions: Optional[Tuple[torch.FloatTensor]] = None
-
-
-class BiEncoder(nn.Module):
+    def __init__(self, *args, freeze=None, **kwargs):
+        """
+        Base class for all trainers. Provides only minimal changes to pl.Trainer
+        
+        """  
+        super().__init__(*args, **kwargs)
+        if freeze is not None:
+            self.freeze(freeze)
+        
+    def step(self, *args, **kwargs):
+        raise NotImplementedError("Subclass and implement step.")
+    
+    def training_step(self, *args, **kwargs):
+        """Step and log training metrics"""
+        outputs = self.step(*args, **kwargs)
+        self.log("train/loss", outputs['loss'])
+        return outputs
+    
+    def validation_step(self, *args, **kwargs):
+        """Step and log validation metrics"""
+        outputs = self.step(*args, **kwargs)
+        self.log("eval/loss", outputs['loss'])
+        return outputs
+    
+    def test_step(self, *args, **kwargs):
+        """Step and log test metrics"""
+        outputs = self.step(*args, **kwargs)
+        self.log("test/loss", outputs['loss'])
+        return outputs
+    
+    def eval_epoch_end(self, eval_outputs):
+        raise NotImplementedError("Subclass and implement eval_epoch_end.")
+    
+    def validation_epoch_end(self, *args, **kwargs):
+        """eval_epoch_end and log"""
+        metrics = self.eval_epoch_end(*args, **kwargs)
+        for k, v in metrics.items():
+            self.log(f"eval/{k}", v)
+            
+    def test_epoch_end(self, *args, **kwargs):
+        """eval_epoch_end and log"""
+        metrics = self.eval_epoch_end(*args, **kwargs)
+        for k, v in metrics.items():
+            self.log(f"test/{k}", v)
+            
+    def get_weights_to_log(self, model):
+        logs = {}
+        weights_to_log = getattr(model, 'weights_to_log', {})
+        for name, tensor in weights_to_log.items():
+            logs[name] = tensor.cpu().detach().item()
+        return logs
+    
+    def freeze(self, regex):
+        """
+        Overrides freeze to freeze only parameters that match the regex.
+        Caveat: does not call .eval() so does not disable Dropout
+        """
+        regex = re.compile(regex)
+        total, frozen = 0, 0
+        print("Model parameters:\n"+"Name".ljust(120)+"\t#Trainable\t#Total")
+        for name, param in self.named_parameters():
+            numel = param.numel()
+            if regex.match(name):
+                param.requires_grad = False
+                frozen += numel
+            total += numel
+            print(f"{name.ljust(120)}\t{(numel if param.requires_grad else 0):,d}\t{numel:,d}")
+        print(f"Froze {frozen:,d} parameters out of {total:,d}")
+        
+        
+class BiEncoder(Trainee):
     """    
+    The training objective is to minimize the negative log-likelihood of the similarities (dot product)
+    between the questions and the passages embeddings, as described in [3]_.
+    
+    References
+    ----------
+    .. [3] Vladimir Karpukhin, Barlas Oguz, Sewon Min, Patrick Lewis, Ledell Wu, Sergey Edunov, Danqi Chen, Wen-tau Yih. 
+       Dense Passage Retrieval for Open-Domain Question Answering. 
+       Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 6769–6781, 2020.
+
     Parameters
     ----------
-    question_model, context_model: nn.Module
+    question_class: str
+        Name of the class used for question_model. See get_class_from_name.
+    question_model_name_or_path: str
+        Passed to from_pretrained. See transformers.PreTrainedModel.from_pretrained
+    context_class: str, optional
+        Analog to question_class for context_model. Defaults to question_class.
+    context_model_name_or_path: str
+        Analog to question_model_name_or_path for context_model. Defaults to question_model_name_or_path.
+    warmup_steps: int, optional
+        Defaults to no warm-up
     """
     supports_gradient_checkpointing = True
-    def __init__(self, question_model, context_model):
+    def __init__(self, question_class, question_model_name_or_path, 
+                 context_class=None, context_model_name_or_path=None, 
+                 warmup_steps=0, lr=2e-5, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0):
         super().__init__()
-        self.question_model = question_model
-        self.context_model = context_model
+        # default to symmetric encoders
+        context_class = question_class if context_class is None else context_class
+        context_model_name_or_path = question_model_name_or_path if context_model_name_or_path is None else context_model_name_or_path
+        
+        # init encoders
+        self.question_model = get_pretrained(question_class, pretrained_model_name_or_path=question_model_name_or_path)
+        self.context_model = get_pretrained(context_class, pretrained_model_name_or_path=context_model_name_or_path)
+        
+        # loss and metrics
+        self.log_softmax = nn.LogSoftmax(1)
+        self.loss_fct = nn.NLLLoss(reduction='mean')
+        self.compute_metrics = retrieval
+        
+        # scheduling and optimization
+        self.warmup_steps = warmup_steps
+        self.lr = lr
+        self.betas = betas
+        self.eps = eps
+        self.weight_decay = weight_decay
 
     def forward(self, question_inputs, context_inputs):
         """        
@@ -106,7 +162,64 @@ class BiEncoder(nn.Module):
         return BiEncoderOutput(
             question_pooler_output=question_outputs.pooler_output,
             context_pooler_output=context_outputs.pooler_output)
+        
+    # TODO delete once I understand how to setup scheduling interval in config.yaml
+    def configure_optimizers(self):
+        """Prepare optimizer and schedule (linear warmup and decay)"""
+        optimizer = AdamW(self.parameters(), lr=self.lr, betas=self.betas, eps=self.eps, weight_decay=self.weight_decay)
+        
+        total_steps=self.trainer.estimated_stepping_batches
+        scheduler = LinearLRWithWarmup(
+            optimizer,
+            warmup_steps=self.warmup_steps, total_steps=total_steps
+        )
+        scheduler = {"scheduler": scheduler, "interval": "step", "frequency": 1}
+        return [optimizer], [scheduler]
     
+    def log_question_and_context(self):
+        """Maybe add weights of question and context model to the logs"""
+        logs = {}
+        # TODO
+        return logs
+        question_logs = self.get_weights_to_log(self.question_model)
+        # add "question_" prefix
+        logs.update({f"question_{k}": question_logs[k] for k in list(question_logs.keys())})
+        
+        context_logs = self.get_weights_to_log(self.context_model)
+        # add "context_" prefix
+        logs.update({f"context_{k}": context_logs[k] for k in list(context_logs.keys())})
+
+        return logs
+    
+    def step(self, inputs, _):
+        """
+        Calculates In-batch negatives schema loss and supports to run it in DDP mode 
+        by exchanging the representations across all the nodes.
+        
+        Adapted from https://github.com/facebookresearch/DPR/blob/main/train_dense_encoder.py
+        and https://github.com/Lightning-AI/lightning/discussions/14390
+        
+        Notes
+        -----
+        This means that the whole representations of questions and contexts, and their similarity matrix, must fit on a single GPU.
+        """            
+        local_labels = inputs.pop('labels')  # (N, )
+
+        outputs = self(**inputs)
+
+        global_outputs = self.all_gather(outputs, sync_grads=True)
+        global_labels = self.all_gather(local_labels, sync_grads=True)
+
+        # compute similarity
+        similarities = global_outputs.question_pooler_output @ global_outputs.context_pooler_output.T  # (N, N*M)
+        log_probs = self.log_softmax(similarities)
+
+        loss = self.loss_fct(log_probs, global_labels)
+        return dict(loss=loss, log_probs=log_probs)   
+    
+    def eval_epoch_end(self, eval_outputs):
+        return self.compute_metrics(eval_outputs)
+        
     # gradient checkpointing: taken from transformers
     def _set_gradient_checkpointing(self, module, value=False):
         if isinstance(module, (BertEncoder, FlamantEncoder)):
@@ -156,6 +269,7 @@ class DPRBiEncoder(BiEncoder):
     def __init__(self, question_model, context_model):
         """
         """
+        raise NotImplementedError("Use BiEncoder instead. It is fine unless you need specific DPRBiEncoderOutput.")
         super().__init__(question_model=question_model, context_model=context_model)
     
     def forward(self, question_inputs, context_inputs):
@@ -190,63 +304,6 @@ class DPRBiEncoder(BiEncoder):
             context_attentions=context_outputs.attentions)
 
 
-class DPRReaderForQuestionAnswering(Trainee):
-    def forward(self,
-                input_ids, attention_mask,
-                start_positions=None, end_positions=None, answer_mask=None,
-                return_dict=None, **kwargs):
-        """Based on transformers.BertForQuestionAnswering and dpr.models.Reader"""
-        return_dict = return_dict if return_dict is not None else self.model.config.use_return_dict
-        # notations: N - number of questions in a batch, M - number of passages per questions, L - sequence length
-        N, M, L = input_ids.size()
-        outputs = self.model(input_ids, attention_mask, return_dict=True, **kwargs)
-
-        # compute loss
-        total_loss = None
-        if start_positions is not None and end_positions is not None:
-            start_positions = start_positions.view(N * M, -1)
-            end_positions = end_positions.view(N * M, -1)
-            answer_mask = answer_mask.view(N * M, -1)
-            start_logits, end_logits, relevance_logits = outputs[:3]
-            start_logits = start_logits.view(N * M, -1)
-            end_logits = end_logits.view(N * M, -1)
-            relevance_logits = relevance_logits.view(N * M)
-
-            answer_mask = answer_mask.to(device=relevance_logits.device, dtype=torch.float32)
-
-            # sometimes the start/end positions are outside our model inputs, we ignore these terms
-            ignored_index = start_logits.size(1)
-            start_positions = start_positions.clamp(0, ignored_index)
-            end_positions = end_positions.clamp(0, ignored_index)
-            loss_fct = nn.CrossEntropyLoss(reduction='none', ignore_index=ignored_index)
-
-            # compute switch loss
-            relevance_logits = relevance_logits.view(N, M)
-            switch_labels = torch.zeros(N, dtype=torch.long, device=relevance_logits.device)
-            switch_loss = torch.sum(loss_fct(relevance_logits, switch_labels))
-
-            # compute span loss
-            start_losses = [(loss_fct(start_logits, _start_positions) * _span_mask)
-                            for (_start_positions, _span_mask)
-                            in zip(torch.unbind(start_positions, dim=1), torch.unbind(answer_mask, dim=1))]
-
-            end_losses = [(loss_fct(end_logits, _end_positions) * _span_mask)
-                          for (_end_positions, _span_mask)
-                          in zip(torch.unbind(end_positions, dim=1), torch.unbind(answer_mask, dim=1))]
-            loss_tensor = torch.cat([t.unsqueeze(1) for t in start_losses], dim=1) + \
-                          torch.cat([t.unsqueeze(1) for t in end_losses], dim=1)
-
-            loss_tensor = loss_tensor.view(N, M, -1).max(dim=1)[0]
-            span_loss = _calc_mml(loss_tensor)
-            total_loss = span_loss + switch_loss
-
-        if not return_dict:
-            outputs = outputs.to_tuple()
-            return ((total_loss,) + outputs) if total_loss is not None else outputs
-
-        return DPRReaderForQuestionAnsweringOutput(loss=total_loss, **outputs)
-
-
 class MultiPassageBERT(BertForQuestionAnswering):
     """
     PyTorch/Transformers implementation of Multi-passage BERT [1]_ (based on the global normalization [2]_)
@@ -277,6 +334,7 @@ class MultiPassageBERT(BertForQuestionAnswering):
     """
 
     def __init__(self, *args, **kwargs):
+        raise NotImplementedError("Compatible with transformers but not lightning")
         super().__init__(*args, **kwargs)
         self.log_softmax = nn.LogSoftmax(1)
 
