@@ -24,18 +24,24 @@ class Trainee(pl.LightningModule):
     
     Parameters
     ----------    
-    freeze: str, optional
+    *args, **kwargs: additionnal arguments are passed to pl.LightningModule
+    freeze_regex: str, optional
         represents a regex used to match the model parameters to freeze
         (i.e. set ``requires_grad = False``).
         Defaults to None (keep model fully-trainable)
     gradient_checkpointing: bool, optional
     """
     supports_gradient_checkpointing = True
-    def __init__(self, *args, freeze=None, gradient_checkpointing=False, **kwargs):
+    def __init__(self, *args, freeze_regex=None, gradient_checkpointing=False, **kwargs):
         super().__init__(*args, **kwargs)
-        if freeze is not None:
-            self.freeze(freeze)        
-        if gradient_checkpointing:
+        self.freeze_regex = freeze_regex
+        self.gradient_checkpointing = gradient_checkpointing
+        
+    # should be called at the end of each subclass __init__
+    def post_init(self):
+        if self.freeze_regex is not None:
+            self.freeze(self.freeze_regex)        
+        if self.gradient_checkpointing:
             self.gradient_checkpointing_enable()
         
     def step(self, *args, **kwargs):
@@ -145,6 +151,7 @@ class BiEncoder(Trainee):
 
     Parameters
     ----------
+    *args, **kwargs: additionnal arguments are passed to Trainee
     question_class: str
         Name of the class used for question_model. See get_class_from_name.
     question_model_name_or_path: str
@@ -156,10 +163,11 @@ class BiEncoder(Trainee):
     warmup_steps: int, optional
         Defaults to no warm-up
     """
-    def __init__(self, question_class, question_model_name_or_path, 
+    def __init__(self, *args, question_class, question_model_name_or_path, 
                  context_class=None, context_model_name_or_path=None, 
-                 warmup_steps=0, lr=2e-5, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0):
-        super().__init__()
+                 warmup_steps=0, lr=2e-5, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0, **kwargs):
+        super().__init__(*args, **kwargs)
+        
         # default to symmetric encoders
         context_class = question_class if context_class is None else context_class
         context_model_name_or_path = question_model_name_or_path if context_model_name_or_path is None else context_model_name_or_path
@@ -179,6 +187,9 @@ class BiEncoder(Trainee):
         self.betas = betas
         self.eps = eps
         self.weight_decay = weight_decay
+        
+        self.post_init()
+        
         
     def forward(self, question_inputs, context_inputs):
         """        
