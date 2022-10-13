@@ -379,7 +379,150 @@ class BiEncoderDataModule(QuestionAnsweringDataModule):
         batch = dict(question_inputs=question_inputs, context_inputs=context_inputs, labels=labels)
         return batch
         
+    
+class ICT(DataModule):
+    """
+    Extends the Inverse Cloze Task (ICT, [2]_) to multimodal documents.
+    Given a wikipedia section, one sentence is considered as a pseudo-question and the nearby sentences as a relevant passage.
+    In this multimodal setting, we also consider the image of the section in the query and the infobox/main image of the article in the visual passage.
+    
+    The only point in common with QuestionAnsweringDataModule is the use of PreComputedImageFeatures
+    
+    Parameters
+    ----------
+    *args, **kwargs: 
+        additional arguments are passed to DataModule
+    image_features_kwargs: dict
+    sentences_per_target: int, optional
+        Number of sentences in the target passages
+    n_hard_negatives: int, optional
+        Synthesize hopefully-hard negatives by permuting images in the batch n times
+        Defaults to only random in-batch negatives
+    prepend_title: bool, optional
+        Whether to preprend the title of the article to the target passage
+    text_mask_rate: float, optional
+        Rate at which the pseudo-question is masked in the target passage
+    image_mask_rate: float, optional
+        Rate at which the infobox image is used as target (keep input image otherwise)
 
+    References
+    ----------
+    .. [2] Kenton Lee, Ming-Wei Chang, and Kristina Toutanova. 2019. Latent Retrieval for Weakly Supervised Open Domain Question Answering. 
+       In Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics, 
+       pages 6086–6096, Florence, Italy. Association for Computational Linguistics.
+    """
+    def __init__(self, *args, image_features_kwargs, sentences_per_target=4, n_hard_negatives=0,
+                 prepend_title=False, text_mask_rate=1.0, image_mask_rate=1.0, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.image_features = PreComputedImageFeatures(**image_features_kwargs)
+        self.sentences_per_target = sentences_per_target
+        self.n_hard_negatives = n_hard_negatives
+        self.prepend_title = prepend_title
+        self.text_mask_rate = text_mask_rate
+        self.image_mask_rate = image_mask_rate
+        # the WIT dataset groups wikipedia sections by article 
+        # so in-batch negatives may get very difficult or even false positives if we don’t shuffle
+        self.shuffle_eval = True
+
+    def get_pseudo_question(self, item):
+        """
+        Returns
+        -------
+        query: dict
+        target: dict
+        """
+        sentences = item['sentences']
+
+        # pick a random sentence: easy
+        i = np.random.randint(len(sentences))
+        query = dict(text=sentences[i]['text'])
+        # pick n random sentences around it: more tricky
+        n = min(self.sentences_per_target, len(sentences)-1)
+        max_shift = min(i, n)
+        if i+n < len(sentences):
+            min_shift = 0
+        else:
+            min_shift = i + n - len(sentences) + 1
+        shift = np.random.randint(min_shift, max_shift+1)
+        # standard ICT: remove sentence from its context
+        if np.random.rand() < self.text_mask_rate:
+            target = [s['text'] for s in sentences[i-shift: i]+sentences[i+1: i+1+n-shift]]
+        # robustness trick: keep the sentence in the context so that the model learns lexical overlap
+        else:
+            target = [s['text'] for s in sentences[i-shift: i+1+n-shift]]
+            
+        if self.prepend_title:
+            target.insert(0, self.tokenizer.sep_token)
+            target.insert(0, item['title'])
+        target = dict(text=" ".join(target))  
+        
+        # standard MICT: use the contextual image as target
+        if np.random.rand() < self.image_mask_rate:
+            context_image_key = "context_"
+        # robustness trick: use the same image in query/target so that the model keeps image information
+        else:
+            context_image_key = ""
+        # rename context image features
+        for k in ({"face_box", "face_embedding"} | self.image_features.image_embeddings_keys):
+            target[k] = item.get(f"{context_image_key}{k}")
+        return query, target
+
+    def collate_fn(self, items):
+        questions, relevant_passages, labels = [], [], []
+        for i, item in enumerate(items):
+            query, relevant_passage = self.get_pseudo_question(item)
+            labels.append(i)
+            questions.append(query)
+            relevant_passages.append(relevant_passage)
+
+        question_inputs_text = self.tokenizer([q['text'] for q in questions], **self.tokenization_kwargs)
+        context_inputs_text = self.tokenizer([p['text'] for p in relevant_passages], **self.tokenization_kwargs)
+        # get image features, for both questions and passages
+        question_inputs = dict(
+            text_inputs=question_inputs_text, 
+            face_inputs=self.image_features.get_face_inputs(items), 
+            image_inputs=self.image_features.get_image_inputs(items)
+        )
+        context_inputs = dict(
+            text_inputs=context_inputs_text, 
+            face_inputs=self.image_features.get_face_inputs(relevant_passages), 
+            image_inputs=self.image_features.get_image_inputs(relevant_passages)
+        )
+
+        # make self.n_hard_negatives by shifting the images of relevant passages
+        if self.n_hard_negatives > 0:
+            # duplicate relevant text
+            for k, v in context_inputs["text_inputs"].items():
+                context_inputs["text_inputs"][k] = torch.tile(v, (self.n_hard_negatives+1, 1))
+            # shift relevant images
+            for k, v in context_inputs['image_inputs'].items():
+                shifted_input, shifted_mask = [v['input']], [v['attention_mask']]
+                for shift in range(self.n_hard_negatives):
+                    # shift along axis 0 (batch axis)
+                    shifted_input.append(torch.roll(v['input'], shift+1, 0))
+                    shifted_mask.append(torch.roll(v['attention_mask'], shift+1, 0))
+                # cat along axis 0 (batch axis)
+                v['input'] = torch.cat(shifted_input, 0)
+                v['attention_mask'] = torch.cat(shifted_mask, 0)
+            # shift relevant faces
+            shifted_faces, shifted_boxes = [context_inputs['face_inputs']["face"]], [context_inputs['face_inputs']["bbox"]]
+            shifted_mask = [context_inputs['face_inputs']['attention_mask']]
+            for shift in range(self.n_hard_negatives):
+                # shift along axis 0 (batch axis)
+                shifted_faces.append(torch.roll(context_inputs['face_inputs']["face"], shift+1, 0))
+                shifted_boxes.append(torch.roll(context_inputs['face_inputs']["bbox"], shift+1, 0))
+                shifted_mask.append(torch.roll(context_inputs['face_inputs']["attention_mask"], shift+1, 0))
+            # cat along axis 0 (batch axis)
+            context_inputs['face_inputs']["face"] = torch.cat(shifted_faces, 0)
+            context_inputs['face_inputs']["bbox"] = torch.cat(shifted_boxes, 0)
+            context_inputs['face_inputs']['attention_mask'] = torch.cat(shifted_mask, 0)
+
+        # wrap it up
+        labels = torch.tensor(labels)
+        batch = dict(question_inputs=question_inputs, context_inputs=context_inputs, labels=labels)
+        return batch
+    
+    
 def filter_rels(dataset, search_key):
     # TODO
     """
