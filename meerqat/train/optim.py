@@ -16,7 +16,6 @@ class LinearLRWithWarmup(LambdaLR):
     """
     def __init__(self, *args, warmup_steps, total_steps, **kwargs):
         self.warmup_steps = warmup_steps
-        # TODO pass from Trainer so you don’t have to specify it twice
         self.total_steps = total_steps
         super().__init__(*args, **kwargs, lr_lambda=self.lr_lambda)
             
