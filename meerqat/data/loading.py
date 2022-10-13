@@ -151,38 +151,10 @@ def get_class_from_name(class_name):
             return Class
     raise ValueError(f"Could not find {class_name} in {modules}")
     
-    
-def get_biencoder(
-        Class, question_class, dpr_question_model_name_or_path, 
-        context_class=None, dpr_context_model_name_or_path=None
-    ):
-    # default to symmetric encoders
-    context_class = question_class if context_class is None else context_class
-    dpr_context_model_name_or_path = dpr_question_model_name_or_path if dpr_context_model_name_or_path is None else dpr_context_model_name_or_path
 
-    # init encoders
-    QuestionClass = get_class_from_name(question_class)
-    question_model = QuestionClass.from_pretrained(dpr_question_model_name_or_path)
-    ContextClass = get_class_from_name(context_class)
-    context_model = ContextClass.from_pretrained(dpr_context_model_name_or_path)
-
-    # finally wrap both encoders
-    biencoder = Class(question_model, context_model)
-    return biencoder
-
-
-def get_pretrained(class_name, trainee_class=None, trainee_kwargs={}, **kwargs):
+def get_pretrained(class_name, **kwargs):
     Class = get_class_from_name(class_name)
-    if issubclass(Class, trainee.BiEncoder):
-        return get_biencoder(Class, **kwargs)
-    elif issubclass(Class, trainee.Trainee):
-        # first get the wrapped pre-trained model in Trainee
-        trainee_model = get_pretrained(trainee_class, **kwargs)
-        # then init the Trainee
-        model = Class(trainee_model, **trainee_kwargs)
-    # simply use PreTrainedModel.from_pretrained method
-    else:
-        model = Class.from_pretrained(**kwargs)        
+    model = Class.from_pretrained(**kwargs)        
     return model
 
 
