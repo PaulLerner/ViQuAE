@@ -1,4 +1,4 @@
-datasets>=1.18.3
+datasets>=2.4.0
 docopt>=0.6.2
 facenet-pytorch>=2.5.2
 SPARQLWrapper>=1.8.5
@@ -7,10 +7,10 @@ tqdm>=4.49.0
 seaborn>=0.11
 spacy>=2.2.4
 elasticsearch>=7.7.1
-transformers>=4.12.5
+transformers>=4.22.2
 optuna>=2.9.1
 scikit-image
 opencv-python>=4.5.3
 faiss-gpu>=1.7.1
-humanize>=3.12
 ranx
+pytorch-lightning[extra]>=1.7.7
