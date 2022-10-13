@@ -215,7 +215,7 @@ class BiEncoder(Trainee):
         log_probs = self.log_softmax(similarities)
 
         loss = self.loss_fct(log_probs, global_labels)
-        return dict(loss=loss, log_probs=log_probs)   
+        return dict(loss=loss, log_probs=log_probs, labels=global_labels)   
     
     def eval_epoch_end(self, eval_outputs):
         return self.compute_metrics(eval_outputs)
