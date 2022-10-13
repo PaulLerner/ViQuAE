@@ -28,15 +28,15 @@ class Trainee(pl.LightningModule):
         represents a regex used to match the model parameters to freeze
         (i.e. set ``requires_grad = False``).
         Defaults to None (keep model fully-trainable)
+    gradient_checkpointing: bool, optional
     """
-    def __init__(self, *args, freeze=None, **kwargs):
-        """
-        Base class for all trainers. Provides only minimal changes to pl.Trainer
-        
-        """  
+    supports_gradient_checkpointing = True
+    def __init__(self, *args, freeze=None, gradient_checkpointing=False, **kwargs):
         super().__init__(*args, **kwargs)
         if freeze is not None:
-            self.freeze(freeze)
+            self.freeze(freeze)        
+        if gradient_checkpointing:
+            self.gradient_checkpointing_enable()
         
     def step(self, *args, **kwargs):
         raise NotImplementedError("Subclass and implement step.")
@@ -98,6 +98,39 @@ class Trainee(pl.LightningModule):
             print(f"{name.ljust(120)}\t{(numel if param.requires_grad else 0):,d}\t{numel:,d}")
         print(f"Froze {frozen:,d} parameters out of {total:,d}")
         
+    # gradient checkpointing: taken from transformers
+    def _set_gradient_checkpointing(self, module, value=False):
+        if isinstance(module, (BertEncoder, FlamantEncoder)):
+            module.gradient_checkpointing = value
+            
+    def gradient_checkpointing_enable(self):
+        """
+        Activates gradient checkpointing for the current model.
+        Note that in other frameworks this feature can be referred to as "activation checkpointing" or "checkpoint
+        activations".
+        """
+        if not self.supports_gradient_checkpointing:
+            raise ValueError(f"{self.__class__.__name__} does not support gradient checkpointing.")
+        self.apply(partial(self._set_gradient_checkpointing, value=True))
+
+    def gradient_checkpointing_disable(self):
+        """
+        Deactivates gradient checkpointing for the current model.
+        Note that in other frameworks this feature can be referred to as "activation checkpointing" or "checkpoint
+        activations".
+        """
+        if self.supports_gradient_checkpointing:
+            self.apply(partial(self._set_gradient_checkpointing, value=False))
+
+    @property
+    def is_gradient_checkpointing(self) -> bool:
+        """
+        Whether gradient checkpointing is activated for this model or not.
+        Note that in other frameworks this feature can be referred to as "activation checkpointing" or "checkpoint
+        activations".
+        """
+        return any(hasattr(m, "gradient_checkpointing") and m.gradient_checkpointing for m in self.modules())
+
         
 class BiEncoder(Trainee):
     """    
@@ -123,7 +156,6 @@ class BiEncoder(Trainee):
     warmup_steps: int, optional
         Defaults to no warm-up
     """
-    supports_gradient_checkpointing = True
     def __init__(self, question_class, question_model_name_or_path, 
                  context_class=None, context_model_name_or_path=None, 
                  warmup_steps=0, lr=2e-5, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0):
@@ -147,7 +179,7 @@ class BiEncoder(Trainee):
         self.betas = betas
         self.eps = eps
         self.weight_decay = weight_decay
-
+        
     def forward(self, question_inputs, context_inputs):
         """        
         Parameters
@@ -219,40 +251,7 @@ class BiEncoder(Trainee):
     
     def eval_epoch_end(self, eval_outputs):
         return self.compute_metrics(eval_outputs)
-        
-    # gradient checkpointing: taken from transformers
-    def _set_gradient_checkpointing(self, module, value=False):
-        if isinstance(module, (BertEncoder, FlamantEncoder)):
-            module.gradient_checkpointing = value
             
-    def gradient_checkpointing_enable(self):
-        """
-        Activates gradient checkpointing for the current model.
-        Note that in other frameworks this feature can be referred to as "activation checkpointing" or "checkpoint
-        activations".
-        """
-        if not self.supports_gradient_checkpointing:
-            raise ValueError(f"{self.__class__.__name__} does not support gradient checkpointing.")
-        self.apply(partial(self._set_gradient_checkpointing, value=True))
-
-    def gradient_checkpointing_disable(self):
-        """
-        Deactivates gradient checkpointing for the current model.
-        Note that in other frameworks this feature can be referred to as "activation checkpointing" or "checkpoint
-        activations".
-        """
-        if self.supports_gradient_checkpointing:
-            self.apply(partial(self._set_gradient_checkpointing, value=False))
-
-    @property
-    def is_gradient_checkpointing(self) -> bool:
-        """
-        Whether gradient checkpointing is activated for this model or not.
-        Note that in other frameworks this feature can be referred to as "activation checkpointing" or "checkpoint
-        activations".
-        """
-        return any(hasattr(m, "gradient_checkpointing") and m.gradient_checkpointing for m in self.modules())
-    
 
 class DPRBiEncoder(BiEncoder):
     """
