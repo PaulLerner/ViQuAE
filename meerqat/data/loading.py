@@ -82,6 +82,13 @@ OKVQA_PATH = DATA_ROOT_PATH/"OK-VQA"
 MSCOCO_PATH = DATA_ROOT_PATH/"MS-COCO"
 
 
+def verbose_load_from_disk(dataset_path):
+    print(f"Loading '{dataset_path}'")
+    dataset = load_from_disk(dataset_path)
+    print(dataset)
+    return dataset
+    
+
 def load_image(file_name):
     path = IMAGE_PATH / file_name
     try:
