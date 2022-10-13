@@ -298,8 +298,10 @@ class QuestionAnsweringDataModule(DataModule):
         
         # multimodal vs. text-only mode
         if self.image_kb is None:
-            relevant_passages = relevant_passages['passage']
-            irrelevant_passages = irrelevant_passages['passage']
+            if relevant_passages:
+                relevant_passages = relevant_passages['passage']
+            if irrelevant_passages:
+                irrelevant_passages = irrelevant_passages['passage']
         else:
             relevant_passages = self.add_image_features(relevant_passages)
             irrelevant_passages = self.add_image_features(irrelevant_passages)
