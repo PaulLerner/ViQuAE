@@ -7,7 +7,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from datasets import DatasetDict
-#import ranx
+import ranx
 
 import pytorch_lightning as pl
 
@@ -381,6 +381,162 @@ class BiEncoderDataModule(QuestionAnsweringDataModule):
         batch = dict(question_inputs=question_inputs, context_inputs=context_inputs, labels=labels)
         return batch
         
+
+class MultiPassageBERTDataModule(QuestionAnsweringDataModule):
+    """
+    Parameters
+    ----------
+    *args, **kwargs: 
+        additional arguments are passed to QuestionAnsweringDataModule
+    max_n_answers: int, optional
+        The answer might be found several time in the same passage, this is a threshold to enable batching
+        Defaults to 10.
+    train_original_answer_only: bool, optional
+        Whether the model should be trained to predict only the original answer (default)
+        or all alternative answers (with the only limit of max_n_answers)
+        This has no effect on the evaluation (where all alternative answers are always considered)
+    oracle: bool, optional
+        Whether to use only relevant passages at inference (stored in {search_key}_provenance_indices)
+        Will enforce n_relevant_passages=M
+        Defaults to False (use IR passages at inference, stored in {search_key}_indices)
+    run_path: str, optional
+        Path to the ranx run stored in the TREC format that holds the IR results.
+        To be used instead of search_key at inference.
+        Defaults to None.
+    """
+    def __init__(self, *args, max_n_answers=10, 
+                 train_original_answer_only=True, oracle=False, run_path=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.max_n_answers = max_n_answers
+        self.train_original_answer_only = train_original_answer_only
+        self.oracle = oracle
+        if self.oracle and self.n_relevant_passages != self.M:
+            warnings.warn(f"Oracle mode. Setting n_relevant_passages={self.M}")
+            self.n_relevant_passages = self.M
+                
+        if run_path is not None:
+            self.run = ranx.Run.from_file(run_path, 'trec')
+        else:            
+            self.run = None
+            
+    def get_answer_position(self, batch, answers, answer_mask):
+        """Adapted from DPR"""
+        start_positions, end_positions = torch.zeros_like(answer_mask), torch.zeros_like(answer_mask)
+        for j, (input_ids, answer) in enumerate(zip(batch['input_ids'], answers)):
+            L = input_ids.size(-1)
+            answer_starts, answer_ends = [], []
+            for a in answer:
+                answer_len = a.size(0)
+                enough = False
+                for i in range(L-answer_len+1):
+                    if (a == input_ids[i: i+answer_len]).all():
+                        start, end = i, i+answer_len-1
+                        if start not in answer_starts and end not in answer_ends:
+                            answer_starts.append(start)
+                            answer_ends.append(end)
+                            if len(answer_starts) >= self.max_n_answers:
+                                enough = True
+                                break
+                if enough:
+                    break
+            for i, (start, end) in enumerate(zip(answer_starts, answer_ends)):
+                start_positions[j, i] = start
+                end_positions[j, i] = end
+                # un-mask answer
+                answer_mask[j, i] = 1
+        start_positions = start_positions.view(-1, self.M, self.max_n_answers)
+        end_positions = end_positions.view(-1, self.M, self.max_n_answers)
+        answer_mask = answer_mask.view(-1, self.M, self.max_n_answers)
+        batch.update(dict(start_positions=start_positions, end_positions=end_positions, answer_mask=answer_mask))
+        return batch
+    
+    def get_eval_passages(self, item):
+        """Keep the top-M passages retrieved by the IR"""
+        if self.run is None:
+            indices = item[self.search_key+"_indices"][: self.M]
+            scores = item[self.search_key+"_scores"][: self.M]
+        else:
+            ir_results = self.run.run[item['id']]
+            # document ids in ranx are str so we map them back to indices (int)
+            indices = list(map(int, ir_results.keys()))[: self.M]
+            scores = list(ir_results.values())[: self.M]
+            
+        return self.kb.select(indices), scores
+
+    def collate_fn(self, items):
+        """
+        Collate batch so that each question is associate with n_relevant_passages and M-n irrelevant ones.
+        Also tokenizes input strings
+
+        Returns (a dict of)
+        -------------------
+        input_ids: Tensor[int]
+            shape (N * M, L)
+        start_positions, end_positions: Tensor[int]
+            shape (N, M, max_n_answers)
+        answer_mask: Tensor[int]
+            shape (N, M, max_n_answers)
+        passage_scores: Tensor[float], optional
+            shape (N * M)
+            only in evaluation mode
+        **kwargs: more tensors depending on the tokenizer, e.g. attention_mask
+        """
+        questions, passages = [], []
+        answers, answer_strings = [], []
+        passage_scores = []
+        N = len(items)
+        answer_mask = torch.zeros((N*self.M, self.max_n_answers), dtype=torch.long)
+        for i, item in enumerate(items):
+            # N. B. seed is set in Trainer
+            questions.extend([item['input']]*self.M)
+
+            # oracle -> use only relevant passages
+            if (self.trainer.state.stage != "train") and not self.oracle:
+                passage, score = self.get_eval_passages(item)
+                passage = passage['passage']
+                passage_scores.extend(score)
+                if len(score) < self.M:
+                    passage_scores.extend([0]*(self.M-len(score)))
+            else:
+                relevant_passage, irrelevant_passage = self.get_training_passages(item)
+                passage = relevant_passage + irrelevant_passage
+
+            passages.extend(passage)
+            # all passages have at least 1 non-masked answer (set to 0 for irrelevant passages)
+            answer_mask[i*self.M: i*self.M+len(passage), 0] = 1
+            # except for padding passages
+            if len(passage) < self.M:
+                passages.extend(['']*(self.M-len(passage)))
+
+            original_answer = item['output']['original_answer']
+            # avoid processing the same answer twice
+            answer = item['output']['answer']
+            answer_strings.extend([answer]*self.M)
+            # beware this create a discrepancy between answer_strings and answers (tokens)
+            # evaluation should always be done using answer_strings
+            if self.train_original_answer_only:
+                answer = [original_answer]
+            else:
+                if self.tokenizer.do_lower_case:
+                    original_answer = original_answer.lower()
+                    answer = list({a.lower() for a in answer} - {original_answer})
+                # but ensure the original answer is still the first to be processed
+                answer = [original_answer] + answer
+            answer = self.tokenizer(answer,
+                                    add_special_tokens=False,
+                                    return_token_type_ids=False,
+                                    return_attention_mask=False)['input_ids']
+            answer = [torch.tensor(a, dtype=torch.long) for a in answer]
+            answers.extend([answer]*self.M)
+        batch = self.tokenizer(*(questions, passages), **self.tokenization_kwargs)
+        batch = self.get_answer_position(batch, answers, answer_mask)
+        # TODO cannot 
+#        batch['answer_strings'] = answer_strings
+#        if passage_scores:
+#            batch['passage_scores'] = torch.tensor(passage_scores)
+
+        return batch
+    
     
 class ICT(DataModule):
     """

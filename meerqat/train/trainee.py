@@ -3,18 +3,22 @@ Trainee is a pl.LightningModule that computes the loss so it is compatible with 
 """
 from functools import partial
 import re
+import numpy as np
 
 import torch.nn as nn
 import torch
 from torch.optim import AdamW
 from transformers.models.bert.modeling_bert import BertEncoder
-from transformers import BertForQuestionAnswering
+from transformers import BertForQuestionAnswering, BertTokenizer
 import pytorch_lightning as pl
+
+from datasets import load_metric
 
 from ..data.loading import get_pretrained
 from ..models.mm import FlamantEncoder
+from ..models.qa import get_best_spans, format_predictions_for_squad
 from .optim import _calc_mml, LinearLRWithWarmup
-from .outputs import MultiPassageBERTOutput, BiEncoderOutput, DPRBiEncoderOutput
+from .outputs import MultiPassageBERTOutput, BiEncoderOutput
 from .metrics import retrieval
 
 
@@ -30,12 +34,24 @@ class Trainee(pl.LightningModule):
         (i.e. set ``requires_grad = False``).
         Defaults to None (keep model fully-trainable)
     gradient_checkpointing: bool, optional
+    lr, eps, weight_decay: float, optional
+    betas: Tuple[float], optional    
+    warmup_steps: int, optional
+        Defaults to no warm-up
     """
     supports_gradient_checkpointing = True
-    def __init__(self, *args, freeze_regex=None, gradient_checkpointing=False, **kwargs):
+    def __init__(self, *args, freeze_regex=None, gradient_checkpointing=False,                  
+                 warmup_steps=0, lr=2e-5, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0, **kwargs):
         super().__init__(*args, **kwargs)
         self.freeze_regex = freeze_regex
         self.gradient_checkpointing = gradient_checkpointing
+        
+        # scheduling and optimization
+        self.warmup_steps = warmup_steps
+        self.lr = lr
+        self.betas = betas
+        self.eps = eps
+        self.weight_decay = weight_decay
         
     # should be called at the end of each subclass __init__
     def post_init(self):
@@ -104,6 +120,19 @@ class Trainee(pl.LightningModule):
             print(f"{name.ljust(120)}\t{(numel if param.requires_grad else 0):,d}\t{numel:,d}")
         print(f"Froze {frozen:,d} parameters out of {total:,d}")
         
+    # TODO delete once I understand how to setup scheduling interval in config.yaml
+    def configure_optimizers(self):
+        """Prepare optimizer and schedule (linear warmup and decay)"""
+        optimizer = AdamW(self.parameters(), lr=self.lr, betas=self.betas, eps=self.eps, weight_decay=self.weight_decay)
+        
+        total_steps=self.trainer.estimated_stepping_batches
+        scheduler = LinearLRWithWarmup(
+            optimizer,
+            warmup_steps=self.warmup_steps, total_steps=total_steps
+        )
+        scheduler = {"scheduler": scheduler, "interval": "step", "frequency": 1}
+        return [optimizer], [scheduler]
+        
     # gradient checkpointing: taken from transformers
     def _set_gradient_checkpointing(self, module, value=False):
         if isinstance(module, (BertEncoder, FlamantEncoder)):
@@ -160,12 +189,9 @@ class BiEncoder(Trainee):
         Analog to question_class for context_model. Defaults to question_class.
     context_model_name_or_path: str
         Analog to question_model_name_or_path for context_model. Defaults to question_model_name_or_path.
-    warmup_steps: int, optional
-        Defaults to no warm-up
     """
     def __init__(self, *args, question_class, question_model_name_or_path, 
-                 context_class=None, context_model_name_or_path=None, 
-                 warmup_steps=0, lr=2e-5, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0, **kwargs):
+                 context_class=None, context_model_name_or_path=None, **kwargs):
         super().__init__(*args, **kwargs)
         
         # default to symmetric encoders
@@ -179,17 +205,8 @@ class BiEncoder(Trainee):
         # loss and metrics
         self.log_softmax = nn.LogSoftmax(1)
         self.loss_fct = nn.NLLLoss(reduction='mean')
-        self.compute_metrics = retrieval
         
-        # scheduling and optimization
-        self.warmup_steps = warmup_steps
-        self.lr = lr
-        self.betas = betas
-        self.eps = eps
-        self.weight_decay = weight_decay
-        
-        self.post_init()
-        
+        self.post_init()        
         
     def forward(self, question_inputs, context_inputs):
         """        
@@ -205,19 +222,6 @@ class BiEncoder(Trainee):
         return BiEncoderOutput(
             question_pooler_output=question_outputs.pooler_output,
             context_pooler_output=context_outputs.pooler_output)
-        
-    # TODO delete once I understand how to setup scheduling interval in config.yaml
-    def configure_optimizers(self):
-        """Prepare optimizer and schedule (linear warmup and decay)"""
-        optimizer = AdamW(self.parameters(), lr=self.lr, betas=self.betas, eps=self.eps, weight_decay=self.weight_decay)
-        
-        total_steps=self.trainer.estimated_stepping_batches
-        scheduler = LinearLRWithWarmup(
-            optimizer,
-            warmup_steps=self.warmup_steps, total_steps=total_steps
-        )
-        scheduler = {"scheduler": scheduler, "interval": "step", "frequency": 1}
-        return [optimizer], [scheduler]
     
     def log_question_and_context(self):
         """Maybe add weights of question and context model to the logs"""
@@ -261,59 +265,17 @@ class BiEncoder(Trainee):
         return dict(loss=loss, log_probs=log_probs, labels=global_labels)   
     
     def eval_epoch_end(self, eval_outputs):
-        return self.compute_metrics(eval_outputs)
+        return retrieval(eval_outputs)
             
-
-class DPRBiEncoder(BiEncoder):
-    """
-    Adapted from https://github.com/facebookresearch/DPR/blob/main/dpr/models/biencoder.py
     
-    Parameters
-    ----------
-    question_model: transformers.DPRQuestionEncoder
-        Encoder based on BERT used to encode the question/query
-    context_model: transformers.DPRContextEncoder  
-        Encoder based on BERT used to encode the context/evidence/passage 
-        ('context' is confusing IMO but I keep it for consistency with DPR and transformers)
-    """
-    def __init__(self, question_model, context_model):
-        """
-        """
-        raise NotImplementedError("Use BiEncoder instead. It is fine unless you need specific DPRBiEncoderOutput.")
-        super().__init__(question_model=question_model, context_model=context_model)
+def _get_n_m_l(input_ids, start_positions):
+    n_times_m, L = input_ids.shape
+    M = start_positions.shape[1]
+    assert n_times_m % M == 0
+    N = n_times_m//M
+    return N, M, L
+
     
-    def forward(self, question_inputs, context_inputs):
-        """
-        Embeds questions and contexts with their respective model and returns the embeddings.
-        
-        * N - number of questions in a batch
-        * M - number of passages per questions
-        * L - sequence length
-        * d - dimension of the model/embeddings
-        
-        Parameters
-        ----------
-        question_inputs: dict[torch.LongTensor]
-            input_ids: torch.LongTensor
-                shape (N, L)
-            usual BERT inputs, see transformers.DPRQuestionEncoder
-        context_inputs: dict[torch.LongTensor]
-            input_ids: torch.LongTensor
-                shape (N*M, L)
-            usual BERT inputs, see transformers.DPRContextEncoder
-        """
-        question_outputs = self.question_model(**question_inputs)
-        context_outputs = self.context_model(**context_inputs)
-
-        return DPRBiEncoderOutput(
-            question_pooler_output=question_outputs.pooler_output,
-            question_hidden_states=question_outputs.hidden_states,
-            question_attentions=question_outputs.attentions,
-            context_pooler_output=context_outputs.pooler_output,
-            context_hidden_states=context_outputs.hidden_states,
-            context_attentions=context_outputs.attentions)
-
-
 class MultiPassageBERT(BertForQuestionAnswering):
     """
     PyTorch/Transformers implementation of Multi-passage BERT [1]_ (based on the global normalization [2]_)
@@ -344,7 +306,6 @@ class MultiPassageBERT(BertForQuestionAnswering):
     """
 
     def __init__(self, *args, **kwargs):
-        raise NotImplementedError("Compatible with transformers but not lightning")
         super().__init__(*args, **kwargs)
         self.log_softmax = nn.LogSoftmax(1)
 
@@ -384,10 +345,7 @@ class MultiPassageBERT(BertForQuestionAnswering):
         # compute loss
         total_loss, start_log_probs, end_log_probs = None, None, None
         if start_positions is not None and end_positions is not None:
-            n_times_m, L = input_ids.size()
-            M = start_positions.size(1)
-            assert n_times_m % M == 0
-            N = n_times_m//M
+            N, M, L = _get_n_m_l(input_ids, start_positions)
             # sometimes the start/end positions are outside our model inputs, we ignore these terms
             ignored_index = L
             start_positions = start_positions.clamp(0, ignored_index)
@@ -435,3 +393,75 @@ class MultiPassageBERT(BertForQuestionAnswering):
             hidden_states=outputs.hidden_states,
             attentions=outputs.attentions,
         )
+
+
+class MultiPassageBERTTrainee(Trainee):
+    """    
+    Parameters
+    ----------
+    model_name_or_path: str
+    tokenizer_name_or_path: str
+    metric: str, optional
+    """
+    def __init__(self, *args, model_name_or_path, tokenizer_name_or_path, metric='squad', **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model = MultiPassageBERT.from_pretrained(model_name_or_path)
+        # FIXME: tokenizer is already loaded in train.data
+        self.tokenizer = BertTokenizer.from_pretrained(model_name_or_path)
+        self.compute_metrics = load_metric(metric)
+        self.post_init()   
+        
+    def forward(self, *args, **kwargs):
+        return self.model(*args, **kwargs)
+        
+    def step(self, inputs, _):   
+        keep_for_eval = {k: inputs.pop(k, None) for k in ['answer_strings', 'passage_scores']}
+        model_outputs = self(**inputs)
+        keep_for_eval['input_ids'] = inputs['input_ids']
+        keep_for_eval.update(model_outputs)
+        return keep_for_eval
+    
+    def log_probs_to_answers(self, start_log_probs, end_log_probs, input_ids, **kwargs):
+        """""
+        1. get span start and end positions from log-probabilities
+        2. extract actual tokens (answer) from input_ids
+        """
+        passage_indices, start_indices, end_indices = get_best_spans(start_probs=np.exp(start_log_probs),
+                                                                     end_probs=np.exp(end_log_probs),
+                                                                     **kwargs)
+        answers = []
+        for i, (passage_index, start, end) in enumerate(zip(passage_indices, start_indices, end_indices)):
+            answers.append(input_ids[i, passage_index, start: end])
+        return self.tokenizer.batch_decode(answers, skip_special_tokens=True)
+    
+    def eval_epoch_end(self, eval_outputs):
+        # TODO
+        return {}
+        # gather all outputs
+        all_predictions, all_weighted_predictions, all_answer_strings = [], [], []
+        for batch in eval_outputs:
+            input_ids = eval_outputs['input_ids']
+            answer_strings = eval_outputs['answer_strings']
+            all_answer_strings.extend(answer_strings)
+            N, M, L = _get_n_m_l(input_ids, eval_outputs['start_positions'])
+            
+            # TODO keep in torch
+            input_ids = input_ids.detach().cpu().numpy()
+            start_log_probs = batch['start_log_probs'].detach().cpu().numpy().reshape(N, M, L)
+            end_log_probs = batch['end_log_probs'].detach().cpu().numpy().reshape(N, M, L)
+            
+            predictions = self.log_probs_to_answers(start_log_probs, end_log_probs, input_ids)
+            all_predictions.extend(predictions)
+            passage_scores = eval_outputs['passage_scores']
+            if passage_scores is not None:
+                passage_scores = passage_scores.detach().cpu().numpy()
+                weighted_predictions = self.log_probs_to_answers(start_log_probs, end_log_probs, input_ids, weights=passage_scores)
+                all_weighted_predictions.extend(weighted_predictions)
+        
+        # format and compute metrics
+        all_predictions, all_references = format_predictions_for_squad(all_predictions, all_answer_strings)
+        metrics = self.compute_metrics(predictions=all_predictions, references=all_references)
+        if weighted_predictions:
+            for k, v in self.compute_metrics(predictions=all_weighted_predictions, references=all_references).items():
+                metrics['weighted_'+k] = v
+        return metrics

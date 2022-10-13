@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Dataclasses for model outputs."""
-from typing import Optional, Tuple
+from typing import Optional
 from dataclasses import dataclass
 
 import torch
@@ -24,17 +24,3 @@ class BiEncoderOutput(ModelOutput):
     """Simply wraps both encoders output in one."""
     question_pooler_output: Optional[torch.FloatTensor] = None
     context_pooler_output: Optional[torch.FloatTensor] = None
-
-
-@dataclass 
-class DPRBiEncoderOutput(BiEncoderOutput):
-    """
-    Outputs from the question and context encoders 
-    (same as DPRQuestionEncoderOutput, DPRContextEncoderOutput with prefixes)
-    """
-    question_pooler_output: Optional[torch.FloatTensor] = None
-    question_hidden_states: Optional[Tuple[torch.FloatTensor]] = None
-    question_attentions: Optional[Tuple[torch.FloatTensor]] = None
-    context_pooler_output: Optional[torch.FloatTensor] = None
-    context_hidden_states: Optional[Tuple[torch.FloatTensor]] = None
-    context_attentions: Optional[Tuple[torch.FloatTensor]] = None
