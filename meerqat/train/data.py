@@ -536,6 +536,13 @@ class MultiPassageBERTDataModule(QuestionAnsweringDataModule):
 
         return batch
     
+    def transfer_batch_to_device(self, batch, device, dataloader_idx):
+        """Keep answer_strings in batch. Does not try to cast them as Tensor of any dtype or device."""
+        answer_strings = batch.pop('answer_strings', None)
+        batch = super().transfer_batch_to_device(batch, device, dataloader_idx)
+        batch['answer_strings'] = answer_strings
+        return batch
+    
     
 class ICT(DataModule):
     """

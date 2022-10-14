@@ -9,7 +9,7 @@ import torch.nn as nn
 import torch
 from torch.optim import AdamW
 from transformers.models.bert.modeling_bert import BertEncoder
-from transformers import BertForQuestionAnswering, BertTokenizer
+from transformers import BertForQuestionAnswering
 import pytorch_lightning as pl
 
 from ..data.loading import get_pretrained
@@ -400,25 +400,14 @@ class MultiPassageBERTTrainee(Trainee):
     Parameters
     ----------
     model_name_or_path: str
-    tokenizer_name_or_path: str
     """
-    def __init__(self, *args, model_name_or_path, tokenizer_name_or_path, **kwargs):
+    def __init__(self, *args, model_name_or_path, **kwargs):
         super().__init__(*args, **kwargs)
         self.model = MultiPassageBERT.from_pretrained(model_name_or_path)
-        # FIXME: tokenizer is already loaded in train.data
-        self.tokenizer = BertTokenizer.from_pretrained(model_name_or_path)
         self.post_init()   
         
     def forward(self, *args, **kwargs):
         return self.model(*args, **kwargs)
-    
-    def transfer_batch_to_device(self, batch, device, dataloader_idx):
-        """Keep answer_strings in batch. Does not try to cast them as Tensor of any dtype or device."""
-        answer_strings = batch.pop('answer_strings', None)
-        batch = super().transfer_batch_to_device(batch, device, dataloader_idx)
-        batch['answer_strings'] = answer_strings
-        
-        return batch
     
     def step(self, inputs, _):   
         keep_for_eval = {k: inputs.pop(k, None) for k in ['answer_strings', 'passage_scores']}
