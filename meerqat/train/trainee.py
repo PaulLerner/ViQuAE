@@ -12,14 +12,12 @@ from transformers.models.bert.modeling_bert import BertEncoder
 from transformers import BertForQuestionAnswering, BertTokenizer
 import pytorch_lightning as pl
 
-from datasets import load_metric
-
 from ..data.loading import get_pretrained
 from ..models.mm import FlamantEncoder
-from ..models.qa import get_best_spans, format_predictions_for_squad
+from ..models.qa import get_best_spans
 from .optim import _calc_mml, LinearLRWithWarmup
 from .outputs import MultiPassageBERTOutput, BiEncoderOutput
-from .metrics import retrieval
+from .metrics import retrieval, squad
 
 
 class Trainee(pl.LightningModule):
@@ -133,7 +131,11 @@ class Trainee(pl.LightningModule):
         scheduler = {"scheduler": scheduler, "interval": "step", "frequency": 1}
         return [optimizer], [scheduler]
         
-    # gradient checkpointing: taken from transformers
+    
+    ###################################################
+    # gradient checkpointing: taken from transformers #
+    ###################################################
+    
     def _set_gradient_checkpointing(self, module, value=False):
         if isinstance(module, (BertEncoder, FlamantEncoder)):
             module.gradient_checkpointing = value
@@ -268,14 +270,6 @@ class BiEncoder(Trainee):
         return retrieval(eval_outputs)
             
     
-def _get_n_m_l(input_ids, start_positions):
-    n_times_m, L = input_ids.shape
-    M = start_positions.shape[1]
-    assert n_times_m % M == 0
-    N = n_times_m//M
-    return N, M, L
-
-    
 class MultiPassageBERT(BertForQuestionAnswering):
     """
     PyTorch/Transformers implementation of Multi-passage BERT [1]_ (based on the global normalization [2]_)
@@ -305,9 +299,10 @@ class MultiPassageBERT(BertForQuestionAnswering):
        pages 845–855, Melbourne, Australia. Association for Computational Linguistics.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, M=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.log_softmax = nn.LogSoftmax(1)
+        self.M = M
 
     def forward(self,
                 input_ids,
@@ -345,7 +340,12 @@ class MultiPassageBERT(BertForQuestionAnswering):
         # compute loss
         total_loss, start_log_probs, end_log_probs = None, None, None
         if start_positions is not None and end_positions is not None:
-            N, M, L = _get_n_m_l(input_ids, start_positions)
+            n_times_m, L = input_ids.shape
+            M = start_positions.shape[1]
+            assert n_times_m % M == 0
+            assert self.M is None or self.M == M
+            self.M = M
+            N = n_times_m//M
             # sometimes the start/end positions are outside our model inputs, we ignore these terms
             ignored_index = L
             start_positions = start_positions.clamp(0, ignored_index)
@@ -401,19 +401,25 @@ class MultiPassageBERTTrainee(Trainee):
     ----------
     model_name_or_path: str
     tokenizer_name_or_path: str
-    metric: str, optional
     """
-    def __init__(self, *args, model_name_or_path, tokenizer_name_or_path, metric='squad', **kwargs):
+    def __init__(self, *args, model_name_or_path, tokenizer_name_or_path, **kwargs):
         super().__init__(*args, **kwargs)
         self.model = MultiPassageBERT.from_pretrained(model_name_or_path)
         # FIXME: tokenizer is already loaded in train.data
         self.tokenizer = BertTokenizer.from_pretrained(model_name_or_path)
-        self.compute_metrics = load_metric(metric)
         self.post_init()   
         
     def forward(self, *args, **kwargs):
         return self.model(*args, **kwargs)
+    
+    def transfer_batch_to_device(self, batch, device, dataloader_idx):
+        """Keep answer_strings in batch. Does not try to cast them as Tensor of any dtype or device."""
+        answer_strings = batch.pop('answer_strings', None)
+        batch = super().transfer_batch_to_device(batch, device, dataloader_idx)
+        batch['answer_strings'] = answer_strings
         
+        return batch
+    
     def step(self, inputs, _):   
         keep_for_eval = {k: inputs.pop(k, None) for k in ['answer_strings', 'passage_scores']}
         model_outputs = self(**inputs)
@@ -435,33 +441,32 @@ class MultiPassageBERTTrainee(Trainee):
         return self.tokenizer.batch_decode(answers, skip_special_tokens=True)
     
     def eval_epoch_end(self, eval_outputs):
-        # TODO
-        return {}
+        M = self.model.M
         # gather all outputs
         all_predictions, all_weighted_predictions, all_answer_strings = [], [], []
         for batch in eval_outputs:
-            input_ids = eval_outputs['input_ids']
-            answer_strings = eval_outputs['answer_strings']
+            input_ids = batch['input_ids']
+            n_times_m, L = input_ids.shape
+            N = n_times_m//M
+            answer_strings = batch['answer_strings']
             all_answer_strings.extend(answer_strings)
-            N, M, L = _get_n_m_l(input_ids, eval_outputs['start_positions'])
             
             # TODO keep in torch
-            input_ids = input_ids.detach().cpu().numpy()
+            input_ids = input_ids.detach().cpu().numpy().reshape(N, M, L)
             start_log_probs = batch['start_log_probs'].detach().cpu().numpy().reshape(N, M, L)
             end_log_probs = batch['end_log_probs'].detach().cpu().numpy().reshape(N, M, L)
             
             predictions = self.log_probs_to_answers(start_log_probs, end_log_probs, input_ids)
             all_predictions.extend(predictions)
-            passage_scores = eval_outputs['passage_scores']
+            passage_scores = batch['passage_scores']
             if passage_scores is not None:
-                passage_scores = passage_scores.detach().cpu().numpy()
+                passage_scores = passage_scores.detach().cpu().numpy().reshape(N, M)
                 weighted_predictions = self.log_probs_to_answers(start_log_probs, end_log_probs, input_ids, weights=passage_scores)
                 all_weighted_predictions.extend(weighted_predictions)
-        
-        # format and compute metrics
-        all_predictions, all_references = format_predictions_for_squad(all_predictions, all_answer_strings)
-        metrics = self.compute_metrics(predictions=all_predictions, references=all_references)
+
+        # compute metrics        
+        metrics = squad(predictions=all_predictions, references=all_answer_strings)
         if weighted_predictions:
-            for k, v in self.compute_metrics(predictions=all_weighted_predictions, references=all_references).items():
+            for k, v in squad(predictions=all_weighted_predictions, references=all_answer_strings).items():
                 metrics['weighted_'+k] = v
         return metrics

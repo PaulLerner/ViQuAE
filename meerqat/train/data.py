@@ -530,10 +530,9 @@ class MultiPassageBERTDataModule(QuestionAnsweringDataModule):
             answers.extend([answer]*self.M)
         batch = self.tokenizer(*(questions, passages), **self.tokenization_kwargs)
         batch = self.get_answer_position(batch, answers, answer_mask)
-        # TODO cannot 
-#        batch['answer_strings'] = answer_strings
-#        if passage_scores:
-#            batch['passage_scores'] = torch.tensor(passage_scores)
+        batch['answer_strings'] = answer_strings
+        if passage_scores:
+            batch['passage_scores'] = torch.tensor(passage_scores)
 
         return batch
     

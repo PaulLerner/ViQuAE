@@ -65,21 +65,3 @@ def get_best_spans(start_probs, end_probs, weights=None, cannot_be_first_token=T
     end_indices = (flat_argmaxes % L) + 1
 
     return passage_indices, start_indices, end_indices
-
-
-def format_predictions_for_squad(predictions, references):
-    """
-    Utility function. 
-    Converts the output of MultiPassageBERTTrainer.log_probs_to_answers to squad metric input.
-    """
-    predictions_squad, references_squad = [], []
-    for i, (prediction, reference) in enumerate(zip(predictions, references)):
-        i = str(i)
-        predictions_squad.append(dict(prediction_text=prediction, id=i))
-        answers = dict(answer_start=[], text=[])
-        for answer in reference:
-            # not sure why 'answer_start' is mandatory but not used when computing the metric
-            answers['answer_start'].append(0)
-            answers['text'].append(answer)
-        references_squad.append(dict(answers=answers, id=i))
-    return predictions_squad, references_squad
