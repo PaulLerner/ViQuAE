@@ -31,4 +31,8 @@ class LinearLRWithWarmup(LambdaLR):
 def _calc_mml(loss_tensor):
     """Taken from dpr.models.reader to avoid extra-dependency"""
     marginal_likelihood = torch.sum(torch.exp(- loss_tensor - 1e10 * (loss_tensor == 0).float()), 1)
-    return -torch.sum(torch.log(marginal_likelihood + torch.ones(loss_tensor.size(0), device=marginal_likelihood.device) * (marginal_likelihood == 0).float()))
+    # Mean reduction: this is different from https://github.com/facebookresearch/DPR/blob/a31212dc0a54dfa85d8bfa01e1669f149ac832b7/dpr/models/reader.py#L180
+    # who use sum reduction
+    # by averaging, the loss does not depend on the batch size N (number of questions)
+    # it might still depend on M, the number of passages, because there’s a max-pooling in MultiPassageBERT
+    return -torch.mean(torch.log(marginal_likelihood + torch.ones(loss_tensor.size(0), device=marginal_likelihood.device) * (marginal_likelihood == 0).float()))
