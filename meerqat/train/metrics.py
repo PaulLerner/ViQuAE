@@ -84,7 +84,6 @@ def squad(predictions, references):
     for prediction, ground_truths in zip(predictions, references):
         exact_match += metric_max_over_ground_truths(exact_match_score, prediction, ground_truths)
         f1 += metric_max_over_ground_truths(f1_score, prediction, ground_truths)
-        breakpoint()
 
     exact_match = 100.0 * exact_match / len(references)
     f1 = 100.0 * f1 / len(references)

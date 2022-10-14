@@ -438,17 +438,21 @@ class MultiPassageBERTTrainee(Trainee):
         answers = []
         for i, (passage_index, start, end) in enumerate(zip(passage_indices, start_indices, end_indices)):
             answers.append(input_ids[i, passage_index, start: end])
-        return self.tokenizer.batch_decode(answers, skip_special_tokens=True)
+        return self.trainer.datamodule.tokenizer.batch_decode(answers, skip_special_tokens=True)
     
-    def eval_epoch_end(self, eval_outputs):
+    def eval_epoch_end(self, eval_outputs):        
         M = self.model.M
         # gather all outputs
         all_predictions, all_weighted_predictions, all_answer_strings = [], [], []
+        dataset_size = 0
         for batch in eval_outputs:
             input_ids = batch['input_ids']
             n_times_m, L = input_ids.shape
             N = n_times_m//M
+            dataset_size += N
             answer_strings = batch['answer_strings']
+            answer_strings = [answer_strings[i] for i in range(0, len(answer_strings), M)]
+            assert len(answer_strings) == N
             all_answer_strings.extend(answer_strings)
             
             # TODO keep in torch
@@ -463,7 +467,7 @@ class MultiPassageBERTTrainee(Trainee):
                 passage_scores = passage_scores.detach().cpu().numpy().reshape(N, M)
                 weighted_predictions = self.log_probs_to_answers(start_log_probs, end_log_probs, input_ids, weights=passage_scores)
                 all_weighted_predictions.extend(weighted_predictions)
-
+        assert len(all_answer_strings) == dataset_size
         # compute metrics        
         metrics = squad(predictions=all_predictions, references=all_answer_strings)
         if weighted_predictions:
