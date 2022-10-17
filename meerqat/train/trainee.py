@@ -1,6 +1,7 @@
 """
 Trainee is a pl.LightningModule that computes the loss so it is compatible with Trainer.
 """
+import warnings
 from functools import partial
 import re
 import numpy as np
@@ -255,12 +256,25 @@ class BiEncoder(Trainee):
         local_labels = inputs.pop('labels')  # (N, )
 
         outputs = self(**inputs)
-
-        global_outputs = self.all_gather(outputs, sync_grads=True)
+        
+        global_question_embeddings = self.all_gather(outputs.question_pooler_output, sync_grads=True)
+        global_context_embeddings = self.all_gather(outputs.context_pooler_output, sync_grads=True)
         global_labels = self.all_gather(local_labels, sync_grads=True)
+        
+        # reshape after all_gather
+        if global_question_embeddings.ndim > 2:
+            n_gpus, N, _ = global_question_embeddings.shape
+            global_question_embeddings = global_question_embeddings.reshape(n_gpus*N, -1)
+            _, N_times_M, _ = global_context_embeddings.shape
+            global_context_embeddings = global_context_embeddings.reshape(n_gpus*N_times_M, -1)
+            # labels are defined at the batch-level so we need to shift them when concatening batches
+            for i in range(1, n_gpus):
+                not_masked = (global_labels[i] != self.loss_fct.ignore_index)
+                global_labels[i, not_masked] += i*N_times_M
+            global_labels = global_labels.reshape(n_gpus*N)
 
         # compute similarity
-        similarities = global_outputs.question_pooler_output @ global_outputs.context_pooler_output.T  # (N, N*M)
+        similarities = global_question_embeddings @ global_context_embeddings.T  # (N, N*M)
         log_probs = self.log_softmax(similarities)
 
         loss = self.loss_fct(log_probs, global_labels)
