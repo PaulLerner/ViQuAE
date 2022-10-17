@@ -99,12 +99,9 @@ class PreComputedImageFeatures:
     
     Parameters
     ----------
-    config_class: str
-        Name of a subclass of MMConfig
-    config_path: str
+    config: MMConfig
     """
-    def __init__(self, config_class, config_path):
-        config = get_pretrained(config_class, pretrained_model_name_or_path=config_path)
+    def __init__(self, config):
         self.n_faces = config.n_faces        
         self.image_embeddings_keys = config.image_kwargs.keys()
         self.image_dims = {}
@@ -213,7 +210,6 @@ class QuestionAnsweringDataModule(DataModule):
     image_kb: str, optional
         Path to the KB that holds pre-computed image features
         Can be mapped from kb using kb['index']
-    image_features_kwargs: dict, optional
     M: int, optional
         Number of passages (relevant or irrelevant) per question in a batch
         Defaults to 24
@@ -228,14 +224,15 @@ class QuestionAnsweringDataModule(DataModule):
         used during training (according to M and n_relevant_passages)
         Defaults to 'search'
     """
-    def __init__(self, *args, kb, image_kb=None, image_features_kwargs={}, 
+    def __init__(self, *args, kb, image_kb=None, 
                  M=24, n_relevant_passages=1, search_key='search', **kwargs):
         super().__init__(*args, **kwargs)
         self.kb = verbose_load_from_disk(kb)
         if image_kb is not None:
-            self.image_kb = verbose_load_from_disk(image_kb)
-            self.image_features = PreComputedImageFeatures(**image_features_kwargs)
+            self.image_kb = verbose_load_from_disk(image_kb)            
             self.padding_passage = [{'passage': ''}]
+            # will be instantiated once we can access trainer
+            self.image_features = None
         else:
             self.image_kb = None
             self.padding_passage = ['']
@@ -303,6 +300,9 @@ class QuestionAnsweringDataModule(DataModule):
             if irrelevant_passages:
                 irrelevant_passages = irrelevant_passages['passage']
         else:
+            if self.image_features is None:
+                mm_config = self.trainer.model.question_model.config
+                self.image_features = PreComputedImageFeatures(mm_config)
             relevant_passages = self.add_image_features(relevant_passages)
             irrelevant_passages = self.add_image_features(irrelevant_passages)
         return relevant_passages, irrelevant_passages  
@@ -556,7 +556,6 @@ class ICT(DataModule):
     ----------
     *args, **kwargs: 
         additional arguments are passed to DataModule
-    image_features_kwargs: dict
     sentences_per_target: int, optional
         Number of sentences in the target passages
     n_hard_negatives: int, optional
@@ -575,10 +574,11 @@ class ICT(DataModule):
        In Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics, 
        pages 6086–6096, Florence, Italy. Association for Computational Linguistics.
     """
-    def __init__(self, *args, image_features_kwargs, sentences_per_target=4, n_hard_negatives=0,
+    def __init__(self, *args, sentences_per_target=4, n_hard_negatives=0,
                  prepend_title=False, text_mask_rate=1.0, image_mask_rate=1.0, **kwargs):
         super().__init__(*args, **kwargs)
-        self.image_features = PreComputedImageFeatures(**image_features_kwargs)
+        # will be instantiated once we can access trainer
+        self.image_features = None
         self.sentences_per_target = sentences_per_target
         self.n_hard_negatives = n_hard_negatives
         self.prepend_title = prepend_title
@@ -632,6 +632,9 @@ class ICT(DataModule):
         return query, target
 
     def collate_fn(self, items):
+        if self.image_features is None:
+            mm_config = self.trainer.model.question_model.config
+            self.image_features = PreComputedImageFeatures(mm_config)
         questions, relevant_passages, labels = [], [], []
         for i, item in enumerate(items):
             query, relevant_passage = self.get_pseudo_question(item)
