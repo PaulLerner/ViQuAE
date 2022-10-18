@@ -7,7 +7,10 @@ from typing import Optional, Tuple
 import torch
 from torch import nn
 from transformers.modeling_outputs import ModelOutput, BaseModelOutputWithPastAndCrossAttentions
-from transformers import PreTrainedModel, BertModel, DPRQuestionEncoder, DPRContextEncoder
+from transformers import (
+    PreTrainedModel, BertModel, DPRQuestionEncoder, DPRContextEncoder, 
+    ViltPreTrainedModel, ViltModel
+)
 from transformers.models.bert import BertConfig, BertPreTrainedModel
 
 from .image import ImageEmbedding, FaceEmbedding
@@ -490,6 +493,25 @@ class FlamantModel(BertPreTrainedModel):
                 hidden_states=outputs.hidden_states, 
                 attentions=outputs.attentions)
 
+
+class ViltForIR(ViltPreTrainedModel):
+    """
+    Pools ViLT using the representation of the [CLS] token, 
+    i.e. DPR-style, *not* with ViltPooler (ITM pre-trained layer),
+    except if add_pooling_layer=True
+    """
+    def __init__(self, config, add_pooling_layer=False):
+        super().__init__(config)
+        self.vilt = ViltModel(config, add_pooling_layer=add_pooling_layer)
+    
+    def forward(self, *args, return_dict=True, **kwargs):
+        outputs = self.vilt(*args, return_dict=return_dict, **kwargs)
+        # default behavior: pooling from [CLS] instead of ViltPooler (ITM pre-trained layer)
+        if outputs.pooler_output is None:
+            outputs.pooler_output = outputs.last_hidden_state[:, 0]
+        # else keep pooling from ViltPooler
+        return outputs
+
         
 class DMREncoder(PreTrainedModel):
     """
@@ -514,8 +536,7 @@ class DMREncoder(PreTrainedModel):
     def __init__(self, config):
         super().__init__(config)
         self.config = config
-        # FIXME: set add_pooling_layer=False
-        self.bert_model = BertModel(config)
+        self.bert_model = BertModel(config, add_pooling_layer=False)
         # add pointers to the gate parameters so that they are logged in trainer
         self.weights_to_log = {}
 
