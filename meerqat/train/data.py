@@ -11,15 +11,16 @@ import ranx
 
 import pytorch_lightning as pl
 
-from ..data.loading import get_pretrained, verbose_load_from_disk
+from ..data.loading import get_pretrained, verbose_load_from_disk, load_image
 from ..models.utils import debug_shape
 
-
+# FIXME can we get rid of all these get_pretrained and automate the process in trainer.CLI?
 class DataModule(pl.LightningDataModule):
     """
     Base class for all data modules. 
     It has a tokenizer and handles dataset loading with train/validation/test subsets.
-    
+    For multimodal models, it can also handle image features or pixels using ImageFormatter
+
     Parameters
     ----------
     tokenizer_class: str
@@ -33,10 +34,12 @@ class DataModule(pl.LightningDataModule):
     train_batch_size, eval_batch_size: int, optional
     tokenization_kwargs: dict, optional
         To be passed to self.tokenizer
+    image_kwargs: dict, optional
+        Passed to ImageFormatter. Optional for text-only models.
     """
     def __init__(self, tokenizer_class, tokenizer_name_or_path, 
                  dataset_path=None, train_path=None, validation_path=None, test_path=None, 
-                 train_batch_size=8, eval_batch_size=8, tokenization_kwargs=None):
+                 train_batch_size=8, eval_batch_size=8, tokenization_kwargs=None, image_kwargs={}):
         super().__init__()
         self.tokenizer = get_pretrained(tokenizer_class, pretrained_model_name_or_path=tokenizer_name_or_path)
         self.dataset_path = dataset_path
@@ -51,6 +54,7 @@ class DataModule(pl.LightningDataModule):
         if tokenization_kwargs is not None:
             default_tokenization_kwargs.update(tokenization_kwargs)
         self.tokenization_kwargs = default_tokenization_kwargs
+        self.image_formatter = ImageFormatter(**image_kwargs)
         
     def setup(self, stage=None):
         if self.dataset_path is None:
@@ -91,17 +95,126 @@ class DataModule(pl.LightningDataModule):
             collate_fn=self.collate_fn,
             shuffle=self.shuffle_eval
         )
+    
 
-
+class ImageFormatter:
+    """
+    Helper to format image features (precomputed or pixels) in nice square Tensors expected by mm models.
+    """
+    def __init__(self, *args, precomputed=None, **kwargs):
+        self.precomputed = precomputed
+        if precomputed is None:
+            # text-only
+            pass
+        elif precomputed:
+            self.image_features = PreComputedImageFeatures(*args, **kwargs)
+        else:
+            self.feature_extractor = get_pretrained(*args, **kwargs)
+    
+    def add_image_features(self, passages, image_kb):
+        """
+        Add image features to passages from QuestionAnsweringDataModule.image_kb
+        
+        Parameters
+        ----------
+        passages: List[dict]
+        image_kb: Dataset
+        """
+        if len(passages) < 1:
+            return passages
+        features = ({"face_box", "face_embedding"} | self.image_features.image_embeddings_keys)
+        batch = {'index': [], 'passage': []}
+        for passage in passages:
+            batch['index'].append(passage['index'])
+            batch['passage'].append(passage['passage'])
+        subset = image_kb.select(batch['index'])
+        for feature in features:
+            batch.setdefault(feature, subset[feature])
+        # dict of list to list of dict
+        output = []
+        for values in zip(*batch.values()):
+            output.append({k: v for k, v in zip(batch.keys(), values)})
+        return output
+    
+    def add_image_pixels(self, passages):
+        """
+        Add image pixels to passages by loading image
+        
+        Parameters
+        ----------
+        passages: List[dict]
+        """
+        if len(passages) < 1:
+            return passages
+        for passage in passages:
+            image = load_image(passage['image'])
+            passage.update(self.feature_extractor(images=image, return_tensors="pt"))
+            # remove all irrelevant keys
+            for k in list(passage.keys()):
+                if k not in {'passage', 'pixel_values'}:
+                    passage.pop(k)
+        return passages   
+    
+    def add_image(self, *args, image_kb=None, **kwargs):
+        """Switches between add_image_features and add_image_pixels"""
+        if self.precomputed:
+            return self.add_image_features(*args, image_kb=image_kb, **kwargs)
+        else:
+            return self.add_image_pixels(*args, **kwargs)
+        
+    def format_pixels(self, items):
+        """Concat all pixels in the batch dimension + keep track of padding passages in attention_mask"""
+        size = self.feature_extractor.crop_size
+        pixels = torch.zeros(len(items), 3, size, size)
+        # 0=masked, 1=not masked
+        pixel_mask = torch.zeros(len(items), size, size, dtype=torch.long)
+        for i, item in enumerate(items):
+            pixel = item.get('pixel_values')
+            # in case of padding passage
+            if pixel is None:
+                # keep zero-padding/mask
+                continue
+            pixels[i] = pixel
+            # the image is either fully-masked or fully-unmasked
+            pixel_mask[i] = 1
+        return dict(pixel_values=pixels, pixel_mask=pixel_mask)     
+    
+    def format_batch(self, text_inputs, items_or_passages):
+        """
+        Parameters
+        ----------
+        text_inputs: dict[Tensor]
+        items_or_passages: List[dict]
+        """
+        if self.precomputed is None:
+            # text-only
+            pass
+        elif self.precomputed:
+            inputs = dict(
+                text_inputs=text_inputs,
+                face_inputs=self.image_features.get_face_inputs(items_or_passages), 
+                image_inputs=self.image_features.get_image_inputs(items_or_passages)
+            )
+        else:
+            inputs = dict(
+                **text_inputs,
+                **self.format_pixels(items_or_passages)
+            )
+        return inputs
+    
+    
 class PreComputedImageFeatures:
     """
     Helper to format image features in nice square Tensors expected by mm models.
     
     Parameters
     ----------
-    config: MMConfig
+    config_class: str
+        Name of a subclass of MMConfig
+    config_path: str
     """
-    def __init__(self, config):
+    def __init__(self, config_class, config_path):
+        config = get_pretrained(config_class, pretrained_model_name_or_path=config_path)
         self.n_faces = config.n_faces        
         self.image_embeddings_keys = config.image_kwargs.keys()
         self.image_dims = {}
@@ -192,10 +305,7 @@ class QuestionAnsweringDataModule(DataModule):
     
     The core idea is that it relies on a Knowledge Base (KB) 
     to retrieve relevant and irrelevant passages for the questions in the dataset.
-    
-    For multimodal models, it can also handle pre-computed image features stored in image_kb
-    using PreComputedImageFeatures
-    
+        
     We need to create the batch of questions and passages on-the-fly
     The inputs should be shaped like (N * M, L), where:
         * N - number of distinct questions (equal to the batch size)
@@ -231,8 +341,6 @@ class QuestionAnsweringDataModule(DataModule):
         if image_kb is not None:
             self.image_kb = verbose_load_from_disk(image_kb)            
             self.padding_passage = [{'passage': ''}]
-            # will be instantiated once we can access trainer
-            self.image_features = None
         else:
             self.image_kb = None
             self.padding_passage = ['']
@@ -241,24 +349,6 @@ class QuestionAnsweringDataModule(DataModule):
         self.n_relevant_passages = n_relevant_passages
         self.search_key = search_key    
                          
-    def add_image_features(self, passages):
-        """Add image features to passages from self.image_kb"""
-        if len(passages) < 1:
-            return passages
-        features = ({"face_box", "face_embedding"} | self.image_features.image_embeddings_keys)
-        batch = {'index': [], 'passage': []}
-        for passage in passages:
-            batch['index'].append(passage['index'])
-            batch['passage'].append(passage['passage'])
-        subset = self.image_kb.select(batch['index'])
-        for feature in features:
-            batch.setdefault(feature, subset[feature])
-        # dict of list to list of dict
-        output = []
-        for values in zip(*batch.values()):
-            output.append({k: v for k, v in zip(batch.keys(), values)})
-        return output
-
     def get_training_passages(self, item):
         """
         Parameters
@@ -300,11 +390,8 @@ class QuestionAnsweringDataModule(DataModule):
             if irrelevant_passages:
                 irrelevant_passages = irrelevant_passages['passage']
         else:
-            if self.image_features is None:
-                mm_config = self.trainer.model.question_model.config
-                self.image_features = PreComputedImageFeatures(mm_config)
-            relevant_passages = self.add_image_features(relevant_passages)
-            irrelevant_passages = self.add_image_features(irrelevant_passages)
+            relevant_passages = self.image_formatter.add_image(relevant_passages, self.image_kb)
+            irrelevant_passages = self.image_formatter.add_image(irrelevant_passages, self.image_kb)
         return relevant_passages, irrelevant_passages  
             
 
@@ -359,24 +446,9 @@ class BiEncoderDataModule(QuestionAnsweringDataModule):
             all_passages_text = [p['passage'] for p in all_passages]
         context_inputs_text = self.tokenizer(all_passages_text, **self.tokenization_kwargs)
         
-        # multimodal vs. text-only
-        if self.image_kb is None:
-            question_inputs = question_inputs_text
-            context_inputs = context_inputs_text
-        else:
-            # get image features, for both questions and passages
-            question_inputs = dict(
-                text_inputs=question_inputs_text, 
-                face_inputs=self.image_features.get_face_inputs(items), 
-                image_inputs=self.image_features.get_image_inputs(items)
-            )
-            context_inputs = dict(
-                text_inputs=context_inputs_text, 
-                face_inputs=self.image_features.get_face_inputs(all_passages), 
-                image_inputs=self.image_features.get_image_inputs(all_passages)
-            )
-        
         # wrap it up
+        question_inputs = self.image_formatter.format_batch(question_inputs_text, items)
+        context_inputs = self.image_formatter.format_batch(context_inputs_text, all_passages)
         labels = torch.tensor(labels)
         batch = dict(question_inputs=question_inputs, context_inputs=context_inputs, labels=labels)
         return batch
@@ -577,8 +649,6 @@ class ICT(DataModule):
     def __init__(self, *args, sentences_per_target=4, n_hard_negatives=0,
                  prepend_title=False, text_mask_rate=1.0, image_mask_rate=1.0, **kwargs):
         super().__init__(*args, **kwargs)
-        # will be instantiated once we can access trainer
-        self.image_features = None
         self.sentences_per_target = sentences_per_target
         self.n_hard_negatives = n_hard_negatives
         self.prepend_title = prepend_title
@@ -626,15 +696,16 @@ class ICT(DataModule):
         # robustness trick: use the same image in query/target so that the model keeps image information
         else:
             context_image_key = ""
-        # rename context image features
-        for k in ({"face_box", "face_embedding"} | self.image_features.image_embeddings_keys):
-            target[k] = item.get(f"{context_image_key}{k}")
+            
+        # rename context image features/image path
+        if self.image_formatter.precomputed:
+            for k in ({"face_box", "face_embedding"} | self.image_features.image_embeddings_keys):
+                target[k] = item.get(f"{context_image_key}{k}")
+        else:
+            target['image'] = item[f"{context_image_key}image"]
         return query, target
 
-    def collate_fn(self, items):
-        if self.image_features is None:
-            mm_config = self.trainer.model.question_model.config
-            self.image_features = PreComputedImageFeatures(mm_config)
+    def collate_fn(self, items):        
         questions, relevant_passages, labels = [], [], []
         for i, item in enumerate(items):
             query, relevant_passage = self.get_pseudo_question(item)
@@ -644,20 +715,14 @@ class ICT(DataModule):
 
         question_inputs_text = self.tokenizer([q['text'] for q in questions], **self.tokenization_kwargs)
         context_inputs_text = self.tokenizer([p['text'] for p in relevant_passages], **self.tokenization_kwargs)
-        # get image features, for both questions and passages
-        question_inputs = dict(
-            text_inputs=question_inputs_text, 
-            face_inputs=self.image_features.get_face_inputs(items), 
-            image_inputs=self.image_features.get_image_inputs(items)
-        )
-        context_inputs = dict(
-            text_inputs=context_inputs_text, 
-            face_inputs=self.image_features.get_face_inputs(relevant_passages), 
-            image_inputs=self.image_features.get_image_inputs(relevant_passages)
-        )
+        # get image features or pixels, for both questions and passages
+        question_inputs = self.image_formatter.format_batch(question_inputs_text, items)
+        context_inputs = self.image_formatter.format_batch(context_inputs_text, relevant_passages)
 
         # make self.n_hard_negatives by shifting the images of relevant passages
         if self.n_hard_negatives > 0:
+            if not self.image_formatter.precomputed:
+                raise NotImplementedError()
             # duplicate relevant text
             for k, v in context_inputs["text_inputs"].items():
                 context_inputs["text_inputs"][k] = torch.tile(v, (self.n_hard_negatives+1, 1))
