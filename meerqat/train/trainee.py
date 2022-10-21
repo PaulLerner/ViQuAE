@@ -313,10 +313,9 @@ class MultiPassageBERT(BertForQuestionAnswering):
        pages 845–855, Melbourne, Australia. Association for Computational Linguistics.
     """
 
-    def __init__(self, *args, M=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.log_softmax = nn.LogSoftmax(1)
-        self.M = M
 
     def forward(self,
                 input_ids,
@@ -357,8 +356,6 @@ class MultiPassageBERT(BertForQuestionAnswering):
             n_times_m, L = input_ids.shape
             M = start_positions.shape[1]
             assert n_times_m % M == 0
-            assert self.M is None or self.M == M
-            self.M = M
             N = n_times_m//M
             # sometimes the start/end positions are outside our model inputs, we ignore these terms
             ignored_index = L
@@ -444,13 +441,14 @@ class MultiPassageBERTTrainee(Trainee):
         return self.trainer.datamodule.tokenizer.batch_decode(answers, skip_special_tokens=True)
     
     def eval_epoch_end(self, eval_outputs):        
-        M = self.model.M
+        M = self.trainer.datamodule.M
         # gather all outputs
         all_predictions, all_weighted_predictions, all_answer_strings = [], [], []
         dataset_size = 0
         for batch in eval_outputs:
             input_ids = batch['input_ids']
             n_times_m, L = input_ids.shape
+            assert n_times_m % M == 0
             N = n_times_m//M
             dataset_size += N
             answer_strings = batch['answer_strings']
