@@ -110,73 +110,23 @@ class ImageFormatter:
             self.image_features = PreComputedImageFeatures(*args, **kwargs)
         else:
             self.feature_extractor = get_pretrained(*args, **kwargs)
-    
-    def add_image_features(self, passages, image_kb):
-        """
-        Add image features to passages from QuestionAnsweringDataModule.image_kb
-        
-        Parameters
-        ----------
-        passages: List[dict]
-        image_kb: Dataset
-        """
-        if len(passages) < 1:
-            return passages
-        features = ({"face_box", "face_embedding"} | self.image_features.image_embeddings_keys)
-        batch = {'index': [], 'passage': []}
-        for passage in passages:
-            batch['index'].append(passage['index'])
-            batch['passage'].append(passage['passage'])
-        subset = image_kb.select(batch['index'])
-        for feature in features:
-            batch.setdefault(feature, subset[feature])
-        # dict of list to list of dict
-        output = []
-        for values in zip(*batch.values()):
-            output.append({k: v for k, v in zip(batch.keys(), values)})
-        return output
-    
-    def add_image_pixels(self, passages):
-        """
-        Add image pixels to passages by loading image
-        
-        Parameters
-        ----------
-        passages: List[dict]
-        """
-        if len(passages) < 1:
-            return passages
-        for passage in passages:
-            image = load_image(passage['image'])
-            passage.update(self.feature_extractor(images=image, return_tensors="pt"))
-            # remove all irrelevant keys
-            for k in list(passage.keys()):
-                if k not in {'passage', 'pixel_values'}:
-                    passage.pop(k)
-        return passages   
-    
-    def add_image(self, *args, image_kb=None, **kwargs):
-        """Switches between add_image_features and add_image_pixels"""
-        if self.precomputed:
-            return self.add_image_features(*args, image_kb=image_kb, **kwargs)
-        else:
-            return self.add_image_pixels(*args, **kwargs)
-        
+                 
     def format_pixels(self, items):
-        """Concat all pixels in the batch dimension + keep track of padding passages in attention_mask"""
-        size = self.feature_extractor.crop_size
+        size = self.feature_extractor.size
         pixels = torch.zeros(len(items), 3, size, size)
         # 0=masked, 1=not masked
         pixel_mask = torch.zeros(len(items), size, size, dtype=torch.long)
         for i, item in enumerate(items):
-            pixel = item.get('pixel_values')
             # in case of padding passage
-            if pixel is None:
-                # keep zero-padding/mask
+            if 'image' not in item:
                 continue
-            pixels[i] = pixel
-            # the image is either fully-masked or fully-unmasked
-            pixel_mask[i] = 1
+            image = load_image(item['image'])
+            # trouble during loading. user is already warned
+            if image is None:
+                continue
+            image = self.feature_extractor(images=image, return_tensors="pt")
+            pixels[i] = image['pixel_values']
+            pixel_mask[i] = image['pixel_mask']
         return dict(pixel_values=pixels, pixel_mask=pixel_mask)     
     
     def format_batch(self, text_inputs, items_or_passages):
@@ -390,10 +340,57 @@ class QuestionAnsweringDataModule(DataModule):
             if irrelevant_passages:
                 irrelevant_passages = irrelevant_passages['passage']
         else:
-            relevant_passages = self.image_formatter.add_image(relevant_passages, self.image_kb)
-            irrelevant_passages = self.image_formatter.add_image(irrelevant_passages, self.image_kb)
+            relevant_passages = self.add_image(relevant_passages)
+            irrelevant_passages = self.add_image(irrelevant_passages)
         return relevant_passages, irrelevant_passages  
-            
+                    
+    def add_image_features(self, passages):
+        """
+        Add image features to passages from image_kb
+        
+        Parameters
+        ----------
+        passages: List[dict]
+        image_kb: Dataset
+        """
+        if len(passages) < 1:
+            return passages
+        features = ({"face_box", "face_embedding"} | self.image_formatter.image_features.image_embeddings_keys)
+        batch = {'index': [], 'passage': []}
+        for passage in passages:
+            batch['index'].append(passage['index'])
+            batch['passage'].append(passage['passage'])
+        subset = self.image_kb.select(batch['index'])
+        for feature in features:
+            batch.setdefault(feature, subset[feature])
+        # dict of list to list of dict
+        output = []
+        for values in zip(*batch.values()):
+            output.append({k: v for k, v in zip(batch.keys(), values)})
+        return output
+    
+    def add_image_path(self, passages):
+        """
+        Add image path to passages from image_kb
+        
+        Parameters
+        ----------
+        passages: List[dict]
+        """
+        if len(passages) < 1:
+            return passages
+        for passage in passages:
+            i = passage['index']
+            passage.setdefault('image', self.image_kb[i]['image'])
+        return passages   
+    
+    def add_image(self, *args, **kwargs):
+        """Switches between add_image_features and add_image_path"""
+        if self.image_formatter.precomputed:
+            return self.add_image_features(*args, **kwargs)
+        else:
+            return self.add_image_path(*args, **kwargs)
+        
 
 class BiEncoderDataModule(QuestionAnsweringDataModule):        
     def collate_fn(self, items):
@@ -699,7 +696,7 @@ class ICT(DataModule):
             
         # rename context image features/image path
         if self.image_formatter.precomputed:
-            for k in ({"face_box", "face_embedding"} | self.image_features.image_embeddings_keys):
+            for k in ({"face_box", "face_embedding"} | self.image_formatter.image_features.image_embeddings_keys):
                 target[k] = item.get(f"{context_image_key}{k}")
         else:
             target['image'] = item[f"{context_image_key}image"]
