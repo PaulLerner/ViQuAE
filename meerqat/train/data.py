@@ -112,10 +112,8 @@ class ImageFormatter:
             self.feature_extractor = get_pretrained(*args, **kwargs)
                  
     def format_pixels(self, items):
-        size = self.feature_extractor.size
-        pixels = torch.zeros(len(items), 3, size, size)
-        # 0=masked, 1=not masked
-        pixel_mask = torch.zeros(len(items), size, size, dtype=torch.long)
+        """Load images and convert to tensors while handling padded passages"""
+        images, indices = [], []
         for i, item in enumerate(items):
             # in case of padding passage
             if 'image' not in item:
@@ -124,10 +122,33 @@ class ImageFormatter:
             # trouble during loading. user is already warned
             if image is None:
                 continue
-            image = self.feature_extractor(images=image, return_tensors="pt")
-            pixels[i] = image['pixel_values']
-            pixel_mask[i] = image['pixel_mask']
-        return dict(pixel_values=pixels, pixel_mask=pixel_mask)     
+            indices.append(i)
+            images.append(image)
+        
+        # corner-case: only padding images
+        if not images:
+            size = self.feature_extractor.size
+            pixel_values = torch.zeros(len(items), 3, size, size)
+            # 0=masked, 1=not masked
+            pixel_mask = torch.zeros(len(items), size, size, dtype=torch.long)            
+            return dict(pixel_values=pixel_values, pixel_mask=pixel_mask) 
+        
+        # resize and pad actual images using feature_extractor
+        images = self.feature_extractor(images, return_tensors="pt")
+        b, c, h, w = images['pixel_values'].shape
+        
+        # opposite corner-case: no padding image, no need for all this trouble
+        if b == len(items):
+            return images
+        
+        # there are some padded images to handle
+        pixel_values = torch.zeros(len(items), c, h, w)
+        pixel_mask = torch.zeros(len(items), h, w, dtype=torch.long)
+        indices = torch.tensor(indices)
+        pixel_values[indices] = images['pixel_values']
+        pixel_mask[indices] = images['pixel_mask']         
+        
+        return dict(pixel_values=pixel_values, pixel_mask=pixel_mask)     
     
     def format_batch(self, text_inputs, items_or_passages):
         """
@@ -340,8 +361,8 @@ class QuestionAnsweringDataModule(DataModule):
             if irrelevant_passages:
                 irrelevant_passages = irrelevant_passages['passage']
         else:
-            relevant_passages = self.add_image(relevant_passages)
-            irrelevant_passages = self.add_image(irrelevant_passages)
+            relevant_passages = self.add_image(list(relevant_passages))
+            irrelevant_passages = self.add_image(list(irrelevant_passages))          
         return relevant_passages, irrelevant_passages  
                     
     def add_image_features(self, passages):
@@ -351,7 +372,6 @@ class QuestionAnsweringDataModule(DataModule):
         Parameters
         ----------
         passages: List[dict]
-        image_kb: Dataset
         """
         if len(passages) < 1:
             return passages
