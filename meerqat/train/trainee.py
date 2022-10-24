@@ -9,18 +9,16 @@ import numpy as np
 import torch.nn as nn
 import torch
 from torch.optim import AdamW
-from transformers.models.bert.modeling_bert import BertEncoder
 from transformers import BertForQuestionAnswering
 import pytorch_lightning as pl
 
 from ..data.loading import get_pretrained
-from ..models.mm import FlamantEncoder
 from ..models.qa import get_best_spans
 from .optim import _calc_mml, LinearLRWithWarmup
 from .outputs import MultiPassageBERTOutput, BiEncoderOutput
 from .metrics import retrieval, squad
 
-
+    
 class Trainee(pl.LightningModule):
     """
     Base class for all Trainee models (to be trained by a Trainer)
@@ -38,8 +36,7 @@ class Trainee(pl.LightningModule):
     warmup_steps: int, optional
         Defaults to no warm-up
     """
-    supports_gradient_checkpointing = True
-    def __init__(self, *args, freeze_regex=None, gradient_checkpointing=False,                  
+    def __init__(self, *args, freeze_regex=None, gradient_checkpointing=False,
                  warmup_steps=0, lr=2e-5, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0, **kwargs):
         super().__init__(*args, **kwargs)
         self.freeze_regex = freeze_regex
@@ -133,12 +130,11 @@ class Trainee(pl.LightningModule):
         return [optimizer], [scheduler]
         
     
-    ###################################################
-    # gradient checkpointing: taken from transformers #
-    ###################################################
-    
+    #####################################################
+    # gradient checkpointing: adapted from transformers #
+    #####################################################
     def _set_gradient_checkpointing(self, module, value=False):
-        if isinstance(module, (BertEncoder, FlamantEncoder)):
+        if hasattr(module, "gradient_checkpointing"):
             module.gradient_checkpointing = value
             
     def gradient_checkpointing_enable(self):
@@ -147,8 +143,6 @@ class Trainee(pl.LightningModule):
         Note that in other frameworks this feature can be referred to as "activation checkpointing" or "checkpoint
         activations".
         """
-        if not self.supports_gradient_checkpointing:
-            raise ValueError(f"{self.__class__.__name__} does not support gradient checkpointing.")
         self.apply(partial(self._set_gradient_checkpointing, value=True))
 
     def gradient_checkpointing_disable(self):
@@ -167,7 +161,7 @@ class Trainee(pl.LightningModule):
         Note that in other frameworks this feature can be referred to as "activation checkpointing" or "checkpoint
         activations".
         """
-        return any(hasattr(m, "gradient_checkpointing") and m.gradient_checkpointing for m in self.modules())
+        return any(getattr(m, "gradient_checkpointing", False) for m in self.modules())
 
         
 class BiEncoder(Trainee):
@@ -196,6 +190,7 @@ class BiEncoder(Trainee):
     def __init__(self, *args, question_class, question_model_name_or_path, 
                  context_class=None, context_model_name_or_path=None, **kwargs):
         super().__init__(*args, **kwargs)
+        # TODO pass kwargs to question/context models
         
         # default to symmetric encoders
         context_class = question_class if context_class is None else context_class
