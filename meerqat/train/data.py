@@ -136,11 +136,7 @@ class ImageFormatter:
         if not images:
             size = self.feature_extractor.size
             pixel_values = torch.zeros(len(items), 3, size, size)
-            # 0=masked, 1=not masked
-            pixel_mask = torch.zeros(len(items), size, size, dtype=torch.long) 
-            # at least one pixel should not be padded (see below)
-            pixel_mask[:, 0, 0] = 1  
-            return dict(pixel_values=pixel_values, pixel_mask=pixel_mask) 
+            return dict(pixel_values=pixel_values) 
         
         # resize and pad actual images using feature_extractor
         images = self.feature_extractor(images, return_tensors="pt")
@@ -152,21 +148,25 @@ class ImageFormatter:
         
         # there are some padded images to handle
         pixel_values = torch.zeros(len(items), c, h, w)
-        pixel_mask = torch.zeros(len(items), h, w, dtype=torch.long)
-        # at least one pixel should not be padded to avoid the following error:
-#       File "transformers/models/vilt/modeling_vilt.py", line 129, in <listcomp>                                               
-#           nn.functional.interpolate(                                                                                                                                                                             
-#       File "torch/nn/functional.py", line 3938, in interpolate                                                                
-#           return torch._C._nn.upsample_bilinear2d(input, output_size, align_corners, scale_factors)                                                                                                              
-#       RuntimeError: Input and output sizes should be greater than 0, but got input (H: 12, W: 12) output (H: 0, W: 0) 
-        pixel_mask[:, 0, 0] = 1  
 
         indices = torch.tensor(indices)
         pixel_values[indices] = images['pixel_values']
-        pixel_mask[indices] = images['pixel_mask']     
+        output = dict(pixel_values=pixel_values)
         
+        # pixel_mask exists for ViLT but not CLIP
+        if 'pixel_mask' in images:
+            pixel_mask = torch.zeros(len(items), h, w, dtype=torch.long)
+            # at least one pixel should not be padded to avoid the following error:
+    #       File "transformers/models/vilt/modeling_vilt.py", line 129, in <listcomp>                                               
+    #           nn.functional.interpolate(                                                                                                                                                                             
+    #       File "torch/nn/functional.py", line 3938, in interpolate                                                                
+    #           return torch._C._nn.upsample_bilinear2d(input, output_size, align_corners, scale_factors)                                                                                                              
+    #       RuntimeError: Input and output sizes should be greater than 0, but got input (H: 12, W: 12) output (H: 0, W: 0) 
+            pixel_mask[:, 0, 0] = 1  
+            pixel_mask[indices] = images['pixel_mask']   
+            output['pixel_mask'] = pixel_mask
         
-        return dict(pixel_values=pixel_values, pixel_mask=pixel_mask)     
+        return output
     
     def format_batch(self, text_inputs, items_or_passages):
         """
