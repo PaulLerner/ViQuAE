@@ -36,10 +36,12 @@ class DataModule(pl.LightningDataModule):
         To be passed to self.tokenizer
     image_kwargs: dict, optional
         Passed to ImageFormatter. Optional for text-only models.
+    loader_kwargs: dict, optional
+        Passed to the data loaders (e.g. self.train_dataloader())
     """
     def __init__(self, tokenizer_class, tokenizer_name_or_path, 
                  dataset_path=None, train_path=None, validation_path=None, test_path=None, 
-                 train_batch_size=8, eval_batch_size=8, tokenization_kwargs=None, image_kwargs={}):
+                 train_batch_size=8, eval_batch_size=8, tokenization_kwargs=None, image_kwargs={}, loader_kwargs={}):
         super().__init__()
         self.tokenizer = get_pretrained(tokenizer_class, pretrained_model_name_or_path=tokenizer_name_or_path)
         self.dataset_path = dataset_path
@@ -55,6 +57,7 @@ class DataModule(pl.LightningDataModule):
             default_tokenization_kwargs.update(tokenization_kwargs)
         self.tokenization_kwargs = default_tokenization_kwargs
         self.image_formatter = ImageFormatter(**image_kwargs)
+        self.loader_kwargs = loader_kwargs
         
     def setup(self, stage=None):
         if self.dataset_path is None:
@@ -73,7 +76,8 @@ class DataModule(pl.LightningDataModule):
             self.dataset['train'], 
             batch_size=self.train_batch_size,
             collate_fn=self.collate_fn,
-            shuffle=True
+            shuffle=True,
+            **self.loader_kwargs
         )
 
     def val_dataloader(self):
@@ -83,7 +87,8 @@ class DataModule(pl.LightningDataModule):
             self.dataset['validation'], 
             batch_size=self.eval_batch_size, 
             collate_fn=self.collate_fn,
-            shuffle=self.shuffle_eval
+            shuffle=self.shuffle_eval,
+            **self.loader_kwargs
         )
 
     def test_dataloader(self):
@@ -93,7 +98,8 @@ class DataModule(pl.LightningDataModule):
             self.dataset['test'], 
             batch_size=self.eval_batch_size, 
             collate_fn=self.collate_fn,
-            shuffle=self.shuffle_eval
+            shuffle=self.shuffle_eval,
+            **self.loader_kwargs
         )
     
 
@@ -118,6 +124,7 @@ class ImageFormatter:
             # in case of padding passage
             if 'image' not in item:
                 continue
+            # FIXME I guess this is very slow. maybe use datasets image features?
             image = load_image(item['image'])
             # trouble during loading. user is already warned
             if image is None:
@@ -308,6 +315,7 @@ class QuestionAnsweringDataModule(DataModule):
     n_relevant_passages: int, optional
         Defaults to 1
     search_key: str, optional
+        TODO refactor: (train|eval)_(provenance|irrelevant)_indices: either str keys stored in dataset or path to ranx run?
         This column in the dataset suffixed by '_indices' and '_scores' should hold the result of information retrieval
         used during evaluation (e.g. the output of ir.search)
         Suffixed by "_provenance_indices" and "_irrelevant_indices" it should hold:
