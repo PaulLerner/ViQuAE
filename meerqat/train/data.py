@@ -31,7 +31,10 @@ class DataModule(pl.LightningDataModule):
         Path to a DatasetDict that should have 'train', 'validation' and 'test' subsets.
         Alternatively, you can specify those using the dedicated variables.
     train_path, validation_path, test_path: str, optional
-    train_batch_size, eval_batch_size: int, optional
+    batch_size, train_batch_size, eval_batch_size: int, optional
+        batch_size is needed to be able to tune it automatically using auto_scale_batch_size in Trainer
+        It is overriden by train_batch_size, eval_batch_size 
+        (if you want to use different batch sizes for training and evaluation)
     tokenization_kwargs: dict, optional
         To be passed to self.tokenizer
     image_kwargs: dict, optional
@@ -40,14 +43,15 @@ class DataModule(pl.LightningDataModule):
         Passed to the data loaders (e.g. self.train_dataloader())
     """
     def __init__(self, tokenizer_class, tokenizer_name_or_path, 
-                 dataset_path=None, train_path=None, validation_path=None, test_path=None, 
-                 train_batch_size=8, eval_batch_size=8, tokenization_kwargs=None, image_kwargs={}, loader_kwargs={}):
+                 dataset_path=None, train_path=None, validation_path=None, test_path=None, batch_size=8,
+                 train_batch_size=None, eval_batch_size=None, tokenization_kwargs=None, image_kwargs={}, loader_kwargs={}):
         super().__init__()
         self.tokenizer = get_pretrained(tokenizer_class, pretrained_model_name_or_path=tokenizer_name_or_path)
         self.dataset_path = dataset_path
         self.train_path = train_path        
         self.validation_path = validation_path
         self.test_path = test_path
+        self.batch_size = batch_size
         self.train_batch_size = train_batch_size
         self.eval_batch_size = eval_batch_size
         # useful in some corner-cases like ICT. False for every other data modules
@@ -68,13 +72,16 @@ class DataModule(pl.LightningDataModule):
                     self.dataset[subset] = verbose_load_from_disk(subset_path)
         else:
             self.dataset = verbose_load_from_disk(self.dataset_path)
-        
+    
     def train_dataloader(self):    
         if 'train' not in self.dataset:
             return None    
+        # set here and not in __init__ so that it will be reset properly in Trainer.reset_train_dataloader,
+        # which is called during auto_scale_batch_size
+        batch_size = self.train_batch_size if self.train_batch_size is not None else self.batch_size
         return DataLoader(
             self.dataset['train'], 
-            batch_size=self.train_batch_size,
+            batch_size=batch_size,
             collate_fn=self.collate_fn,
             shuffle=True,
             **self.loader_kwargs
@@ -83,9 +90,10 @@ class DataModule(pl.LightningDataModule):
     def val_dataloader(self):
         if 'validation' not in self.dataset:
             return None
+        batch_size = self.eval_batch_size if self.eval_batch_size is not None else self.batch_size
         return DataLoader(
             self.dataset['validation'], 
-            batch_size=self.eval_batch_size, 
+            batch_size=batch_size, 
             collate_fn=self.collate_fn,
             shuffle=self.shuffle_eval,
             **self.loader_kwargs
@@ -94,9 +102,10 @@ class DataModule(pl.LightningDataModule):
     def test_dataloader(self):
         if 'test' not in self.dataset:
             return None
+        batch_size = self.eval_batch_size if self.eval_batch_size is not None else self.batch_size
         return DataLoader(
             self.dataset['test'], 
-            batch_size=self.eval_batch_size, 
+            batch_size=batch_size, 
             collate_fn=self.collate_fn,
             shuffle=self.shuffle_eval,
             **self.loader_kwargs
@@ -124,7 +133,6 @@ class ImageFormatter:
             # in case of padding passage
             if 'image' not in item:
                 continue
-            # FIXME I guess this is very slow. maybe use datasets image features?
             image = load_image(item['image'])
             # trouble during loading. user is already warned
             if image is None:
@@ -139,6 +147,7 @@ class ImageFormatter:
             return dict(pixel_values=pixel_values) 
         
         # resize and pad actual images using feature_extractor
+        # N. B. this is three time slower than load_image (in cumulated time)
         images = self.feature_extractor(images, return_tensors="pt")
         b, c, h, w = images['pixel_values'].shape
         
