@@ -111,7 +111,7 @@ class ImageFormatter:
         self.precomputed = precomputed
         if precomputed is None:
             # text-only
-            pass
+            assert not (args or kwargs), f"Maybe you forgot to set `precomputed=True|False`. Got:\n{args}\n{kwargs}"
         elif precomputed:
             self.image_features = PreComputedImageFeatures(*args, **kwargs)
         else:
