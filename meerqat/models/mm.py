@@ -9,7 +9,7 @@ from torch import nn
 from transformers.modeling_outputs import ModelOutput, BaseModelOutputWithPastAndCrossAttentions
 from transformers import (
     PreTrainedModel, BertModel, DPRQuestionEncoder, DPRContextEncoder, 
-    ViltPreTrainedModel, ViltModel
+    ViltPreTrainedModel, ViltModel, CLIPModel, CLIPConfig
 )
 from transformers.models.bert import BertConfig, BertPreTrainedModel
 
@@ -512,6 +512,30 @@ class ViltForIR(ViltPreTrainedModel):
         # else keep pooling from ViltPooler
         return outputs
 
+
+class CLIPForIR(PreTrainedModel):
+    """
+    Fuses image and text embeddings simply by summing them to be compatible with BiEncoder.
+    
+    Because BiEncoder uses dot-product similarity, note that this will be equivalent to computing:
+        i_q*i_p + i_q*t_p + t_q*t_p + t_q*i_p
+    Where i, t stand for image, text and _q and _p suffixes stand for question and passage (or context)
+    i.e. computing all mono-modal and cross-modal similarities.
+    
+    But it might be worth using another trainee than BiEncoder to be able to scale these similarities.
+    """
+    config_class = CLIPConfig
+    base_model_prefix = "clip"
+
+    def __init__(self, config):
+        super().__init__(config)
+        self.clip = CLIPModel(config)
+    
+    def forward(self, *args, return_dict=True, return_loss=False, **kwargs):
+        outputs = self.clip(*args, return_dict=return_dict, return_loss=return_loss, **kwargs)
+        multimodal_output = outputs.text_embeds + outputs.image_embeds
+        return EncoderOutput(pooler_output=multimodal_output)
+        
         
 class DMREncoder(PreTrainedModel):
     """
