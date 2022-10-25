@@ -3,7 +3,10 @@ import warnings
 
 import numpy as np
 
-from transformers import BertForQuestionAnswering
+from torch import nn
+from transformers import (
+    BertForQuestionAnswering, ViltPreTrainedModel, ViltModel
+)
 
 from ..train.optim import multi_passage_rc_loss
 from .outputs import MultiPassageBERTOutput
@@ -154,3 +157,60 @@ class MultiPassageBERT(BertForQuestionAnswering):
             hidden_states=outputs.hidden_states,
             attentions=outputs.attentions,
         )
+        
+        
+class MultiPassageVilt(ViltPreTrainedModel):
+    """Like MultiPassageBERT with a ViLT backbone instead of BERT"""
+    def __init__(self, config, add_pooling_layer=False):
+        super().__init__(config)
+        self.vilt = ViltModel(config, add_pooling_layer=add_pooling_layer)
+        
+        # like BertForQuestionAnswering
+        self.num_labels = config.num_labels
+        self.qa_outputs = nn.Linear(config.hidden_size, config.num_labels)
+        # Initialize weights and apply final processing
+        self.post_init()
+
+    
+    def forward(self, input_ids, *args,
+                start_positions=None, end_positions=None, answer_mask=None,
+                return_dict=None, **kwargs):
+        outputs = self.vilt(input_ids, *args, return_dict=return_dict, **kwargs)
+        
+        # same as MultiPassageBERT
+        sequence_output = outputs[0]
+        logits = self.qa_outputs(sequence_output)
+        start_logits, end_logits = logits.split(1, dim=-1)
+        start_logits = start_logits.squeeze(-1).contiguous()
+        end_logits = end_logits.squeeze(-1).contiguous()
+
+        # compute loss
+        if start_positions is not None and end_positions is not None:
+            pack = multi_passage_rc_loss(
+                input_ids, 
+                start_positions, 
+                end_positions, 
+                start_logits, 
+                end_logits, 
+                answer_mask
+            )
+            # unpack so that the line is not hundreds columns long
+            total_loss, start_positions, end_positions, start_logits, end_logits, start_log_probs, end_log_probs = pack
+        else:            
+            total_loss, start_log_probs, end_log_probs = None, None, None
+
+        if not return_dict:
+            output = (start_logits, end_logits, start_log_probs, end_log_probs) + outputs[2:]
+            return ((total_loss,) + output) if total_loss is not None else output
+
+        return MultiPassageBERTOutput(
+            loss=total_loss,
+            start_logits=start_logits,
+            end_logits=end_logits,
+            start_log_probs=start_log_probs,
+            end_log_probs=end_log_probs,
+            hidden_states=outputs.hidden_states,
+            attentions=outputs.attentions,
+        )
+
+        
