@@ -1,12 +1,11 @@
 """Implements the two main architectures presented in the ECIR-submitted paper."""
 import warnings
 
-from dataclasses import dataclass
 from typing import Optional, Tuple
 
 import torch
 from torch import nn
-from transformers.modeling_outputs import ModelOutput, BaseModelOutputWithPastAndCrossAttentions
+from transformers.modeling_outputs import BaseModelOutputWithPastAndCrossAttentions
 from transformers import (
     PreTrainedModel, BertModel, DPRQuestionEncoder, DPRContextEncoder, 
     ViltPreTrainedModel, ViltModel, CLIPModel, CLIPConfig
@@ -16,22 +15,6 @@ from transformers.models.bert import BertConfig, BertPreTrainedModel
 from .image import ImageEmbedding, FaceEmbedding
 from .utils import TanhGate
 from .bert import BertAttention, BertEmbeddings, BertIntermediate, BertOutput, BertPooler, BertLayer
-
-
-@dataclass
-class EncoderOutput(ModelOutput):
-    """Generic class for any encoder output of the BiEncoder framework."""
-    pooler_output: Optional[torch.FloatTensor] = None
-
-
-@dataclass 
-class DMREncoderOutput(EncoderOutput):
-    """
-    Same as DPRQuestionEncoderOutput / DPRContextEncoderOutput
-    """
-    pooler_output: Optional[torch.FloatTensor] = None
-    hidden_states: Optional[Tuple[torch.FloatTensor]] = None
-    attentions: Optional[Tuple[torch.FloatTensor]] = None
 
 
 class MMConfig(BertConfig):

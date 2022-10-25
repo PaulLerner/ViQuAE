@@ -3,6 +3,11 @@ import warnings
 
 import numpy as np
 
+from transformers import BertForQuestionAnswering
+
+from ..train.optim import multi_passage_rc_loss
+from .outputs import MultiPassageBERTOutput
+
 
 def get_best_spans(start_probs, end_probs, weights=None, cannot_be_first_token=True):
     """
@@ -65,3 +70,87 @@ def get_best_spans(start_probs, end_probs, weights=None, cannot_be_first_token=T
     end_indices = (flat_argmaxes % L) + 1
 
     return passage_indices, start_indices, end_indices
+
+
+class MultiPassageBERT(BertForQuestionAnswering):
+    """
+    PyTorch/Transformers implementation of Multi-passage BERT [1]_ (based on the global normalization [2]_)
+    i.e. groups passages per question before computing the softmax (and the NLL loss)
+    so that spans scores are comparable across passages
+
+    Code based on transformers.BertForQuestionAnswering, dpr.models.Reader
+    and https://github.com/allenai/document-qa/blob/master/docqa/nn/span_prediction.py
+
+    References
+    ----------
+    .. [1] Zhiguo Wang, Patrick Ng, Xiaofei Ma, Ramesh Nallapati, and Bing Xiang. 
+       2019. Multi-passage BERT: A Globally Normalized BERT Model for Open-domain Question Answering. 
+       In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing 
+       and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP), 
+       pages 5878–5882, Hong Kong, China. Association for Computational Linguistics.
+
+    .. [2] Christopher Clark and Matt Gardner. 2018. Simple and Effective Multi-Paragraph Reading Comprehension. 
+       In Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), 
+       pages 845–855, Melbourne, Australia. Association for Computational Linguistics.
+    """
+    def forward(self,
+                input_ids,
+                start_positions=None, end_positions=None, answer_mask=None,
+                return_dict=None, **kwargs):
+        """
+        notations: 
+           * N - number of distinct questions
+           * M - number of passages per question in a batch
+           * L - sequence length
+
+        Parameters
+        ----------
+        input_ids: Tensor[int]
+            shape (N * M, L)
+            There should always be a constant number of passages (relevant or not) per question
+        start_positions, end_positions: Tensor[int], optional
+            shape (N, M, max_n_answers)
+            The answer might be found several time in the same passage, maximum ``max_n_answers`` times
+            Defaults to None (i.e. don’t compute the loss)
+        answer_mask: Tensor[int], optional
+            shape (N, M, max_n_answers)
+            Used to mask the loss for answers that are not ``max_n_answers`` times in the passage
+            Required if start_positions and end_positions are specified
+        **kwargs: additional arguments are passed to BERT after being reshape like 
+        """
+        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        outputs = self.bert(input_ids, return_dict=True, **kwargs)
+        sequence_output = outputs[0]
+        logits = self.qa_outputs(sequence_output)
+        start_logits, end_logits = logits.split(1, dim=-1)
+        start_logits = start_logits.squeeze(-1).contiguous()
+        end_logits = end_logits.squeeze(-1).contiguous()
+
+        # compute loss
+        if start_positions is not None and end_positions is not None:
+            pack = multi_passage_rc_loss(
+                input_ids, 
+                start_positions, 
+                end_positions, 
+                start_logits, 
+                end_logits, 
+                answer_mask
+            )
+            # unpack so that the line is not hundreds columns long
+            total_loss, start_positions, end_positions, start_logits, end_logits, start_log_probs, end_log_probs = pack
+        else:            
+            total_loss, start_log_probs, end_log_probs = None, None, None
+
+        if not return_dict:
+            output = (start_logits, end_logits, start_log_probs, end_log_probs) + outputs[2:]
+            return ((total_loss,) + output) if total_loss is not None else output
+
+        return MultiPassageBERTOutput(
+            loss=total_loss,
+            start_logits=start_logits,
+            end_logits=end_logits,
+            start_log_probs=start_log_probs,
+            end_log_probs=end_log_probs,
+            hidden_states=outputs.hidden_states,
+            attentions=outputs.attentions,
+        )

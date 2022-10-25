@@ -56,12 +56,11 @@ from PIL import Image, ImageFile
 import re
 import string
 
-import spacy
 from spacy.lang.en import English
 from datasets import load_dataset, Dataset, load_from_disk, set_caching_enabled
 import transformers
 
-from ..models import mm
+from ..models import mm, qa
 from meerqat import __file__ as ROOT_PATH
 
 
@@ -143,7 +142,7 @@ def answer_preprocess(answer):
 
 
 def get_class_from_name(class_name):
-    modules = [mm, transformers]
+    modules = [mm, qa, transformers]
     for module in modules:
         Class = getattr(module, class_name, None)
         if Class is not None:

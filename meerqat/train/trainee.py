@@ -7,15 +7,13 @@ import re
 import numpy as np
 
 import torch.nn as nn
-import torch
 from torch.optim import AdamW
-from transformers import BertForQuestionAnswering
 import pytorch_lightning as pl
 
 from ..data.loading import get_pretrained
 from ..models.qa import get_best_spans
-from .optim import _calc_mml, LinearLRWithWarmup
-from .outputs import MultiPassageBERTOutput, BiEncoderOutput
+from ..models.outputs import BiEncoderOutput
+from .optim import LinearLRWithWarmup
 from .metrics import retrieval, squad
 
     
@@ -121,6 +119,9 @@ class Trainee(pl.LightningModule):
         """Prepare optimizer and schedule (linear warmup and decay)"""
         optimizer = AdamW(self.parameters(), lr=self.lr, betas=self.betas, eps=self.eps, weight_decay=self.weight_decay)
         
+        # FIXME: this will be overwritten when loading state from ckpt_path
+        # so if you want to keep training by increasing total_steps, 
+        # your LR will be 0 if the ckpt reached the previously set total_steps
         total_steps=self.trainer.estimated_stepping_batches
         scheduler = LinearLRWithWarmup(
             optimizer,
@@ -278,138 +279,19 @@ class BiEncoder(Trainee):
     def eval_epoch_end(self, eval_outputs):
         return retrieval(eval_outputs)
             
-    
-class MultiPassageBERT(BertForQuestionAnswering):
-    """
-    PyTorch/Transformers implementation of Multi-passage BERT [1]_ (based on the global normalization [2]_)
-    i.e. groups passages per question before computing the softmax (and the NLL loss)
-    so that spans scores are comparable across passages
-
-    Code based on transformers.BertForQuestionAnswering, dpr.models.Reader
-    and https://github.com/allenai/document-qa/blob/master/docqa/nn/span_prediction.py
-
-    Notes
-    -----
-    Differences with DPRReaderForQuestionAnswering:
-        * no projection layer between BERT and QA-extraction
-        * no re-ranking (TODO implement MultiPassageDPRReader?)
-        * global normalization
-
-    References
-    ----------
-    .. [1] Zhiguo Wang, Patrick Ng, Xiaofei Ma, Ramesh Nallapati, and Bing Xiang. 
-       2019. Multi-passage BERT: A Globally Normalized BERT Model for Open-domain Question Answering. 
-       In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing 
-       and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP), 
-       pages 5878–5882, Hong Kong, China. Association for Computational Linguistics.
-
-    .. [2] Christopher Clark and Matt Gardner. 2018. Simple and Effective Multi-Paragraph Reading Comprehension. 
-       In Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), 
-       pages 845–855, Melbourne, Australia. Association for Computational Linguistics.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.log_softmax = nn.LogSoftmax(1)
-
-    def forward(self,
-                input_ids,
-                start_positions=None, end_positions=None, answer_mask=None,
-                return_dict=None, **kwargs):
-        """
-        notations: 
-           * N - number of distinct questions
-           * M - number of passages per question in a batch
-           * L - sequence length
-
-        Parameters
-        ----------
-        input_ids: Tensor[int]
-            shape (N * M, L)
-            There should always be a constant number of passages (relevant or not) per question
-        start_positions, end_positions: Tensor[int], optional
-            shape (N, M, max_n_answers)
-            The answer might be found several time in the same passage, maximum ``max_n_answers`` times
-            Defaults to None (i.e. don’t compute the loss)
-        answer_mask: Tensor[int], optional
-            shape (N, M, max_n_answers)
-            Used to mask the loss for answers that are not ``max_n_answers`` times in the passage
-            Required if start_positions and end_positions are specified
-        **kwargs: additional arguments are passed to BERT after being reshape like 
-        """
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
-        outputs = self.bert(input_ids, return_dict=True, **kwargs)
-        sequence_output = outputs[0]
-        logits = self.qa_outputs(sequence_output)
-        start_logits, end_logits = logits.split(1, dim=-1)
-        start_logits = start_logits.squeeze(-1).contiguous()
-        end_logits = end_logits.squeeze(-1).contiguous()
-
-        # compute loss
-        total_loss, start_log_probs, end_log_probs = None, None, None
-        if start_positions is not None and end_positions is not None:
-            n_times_m, L = input_ids.shape
-            M = start_positions.shape[1]
-            assert n_times_m % M == 0
-            N = n_times_m//M
-            # sometimes the start/end positions are outside our model inputs, we ignore these terms
-            ignored_index = L
-            start_positions = start_positions.clamp(0, ignored_index)
-            end_positions = end_positions.clamp(0, ignored_index)
-            loss_fct = nn.NLLLoss(reduction='none', ignore_index=ignored_index)
-
-            # reshape from (N * M, L) to (N, M * L) so that all M passages related to the same question
-            # will share the same softmax normalization
-            start_logits, end_logits = start_logits.view(N, M*L), end_logits.view(N, M*L)
-            start_log_probs, end_log_probs = self.log_softmax(start_logits), self.log_softmax(end_logits)
-            # after computing the softmax, reshape back to (N * M, L)
-            # because the last dimension, L, must match the position indices (i.e. class label) in start_positions, end_positions
-            start_log_probs, end_log_probs = start_log_probs.view(N*M, L), end_log_probs.view(N*M, L)
-            start_logits, end_logits = start_logits.view(N*M, L), end_logits.view(N*M, L)
-
-            # reshape to match model output
-            start_positions, end_positions = start_positions.view(N*M, -1), end_positions.view(N*M, -1)
-            answer_mask = answer_mask.to(device=input_ids.device, dtype=torch.float32).view(N*M, -1)
-
-            # compute span loss for each answer position in passage (in range `max_n_answers`)
-            start_losses = [(loss_fct(start_log_probs, _start_positions) * _span_mask)
-                            for (_start_positions, _span_mask)
-                            in zip(torch.unbind(start_positions, dim=1), torch.unbind(answer_mask, dim=1))]
-
-            end_losses = [(loss_fct(end_log_probs, _end_positions) * _span_mask)
-                          for (_end_positions, _span_mask)
-                          in zip(torch.unbind(end_positions, dim=1), torch.unbind(answer_mask, dim=1))]
-            loss_tensor = torch.cat([t.unsqueeze(1) for t in start_losses], dim=1) + \
-                          torch.cat([t.unsqueeze(1) for t in end_losses], dim=1)
-
-            # keep the maximum per passage for each question
-            loss_tensor = loss_tensor.view(N, M, -1).max(dim=1)[0]
-            total_loss = _calc_mml(loss_tensor)
-
-        if not return_dict:
-            output = (start_logits, end_logits, start_log_probs, end_log_probs) + outputs[2:]
-            return ((total_loss,) + output) if total_loss is not None else output
-
-        return MultiPassageBERTOutput(
-            loss=total_loss,
-            start_logits=start_logits,
-            end_logits=end_logits,
-            start_log_probs=start_log_probs,
-            end_log_probs=end_log_probs,
-            hidden_states=outputs.hidden_states,
-            attentions=outputs.attentions,
-        )
-
 
 class MultiPassageBERTTrainee(Trainee):
     """    
     Parameters
     ----------
-    model_name_or_path: str
+    model_kwargs: dict[str, str]
+        Passed to get_pretrained
     """
-    def __init__(self, *args, model_name_or_path, **kwargs):
+    def __init__(self, *args, model_kwargs, **kwargs):
         super().__init__(*args, **kwargs)
-        self.model = MultiPassageBERT.from_pretrained(model_name_or_path)
+        # TODO refactor all get_pretrained calls like this, 
+        # no need to have a bunch of '*_name_or_path' in each Trainee model
+        self.model = get_pretrained(**model_kwargs)
         self.post_init()   
         
     def forward(self, *args, **kwargs):
