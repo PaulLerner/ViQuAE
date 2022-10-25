@@ -12,6 +12,7 @@ from transformers import (
 )
 from transformers.models.bert import BertConfig, BertPreTrainedModel
 
+from .outputs import EncoderOutput, DMREncoderOutput
 from .image import ImageEmbedding, FaceEmbedding
 from .utils import TanhGate
 from .bert import BertAttention, BertEmbeddings, BertIntermediate, BertOutput, BertPooler, BertLayer
@@ -52,16 +53,17 @@ class MMConfig(BertConfig):
     .. [2] Jean-Baptiste Alayrac et al. (2022). 
        Flamingo: a Visual Language Model for Few-Shot Learning. ArXiv:2204.14198.
     """
-    def __init__(self,
-                 *args,
-                 n_faces=4,
-                 face_kwargs=None,
-                 image_kwargs=None,
-                 face_and_image_are_exclusive=False,
-                 no_text=False,
-                 gating=False,
-                 **kwargs
-                 ):
+    def __init__(
+            self,
+             *args,
+             n_faces=4,
+             face_kwargs=None,
+             image_kwargs=None,
+             face_and_image_are_exclusive=False,
+             no_text=False,
+             gating=False,
+             **kwargs
+        ):
         super().__init__(*args, **kwargs)
         self.n_faces = n_faces
         if face_kwargs is None:
@@ -370,8 +372,7 @@ class FlamantModel(BertPreTrainedModel):
                     self.weights_to_log[f"attn_gate_{i}"] = layer_module.attn_gate.gate_param
                     self.weights_to_log[f"ffw_gate_{i}"] = layer_module.ffw_gate.gate_param
                     
-        # FIXME: switch to post_init if update transformers
-        self.init_weights()
+        self.post_init()
         
     def get_input_embeddings(self):
         return self.embeddings.word_embeddings
@@ -486,6 +487,7 @@ class ViltForIR(ViltPreTrainedModel):
     def __init__(self, config, add_pooling_layer=False):
         super().__init__(config)
         self.vilt = ViltModel(config, add_pooling_layer=add_pooling_layer)
+        # N. B. post_init is called in ViltModel
     
     def forward(self, *args, return_dict=True, **kwargs):
         outputs = self.vilt(*args, return_dict=return_dict, **kwargs)
@@ -513,6 +515,7 @@ class CLIPForIR(PreTrainedModel):
     def __init__(self, config):
         super().__init__(config)
         self.clip = CLIPModel(config)
+        # N. B. post_init is called in CLIPModel
     
     def forward(self, *args, return_dict=True, return_loss=False, **kwargs):
         outputs = self.clip(*args, return_dict=return_dict, return_loss=return_loss, **kwargs)
