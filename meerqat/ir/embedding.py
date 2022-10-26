@@ -131,7 +131,7 @@ def get_inputs(batch, model, tokenizer, tokenization_kwargs={}, key='passage', k
     ----------
     batch: dict
     model: nn.Module
-        If it’s a DMREncoder or IntermediateLinearFusion instance, 
+        If it’s a ECAEncoder or IntermediateLinearFusion instance, 
         will gather image features to take as input (from the kb if kb is not None)
     tokenizer: PreTrainedTokenizer
     tokenization_kwargs: dict, optional
@@ -177,7 +177,7 @@ def embed(batch, model, tokenizer, tokenization_kwargs={}, key='passage',
     layers: list[int], optional
         if not None, expects that the output is a List[Tensor] 
         with each Tensor being shaped like (batch_size, sequence_length, hidden_size)
-        In this case, it will save in {save_as}_layer_{layer} the representation of the first token (DMR-like), for each layer
+        In this case, it will save in {save_as}_layer_{layer} the representation of the first token (DPR-like), for each layer
     """
     inputs = get_inputs(batch, model, tokenizer, tokenization_kwargs=tokenization_kwargs, key=key, kb=kb)
     # move to device

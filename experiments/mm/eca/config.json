@@ -1,9 +1,9 @@
 {
     "trainee": {
         "class_name": "BiEncoder",
-        "question_class": "DMREncoder",
-        "dpr_question_model_name_or_path": "experiments/ict/dmr/checkpoint-7400/question_model",
-        "dpr_context_model_name_or_path": "experiments/ict/dmr/checkpoint-7400/context_model"
+        "question_class": "ECAEncoder",
+        "dpr_question_model_name_or_path": "experiments/ict/eca/checkpoint-7400/question_model",
+        "dpr_context_model_name_or_path": "experiments/ict/eca/checkpoint-7400/context_model"
     },
     "trainer_class": "MMTrainer",
     "tokenizer": {
@@ -38,8 +38,8 @@
         "do_eval": false,
         "do_predict": false,
         "group_by_length": false,
-        "output_dir": "experiments/mm/dmr",
-        "logging_dir": "experiments/mm/dmr",
+        "output_dir": "experiments/mm/eca",
+        "logging_dir": "experiments/mm/eca",
         "evaluation_strategy": "steps",
         "prediction_loss_only": false,
         "per_device_train_batch_size": 298,

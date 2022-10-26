@@ -26,7 +26,7 @@ class EncoderOutput(ModelOutput):
 
 
 @dataclass 
-class DMREncoderOutput(EncoderOutput):
+class ECAEncoderOutput(EncoderOutput):
     """
     Same as DPRQuestionEncoderOutput / DPRContextEncoderOutput
     """

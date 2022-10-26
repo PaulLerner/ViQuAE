@@ -12,7 +12,7 @@ from transformers import (
 )
 from transformers.models.bert import BertConfig, BertPreTrainedModel
 
-from .outputs import EncoderOutput, DMREncoderOutput
+from .outputs import EncoderOutput, ECAEncoderOutput
 from .image import ImageEmbedding, FaceEmbedding
 from .utils import TanhGate
 from .bert import BertAttention, BertEmbeddings, BertIntermediate, BertOutput, BertPooler, BertLayer
@@ -472,7 +472,7 @@ class FlamantModel(BertPreTrainedModel):
         if not return_dict:
             return (pooled_output, ) + outputs[2:]
         
-        return DMREncoderOutput(
+        return ECAEncoderOutput(
                 pooler_output=pooled_output,
                 hidden_states=outputs.hidden_states, 
                 attentions=outputs.attentions)
@@ -523,7 +523,7 @@ class CLIPForIR(PreTrainedModel):
         return EncoderOutput(pooler_output=multimodal_output)
         
         
-class DMREncoder(PreTrainedModel):
+class ECAEncoder(PreTrainedModel):
     """
     Text and image are fused by concatenating them at the sequence-level then feeding them to BERT, à la UNITER [1]_
         - one face ≃ one token  
@@ -667,7 +667,7 @@ class DMREncoder(PreTrainedModel):
         if not return_dict:
             return (pooled_output, ) + outputs[2:]
         
-        return DMREncoderOutput(
+        return ECAEncoderOutput(
                 pooler_output=pooled_output,
                 hidden_states=outputs.hidden_states, 
                 attentions=outputs.attentions)

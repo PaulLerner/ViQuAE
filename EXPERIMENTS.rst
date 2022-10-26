@@ -24,9 +24,6 @@ while the instructions specific to the SIGIR ViQuAE dataset paper are marqued wi
 Note that, while face detection (MTCNN) and recognition (ArcFace) are not specific to ViQuAE,
 they did not give promising results with MICT.
 
-DMR was renamed "ECA" during the writing of the paper. For now, it is still called "DMR"
-in the code and documentation.
-
 
 Preprocessing passages
 ----------------------
@@ -88,7 +85,7 @@ code snippet:
    def keep_relevant_search_wrt_original_in_priority(item, kb):
        # this contains the latest result of the fusion
        # to reproduce the results of the paper:
-       # - use DPR+Image as IR to train the reader or fine-tune DMR/ECA/ILF
+       # - use DPR+Image as IR to train the reader or fine-tune ECA/ILF
        # - use BM25 as IR to train DPR (then save in 'BM25_provenance_indices'/'BM25_irrelevant_indices')
        indices = item['search_indices']
        relevant_indices, _ = find_relevant(indices, item['output']['original_answer'], [], kb)
@@ -273,7 +270,7 @@ Given the small size of ViQuAE, DPR is pre-trained on TriviaQA:
 
 Get TriviaQA with these splits from:
 https://huggingface.co/datasets/PaulLerner/triviaqa_for_viquae (or
-``load_dataset("triviaqa_for_viquae")``)
+``load_dataset("PaulLerner/triviaqa_for_viquae")``)
 
 In this step we use the complete ``kilt_wikipedia`` instead of
 ``viquae_wikipedia``.
@@ -307,7 +304,7 @@ both to embed questions and passages below.
 
 Multimodal Inverse Cloze Task (MICT)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Starting from DPR training on TriviaQA, we will train ECA/DMR and ILF for MICT on WIT.
+Starting from DPR training on TriviaQA, we will train ECA and ILF for MICT on WIT.
 
 You should change DPR’s config file so it is like the config files provided in 
 ``ict/*/question_model_config.json`` and ``ict/*/context_model_config.json``,
@@ -323,19 +320,19 @@ ILF
 Notice how ILF fully freezes BERT during this stage with the regex ``".*dpr_encoder.*"``
 ``python -m meerqat.train.trainer experiments/ict/ilf/config.json``
 
-DMR/ECA
+ECA
 ^^^^^^^
-DMR uses internally ``BertModel`` instead of ``DPR*Encoder`` so you need to run
+ECA uses internally ``BertModel`` instead of ``DPR*Encoder`` so you need to run
 ``meerqat.train.split_biencoder`` again, this time with the ``--bert`` option.
 
 Again, notice how the last six layers of BERT are frozen thanks to the regex.
 
-``python -m meerqat.train.trainer experiments/ict/dmr/config.json``
+``python -m meerqat.train.trainer experiments/ict/eca/config.json``
 
 
 As a sanity check, you can check the performance of the models on WIT’s test set.
 
-``python -m meerqat.train.trainer experiments/ict/dmr/test/config.json``
+``python -m meerqat.train.trainer experiments/ict/eca/test/config.json``
 ``python -m meerqat.train.trainer experiments/ict/ilf/test/config.json``
 
 
@@ -347,14 +344,14 @@ We have tried to fine-tune DPR with the same hyperparameters and found no signif
 Notice also that now we need a second KB that holds the pre-computed image features (viquae_wikipedia)
 
 You can use the provided test config to split the BiEncoder:
-``python -m meerqat.train.split_biencoder experiments/ict/dmr/test/config.json``
+``python -m meerqat.train.split_biencoder experiments/ict/eca/test/config.json``
 ``python -m meerqat.train.split_biencoder experiments/ict/ilf/test/config.json``
 
 
 Notice that all layers of the model are trainable during this stage.
 
 ``python -m meerqat.train.trainer experiments/mm/ilf/config.json``
-``python -m meerqat.train.trainer experiments/mm/dmr/config.json``
+``python -m meerqat.train.trainer experiments/mm/eca/config.json``
 
 IR
 --
@@ -526,12 +523,12 @@ which holds pre-computed image features of the visual passages.
 
    python -m meerqat.ir.embedding data/viquae_dataset experiments/ir/viquae/ilf/embedding/dataset_config.json
    python -m meerqat.ir.embedding data/viquae_passages experiments/ir/viquae/ilf/embedding/kb_config.json --kb=data/viquae_wikipedia
-   python -m meerqat.ir.embedding data/viquae_dataset experiments/ir/viquae/dmr/embedding/dataset_config.json
-   python -m meerqat.ir.embedding data/viquae_passages experiments/ir/viquae/dmr/embedding/kb_config.json --kb=data/viquae_wikipedia
+   python -m meerqat.ir.embedding data/viquae_dataset experiments/ir/viquae/eca/embedding/dataset_config.json
+   python -m meerqat.ir.embedding data/viquae_passages experiments/ir/viquae/eca/embedding/kb_config.json --kb=data/viquae_wikipedia
 
 Searching
 ^^^^^^^^^
-This is exactly the same as for DPR, simply change "key" and "column" to "ILF_few_shot" or "DMR_few_shot".
+This is exactly the same as for DPR, simply change "key" and "column" to "ILF_few_shot" or "ECA_few_shot".
 
 TODO provide ranx runs (.trec files). See also note in README on the different passages versions.
 
