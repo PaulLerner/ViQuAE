@@ -1,15 +1,19 @@
 """Utility functions specific to Question Answering."""
 import warnings
+from typing import Optional, Tuple, Union
 
 import numpy as np
 
+import torch
 from torch import nn
 from transformers import (
     BertForQuestionAnswering, ViltPreTrainedModel, ViltModel
 )
+from transformers.modeling_outputs import BaseModelOutputWithPooling
 
 from ..train.optim import multi_passage_rc_loss
 from .outputs import MultiPassageBERTOutput
+from .vilt import ViltEmbeddings, ViltPooler, ViltEncoder
 
 
 def get_best_spans(start_probs, end_probs, weights=None, cannot_be_first_token=True):
@@ -159,11 +163,204 @@ class MultiPassageBERT(BertForQuestionAnswering):
         )
         
         
+class ViltMultiImageEmbeddings(ViltEmbeddings):
+    """
+    Similar to the 'triplet' strategy of UNITER, 
+    patches of multiple images are concatenated in the sequence dimension.
+    The resulting embedding thus have a sequence length of #tokens + num_patches*num_images
+    """    
+    def forward(
+        self,
+        input_ids,
+        attention_mask,
+        token_type_ids,
+        pixel_values,
+        pixel_mask,
+        inputs_embeds
+    ):
+        """
+        Parameters
+        ----------
+        input_ids (`torch.LongTensor` of shape `(batch_size, #tokens)`):
+            Indices of input sequence tokens in the vocabulary. Indices can be obtained using [`BertTokenizer`]. See
+            [`PreTrainedTokenizer.encode`] and [`PreTrainedTokenizer.__call__`] for details. 
+    
+        attention_mask (`torch.FloatTensor` of shape `(batch_size, #tokens})`):
+            Mask to avoid performing attention on padding token indices. Mask values selected in `[0, 1]`:
+            - 1 for tokens that are **not masked**,
+            - 0 for tokens that are **masked**.
+    
+        token_type_ids (`torch.LongTensor` of shape `(batch_size, #tokens)`):
+            Segment token indices to indicate first and second portions of the inputs. Indices are selected in `[0,
+            1]`:
+            - 0 corresponds to a *sentence A* token,
+            - 1 corresponds to a *sentence B* token.
+    
+        pixel_values (`torch.FloatTensor` of shape `(batch_size, num_images, num_channels, height, width)`):
+            Pixel values. Pixel values can be obtained using [`ViltFeatureExtractor`]. See
+            [`ViltFeatureExtractor.__call__`] for details.
+    
+        pixel_mask (`torch.LongTensor` of shape `(batch_size, num_images, height, width)`):
+            Mask to avoid performing attention on padding pixel values. Mask values selected in `[0, 1]`:
+    
+            - 1 for pixels that are real (i.e. **not masked**),
+            - 0 for pixels that are padding (i.e. **masked**).
+        
+        inputs_embeds (`torch.FloatTensor` of shape `(batch_size, #tokens, hidden_size)`):
+            Optionally, instead of passing `input_ids` you can choose to directly pass an embedded representation. This
+            is useful if you want more control over how to convert `input_ids` indices into associated vectors than the
+            model's internal embedding lookup matrix.
+        """
+        # PART 1: text embeddings
+        text_embeds = self.text_embeddings(
+            input_ids=input_ids, token_type_ids=token_type_ids, inputs_embeds=inputs_embeds
+        )
+    
+        # PART 2: patch embeddings (with interpolated position encodings)
+        batch_size, num_images, num_channels, height, width = pixel_values.shape
+        # reshape to embed in parallel
+        pixel_values = pixel_values.reshape(batch_size * num_images, num_channels, height, width)
+        pixel_mask = pixel_mask.reshape(batch_size * num_images, height, width)
+        image_embeds, image_masks, patch_index = self.visual_embed(
+            pixel_values, pixel_mask, max_image_length=self.config.max_image_length
+        )
+        _, num_patches, hidden_size = image_embeds.shape
+        # regroup multiple images together and concatenate their patches     
+        image_embeds = image_embeds.reshape(batch_size, num_images*num_patches, hidden_size)
+        image_masks = image_masks.reshape(batch_size, num_images*num_patches)
+    
+        # PART 3: add modality type embeddings
+        # 0 indicates text, i>0 indicates image #i
+        text_embeds = text_embeds + self.token_type_embeddings(
+            torch.zeros_like(attention_mask, dtype=torch.long, device=text_embeds.device)
+        )
+        image_type_indices = torch.ones(
+            (batch_size, num_images, num_patches), 
+            dtype=torch.long, device=text_embeds.device
+        )
+        # broadcast arange to the proper shape
+        image_type_indices += torch.arange(
+            num_images, dtype=torch.long, device=text_embeds.device).reshape((1, num_images, 1)
+        )            
+        image_embeds = image_embeds + self.token_type_embeddings(image_type_indices.reshape(batch_size, num_images*num_patches))
+    
+        # PART 4: concatenate
+        embeddings = torch.cat([text_embeds, image_embeds], dim=1)
+        masks = torch.cat([attention_mask, image_masks], dim=1)
+    
+        return embeddings, masks
+
+
+class ViltMultiImageModel(ViltModel):
+    """Same as ViltModel with ViltMultiImageEmbeddings instead of ViltEmbeddings"""
+    def __init__(self, config, add_pooling_layer=True):
+        super().__init__(config)
+        self.config = config
+
+        self.embeddings = ViltMultiImageEmbeddings(config)
+        self.encoder = ViltEncoder(config)
+
+        self.layernorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+        self.pooler = ViltPooler(config) if add_pooling_layer else None
+
+        # Initialize weights and apply final processing
+        self.post_init()
+
+    def forward(
+        self,
+        input_ids: Optional[torch.LongTensor] = None,
+        attention_mask: Optional[torch.FloatTensor] = None,
+        token_type_ids: Optional[torch.LongTensor] = None,
+        pixel_values: Optional[torch.FloatTensor] = None,
+        pixel_mask: Optional[torch.LongTensor] = None,
+        head_mask: Optional[torch.FloatTensor] = None,
+        inputs_embeds: Optional[torch.FloatTensor] = None,
+        image_embeds: Optional[torch.FloatTensor] = None,
+        image_token_type_idx: Optional[int] = None,
+        output_attentions: Optional[bool] = None,
+        output_hidden_states: Optional[bool] = None,
+        return_dict: Optional[bool] = None,
+    ) -> Union[BaseModelOutputWithPooling, Tuple[torch.FloatTensor]]:
+        output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
+        output_hidden_states = (
+            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        )
+        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+
+        if input_ids is not None and inputs_embeds is not None:
+            raise ValueError("You cannot specify both input_ids and inputs_embeds at the same time")
+        elif input_ids is not None:
+            input_shape = input_ids.size()
+        elif inputs_embeds is not None:
+            input_shape = inputs_embeds.size()[:-1]
+        else:
+            raise ValueError("You have to specify either input_ids or inputs_embeds")
+
+        text_batch_size, seq_length = input_shape
+        device = input_ids.device if input_ids is not None else inputs_embeds.device
+
+        if attention_mask is None:
+            attention_mask = torch.ones(((text_batch_size, seq_length)), device=device)
+
+        if pixel_values is not None and image_embeds is not None:
+            raise ValueError("You cannot specify both pixel_values and image_embeds at the same time")
+        elif pixel_values is None and image_embeds is None:
+            raise ValueError("You have to specify either pixel_values or image_embeds")
+
+        image_batch_size = pixel_values.shape[0] if pixel_values is not None else image_embeds.shape[0]
+        if image_batch_size != text_batch_size:
+            raise ValueError("The text inputs and image inputs need to have the same batch size")
+        if pixel_mask is None:
+            pixel_mask = torch.ones((image_batch_size, self.config.image_size, self.config.image_size), device=device)
+
+        # Prepare head mask if needed
+        # 1.0 in head_mask indicate we keep the head
+        # attention_probs has shape bsz x n_heads x N x N
+        # input head_mask has shape [num_heads] or [num_hidden_layers x num_heads]
+        # and head_mask is converted to shape [num_hidden_layers x batch x num_heads x seq_length x seq_length]
+        head_mask = self.get_head_mask(head_mask, self.config.num_hidden_layers)
+
+        embedding_output, attention_mask = self.embeddings(
+            input_ids,
+            attention_mask,
+            token_type_ids,
+            pixel_values,
+            pixel_mask,
+            inputs_embeds
+        )
+
+        # We can provide a self-attention mask of dimensions [batch_size, from_seq_length, to_seq_length]
+        # ourselves in which case we just need to make it broadcastable to all heads.
+        extended_attention_mask: torch.Tensor = self.get_extended_attention_mask(attention_mask, input_shape)
+
+        encoder_outputs = self.encoder(
+            embedding_output,
+            attention_mask=extended_attention_mask,
+            head_mask=head_mask,
+            output_attentions=output_attentions,
+            output_hidden_states=output_hidden_states,
+            return_dict=return_dict,
+        )
+        sequence_output = encoder_outputs[0]
+        sequence_output = self.layernorm(sequence_output)
+        pooled_output = self.pooler(sequence_output) if self.pooler is not None else None
+
+        if not return_dict:
+            return (sequence_output, pooled_output) + encoder_outputs[1:]
+
+        return BaseModelOutputWithPooling(
+            last_hidden_state=sequence_output,
+            pooler_output=pooled_output,
+            hidden_states=encoder_outputs.hidden_states,
+            attentions=encoder_outputs.attentions,
+        )
+
+
 class MultiPassageVilt(ViltPreTrainedModel):
     """Like MultiPassageBERT with a ViLT backbone instead of BERT"""
     def __init__(self, config, add_pooling_layer=False):
         super().__init__(config)
-        self.vilt = ViltModel(config, add_pooling_layer=add_pooling_layer)
+        self.vilt = ViltMultiImageModel(config, add_pooling_layer=add_pooling_layer)
         
         # like BertForQuestionAnswering
         self.num_labels = config.num_labels
@@ -177,8 +374,12 @@ class MultiPassageVilt(ViltPreTrainedModel):
                 return_dict=None, **kwargs):
         outputs = self.vilt(input_ids, *args, return_dict=return_dict, **kwargs)
         
-        # same as MultiPassageBERT
         sequence_output = outputs[0]
+        # truncate to keep only text representations
+        # the answer is extracted from text and the sequence length must match start/end positions shape (L)
+        sequence_output = sequence_output[:, :input_ids.shape[1]]
+        
+        # same as MultiPassageBERT
         logits = self.qa_outputs(sequence_output)
         start_logits, end_logits = logits.split(1, dim=-1)
         start_logits = start_logits.squeeze(-1).contiguous()
