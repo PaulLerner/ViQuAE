@@ -28,9 +28,11 @@ class EncoderOutput(ModelOutput):
 @dataclass 
 class ECAEncoderOutput(EncoderOutput):
     """
-    Same as DPRQuestionEncoderOutput / DPRContextEncoderOutput
+    Returns the full sequence hidden states (optionally across layer) 
+    and attentions scores in addition to pooled sequence embedding
     """
     pooler_output: Optional[torch.FloatTensor] = None
+    last_hidden_state: Optional[torch.FloatTensor] = None
     hidden_states: Optional[Tuple[torch.FloatTensor]] = None
     attentions: Optional[Tuple[torch.FloatTensor]] = None
 
