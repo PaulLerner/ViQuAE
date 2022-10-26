@@ -26,6 +26,10 @@ class MMConfig(BertConfig):
     ----------
     *args, **kwargs: 
         additionnal arguments are passed to BertConfig.
+    n_images: int, optional
+        Number of images to embed alongside with text. 
+        Each image can be mapped to multiple face features or image features.
+        If greater than 1, will be assigned to a type embedding (analog to BERT).
     n_faces: int, optional
         Number of faces that the multimodal model should take as input. Defaults to 4.
     face_kwargs: dict, optional
@@ -56,6 +60,7 @@ class MMConfig(BertConfig):
     def __init__(
             self,
              *args,
+             n_images=1,
              n_faces=4,
              face_kwargs=None,
              image_kwargs=None,
@@ -65,6 +70,7 @@ class MMConfig(BertConfig):
              **kwargs
         ):
         super().__init__(*args, **kwargs)
+        self.n_images = n_images
         self.n_faces = n_faces
         if face_kwargs is None:
             self.face_kwargs = dict(face_dim=512, bbox_dim=7)
@@ -345,6 +351,8 @@ class FlamantModel(BertPreTrainedModel):
     load_tf_weights = None
     
     def __init__(self, config, add_pooling_layer=False):
+        if config.n_images > 1:
+            raise NotImplementedError()
         super().__init__(config)
         self.config = config
 
@@ -430,7 +438,7 @@ class FlamantModel(BertPreTrainedModel):
                 image_output = self.image_embeddings[name](image['input']).unsqueeze(0)
                 image_outputs.append(image_output)
                 image_attention_mask.append(image['attention_mask'].unsqueeze(0))
-            # (n_images, batch_size, embedding_dim) -> (batch_size, n_images, embedding_dim)
+            # (n_models, batch_size, embedding_dim) -> (batch_size, n_models, embedding_dim)
             image_outputs = torch.cat(image_outputs, 0).transpose(0, 1)
             image_attention_mask = torch.cat(image_attention_mask, 0).transpose(0, 1)
         else:
@@ -454,10 +462,10 @@ class FlamantModel(BertPreTrainedModel):
         attention_mask = self.get_extended_attention_mask(
             text_inputs['attention_mask'], text_embeddings.shape[:-1], text_embeddings.device)
 
-        # (batch_size, n_faces+n_images, embedding_dim)
+        # (batch_size, n_faces+n_models, embedding_dim)
         image_embeddings = torch.cat((face_output, image_outputs), dim=1)
         image_attention_mask = torch.cat((face_inputs['attention_mask'], image_attention_mask), dim=1)
-        # N. B. looks like this produce sthe same output as get_extended_attention_mask
+        # N. B. looks like this produces the same output as get_extended_attention_mask
         # I stick to what is in BertModel implementation
         image_attention_mask = self.invert_attention_mask(image_attention_mask)
         outputs = self.encoder(
@@ -549,7 +557,13 @@ class ECAEncoder(PreTrainedModel):
         self.bert_model = BertModel(config, add_pooling_layer=False)
         # add pointers to the gate parameters so that they are logged in trainer
         self.weights_to_log = {}
-
+        
+        if self.config.n_images > 1:
+            self.image_type_embeddings = nn.Embedding(self.config.n_images, self.config.hidden_size)
+            image_layer_norm = self.config.layer_norm_eps
+        else:
+            image_layer_norm = None
+            
         if self.config.n_faces > 0:
             self.face_embedding = FaceEmbedding(embedding_dim=self.config.hidden_size,
                                                 dropout=self.config.hidden_dropout_prob,
@@ -566,16 +580,21 @@ class ECAEncoder(PreTrainedModel):
         for name, image_kwarg in self.config.image_kwargs.items():
             self.image_embeddings[name] = ImageEmbedding(embedding_dim=self.config.hidden_size,
                                                          dropout=self.config.hidden_dropout_prob,
+                                                         layer_norm_eps=image_layer_norm,
                                                          **image_kwarg)
             if self.config.gating:
                 self.image_gates[name] = TanhGate()
                 self.weights_to_log[f"{name}_gate"] = self.image_gates[name].gate_param
             else:
                 self.image_gates[name] = nn.Identity()
-                        
+                                
     def _init_weights(self, module):
-        # keep torch defaults
-        pass
+        # same as BERT
+        if isinstance(module, nn.Embedding):
+            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
+            if module.padding_idx is not None:
+                module.weight.data[module.padding_idx].zero_()
+        # keep torch defaults for linear layers
     
     def forward(self, text_inputs, face_inputs, image_inputs,
                 output_attentions=False,
@@ -588,27 +607,35 @@ class ECAEncoder(PreTrainedModel):
             usual BERT inputs, see transformers.BertModel
         face_inputs: dict[str, torch.FloatTensor]
             {
-                "face": (batch_size, n_faces, face_dim),
-                "bbox": (batch_size, n_faces, bbox_dim),
-                "attention_mask": (batch_size, n_faces)
+                "face": (batch_size, n_images, n_faces, face_dim),
+                "bbox": (batch_size, n_images, n_faces, bbox_dim),
+                "attention_mask": (batch_size, n_images, n_faces)
             }
         image_inputs: dict[str, dict[str, torch.FloatTensor]]
             {
                 model:
                 {
-                    "input": (batch_size, image_dim)
-                    "attention_mask": (batch_size, )
+                    "input": (batch_size, n_images, image_dim)
+                    "attention_mask": (batch_size, n_images)
                 }
             }
         """
         # reshape faces
         faces = face_inputs['face']
-        batch_size, n_faces, face_dim = faces.shape
+        batch_size, n_images, n_faces, face_dim = faces.shape
+        assert n_images == self.config.n_images
         if n_faces > 0:
-            faces = faces.reshape(batch_size * n_faces, face_dim)
-            # embed batch of size batch_size*n_faces
-            face_output = self.face_embedding(face=faces, bbox=face_inputs['bbox'].reshape(batch_size * n_faces, -1))
-            face_output = face_output.reshape(batch_size, n_faces, -1)
+            if n_images > 1:
+                image_type_ids = torch.zeros((batch_size, n_images, n_faces), dtype=torch.long, device=faces.device)
+                # broadcast arange to the right shape
+                image_type_ids += torch.arange(n_images, dtype=torch.long, device=faces.device).reshape(1, n_images, 1)
+                image_type_embeddings = self.image_type_embeddings(image_type_ids.reshape(batch_size*n_images*n_faces))
+            else:
+                image_type_embeddings = None
+            faces = faces.reshape(batch_size*n_images*n_faces, face_dim)
+            bbox=face_inputs['bbox'].reshape(batch_size*n_images*n_faces, -1)
+            face_output = self.face_embedding(face=faces, bbox=bbox, image_type_embeddings=image_type_embeddings)
+            face_output = face_output.reshape(batch_size, n_images*n_faces, -1)
             # maybe gate faces
             face_output = self.face_gate(face_output)
         else:
@@ -616,16 +643,26 @@ class ECAEncoder(PreTrainedModel):
 
         # embed images
         if image_inputs:
+            if n_images > 1:
+                image_type_ids = torch.zeros((batch_size, n_images), dtype=torch.long, device=faces.device)
+                image_type_ids += torch.arange(n_images, dtype=torch.long, device=faces.device)
+                image_type_embeddings = self.image_type_embeddings(image_type_ids.reshape(batch_size*n_images))
+            else:
+                image_type_embeddings = None
+
             image_outputs, image_attention_mask = [], []
             for name, image in image_inputs.items():
-                image_output = self.image_embeddings[name](image['input']).unsqueeze(0)
+                image_output = self.image_embeddings[name](
+                    image['input'].reshape(batch_size*n_images), 
+                    image_type_embeddings=image_type_embeddings
+                )
                 # maybe gate image
                 image_output = self.image_gates[name](image_output)
-                image_outputs.append(image_output)
+                image_outputs.append(image_output.reshape(1, batch_size, n_images, -1))
                 image_attention_mask.append(image['attention_mask'].unsqueeze(0))
-            # (n_images, batch_size, embedding_dim) -> (batch_size, n_images, embedding_dim)
-            image_outputs = torch.cat(image_outputs, 0).transpose(0, 1)
-            image_attention_mask = torch.cat(image_attention_mask, 0).transpose(0, 1)
+            # (n_models, batch_size, n_images, embedding_dim) -> (batch_size, n_images*n_models, embedding_dim)
+            image_outputs = torch.cat(image_outputs, 0).transpose(0, 1).reshape(batch_size, len(image_inputs)*n_images, -1)
+            image_attention_mask = torch.cat(image_attention_mask, 0).transpose(0, 1).reshape(batch_size, len(image_inputs)*n_images)
         else:
             image_outputs = torch.zeros(batch_size, 0, self.config.hidden_size, device=faces.device)
             image_attention_mask = torch.zeros(batch_size, 0, device=faces.device)
@@ -649,7 +686,7 @@ class ECAEncoder(PreTrainedModel):
         text_embeddings = self.bert_model.embeddings(input_ids=text_inputs['input_ids'],
                                                      token_type_ids=token_type_ids)
 
-        # (batch_size, sequence_length+n_faces+n_images, embedding_dim)
+        # (batch_size, sequence_length+(n_faces+n_models)*n_images, embedding_dim)
         multimodal_embeddings = torch.cat((text_embeddings, face_output, image_outputs), dim=1)
         attention_mask = torch.cat((text_inputs['attention_mask'], face_inputs['attention_mask'], image_attention_mask), dim=1)
         extended_attention_mask = self.bert_model.get_extended_attention_mask(
@@ -696,6 +733,8 @@ class IntermediateLinearFusion(PreTrainedModel):
     base_model_prefix = "dpr_encoder"
 
     def __init__(self, config):
+        if config.n_images > 1:
+            raise NotImplementedError()
         super().__init__(config)
         self.config = config
         if self.config.question_encoder:
@@ -715,8 +754,12 @@ class IntermediateLinearFusion(PreTrainedModel):
         self.dropout = nn.Dropout(self.config.hidden_dropout_prob)
         
     def _init_weights(self, module):
-        # keep torch defaults
-        pass
+        # same as BERT
+        if isinstance(module, nn.Embedding):
+            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
+            if module.padding_idx is not None:
+                module.weight.data[module.padding_idx].zero_()
+        # keep torch defaults for linear layers
     
     def forward(self, text_inputs, face_inputs, image_inputs):
         """
