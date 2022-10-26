@@ -176,6 +176,8 @@ class ViltMultiImageEmbeddings(ViltEmbeddings):
         token_type_ids,
         pixel_values,
         pixel_mask,
+        passage_pixel_values,
+        passage_pixel_mask,
         inputs_embeds
     ):
         """
@@ -196,11 +198,11 @@ class ViltMultiImageEmbeddings(ViltEmbeddings):
             - 0 corresponds to a *sentence A* token,
             - 1 corresponds to a *sentence B* token.
     
-        pixel_values (`torch.FloatTensor` of shape `(batch_size, num_images, num_channels, height, width)`):
+        pixel_values, passage_pixel_values (`torch.FloatTensor` of shape `(batch_size, num_channels, height, width)`):
             Pixel values. Pixel values can be obtained using [`ViltFeatureExtractor`]. See
             [`ViltFeatureExtractor.__call__`] for details.
     
-        pixel_mask (`torch.LongTensor` of shape `(batch_size, num_images, height, width)`):
+        pixel_mask, passage_pixel_mask (`torch.LongTensor` of shape `(batch_size, height, width)`):
             Mask to avoid performing attention on padding pixel values. Mask values selected in `[0, 1]`:
     
             - 1 for pixels that are real (i.e. **not masked**),
@@ -217,36 +219,28 @@ class ViltMultiImageEmbeddings(ViltEmbeddings):
         )
     
         # PART 2: patch embeddings (with interpolated position encodings)
-        batch_size, num_images, num_channels, height, width = pixel_values.shape
-        # reshape to embed in parallel
-        pixel_values = pixel_values.reshape(batch_size * num_images, num_channels, height, width)
-        pixel_mask = pixel_mask.reshape(batch_size * num_images, height, width)
         image_embeds, image_masks, patch_index = self.visual_embed(
             pixel_values, pixel_mask, max_image_length=self.config.max_image_length
         )
-        _, num_patches, hidden_size = image_embeds.shape
-        # regroup multiple images together and concatenate their patches     
-        image_embeds = image_embeds.reshape(batch_size, num_images*num_patches, hidden_size)
-        image_masks = image_masks.reshape(batch_size, num_images*num_patches)
+        passage_image_embeds, passage_image_masks, _ = self.visual_embed(
+            passage_pixel_values, passage_pixel_mask, max_image_length=self.config.max_image_length
+        )
     
         # PART 3: add modality type embeddings
-        # 0 indicates text, i>0 indicates image #i
+        # 0 indicates text, 1 question image, 2 passage image
         text_embeds = text_embeds + self.token_type_embeddings(
             torch.zeros_like(attention_mask, dtype=torch.long, device=text_embeds.device)
         )
-        image_type_indices = torch.ones(
-            (batch_size, num_images, num_patches), 
-            dtype=torch.long, device=text_embeds.device
+        image_embeds = image_embeds + self.token_type_embeddings(
+            torch.full_like(image_masks, 1, dtype=torch.long, device=text_embeds.device)
         )
-        # broadcast arange to the proper shape
-        image_type_indices += torch.arange(
-            num_images, dtype=torch.long, device=text_embeds.device).reshape((1, num_images, 1)
-        )            
-        image_embeds = image_embeds + self.token_type_embeddings(image_type_indices.reshape(batch_size, num_images*num_patches))
+        passage_image_embeds = passage_image_embeds + self.token_type_embeddings(
+            torch.full_like(passage_image_masks, 2, dtype=torch.long, device=text_embeds.device)
+        )
     
         # PART 4: concatenate
-        embeddings = torch.cat([text_embeds, image_embeds], dim=1)
-        masks = torch.cat([attention_mask, image_masks], dim=1)
+        embeddings = torch.cat([text_embeds, image_embeds, passage_image_embeds], dim=1)
+        masks = torch.cat([attention_mask, image_masks, passage_image_masks], dim=1)
     
         return embeddings, masks
 
@@ -273,6 +267,8 @@ class ViltMultiImageModel(ViltModel):
         token_type_ids: Optional[torch.LongTensor] = None,
         pixel_values: Optional[torch.FloatTensor] = None,
         pixel_mask: Optional[torch.LongTensor] = None,
+        passage_pixel_values: Optional[torch.FloatTensor] = None,
+        passage_pixel_mask: Optional[torch.LongTensor] = None,
         head_mask: Optional[torch.FloatTensor] = None,
         inputs_embeds: Optional[torch.FloatTensor] = None,
         image_embeds: Optional[torch.FloatTensor] = None,
@@ -326,11 +322,12 @@ class ViltMultiImageModel(ViltModel):
             token_type_ids,
             pixel_values,
             pixel_mask,
+            passage_pixel_values,
+            passage_pixel_mask,
             inputs_embeds
         )
 
-        # We can provide a self-attention mask of dimensions [batch_size, from_seq_length, to_seq_length]
-        # ourselves in which case we just need to make it broadcastable to all heads.
+        # broadcast attention mask to all heads. N. B input_shape is only used for decoder models
         extended_attention_mask: torch.Tensor = self.get_extended_attention_mask(attention_mask, input_shape)
 
         encoder_outputs = self.encoder(
@@ -371,7 +368,7 @@ class MultiPassageVilt(ViltPreTrainedModel):
     
     def forward(self, input_ids, *args,
                 start_positions=None, end_positions=None, answer_mask=None,
-                return_dict=None, **kwargs):
+                return_dict=True, **kwargs):
         outputs = self.vilt(input_ids, *args, return_dict=return_dict, **kwargs)
         
         sequence_output = outputs[0]

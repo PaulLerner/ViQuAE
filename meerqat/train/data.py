@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Classes to format data in proper batches to train models"""
+"""
+Classes to format data in proper batches to train models.
+Also holds example generation methods such as Multimodal Inverse Cloze Task (ICT),
+and dynamic examples based on passages retrieved from KB.
+"""
 import warnings
 
 import numpy as np
@@ -176,27 +180,36 @@ class ImageFormatter:
             output['pixel_mask'] = pixel_mask
         
         return output
-    
-    def format_batch(self, text_inputs, items_or_passages):
+        
+    def format_batch(self, text_inputs, items_or_passages, passages=None):
         """
         Parameters
         ----------
         text_inputs: dict[Tensor]
         items_or_passages: List[dict]
+        passages: List[dict], optional
+            If passed, the image features will get an extra dimension after batch,
+            e.g. (batch_size, 2, num_channels, height, width) for pixel_values
         """
         if self.precomputed is None:
             # text-only
             pass
         elif self.precomputed:
+            if passages is not None:
+                raise NotImplementedError()
             inputs = dict(
                 text_inputs=text_inputs,
                 face_inputs=self.image_features.get_face_inputs(items_or_passages), 
                 image_inputs=self.image_features.get_image_inputs(items_or_passages)
             )
         else:
+            items_pixels = self.format_pixels(items_or_passages)
+            if passages is not None:
+                passages_pixels = self.format_pixels(passages)
+                items_pixels.update({f"passage_{k}": v for k, v in passages_pixels.items()})
             inputs = dict(
                 **text_inputs,
-                **self.format_pixels(items_or_passages)
+                **items_pixels
             )
         return inputs
     
@@ -577,7 +590,14 @@ class MultiPassageBERTDataModule(QuestionAnsweringDataModule):
             indices = list(map(int, ir_results.keys()))[: self.M]
             scores = list(ir_results.values())[: self.M]
             
-        return self.kb.select(indices), scores
+        passages = self.kb.select(indices)
+        
+        # multimodal vs. text-only mode
+        if self.image_kb is None:
+            passages = passages['passage']
+        else:
+            passages = self.add_image(list(passages))
+        return passages, scores
 
     def collate_fn(self, items):
         """
@@ -604,12 +624,11 @@ class MultiPassageBERTDataModule(QuestionAnsweringDataModule):
         answer_mask = torch.zeros((N*self.M, self.max_n_answers), dtype=torch.long)
         for i, item in enumerate(items):
             # N. B. seed is set in Trainer
-            questions.extend([item['input']]*self.M)
+            questions.extend([{k: item[k] for k in ['input', 'image']}]*self.M)
 
             # oracle -> use only relevant passages
             if (self.trainer.state.stage != "train") and not self.oracle:
                 passage, score = self.get_eval_passages(item)
-                passage = passage['passage']
                 passage_scores.extend(score)
                 if len(score) < self.M:
                     passage_scores.extend([0]*(self.M-len(score)))
@@ -622,10 +641,9 @@ class MultiPassageBERTDataModule(QuestionAnsweringDataModule):
             answer_mask[i*self.M: i*self.M+len(passage), 0] = 1
             # except for padding passages
             if len(passage) < self.M:
-                passages.extend(['']*(self.M-len(passage)))
+                passages.extend(self.padding_passage*(self.M-len(passage)))
 
             original_answer = item['output']['original_answer']
-            # avoid processing the same answer twice
             answer = item['output']['answer']
             answer_strings.extend([answer]*self.M)
             # beware this create a discrepancy between answer_strings and answers (tokens)
@@ -633,6 +651,7 @@ class MultiPassageBERTDataModule(QuestionAnsweringDataModule):
             if self.train_original_answer_only:
                 answer = [original_answer]
             else:
+                # avoid processing the same answer twice
                 if self.tokenizer.do_lower_case:
                     original_answer = original_answer.lower()
                     answer = list({a.lower() for a in answer} - {original_answer})
@@ -644,11 +663,19 @@ class MultiPassageBERTDataModule(QuestionAnsweringDataModule):
                                     return_attention_mask=False)['input_ids']
             answer = [torch.tensor(a, dtype=torch.long) for a in answer]
             answers.extend([answer]*self.M)
-        batch = self.tokenizer(*(questions, passages), **self.tokenization_kwargs)
+        if self.image_kb is None:
+            questions_text = questions
+            passages_text = passages
+        else:
+            questions_text = [q['input'] for q in questions]
+            passages_text = [p['passage'] for p in passages]
+        batch = self.tokenizer(*(questions_text, passages_text), **self.tokenization_kwargs)
         batch = self.get_answer_position(batch, answers, answer_mask)
         batch['answer_strings'] = answer_strings
         if passage_scores:
             batch['passage_scores'] = torch.tensor(passage_scores)
+            
+        batch = self.image_formatter.format_batch(batch, questions, passages)
 
         return batch
     
