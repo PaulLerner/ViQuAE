@@ -702,14 +702,15 @@ class ECAEncoder(PreTrainedModel):
         pooled_output = sequence_output[:, 0, :]
         
         if not return_dict:
-            return (pooled_output, ) + outputs[2:]
+            return (pooled_output, sequence_output) + outputs[2:]
         
         return ECAEncoderOutput(
                 pooler_output=pooled_output,
+                last_hidden_state=sequence_output,
                 hidden_states=outputs.hidden_states, 
                 attentions=outputs.attentions)
 
-
+    
 class ILFConfig(MMConfig):
     """
     Same as MMConfig with an extra parameter: 

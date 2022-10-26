@@ -14,6 +14,7 @@ from transformers.modeling_outputs import BaseModelOutputWithPooling
 from ..train.optim import multi_passage_rc_loss
 from .outputs import MultiPassageBERTOutput
 from .vilt import ViltEmbeddings, ViltPooler, ViltEncoder
+from .mm import ECAEncoder
 
 
 def get_best_spans(start_probs, end_probs, weights=None, cannot_be_first_token=True):
@@ -163,6 +164,65 @@ class MultiPassageBERT(BertForQuestionAnswering):
         )
         
         
+class MultiPassageECA(ECAEncoder):
+    """Like MultiPassageBERT with a ECA backbone instead of BERT"""
+    def __init__(self, config):
+        assert not config.no_text, "no_text option is only for IR"
+        super().__init__(config)
+        
+        # like BertForQuestionAnswering
+        self.num_labels = config.num_labels
+        self.qa_outputs = nn.Linear(config.hidden_size, config.num_labels)
+        # Initialize weights and apply final processing
+        self.post_init()
+
+    
+    def forward(self, text_inputs, *args,
+                start_positions=None, end_positions=None, answer_mask=None,
+                return_dict=True, **kwargs):
+        input_ids = text_inputs['input_ids']
+        outputs = super().forward(text_inputs, *args, return_dict=return_dict, **kwargs)
+        
+        # truncate to keep only text representations
+        # the answer is extracted from text and the sequence length must match start/end positions shape (L)
+        sequence_output = outputs.last_hidden_state[:, :input_ids.shape[1]]
+        
+        # same as MultiPassageBERT
+        logits = self.qa_outputs(sequence_output)
+        start_logits, end_logits = logits.split(1, dim=-1)
+        start_logits = start_logits.squeeze(-1).contiguous()
+        end_logits = end_logits.squeeze(-1).contiguous()
+
+        # compute loss
+        if start_positions is not None and end_positions is not None:
+            pack = multi_passage_rc_loss(
+                input_ids, 
+                start_positions, 
+                end_positions, 
+                start_logits, 
+                end_logits, 
+                answer_mask
+            )
+            # unpack so that the line is not hundreds columns long
+            total_loss, start_positions, end_positions, start_logits, end_logits, start_log_probs, end_log_probs = pack
+        else:            
+            total_loss, start_log_probs, end_log_probs = None, None, None
+
+        if not return_dict:
+            output = (start_logits, end_logits, start_log_probs, end_log_probs) + outputs[2:]
+            return ((total_loss,) + output) if total_loss is not None else output
+
+        return MultiPassageBERTOutput(
+            loss=total_loss,
+            start_logits=start_logits,
+            end_logits=end_logits,
+            start_log_probs=start_log_probs,
+            end_log_probs=end_log_probs,
+            hidden_states=outputs.hidden_states,
+            attentions=outputs.attentions,
+        )
+
+    
 class ViltMultiImageEmbeddings(ViltEmbeddings):
     """
     Similar to the 'triplet' strategy of UNITER, 
