@@ -18,7 +18,7 @@ class EncoderOutput(ModelOutput):
 
 
 @dataclass 
-class DMREncoderOutput(EncoderOutput):
+class ECAEncoderOutput(EncoderOutput):
     """
     Same as DPRQuestionEncoderOutput / DPRContextEncoderOutput
     """
@@ -78,9 +78,9 @@ class MMConfig(BertConfig):
             self.image_kwargs = image_kwargs
         self.face_and_image_are_exclusive = face_and_image_are_exclusive
         self.no_text = no_text
-
-
-class DMREncoder(PreTrainedModel):
+        
+        
+class ECAEncoder(PreTrainedModel):
     """
     Text and image are fused by concatenating them at the sequence-level then feeding them to BERT, à la UNITER [1]_
         - one face ≃ one token  
@@ -205,7 +205,7 @@ class DMREncoder(PreTrainedModel):
         if not return_dict:
             return (pooled_output, ) + outputs[2:]
         
-        return DMREncoderOutput(
+        return ECAEncoderOutput(
                 pooler_output=pooled_output,
                 hidden_states=outputs.hidden_states, 
                 attentions=outputs.attentions)

@@ -1,7 +1,7 @@
 {
   "trainee": {
     "class_name": "BiEncoder",
-    "question_class": "DMREncoder",
+    "question_class": "ECAEncoder",
     "dpr_question_model_name_or_path": "experiments/dpr/triviaqa/checkpoint-13984/question_model_bert",
     "dpr_context_model_name_or_path": "experiments/dpr/triviaqa/checkpoint-13984/context_model_bert"
   },
@@ -38,8 +38,8 @@
     "do_eval": false,
     "do_predict": false,
     "group_by_length": false,
-    "output_dir": "experiments/ict/dmr",
-    "logging_dir": "experiments/ict/dmr",
+    "output_dir": "experiments/ict/eca",
+    "logging_dir": "experiments/ict/eca",
     "evaluation_strategy": "steps",
     "prediction_loss_only": false,
     "per_device_train_batch_size": 512,

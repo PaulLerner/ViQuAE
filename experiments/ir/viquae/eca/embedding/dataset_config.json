@@ -1,7 +1,7 @@
 {
   "model": {
-    "class_name": "DMREncoder",
-    "pretrained_model_name_or_path": "experiments/mm/dmr/checkpoint-36/context_model"
+    "class_name": "ECAEncoder",
+    "pretrained_model_name_or_path": "experiments/mm/eca/checkpoint-36/question_model"
  },
   "tokenizer": {
     "class_name": "BertTokenizer",
@@ -11,8 +11,8 @@
     "max_length": 256,
     "padding": "longest"
   },
-    "key": "passage",
-    "save_as": "DMR_few_shot",
+    "key": "input",
+    "save_as": "ECA_few_shot",
     "output_key": "pooler_output",
     "map_kwargs":
     {
