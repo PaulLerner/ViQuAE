@@ -300,7 +300,10 @@ class MultiPassageBERTTrainee(Trainee):
     def step(self, inputs, _):   
         keep_for_eval = {k: inputs.pop(k, None) for k in ['answer_strings', 'passage_scores']}
         model_outputs = self(**inputs)
-        keep_for_eval['input_ids'] = inputs['input_ids']
+        if 'text_inputs' in inputs:
+            keep_for_eval['input_ids'] = inputs['text_inputs']['input_ids']
+        else:
+            keep_for_eval['input_ids'] = inputs['input_ids']
         keep_for_eval.update(model_outputs)
         return keep_for_eval
     

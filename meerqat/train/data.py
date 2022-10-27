@@ -188,19 +188,28 @@ class ImageFormatter:
         text_inputs: dict[Tensor]
         items_or_passages: List[dict]
         passages: List[dict], optional
-            If passed, the image features will get an extra dimension after batch,
-            e.g. (batch_size, 2, num_channels, height, width) for pixel_values
         """
         if self.precomputed is None:
             # text-only
             inputs = text_inputs
         elif self.precomputed:
+            items_face_inputs = self.image_features.get_face_inputs(items_or_passages)            
+            items_image_inputs = self.image_features.get_image_inputs(items_or_passages)
+            
+            # add a new dimension after batch, e.g. (batch_size, n_images, n_faces, face_dim) for faces
             if passages is not None:
-                raise NotImplementedError()
+                passage_face_inputs = self.image_features.get_face_inputs(passages)
+                passage_image_inputs = self.image_features.get_image_inputs(passages)
+                for k, v in passage_face_inputs.items():
+                    items_face_inputs[k] = torch.cat((items_face_inputs[k], v), dim=1)
+                for name, image in passage_image_inputs.items():
+                    for k, v in image.items():
+                        items_image_inputs[name][k] = torch.cat((items_image_inputs[name][k], v), dim=1)
+                        
             inputs = dict(
                 text_inputs=text_inputs,
-                face_inputs=self.image_features.get_face_inputs(items_or_passages), 
-                image_inputs=self.image_features.get_image_inputs(items_or_passages)
+                face_inputs=items_face_inputs, 
+                image_inputs=items_image_inputs
             )
         else:
             items_pixels = self.format_pixels(items_or_passages)
@@ -239,20 +248,23 @@ class PreComputedImageFeatures:
         """
         Formats pre-computed face features in nice square tensors.
         
+        The extra dimension 1 stands for the number of images 
+        (images are processed one by one and are concatenated in ImageFormatter)
+        
         Returns
         -------
         face_inputs: dict[str, Tensor]
             {
-               * face: Tensor(batch_size, self.n_faces, self.face_dim)
-               * bbox: Tensor(batch_size, self.n_faces, self.bbox_dim)
-               * attention_mask: Tensor(batch_size, self.n_faces)
+               * face: Tensor(batch_size, 1, self.n_faces, self.face_dim)
+               * bbox: Tensor(batch_size, 1, self.n_faces, self.bbox_dim)
+               * attention_mask: Tensor(batch_size, 1, self.n_faces)
             }
         """
         # trim or pad, and convert to tensor
-        face_embeddings = torch.zeros((len(items), self.n_faces, self.face_dim))
-        face_boxes = torch.zeros((len(items), self.n_faces, self.bbox_dim))
+        face_embeddings = torch.zeros((len(items), 1, self.n_faces, self.face_dim))
+        face_boxes = torch.zeros((len(items), 1, self.n_faces, self.bbox_dim))
         # 0=masked, 1=not masked
-        attention_mask = torch.zeros((len(items), self.n_faces), dtype=torch.long)
+        attention_mask = torch.zeros((len(items), 1, self.n_faces), dtype=torch.long)
         if self.n_faces == 0:
             return {
                 "face": face_embeddings,
@@ -266,10 +278,10 @@ class PreComputedImageFeatures:
                 # keep zero-padding/mask
                 continue
             n_faces = min(self.n_faces, len(face_embedding))
-            face_embeddings[i, : n_faces] = torch.tensor(face_embedding[: n_faces])
+            face_embeddings[i, 0, : n_faces] = torch.tensor(face_embedding[: n_faces])
             bbox = item["face_box"]
-            face_boxes[i, : n_faces] = torch.tensor(bbox[: n_faces])
-            attention_mask[i, : n_faces] = 1
+            face_boxes[i, 0, : n_faces] = torch.tensor(bbox[: n_faces])
+            attention_mask[i, 0, : n_faces] = 1
 
         face_inputs = {
             "face": face_embeddings,
@@ -282,20 +294,23 @@ class PreComputedImageFeatures:
         """
         Formats pre-computed full-image features in nice square tensors.
         
+        The extra dimension 1 stands for the number of images 
+        (images are processed one by one and are concatenated in ImageFormatter)
+
         Returns
         -------
         image_inputs: dict[str, dict[str,Tensor]]
             one key per image feature
             {
-               * input: Tensor(batch_size, ?)
-               * attention_mask: Tensor(batch_size, )
+               * input: Tensor(batch_size, 1, ?)
+               * attention_mask: Tensor(batch_size, 1)
             }
         """
         image_inputs = {}
         for name in self.image_embeddings_keys: 
-            features = torch.zeros(len(items), self.image_dims[name])
+            features = torch.zeros(len(items), 1, self.image_dims[name])
             # 0=masked, 1=not masked
-            attention_mask = torch.zeros(len(items), dtype=torch.long)
+            attention_mask = torch.zeros(len(items), 1, dtype=torch.long)
 
             for i, item in enumerate(items):
                 feature = item.get(name)
@@ -303,8 +318,8 @@ class PreComputedImageFeatures:
                 if feature is None:
                     # keep zero-padding/mask
                     continue
-                features[i] = torch.tensor(feature)
-                attention_mask[i] = 1
+                features[i, 0] = torch.tensor(feature)
+                attention_mask[i, 0] = 1
 
             image_inputs[name] = dict(input=features, attention_mask=attention_mask)
         return image_inputs               
@@ -576,8 +591,7 @@ class MultiPassageBERTDataModule(QuestionAnsweringDataModule):
         start_positions = start_positions.view(-1, self.M, self.max_n_answers)
         end_positions = end_positions.view(-1, self.M, self.max_n_answers)
         answer_mask = answer_mask.view(-1, self.M, self.max_n_answers)
-        batch.update(dict(start_positions=start_positions, end_positions=end_positions, answer_mask=answer_mask))
-        return batch
+        return dict(start_positions=start_positions, end_positions=end_positions, answer_mask=answer_mask)
     
     def get_eval_passages(self, item):
         """Keep the top-M passages retrieved by the IR"""
@@ -669,15 +683,15 @@ class MultiPassageBERTDataModule(QuestionAnsweringDataModule):
             passages_text = [p['passage'] for p in passages]
         questions_text = [q['input'] for q in questions]
         batch = self.tokenizer(*(questions_text, passages_text), **self.tokenization_kwargs)
-        batch = self.get_answer_position(batch, answers, answer_mask)
+        answer_position = self.get_answer_position(batch, answers, answer_mask)            
+        batch = self.image_formatter.format_batch(batch, questions, passages)
+        batch.update(answer_position)
         batch['answer_strings'] = answer_strings
         if passage_scores:
             batch['passage_scores'] = torch.tensor(passage_scores)
-            
-        batch = self.image_formatter.format_batch(batch, questions, passages)
 
         return batch
-    
+                
     def transfer_batch_to_device(self, batch, device, dataloader_idx):
         """Keep answer_strings in batch. Does not try to cast them as Tensor of any dtype or device."""
         answer_strings = batch.pop('answer_strings', None)
