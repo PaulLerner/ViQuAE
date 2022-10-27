@@ -92,7 +92,10 @@ def load_image(file_name):
     try:
         image = Image.open(path).convert('RGB')
     except Exception as e:
-        warnings.warn(f"{e} with image {path}")
+        warnings.warn(f"Caught exception '{e}' with image '{path}'")
+        return None    
+    if image.width < 1 or image.height < 1:
+        warnings.warn(f"Empty image '{path}'")
         return None
     return image
 
@@ -151,6 +154,7 @@ def get_class_from_name(class_name):
     
 
 def get_pretrained(class_name, **kwargs):
+    # TODO: if pretrained_model_name_or_path is None, then init from scratch using Class.config_class
     Class = get_class_from_name(class_name)
     model = Class.from_pretrained(**kwargs)        
     return model
