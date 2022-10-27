@@ -193,7 +193,7 @@ class ImageFormatter:
         """
         if self.precomputed is None:
             # text-only
-            pass
+            inputs = text_inputs
         elif self.precomputed:
             if passages is not None:
                 raise NotImplementedError()
@@ -664,11 +664,10 @@ class MultiPassageBERTDataModule(QuestionAnsweringDataModule):
             answer = [torch.tensor(a, dtype=torch.long) for a in answer]
             answers.extend([answer]*self.M)
         if self.image_kb is None:
-            questions_text = questions
             passages_text = passages
         else:
-            questions_text = [q['input'] for q in questions]
             passages_text = [p['passage'] for p in passages]
+        questions_text = [q['input'] for q in questions]
         batch = self.tokenizer(*(questions_text, passages_text), **self.tokenization_kwargs)
         batch = self.get_answer_position(batch, answers, answer_mask)
         batch['answer_strings'] = answer_strings
