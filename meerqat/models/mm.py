@@ -633,13 +633,14 @@ class ECAEncoder(PreTrainedModel):
             else:
                 image_type_embeddings = None
             faces = faces.reshape(batch_size*n_images*n_faces, face_dim)
-            bbox=face_inputs['bbox'].reshape(batch_size*n_images*n_faces, -1)
+            bbox = face_inputs['bbox'].reshape(batch_size*n_images*n_faces, -1)
             face_output = self.face_embedding(face=faces, bbox=bbox, image_type_embeddings=image_type_embeddings)
             face_output = face_output.reshape(batch_size, n_images*n_faces, -1)
             # maybe gate faces
             face_output = self.face_gate(face_output)
         else:
             face_output = torch.zeros(batch_size, 0, self.config.hidden_size, device=faces.device)
+        face_attention_mask = face_inputs["attention_mask"].reshape(batch_size, n_images*n_faces)
 
         # embed images
         if image_inputs:
@@ -653,22 +654,21 @@ class ECAEncoder(PreTrainedModel):
             image_outputs, image_attention_mask = [], []
             for name, image in image_inputs.items():
                 image_output = self.image_embeddings[name](
-                    image['input'].reshape(batch_size*n_images), 
+                    image['input'].reshape(batch_size*n_images, -1), 
                     image_type_embeddings=image_type_embeddings
                 )
                 # maybe gate image
                 image_output = self.image_gates[name](image_output)
-                image_outputs.append(image_output.reshape(1, batch_size, n_images, -1))
-                image_attention_mask.append(image['attention_mask'].unsqueeze(0))
+                image_outputs.append(image_output.reshape(batch_size, n_images, -1))
+                image_attention_mask.append(image['attention_mask'])
             # (n_models, batch_size, n_images, embedding_dim) -> (batch_size, n_images*n_models, embedding_dim)
-            image_outputs = torch.cat(image_outputs, 0).transpose(0, 1).reshape(batch_size, len(image_inputs)*n_images, -1)
-            image_attention_mask = torch.cat(image_attention_mask, 0).transpose(0, 1).reshape(batch_size, len(image_inputs)*n_images)
+            image_outputs = torch.cat(image_outputs, dim=1)
+            image_attention_mask = torch.cat(image_attention_mask, dim=1)
         else:
             image_outputs = torch.zeros(batch_size, 0, self.config.hidden_size, device=faces.device)
             image_attention_mask = torch.zeros(batch_size, 0, device=faces.device)
         
         if self.config.face_and_image_are_exclusive:
-            face_attention_mask = face_inputs["attention_mask"]
             # indices at the batch level: at least one face detected (i.e. not masked)
             where_are_faces = face_attention_mask.nonzero()[:,0].unique()
             # mask images if at least one face was detected
@@ -688,7 +688,7 @@ class ECAEncoder(PreTrainedModel):
 
         # (batch_size, sequence_length+(n_faces+n_models)*n_images, embedding_dim)
         multimodal_embeddings = torch.cat((text_embeddings, face_output, image_outputs), dim=1)
-        attention_mask = torch.cat((text_inputs['attention_mask'], face_inputs['attention_mask'], image_attention_mask), dim=1)
+        attention_mask = torch.cat((text_inputs['attention_mask'], face_attention_mask, image_attention_mask), dim=1)
         extended_attention_mask = self.bert_model.get_extended_attention_mask(
             attention_mask, multimodal_embeddings.shape[:-1], multimodal_embeddings.device
         )
