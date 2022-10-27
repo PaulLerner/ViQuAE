@@ -60,7 +60,7 @@ from spacy.lang.en import English
 from datasets import load_dataset, Dataset, load_from_disk, set_caching_enabled
 import transformers
 
-from ..models import mm, qa
+from ..models import mm, qa, rr
 from meerqat import __file__ as ROOT_PATH
 
 
@@ -145,7 +145,7 @@ def answer_preprocess(answer):
 
 
 def get_class_from_name(class_name):
-    modules = [mm, qa, transformers]
+    modules = [mm, qa, rr, transformers]
     for module in modules:
         Class = getattr(module, class_name, None)
         if Class is not None:

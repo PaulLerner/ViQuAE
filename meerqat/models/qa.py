@@ -12,7 +12,7 @@ from transformers import (
 from transformers.modeling_outputs import BaseModelOutputWithPooling
 
 from ..train.optim import multi_passage_rc_loss
-from .outputs import MultiPassageBERTOutput
+from .outputs import ReaderOutput
 from .vilt import ViltEmbeddings, ViltPooler, ViltEncoder
 from .mm import ECAEncoder
 
@@ -153,7 +153,7 @@ class MultiPassageBERT(BertForQuestionAnswering):
             output = (start_logits, end_logits, start_log_probs, end_log_probs) + outputs[2:]
             return ((total_loss,) + output) if total_loss is not None else output
 
-        return MultiPassageBERTOutput(
+        return ReaderOutput(
             loss=total_loss,
             start_logits=start_logits,
             end_logits=end_logits,
@@ -212,7 +212,7 @@ class MultiPassageECA(ECAEncoder):
             output = (start_logits, end_logits, start_log_probs, end_log_probs) + outputs[2:]
             return ((total_loss,) + output) if total_loss is not None else output
 
-        return MultiPassageBERTOutput(
+        return ReaderOutput(
             loss=total_loss,
             start_logits=start_logits,
             end_logits=end_logits,
@@ -413,6 +413,7 @@ class ViltMultiImageModel(ViltModel):
         )
 
 
+# TODO: alternatively, subclass ViltForImagesAndTextClassification and feed it two text-image pairs
 class MultiPassageVilt(ViltPreTrainedModel):
     """Like MultiPassageBERT with a ViLT backbone instead of BERT"""
     def __init__(self, config, add_pooling_layer=False):
@@ -461,7 +462,7 @@ class MultiPassageVilt(ViltPreTrainedModel):
             output = (start_logits, end_logits, start_log_probs, end_log_probs) + outputs[2:]
             return ((total_loss,) + output) if total_loss is not None else output
 
-        return MultiPassageBERTOutput(
+        return ReaderOutput(
             loss=total_loss,
             start_logits=start_logits,
             end_logits=end_logits,

@@ -492,7 +492,12 @@ class BiEncoderDataModule(QuestionAnsweringDataModule):
                 The rest N*(M-1) rows are irrelevant contexts for all questions.
             **kwargs: 
                 idem
-        """
+        labels: torch.LongTensor
+            shape (N, )
+            Index of the relevant passage in context_inputs.
+            Should be arange(N) except for padding passages.
+        """        
+        assert self.n_relevant_passages == 1
         n_irrelevant_passages = self.M-self.n_relevant_passages
         questions, relevant_passages, irrelevant_passages, labels = [], [], [], []
         for i, item in enumerate(items):
@@ -525,13 +530,110 @@ class BiEncoderDataModule(QuestionAnsweringDataModule):
         batch = dict(question_inputs=question_inputs, context_inputs=context_inputs, labels=labels)
         return batch
         
-
-class MultiPassageBERTDataModule(QuestionAnsweringDataModule):
+    
+class CrossEncoderDataModule(QuestionAnsweringDataModule):
     """
+    Cross-encoder models concatenate (visual) questions and passages instead of modeling them separately.
+    This includes both rerankers and reading comprehension models.
+    Therefore, this class is abstract and should be shared by both.
+    
     Parameters
     ----------
     *args, **kwargs: 
         additional arguments are passed to QuestionAnsweringDataModule
+    run_path: str, optional
+        Path to the ranx run stored in the TREC format that holds the IR results.
+        To be used instead of search_key at inference.
+        Defaults to None.
+    """
+    def __init__(self, *args, run_path=None, **kwargs):
+        super().__init__(*args, **kwargs)                
+        if run_path is not None:
+            self.run = ranx.Run.from_file(run_path, 'trec')
+        else:            
+            self.run = None
+            
+    def get_eval_passages(self, item):
+        """Keep the top-M passages retrieved by the IR"""
+        if self.run is None:
+            indices = item[self.search_key+"_indices"][: self.M]
+            scores = item[self.search_key+"_scores"][: self.M]
+        else:
+            ir_results = self.run.run[item['id']]
+            # document ids in ranx are str so we map them back to indices (int)
+            indices = list(map(int, ir_results.keys()))[: self.M]
+            scores = list(ir_results.values())[: self.M]
+            
+        passages = self.kb.select(indices)
+        
+        # multimodal vs. text-only mode
+        if self.image_kb is None:
+            passages = passages['passage']
+        else:
+            passages = self.add_image(list(passages))
+        return passages, scores
+    
+    # TODO find a way to factorize subclasses collate_fn, which are very similar
+    def collate_fn(self, items):
+        raise NotImplementedError("Subclass and implement collate_fn.")
+        
+        
+class ReRankerDataModule(CrossEncoderDataModule):
+    def collate_fn(self, items):
+        """
+        Collate batch so that each question is associate with 1 and M-1 irrelevant ones.
+        Also tokenizes input strings
+
+        Returns (a dict of)
+        -------------------
+        input_ids: Tensor[int]
+            shape (N * M, L)     
+            1 relevant passage followed by M-1 irrelevant ones, N times
+            /!\ different from BiEncoderDataModule
+        labels: torch.LongTensor
+            shape (N, )
+            Index of the relevant passage in input_ids.
+            Should be 0 except for padding passages.
+        **kwargs: more tensors depending on the tokenizer, e.g. attention_mask
+        """
+        assert self.n_relevant_passages == 1
+        questions_text, questions_images, passages, labels = [], [], [], []
+        for i, item in enumerate(items):
+            questions_text.extend([item['input']]*self.M)
+            if self.image_kb is not None:
+                questions_images.extend([{'image': item['image']}]*self.M)
+                            
+            # TODO: gather qrels for evaluation
+            if False:#self.trainer.state.stage != "train":
+                passage, score = self.get_eval_passages(item)
+            else:
+                relevant_passage, irrelevant_passage = self.get_training_passages(item)
+                passage = relevant_passage + irrelevant_passage
+                if len(relevant_passage) < 1:
+                    labels.append(self.trainer.model.loss_fct.ignore_index)
+                else:
+                    labels.append(0)
+
+            passages.extend(passage)
+            if len(passage) < self.M:
+                passages.extend(self.padding_passage*(self.M-len(passage)))
+
+        if self.image_kb is None:
+            passages_text = passages
+        else:
+            passages_text = [p['passage'] for p in passages]
+        batch = self.tokenizer(*(questions_text, passages_text), **self.tokenization_kwargs)
+        batch = self.image_formatter.format_batch(batch, questions_images, passages)
+        batch['labels'] = torch.tensor(labels)
+        return batch
+
+    
+class ReaderDataModule(CrossEncoderDataModule):
+    """
+    Parameters
+    ----------
+    *args, **kwargs: 
+        additional arguments are passed to CrossEncoderDataModule
     max_n_answers: int, optional
         The answer might be found several time in the same passage, this is a threshold to enable batching
         Defaults to 10.
@@ -543,13 +645,9 @@ class MultiPassageBERTDataModule(QuestionAnsweringDataModule):
         Whether to use only relevant passages at inference (stored in {search_key}_provenance_indices)
         Will enforce n_relevant_passages=M
         Defaults to False (use IR passages at inference, stored in {search_key}_indices)
-    run_path: str, optional
-        Path to the ranx run stored in the TREC format that holds the IR results.
-        To be used instead of search_key at inference.
-        Defaults to None.
     """
     def __init__(self, *args, max_n_answers=10, 
-                 train_original_answer_only=True, oracle=False, run_path=None, **kwargs):
+                 train_original_answer_only=True, oracle=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.max_n_answers = max_n_answers
         self.train_original_answer_only = train_original_answer_only
@@ -557,12 +655,7 @@ class MultiPassageBERTDataModule(QuestionAnsweringDataModule):
         if self.oracle and self.n_relevant_passages != self.M:
             warnings.warn(f"Oracle mode. Setting n_relevant_passages={self.M}")
             self.n_relevant_passages = self.M
-                
-        if run_path is not None:
-            self.run = ranx.Run.from_file(run_path, 'trec')
-        else:            
-            self.run = None
-            
+                            
     def get_answer_position(self, batch, answers, answer_mask):
         """Adapted from DPR"""
         start_positions, end_positions = torch.zeros_like(answer_mask), torch.zeros_like(answer_mask)
@@ -593,26 +686,6 @@ class MultiPassageBERTDataModule(QuestionAnsweringDataModule):
         answer_mask = answer_mask.view(-1, self.M, self.max_n_answers)
         return dict(start_positions=start_positions, end_positions=end_positions, answer_mask=answer_mask)
     
-    def get_eval_passages(self, item):
-        """Keep the top-M passages retrieved by the IR"""
-        if self.run is None:
-            indices = item[self.search_key+"_indices"][: self.M]
-            scores = item[self.search_key+"_scores"][: self.M]
-        else:
-            ir_results = self.run.run[item['id']]
-            # document ids in ranx are str so we map them back to indices (int)
-            indices = list(map(int, ir_results.keys()))[: self.M]
-            scores = list(ir_results.values())[: self.M]
-            
-        passages = self.kb.select(indices)
-        
-        # multimodal vs. text-only mode
-        if self.image_kb is None:
-            passages = passages['passage']
-        else:
-            passages = self.add_image(list(passages))
-        return passages, scores
-
     def collate_fn(self, items):
         """
         Collate batch so that each question is associate with n_relevant_passages and M-n irrelevant ones.

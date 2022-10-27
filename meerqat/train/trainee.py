@@ -76,7 +76,8 @@ class Trainee(pl.LightningModule):
         return outputs
     
     def eval_epoch_end(self, eval_outputs):
-        raise NotImplementedError("Subclass and implement eval_epoch_end.")
+        warnings.warn("eval_epoch_end is not implemented.")
+        return {}
     
     def validation_epoch_end(self, *args, **kwargs):
         """eval_epoch_end and log"""
@@ -278,9 +279,39 @@ class BiEncoder(Trainee):
     
     def eval_epoch_end(self, eval_outputs):
         return retrieval(eval_outputs)
-            
+  
+          
+class ReRanker(Trainee):
+    """    
+    Parameters
+    ----------
+    model_kwargs: dict[str, str]
+        Passed to get_pretrained
+    """
+    def __init__(self, *args, model_kwargs, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model = get_pretrained(**model_kwargs)
+        self.loss_fct = nn.CrossEntropyLoss(reduction='mean')
+        self.post_init()   
 
-class MultiPassageBERTTrainee(Trainee):
+    def forward(self, *args, **kwargs):
+        return self.model(*args, **kwargs)
+    
+    def step(self, inputs, _):   
+        labels = inputs.pop('labels')
+        outputs = self(**inputs)
+        M = self.trainer.datamodule.M
+        N, = labels.shape
+        logits = outputs.logits.reshape(N, M)
+        loss = self.loss_fct(logits, labels)
+        return dict(loss=loss, logits=logits, labels=labels)        
+        
+    def eval_epoch_end(self, eval_outputs):
+        # TODO use ranx to compute metrics
+        return retrieval(eval_outputs)
+
+
+class Reader(Trainee):
     """    
     Parameters
     ----------

@@ -23,7 +23,12 @@ def retrieval(eval_outputs, ignore_index=-100):
     metrics = {}    
     mrr, hits_at_1, ignored_predictions, dataset_size = 0, 0, 0, 0
     for batch in eval_outputs:
-        log_probs = batch['log_probs'].detach().cpu().numpy()
+        if 'log_probs' in batch:
+            log_probs = batch['log_probs']
+        else:
+            # activation of the ranking does not really matter as long as it is strictly increasing
+            log_probs = batch['logits']
+        log_probs= log_probs.detach().cpu().numpy()
         labels = batch['labels'].detach().cpu().numpy()
         batch_size, _ = log_probs.shape
         dataset_size += batch_size
