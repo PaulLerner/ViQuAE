@@ -32,7 +32,7 @@ def format_html(dataset_path, output, n=None, width=400,
                 passages_path=None, wiki_path=None, search_run=None, other_search_run=None):
     # complete template according to parameters
     if search_run is not None:
-        search_run = Run.from_file(search_run, 'trec')
+        search_run = Run.from_file(search_run)
         search_headers = f"""<th>Visual</th>
         <th>Passage ({search_run.name})</th>"""
         search_row_template = """<td><img src="{passage_url}" width="{width}"></td>
@@ -40,7 +40,7 @@ def format_html(dataset_path, output, n=None, width=400,
     else:
         search_headers, search_row_template = "", ""
     if other_search_run is not None:
-        other_search_run = Run.from_file(other_search_run, 'trec')
+        other_search_run = Run.from_file(other_search_run)
         other_search_headers = f"""<th>Other Visual</th>
         <th>Passage ({other_search_run.name})</th>"""
         other_search_row_template = """<td><img src="{other_passage_url}" width="{width}"></td>

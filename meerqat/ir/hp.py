@@ -399,12 +399,12 @@ def hyperparameter_search(study_name=None, storage=None, metric_save_path=None,
             metric_save_path = Path(metric_save_path)
             metric_save_path.mkdir(exist_ok=True)
             # N. B. qrels and runs are overwritten in Searcher every time there's a call to add_multi
-            objective.searcher.qrels.save(metric_save_path / "qrels.trec")
+            objective.searcher.qrels.save(metric_save_path / "qrels.json")
             report.save(metric_save_path / "metrics.json")
             with open(metric_save_path / "metrics.tex", 'wt') as file:
                 file.write(report.to_latex())
             for index_name, run in objective.searcher.runs.items():
-                run.save(metric_save_path / f"{index_name}.trec")
+                run.save(metric_save_path / f"{index_name}.json")
 
     return objective.eval_dataset
 

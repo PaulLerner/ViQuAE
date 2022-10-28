@@ -81,8 +81,8 @@ def iplot(reduced_embeddings, dataset, urls, input_key='input', thumb_width=128,
 
 
 def get_ranx_run(qrels_path, run_path, metric='mrr'):
-    qrels = ranx.Qrels.from_file(qrels_path, kind='trec')
-    run = ranx.Run.from_file(run_path, kind='trec')
+    qrels = ranx.Qrels.from_file(qrels_path)
+    run = ranx.Run.from_file(run_path)
     ranx.evaluate(qrels, run, metrics=metric)
     return run, metric
 

@@ -674,12 +674,12 @@ def dataset_search(dataset, k=100, metric_save_path=None, map_kwargs={}, **kwarg
     # save qrels, metrics (in JSON and LaTeX), statistical tests, and runs.
     if metric_save_path is not None:
         metric_save_path.mkdir(exist_ok=True)
-        searcher.qrels.save(metric_save_path/"qrels.trec", kind='trec')
+        searcher.qrels.save(metric_save_path/"qrels.json")
         report.save(metric_save_path/"metrics.json")
         with open(metric_save_path/"metrics.tex", 'wt') as file:
             file.write(report.to_latex())
         for index_name, run in searcher.runs.items():
-            run.save(metric_save_path/f"{index_name}.trec", kind='trec')
+            run.save(metric_save_path/f"{index_name}.json")
     
     if searcher.save_in_dataset:
         return dataset

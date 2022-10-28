@@ -24,7 +24,7 @@ Positional arguments:
 
 Options:
     --disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
-    --output=<path>         1. qrels: output path to the TREC file
+    --output=<path>         1. qrels: output path to the JSON file
                             2. ranx: output path to the directory where to save metrics
     --filter=<path>         Path towards the JSON file that contains a list of question ids to filter *out*
     --kwargs=<path>         Path towards the JSON config file that contains kwargs
@@ -40,7 +40,6 @@ from tqdm import tqdm
 from pathlib import Path
 
 import pandas as pd
-import numpy as np
 from datasets import load_from_disk
 import ranx
 
@@ -154,7 +153,7 @@ def find_relevant_item(item, passages, title2index, article2passage):
 def find_relevant_dataset(dataset_path, **kwargs):
     """Loads dataset, maps it through find_relevant_item and saves it back."""
     dataset = load_from_disk(dataset_path)
-    # TODO save qrels in TREC/ranx format in dataset_path/qrels.trec
+    # TODO save qrels in ranx format in dataset_path/qrels.json
     dataset = dataset.map(find_relevant_item, fn_kwargs=kwargs)
     dataset.save_to_disk(dataset_path)
 
@@ -173,10 +172,10 @@ def fuse_qrels(qrels_paths):
     """
     # nothing to fuse
     if len(qrels_paths) == 1:
-        return ranx.Qrels.from_file(qrels_paths[0], kind='trec')
+        return ranx.Qrels.from_file(qrels_paths[0])
     final_qrels = {}
     for qrels_path in tqdm(qrels_paths):
-        qrels = ranx.Qrels.from_file(qrels_path, kind='trec').qrels
+        qrels = ranx.Qrels.from_file(qrels_path).qrels
         for q_id, rels in qrels.items():
             final_qrels.setdefault(q_id, {})
             for doc_id, score in rels.items():
@@ -205,7 +204,7 @@ def load_runs(runs_paths=[], runs_dict={}, filter_q_ids=[]):
     
     # load runs from CLI
     for run_path in runs_paths:
-        run = ranx.Run.from_file(run_path, kind='trec')
+        run = ranx.Run.from_file(run_path)
         if run.name is None:
             run.name = run_path
         else:
@@ -216,7 +215,7 @@ def load_runs(runs_paths=[], runs_dict={}, filter_q_ids=[]):
     
     # load runs from config file
     for name, run_path in runs_dict.items():
-        run = ranx.Run.from_file(run_path, kind='trec')
+        run = ranx.Run.from_file(run_path)
         run.name = name
         for q_id in filter_q_ids:
             run.run.pop(q_id)
@@ -243,7 +242,7 @@ def compare(qrels_path, runs_paths=[], runs_dict={}, output_path=None, filter_q_
     **kwargs:
         Passed to ranx.compare
     """
-    qrels = ranx.Qrels.from_file(qrels_path, kind='trec')
+    qrels = ranx.Qrels.from_file(qrels_path)
     for q_id in filter_q_ids:
         qrels.qrels.pop(q_id)
     
@@ -278,7 +277,7 @@ def cat_breakdown(qrels_path, runs_paths, cats, runs_dict={}, output_path=None,
         output_path = Path(output_path)
         output_path.mkdir(exist_ok=True)
         
-    qrels = ranx.Qrels.from_file(qrels_path, kind='trec')    
+    qrels = ranx.Qrels.from_file(qrels_path)    
     runs = load_runs(runs_paths, runs_dict=runs_dict)
     
     # break qrels by cat
@@ -351,7 +350,7 @@ if __name__ == '__main__':
     
     elif args['qrels']:
         qrels = fuse_qrels(args['<qrels>'])
-        qrels.save(args['--output'], kind='trec')
+        qrels.save(args['--output'])
         
     elif args['ranx']:
         # usage: either cat_breakdown or compare
