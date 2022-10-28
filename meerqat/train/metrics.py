@@ -4,6 +4,8 @@ import re
 import string
 from collections import Counter                                                                                                                                                                                    
 
+import ranx
+
 from ..data.loading import answer_preprocess
 
 
@@ -23,12 +25,7 @@ def retrieval(eval_outputs, ignore_index=-100):
     metrics = {}    
     mrr, hits_at_1, ignored_predictions, dataset_size = 0, 0, 0, 0
     for batch in eval_outputs:
-        if 'log_probs' in batch:
-            log_probs = batch['log_probs']
-        else:
-            # activation of the ranking does not really matter as long as it is strictly increasing
-            log_probs = batch['logits']
-        log_probs= log_probs.detach().cpu().numpy()
+        log_probs = batch['log_probs'].detach().cpu().numpy()
         labels = batch['labels'].detach().cpu().numpy()
         batch_size, _ = log_probs.shape
         dataset_size += batch_size
@@ -47,6 +44,27 @@ def retrieval(eval_outputs, ignore_index=-100):
     metrics["hits@1"] = hits_at_1 / (dataset_size-ignored_predictions)
 
     return metrics
+
+
+def get_run(eval_outputs, ir_run):
+    """    
+    Parameters
+    ----------
+    eval_outputs: List[dict[str, Tensor]]
+        Contains logits for all batches in the evaluation step (either validation or test)
+    ir_run: ranx.Run
+        Original IR run being re-ranked.
+    """
+    run = {}
+    for batch in eval_outputs:
+        logits = batch['logits'].detach().cpu().numpy()
+        N, M = logits.shape
+        question_ids = [batch['ids'][i] for i in range(0, N*M, M)]
+        rankings = (-logits).argsort(axis=1)
+        for ranking, logit, question_id in zip(rankings, logits, question_ids):
+            doc_ids = list(ir_run.run[question_id].keys())[: M]
+            run[question_id] = {doc_ids[i]: logit[i] for i in ranking}
+    return ranx.Run(run)
 
 
 def f1_score(prediction, ground_truth):

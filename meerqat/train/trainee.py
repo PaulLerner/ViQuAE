@@ -4,7 +4,10 @@ Trainee is a pl.LightningModule that computes the loss so it is compatible with 
 import warnings
 from functools import partial
 import re
+from pathlib import Path
+
 import numpy as np
+import ranx
 
 import torch.nn as nn
 from torch.optim import AdamW
@@ -14,7 +17,7 @@ from ..data.loading import get_pretrained
 from ..models.qa import get_best_spans
 from ..models.outputs import BiEncoderOutput
 from .optim import LinearLRWithWarmup
-from .metrics import retrieval, squad
+from .metrics import retrieval, squad, get_run
 
     
 class Trainee(pl.LightningModule):
@@ -57,6 +60,12 @@ class Trainee(pl.LightningModule):
     def step(self, *args, **kwargs):
         raise NotImplementedError("Subclass and implement step.")
     
+    def log(self, name, value, **kwargs):
+        """Ignores None values."""
+        if value is None:
+            return None
+        super().log(name, value, **kwargs)
+            
     def training_step(self, *args, **kwargs):
         """Step and log training metrics"""
         outputs = self.step(*args, **kwargs)
@@ -278,7 +287,7 @@ class BiEncoder(Trainee):
         return dict(loss=loss, log_probs=log_probs, labels=global_labels)   
     
     def eval_epoch_end(self, eval_outputs):
-        return retrieval(eval_outputs)
+        return retrieval(eval_outputs, ignore_index=self.loss_fct.ignore_index)
   
           
 class ReRanker(Trainee):
@@ -287,29 +296,55 @@ class ReRanker(Trainee):
     ----------
     model_kwargs: dict[str, str]
         Passed to get_pretrained
+    metric_kwargs: dict[str, str], optional
+        Passed to ranx.evaluate to compute metrics during evaluation
     """
-    def __init__(self, *args, model_kwargs, **kwargs):
+    def __init__(self, *args, model_kwargs, metric_kwargs={}, **kwargs):
         super().__init__(*args, **kwargs)
         self.model = get_pretrained(**model_kwargs)
         self.loss_fct = nn.CrossEntropyLoss(reduction='mean')
+        ks = metric_kwargs.pop("ks", [1, 5, 10, 20, 100])
+        default_metrics_kwargs = dict(metrics=[f"{m}@{k}" for m in ["mrr", "precision", "hit_rate"] for k in ks])
+        default_metrics_kwargs.update(metric_kwargs)
+        self.metrics_kwargs = default_metrics_kwargs
         self.post_init()   
 
     def forward(self, *args, **kwargs):
         return self.model(*args, **kwargs)
     
     def step(self, inputs, _):   
-        labels = inputs.pop('labels')
+        labels = inputs.pop('labels', None)
+        question_ids = inputs.pop('ids', None)
         outputs = self(**inputs)
         M = self.trainer.datamodule.M
-        N, = labels.shape
+        n_times_m, _ = outputs.logits.shape
+        assert n_times_m % M == 0
+        N = n_times_m//M
         logits = outputs.logits.reshape(N, M)
-        loss = self.loss_fct(logits, labels)
-        return dict(loss=loss, logits=logits, labels=labels)        
+        if labels is not None:
+            loss = self.loss_fct(logits, labels)
+        else:
+            loss = None
+        return dict(loss=loss, logits=logits, labels=labels, ids=question_ids)        
         
     def eval_epoch_end(self, eval_outputs):
-        # TODO use ranx to compute metrics
-        return retrieval(eval_outputs)
+        run = get_run(eval_outputs, ir_run=self.trainer.datamodule.run)
+        metrics = ranx.evaluate(qrels=self.trainer.datamodule.qrels, run=run, **self.metrics_kwargs)
+        return metrics, run
+    
+    def test_epoch_end(self, *args, **kwargs):
+        """eval_epoch_end, log and save run"""
+        metrics, run = self.eval_epoch_end(*args, **kwargs)
+        for k, v in metrics.items():
+            self.log(f"test/{k}", v)
+        run.save(Path(self.trainer.log_dir)/'run.json')
 
+    def validation_epoch_end(self, *args, **kwargs):
+        """eval_epoch_end and log"""
+        metrics, _ = self.eval_epoch_end(*args, **kwargs)
+        for k, v in metrics.items():
+            self.log(f"eval/{k}", v)
+            
 
 class Reader(Trainee):
     """    
