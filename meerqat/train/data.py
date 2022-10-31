@@ -590,12 +590,9 @@ class ReRankerDataModule(QuestionAnsweringDataModule):
         **kwargs: more tensors depending on the tokenizer, e.g. attention_mask
         """
         assert self.n_relevant_passages == 1
-        question_ids, questions_text, questions_images, passages, labels = [], [], [], [], []
+        question_ids, questions, passages, labels = [], [], [], []
         for i, item in enumerate(items):
-            questions_text.extend([item['input']]*self.M)
-            if self.image_kb is not None:
-                questions_images.extend([{'image': item['image']}]*self.M)
-                            
+            questions.extend([item]*self.M)                            
             if self.trainer.state.stage != "train":
                 passage = self.get_eval_passages(item)
                 question_ids.extend([item['id']]*self.M)
@@ -615,8 +612,9 @@ class ReRankerDataModule(QuestionAnsweringDataModule):
             passages_text = passages
         else:
             passages_text = [p['passage'] for p in passages]
+        questions_text = [q['input'] for q in questions]
         batch = self.tokenizer(*(questions_text, passages_text), **self.tokenization_kwargs)
-        batch = self.image_formatter.format_batch(batch, questions_images, passages)
+        batch = self.image_formatter.format_batch(batch, questions, passages)
         if labels:
             batch['labels'] = torch.tensor(labels)
         if question_ids:
@@ -735,16 +733,14 @@ class ReaderDataModule(QuestionAnsweringDataModule):
             only in evaluation mode
         **kwargs: more tensors depending on the tokenizer, e.g. attention_mask
         """
-        questions_text, questions_images, passages = [], [], []
+        questions, passages = [], []
         answers, answer_strings = [], []
         passage_scores = []
         N = len(items)
         answer_mask = torch.zeros((N*self.M, self.max_n_answers), dtype=torch.long)
         for i, item in enumerate(items):
             # N. B. seed is set in Trainer
-            questions_text.extend([item['input']]*self.M)
-            if self.image_kb is not None:
-                questions_images.extend([{'image': item['image']}]*self.M)
+            questions.extend([item]*self.M)
 
             # oracle -> use only relevant passages
             if (self.trainer.state.stage != "train") and not self.oracle:
@@ -787,9 +783,10 @@ class ReaderDataModule(QuestionAnsweringDataModule):
             passages_text = passages
         else:
             passages_text = [p['passage'] for p in passages]
+        questions_text = [q['input'] for q in questions]
         batch = self.tokenizer(*(questions_text, passages_text), **self.tokenization_kwargs)
         answer_position = self.get_answer_position(batch, answers, answer_mask)            
-        batch = self.image_formatter.format_batch(batch, questions_images, passages)
+        batch = self.image_formatter.format_batch(batch, questions, passages)
         batch.update(answer_position)
         batch['answer_strings'] = answer_strings
         if passage_scores:
