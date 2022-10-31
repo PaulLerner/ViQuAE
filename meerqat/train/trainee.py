@@ -18,6 +18,7 @@ from ..models.qa import get_best_spans
 from ..models.outputs import BiEncoderOutput
 from .optim import LinearLRWithWarmup
 from .metrics import retrieval, squad, get_run
+from .data import ReRankerDataModule
 
     
 class Trainee(pl.LightningModule):
@@ -90,13 +91,13 @@ class Trainee(pl.LightningModule):
     
     def validation_epoch_end(self, *args, **kwargs):
         """eval_epoch_end and log"""
-        metrics = self.eval_epoch_end(*args, **kwargs)
+        metrics = self.eval_epoch_end(*args, **kwargs)['metrics']
         for k, v in metrics.items():
             self.log(f"eval/{k}", v)
             
     def test_epoch_end(self, *args, **kwargs):
         """eval_epoch_end and log"""
-        metrics = self.eval_epoch_end(*args, **kwargs)
+        metrics = self.eval_epoch_end(*args, **kwargs)['metrics']
         for k, v in metrics.items():
             self.log(f"test/{k}", v)
             
@@ -287,7 +288,7 @@ class BiEncoder(Trainee):
         return dict(loss=loss, log_probs=log_probs, labels=global_labels)   
     
     def eval_epoch_end(self, eval_outputs):
-        return retrieval(eval_outputs, ignore_index=self.loss_fct.ignore_index)
+        return {'metrics': retrieval(eval_outputs, ignore_index=self.loss_fct.ignore_index)}
   
           
 class ReRanker(Trainee):
@@ -328,22 +329,23 @@ class ReRanker(Trainee):
         return dict(loss=loss, logits=logits, labels=labels, ids=question_ids)        
         
     def eval_epoch_end(self, eval_outputs):
-        run = get_run(eval_outputs, ir_run=self.trainer.datamodule.run)
-        metrics = ranx.evaluate(qrels=self.trainer.datamodule.qrels, run=run, **self.metrics_kwargs)
-        return metrics, run
+        # rerank results of IR
+        if isinstance(self.trainer.datamodule, ReRankerDataModule):
+            run = get_run(eval_outputs, ir_run=self.trainer.datamodule.run)
+            metrics = ranx.evaluate(qrels=self.trainer.datamodule.qrels, run=run, **self.metrics_kwargs)
+        # in-batch metrics (e.g. for ICT)
+        else:
+            run = None
+            metrics = retrieval(eval_outputs, ignore_index=self.loss_fct.ignore_index, output_key='logits')
+        return {'metrics': metrics, 'run': run}
     
     def test_epoch_end(self, *args, **kwargs):
         """eval_epoch_end, log and save run"""
-        metrics, run = self.eval_epoch_end(*args, **kwargs)
-        for k, v in metrics.items():
+        outputs = self.eval_epoch_end(*args, **kwargs)
+        for k, v in outputs['metrics'].items():
             self.log(f"test/{k}", v)
-        run.save(Path(self.trainer.log_dir)/'run.json')
-
-    def validation_epoch_end(self, *args, **kwargs):
-        """eval_epoch_end and log"""
-        metrics, _ = self.eval_epoch_end(*args, **kwargs)
-        for k, v in metrics.items():
-            self.log(f"eval/{k}", v)
+        if outputs['run'] is not None:
+            outputs['run'].save(Path(self.trainer.log_dir)/'run.json')
             
 
 class Reader(Trainee):
@@ -420,4 +422,4 @@ class Reader(Trainee):
         if weighted_predictions:
             for k, v in squad(predictions=all_weighted_predictions, references=all_answer_strings).items():
                 metrics['weighted_'+k] = v
-        return metrics
+        return {'metrics': metrics}

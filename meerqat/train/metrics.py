@@ -1,7 +1,5 @@
 """Metrics to be used in trainer."""
 import warnings
-import re
-import string
 from collections import Counter                                                                                                                                                                                    
 
 import ranx
@@ -10,7 +8,7 @@ from ..data.loading import answer_preprocess
 
 
 # TODO https://torchmetrics.readthedocs.io/en/stable/retrieval/mrr.html
-def retrieval(eval_outputs, ignore_index=-100):
+def retrieval(eval_outputs, ignore_index=-100, output_key='log_probs'):
     """
     Computes metric for retrieval training (at the batch-level)
     
@@ -21,11 +19,13 @@ def retrieval(eval_outputs, ignore_index=-100):
     ignore_index: int, optional
         Labels with this value are not taken into account when computing metrics.
         Defaults to -100
+    output_key: str, optional
+        Name of the model output in eval_outputs
     """
     metrics = {}    
     mrr, hits_at_1, ignored_predictions, dataset_size = 0, 0, 0, 0
     for batch in eval_outputs:
-        log_probs = batch['log_probs'].detach().cpu().numpy()
+        log_probs = batch[output_key].detach().cpu().numpy()
         labels = batch['labels'].detach().cpu().numpy()
         batch_size, _ = log_probs.shape
         dataset_size += batch_size

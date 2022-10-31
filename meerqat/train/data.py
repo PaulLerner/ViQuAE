@@ -38,7 +38,12 @@ class DataModule(pl.LightningDataModule):
     batch_size, train_batch_size, eval_batch_size: int, optional
         batch_size is needed to be able to tune it automatically using auto_scale_batch_size in Trainer
         It is overriden by train_batch_size, eval_batch_size 
-        (if you want to use different batch sizes for training and evaluation)
+        (if you want to use different batch sizes for training and evaluation)    
+    M: int, optional
+        Number of passages (relevant or irrelevant) per question in a batch
+        Defaults to 24
+    n_relevant_passages: int, optional
+        Defaults to 1
     tokenization_kwargs: dict, optional
         To be passed to self.tokenizer
     image_kwargs: dict, optional
@@ -47,8 +52,10 @@ class DataModule(pl.LightningDataModule):
         Passed to the data loaders (e.g. self.train_dataloader())
     """
     def __init__(self, tokenizer_class, tokenizer_name_or_path, 
-                 dataset_path=None, train_path=None, validation_path=None, test_path=None, batch_size=8,
-                 train_batch_size=None, eval_batch_size=None, tokenization_kwargs=None, image_kwargs={}, loader_kwargs={}):
+                 dataset_path=None, train_path=None, validation_path=None, test_path=None, 
+                 batch_size=8, train_batch_size=None, eval_batch_size=None, 
+                 M=24, n_relevant_passages=1, 
+                 tokenization_kwargs=None, image_kwargs={}, loader_kwargs={}):
         super().__init__()
         self.tokenizer = get_pretrained(tokenizer_class, pretrained_model_name_or_path=tokenizer_name_or_path)
         self.dataset_path = dataset_path
@@ -58,9 +65,18 @@ class DataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         self.train_batch_size = train_batch_size
         self.eval_batch_size = eval_batch_size
+        self.M = M
+        assert n_relevant_passages <= M
+        self.n_relevant_passages = n_relevant_passages
+
         # useful in some corner-cases like ICT. False for every other data modules
         self.shuffle_eval = False
-        default_tokenization_kwargs = dict(return_tensors='pt', padding='longest', truncation=True)
+        default_tokenization_kwargs = dict(
+            return_tensors='pt', 
+            padding='longest', 
+            truncation=True, 
+            return_overflowing_tokens=False
+        )
         if tokenization_kwargs is not None:
             default_tokenization_kwargs.update(tokenization_kwargs)
         self.tokenization_kwargs = default_tokenization_kwargs
@@ -346,11 +362,6 @@ class QuestionAnsweringDataModule(DataModule):
     image_kb: str, optional
         Path to the KB that holds pre-computed image features
         Can be mapped from kb using kb['index']
-    M: int, optional
-        Number of passages (relevant or irrelevant) per question in a batch
-        Defaults to 24
-    n_relevant_passages: int, optional
-        Defaults to 1
     search_key: str, optional
         This column in the dataset suffixed by '_indices' and '_scores' should hold the result of information retrieval
         used during evaluation (e.g. the output of ir.search)
@@ -360,8 +371,7 @@ class QuestionAnsweringDataModule(DataModule):
         used during training (according to M and n_relevant_passages)
         Defaults to 'search'
     """
-    def __init__(self, *args, kb, image_kb=None, 
-                 M=24, n_relevant_passages=1, search_key='search', **kwargs):
+    def __init__(self, *args, kb, image_kb=None, search_key='search', **kwargs):
         super().__init__(*args, **kwargs)
         self.kb = verbose_load_from_disk(kb)
         if image_kb is not None:
@@ -370,10 +380,11 @@ class QuestionAnsweringDataModule(DataModule):
         else:
             self.image_kb = None
             self.padding_passage = ['']
-        self.M = M
-        assert n_relevant_passages <= M
-        self.n_relevant_passages = n_relevant_passages
         self.search_key = search_key    
+        if self.image_formatter.precomputed:
+            self.add_image = self.add_image_features
+        else:
+            self.add_image = self.add_image_path
                          
     def get_training_passages(self, item):
         """
@@ -459,14 +470,7 @@ class QuestionAnsweringDataModule(DataModule):
             passage.setdefault('image', self.image_kb[i]['image'])
         return passages   
     
-    def add_image(self, *args, **kwargs):
-        """Switches between add_image_features and add_image_path"""
-        if self.image_formatter.precomputed:
-            return self.add_image_features(*args, **kwargs)
-        else:
-            return self.add_image_path(*args, **kwargs)
-        
-
+    
 class BiEncoderDataModule(QuestionAnsweringDataModule):        
     def collate_fn(self, items):
         """
@@ -591,7 +595,7 @@ class ReRankerDataModule(QuestionAnsweringDataModule):
         """
         assert self.n_relevant_passages == 1
         question_ids, questions, passages, labels = [], [], [], []
-        for i, item in enumerate(items):
+        for item in items:
             questions.extend([item]*self.M)                            
             if self.trainer.state.stage != "train":
                 passage = self.get_eval_passages(item)
@@ -814,11 +818,11 @@ class ICT(DataModule):
     ----------
     *args, **kwargs: 
         additional arguments are passed to DataModule
+    biencoder: bool, optional
+        Expected kind of model: bi-encoder or cross-encoder
+        i.e. whether to concatenate questions with passages or leave them in separate tensors
     sentences_per_target: int, optional
         Number of sentences in the target passages
-    n_hard_negatives: int, optional
-        Synthesize hopefully-hard negatives by permuting images in the batch n times
-        Defaults to only random in-batch negatives
     prepend_title: bool, optional
         Whether to preprend the title of the article to the target passage
     text_mask_rate: float, optional
@@ -832,18 +836,22 @@ class ICT(DataModule):
        In Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics, 
        pages 6086–6096, Florence, Italy. Association for Computational Linguistics.
     """
-    def __init__(self, *args, sentences_per_target=4, n_hard_negatives=0,
+    def __init__(self, *args, biencoder=True, sentences_per_target=4,
                  prepend_title=False, text_mask_rate=1.0, image_mask_rate=1.0, **kwargs):
         super().__init__(*args, **kwargs)
+        assert self.n_relevant_passages == 1
+        if biencoder:
+             self.collate_fn = self.biencoder_collate_fn
+        else:
+            self.collate_fn = self.reranker_collate_fn
         self.sentences_per_target = sentences_per_target
-        self.n_hard_negatives = n_hard_negatives
         self.prepend_title = prepend_title
         self.text_mask_rate = text_mask_rate
         self.image_mask_rate = image_mask_rate
         # the WIT dataset groups wikipedia sections by article 
         # so in-batch negatives may get very difficult or even false positives if we don’t shuffle
         self.shuffle_eval = True
-
+        
     def get_pseudo_question(self, item):
         """
         Returns
@@ -891,7 +899,7 @@ class ICT(DataModule):
             target['image'] = item[f"{context_image_key}image"]
         return query, target
 
-    def collate_fn(self, items):        
+    def biencoder_collate_fn(self, items):        
         questions, relevant_passages, labels = [], [], []
         for i, item in enumerate(items):
             query, relevant_passage = self.get_pseudo_question(item)
@@ -904,18 +912,19 @@ class ICT(DataModule):
         # get image features or pixels, for both questions and passages
         question_inputs = self.image_formatter.format_batch(question_inputs_text, items)
         context_inputs = self.image_formatter.format_batch(context_inputs_text, relevant_passages)
-
-        # make self.n_hard_negatives by shifting the images of relevant passages
-        if self.n_hard_negatives > 0:
+        
+        n_hard_negatives = self.M - self.n_relevant_passages
+        # make n_hard_negatives by shifting the images of relevant passages
+        if n_hard_negatives > 0:
             if not self.image_formatter.precomputed:
                 raise NotImplementedError()
             # duplicate relevant text
             for k, v in context_inputs["text_inputs"].items():
-                context_inputs["text_inputs"][k] = torch.tile(v, (self.n_hard_negatives+1, 1))
+                context_inputs["text_inputs"][k] = torch.tile(v, (n_hard_negatives+1, 1))
             # shift relevant images
             for k, v in context_inputs['image_inputs'].items():
                 shifted_input, shifted_mask = [v['input']], [v['attention_mask']]
-                for shift in range(self.n_hard_negatives):
+                for shift in range(n_hard_negatives):
                     # shift along axis 0 (batch axis)
                     shifted_input.append(torch.roll(v['input'], shift+1, 0))
                     shifted_mask.append(torch.roll(v['attention_mask'], shift+1, 0))
@@ -925,7 +934,7 @@ class ICT(DataModule):
             # shift relevant faces
             shifted_faces, shifted_boxes = [context_inputs['face_inputs']["face"]], [context_inputs['face_inputs']["bbox"]]
             shifted_mask = [context_inputs['face_inputs']['attention_mask']]
-            for shift in range(self.n_hard_negatives):
+            for shift in range(n_hard_negatives):
                 # shift along axis 0 (batch axis)
                 shifted_faces.append(torch.roll(context_inputs['face_inputs']["face"], shift+1, 0))
                 shifted_boxes.append(torch.roll(context_inputs['face_inputs']["bbox"], shift+1, 0))
@@ -939,7 +948,38 @@ class ICT(DataModule):
         labels = torch.tensor(labels)
         batch = dict(question_inputs=question_inputs, context_inputs=context_inputs, labels=labels)
         return batch
-    
+        
+    def reranker_collate_fn(self, items):   
+        assert len(items) >= self.M, "Not enough random negatives"
+        # generate pseudo-questions for all items in the batch
+        unique_questions, relevant_passages = [], []
+        for item in items:
+            query, relevant_passage = self.get_pseudo_question(item)
+            unique_questions.append(query)
+            relevant_passages.append(relevant_passage)
+        
+        # mix questions with random negatives (passages relevant for other questions in the batch)
+        questions, passages = [], []
+        for i in range(len(items)):
+            for j in range(self.M):
+                questions.append(unique_questions[i])
+                # j==0 --> relevant passage. label should always be 0
+                # j>0  --> irrelevant passage. relevant for another question in the batch
+                if i+j < len(items):
+                    passages.append(relevant_passages[i+j])
+                # corner-case: get passages from the first questions in the batch
+                else:
+                    passages.append(relevant_passages[i+j-len(items)])
+                
+        questions_text = [q['text'] for q in questions]
+        passages_text = [p['text'] for p in passages]
+        batch = self.tokenizer(*(questions_text, passages_text), **self.tokenization_kwargs)
+        batch = self.image_formatter.format_batch(batch, questions, passages)
+
+        # wrap it up
+        batch['labels'] = torch.zeros(len(items), dtype=torch.long)
+        return batch
+
     
 def filter_rels(dataset, search_key):
     # TODO
