@@ -891,12 +891,14 @@ class ICT(DataModule):
         else:
             context_image_key = ""
             
-        # rename context image features/image path
+        # rename context image features/image path and copy for query
         if self.image_formatter.precomputed:
             for k in ({"face_box", "face_embedding"} | self.image_formatter.image_features.image_embeddings_keys):
                 target[k] = item.get(f"{context_image_key}{k}")
+                query[k] = item.get(k)
         else:
             target['image'] = item[f"{context_image_key}image"]
+            query['image'] = item['image']
         return query, target
 
     def biencoder_collate_fn(self, items):        
@@ -910,7 +912,7 @@ class ICT(DataModule):
         question_inputs_text = self.tokenizer([q['text'] for q in questions], **self.tokenization_kwargs)
         context_inputs_text = self.tokenizer([p['text'] for p in relevant_passages], **self.tokenization_kwargs)
         # get image features or pixels, for both questions and passages
-        question_inputs = self.image_formatter.format_batch(question_inputs_text, items)
+        question_inputs = self.image_formatter.format_batch(question_inputs_text, questions)
         context_inputs = self.image_formatter.format_batch(context_inputs_text, relevant_passages)
         
         n_hard_negatives = self.M - self.n_relevant_passages
@@ -970,7 +972,7 @@ class ICT(DataModule):
                 # corner-case: get passages from the first questions in the batch
                 else:
                     passages.append(relevant_passages[i+j-len(items)])
-                
+                    
         questions_text = [q['text'] for q in questions]
         passages_text = [p['text'] for p in passages]
         batch = self.tokenizer(*(questions_text, passages_text), **self.tokenization_kwargs)
