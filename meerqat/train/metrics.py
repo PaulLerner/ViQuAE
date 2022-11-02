@@ -1,11 +1,16 @@
 """Metrics to be used in trainer."""
 import warnings
 from collections import Counter                                                                                                                                                                                    
+import pandas as pd
 
 import ranx
 
 from ..data.loading import answer_preprocess
 
+def to_latex(metrics):
+    table = pd.DataFrame([metrics])*100
+    return table.to_latex(float_format='%.1f')
+    
 
 # TODO https://torchmetrics.readthedocs.io/en/stable/retrieval/mrr.html
 def retrieval(eval_outputs, ignore_index=-100, output_key='log_probs'):
@@ -108,8 +113,8 @@ def squad(predictions, references):
         exact_match += metric_max_over_ground_truths(exact_match_score, prediction, ground_truths)
         f1 += metric_max_over_ground_truths(f1_score, prediction, ground_truths)
 
-    exact_match = 100.0 * exact_match / len(references)
-    f1 = 100.0 * f1 / len(references)
+    exact_match = exact_match / len(references)
+    f1 = f1 / len(references)
 
     return {"exact_match": exact_match, "f1": f1}
 

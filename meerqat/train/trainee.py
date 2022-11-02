@@ -17,7 +17,7 @@ from ..data.loading import get_pretrained
 from ..models.qa import get_best_spans
 from ..models.outputs import BiEncoderOutput
 from .optim import LinearLRWithWarmup
-from .metrics import retrieval, squad, get_run
+from .metrics import retrieval, squad, get_run, to_latex
 from .data import ReRankerDataModule
 
     
@@ -98,9 +98,10 @@ class Trainee(pl.LightningModule):
     def test_epoch_end(self, *args, **kwargs):
         """eval_epoch_end and log"""
         metrics = self.eval_epoch_end(*args, **kwargs)['metrics']
+        print(to_latex(metrics))
         for k, v in metrics.items():
             self.log(f"test/{k}", v)
-            
+                
     def get_weights_to_log(self, model):
         logs = {}
         weights_to_log = getattr(model, 'weights_to_log', {})
@@ -342,6 +343,7 @@ class ReRanker(Trainee):
     def test_epoch_end(self, *args, **kwargs):
         """eval_epoch_end, log and save run"""
         outputs = self.eval_epoch_end(*args, **kwargs)
+        print(to_latex(outputs['metrics']))
         for k, v in outputs['metrics'].items():
             self.log(f"test/{k}", v)
         if outputs['run'] is not None:
