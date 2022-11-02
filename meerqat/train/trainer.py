@@ -24,6 +24,9 @@ For more details of each subcommand add it as argument followed by --help.
 """
 from pathlib import Path
 from typing import Optional, Union
+
+import torch
+
 from pytorch_lightning.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
 
 import pytorch_lightning as pl
@@ -33,6 +36,7 @@ from pytorch_lightning.cli import LightningCLI
 
 class Trainer(pl.Trainer):
     # FIXME: no need to load data to split model. Can we control this from CLI or Trainer ?
+    # FIXME: a lot of hacks because pl.Trainer is difficult to subclass. Maybe put this somwhere else?
     def split(
             self,         
             model: "pl.LightningModule",
@@ -40,6 +44,7 @@ class Trainer(pl.Trainer):
             val_dataloaders: Optional[EVAL_DATALOADERS] = None,
             datamodule: Optional[LightningDataModule] = None,
             ckpt_path: Optional[str] = None,
+            # FIXME: able to pass --bert=true but not --bert
             bert: Optional[bool] = False
         ):
         """
@@ -53,6 +58,8 @@ class Trainer(pl.Trainer):
             Save Encoder sub-BertModel instead of the full Encoder (which then must have bert_model attribute).
             Defaults to False.       
         """
+        sd = torch.load(ckpt_path, 'cpu')['state_dict']
+        model.load_state_dict(sd)
         # used as root directory
         ckpt_path = Path(ckpt_path).with_suffix('')
         question_model = model.question_model
@@ -76,6 +83,13 @@ class CLI(LightningCLI):
         lightning_commands = super().subcommands()
         lightning_commands["split"] = {"model", "train_dataloaders", "val_dataloaders", "datamodule"}
         return lightning_commands
+    
+#TODO auto ckpt_path using In [14]: ckpt['callbacks']
+#Out[14]: 
+#{"ModelCheckpoint{'monitor': None, 'mode': 'min', 'every_n_train_steps': 0, 'every_n_epochs': 1, 'train_time_interval': None, 'save_on_train_epoch_end': True}": {'monitor': None,
+#  'best_model_score': None,
+#  'best_model_path': 'dpr/lightning/kilt/1/lightning_logs/version_15/checkpoints/epoch=6-step=2576.ckpt',
+# }
 
 
 def main():
