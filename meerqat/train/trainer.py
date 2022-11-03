@@ -27,7 +27,7 @@ from typing import Optional, Union
 
 import torch
 
-from pytorch_lightning.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS, _PATH
+from pytorch_lightning.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
 
 import pytorch_lightning as pl
 from pytorch_lightning.core.datamodule import LightningDataModule
@@ -35,20 +35,8 @@ from pytorch_lightning.cli import LightningCLI
 
 
 class Trainer(pl.Trainer):
-    def __init__(self, *args, transfer_learning: Optional[bool] = False, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.transfer_learning = transfer_learning
-        
-    def _restore_modules_and_callbacks(self, checkpoint_path: Optional[_PATH] = None) -> None:
-        # restore only model. discard optimizer etc.
-        if self.transfer_learning:            
-            self._checkpoint_connector.restore_model()
-        # fallback to default (restore everything)
-        else:
-            super()._restore_modules_and_callbacks(checkpoint_path=checkpoint_path)
-            
     # FIXME: no need to load data to split model. Can we control this from CLI or Trainer ?
-    # FIXME: a lot of hacks because pl.Trainer is difficult to subclass. Maybe put this somewhere else?
+    # FIXME: a lot of hacks because pl.Trainer is difficult to subclass. Maybe put this somwhere else?
     def split(
             self,         
             model: "pl.LightningModule",
@@ -96,6 +84,13 @@ class CLI(LightningCLI):
         lightning_commands["split"] = {"model", "train_dataloaders", "val_dataloaders", "datamodule"}
         return lightning_commands
     
+#TODO auto ckpt_path using In [14]: ckpt['callbacks']
+#Out[14]: 
+#{"ModelCheckpoint{'monitor': None, 'mode': 'min', 'every_n_train_steps': 0, 'every_n_epochs': 1, 'train_time_interval': None, 'save_on_train_epoch_end': True}": {'monitor': None,
+#  'best_model_score': None,
+#  'best_model_path': 'dpr/lightning/kilt/1/lightning_logs/version_15/checkpoints/epoch=6-step=2576.ckpt',
+# }
+
 
 def main():
     cli = CLI(
