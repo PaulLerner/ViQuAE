@@ -290,8 +290,24 @@ class BiEncoder(Trainee):
     
     def eval_epoch_end(self, eval_outputs):
         return {'metrics': retrieval(eval_outputs, ignore_index=self.loss_fct.ignore_index)}
+    
+    def save_pretrained(self, ckpt_path, bert=False):
+        question_model = self.question_model
+        context_model = self.context_model
+        if bert:
+            question_model = question_model.question_encoder.bert_model
+            context_model = context_model.ctx_encoder.bert_model
+            question_path = ckpt_path/'question_model_bert'
+            context_path = ckpt_path/'context_model_bert'
+        else:
+            question_path = ckpt_path/'question_model'
+            context_path = ckpt_path/'context_model'
+        question_model.save_pretrained(question_path)
+        context_model.save_pretrained(context_path)
+        
   
-          
+# TODO override load_from_checkpoint to use from_pretrained instead ?   
+# see lightning/src/pytorch_lightning/core/saving.py
 class ReRanker(Trainee):
     """    
     Parameters
@@ -348,7 +364,11 @@ class ReRanker(Trainee):
             self.log(f"test/{k}", v)
         if outputs['run'] is not None:
             outputs['run'].save(Path(self.trainer.log_dir)/'run.json')
-            
+    
+    def save_pretrained(self, ckpt_path, bert=False):
+        assert not bert
+        self.model.save_pretrained(ckpt_path)
+
 
 class Reader(Trainee):
     """    
@@ -425,3 +445,7 @@ class Reader(Trainee):
             for k, v in squad(predictions=all_weighted_predictions, references=all_answer_strings).items():
                 metrics['weighted_'+k] = v
         return {'metrics': metrics}
+    
+    def save_pretrained(self, ckpt_path, bert=False):
+        assert not bert
+        self.model.save_pretrained(ckpt_path)
