@@ -507,7 +507,7 @@ class BiEncoderDataModule(QuestionAnsweringDataModule):
             relevant_passage, irrelevant_passage = self.get_training_passages(item)
             if len(relevant_passage) < 1:
                 relevant_passage = self.padding_passage
-                labels.append(self.trainer.model.loss_fct.ignore_index)
+                labels.append(self.trainer.lightning_module.loss_fct.ignore_index)
             else:
                 labels.append(i)
             if len(irrelevant_passage) < n_irrelevant_passages:
@@ -604,7 +604,7 @@ class ReRankerDataModule(QuestionAnsweringDataModule):
                 relevant_passage, irrelevant_passage = self.get_training_passages(item)
                 passage = relevant_passage + irrelevant_passage
                 if len(relevant_passage) < 1:
-                    labels.append(self.trainer.model.loss_fct.ignore_index)
+                    labels.append(self.trainer.lightning_module.loss_fct.ignore_index)
                 else:
                     labels.append(0)
 
