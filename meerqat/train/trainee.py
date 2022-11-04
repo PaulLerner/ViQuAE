@@ -176,7 +176,13 @@ class Trainee(pl.LightningModule):
         """
         return any(getattr(m, "gradient_checkpointing", False) for m in self.modules())
 
-        
+
+def _get_bert(dpr_encoder):
+    if hasattr(dpr_encoder, 'question_encoder'):
+        return dpr_encoder.question_encoder.bert_model
+    return dpr_encoder.ctx_encoder.bert_model
+
+
 class BiEncoder(Trainee):
     """    
     The training objective is to minimize the negative log-likelihood of the similarities (dot product)
@@ -197,6 +203,8 @@ class BiEncoder(Trainee):
         Passed to from_pretrained. See transformers.PreTrainedModel.from_pretrained
     context_class: str, optional
         Analog to question_class for context_model. Defaults to question_class.
+        If 'shared', then use the same model to encode questions and passages. 
+        Will set shared_encoders=True 
     context_model_name_or_path: str
         Analog to question_model_name_or_path for context_model. Defaults to question_model_name_or_path.
     """
@@ -211,7 +219,14 @@ class BiEncoder(Trainee):
         
         # init encoders
         self.question_model = get_pretrained(question_class, pretrained_model_name_or_path=question_model_name_or_path)
-        self.context_model = get_pretrained(context_class, pretrained_model_name_or_path=context_model_name_or_path)
+        if context_class == 'shared':
+            assert context_model_name_or_path == question_model_name_or_path
+            self.context_model = self.question_model
+            print(f"Sharing {self.question_model.__class__.__name__} to encode both questions and passages")
+            self.shared_encoders = True
+        else:
+            self.shared_encoders = False
+            self.context_model = get_pretrained(context_class, pretrained_model_name_or_path=context_model_name_or_path)
         
         # loss and metrics
         self.log_softmax = nn.LogSoftmax(1)
@@ -293,17 +308,22 @@ class BiEncoder(Trainee):
     
     def save_pretrained(self, ckpt_path, bert=False):
         question_model = self.question_model
-        context_model = self.context_model
-        if bert:
-            question_model = question_model.question_encoder.bert_model
-            context_model = context_model.ctx_encoder.bert_model
-            question_path = ckpt_path/'question_model_bert'
-            context_path = ckpt_path/'context_model_bert'
+        if self.shared_encoders:
+            if bert:
+                question_model = _get_bert(question_model)
+            question_model.save_pretrained(ckpt_path)
         else:
-            question_path = ckpt_path/'question_model'
-            context_path = ckpt_path/'context_model'
-        question_model.save_pretrained(question_path)
-        context_model.save_pretrained(context_path)
+            context_model = self.context_model
+            if bert:
+                question_model = _get_bert(question_model)
+                context_model = _get_bert(context_model)
+                question_path = ckpt_path/'question_model_bert'
+                context_path = ckpt_path/'context_model_bert'
+            else:
+                question_path = ckpt_path/'question_model'
+                context_path = ckpt_path/'context_model'
+            question_model.save_pretrained(question_path)
+            context_model.save_pretrained(context_path)
         
   
 # TODO override load_from_checkpoint to use from_pretrained instead ?   
