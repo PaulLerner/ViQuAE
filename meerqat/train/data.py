@@ -471,7 +471,20 @@ class QuestionAnsweringDataModule(DataModule):
         return passages   
     
     
-class BiEncoderDataModule(QuestionAnsweringDataModule):        
+class BiEncoderDataModule(QuestionAnsweringDataModule): 
+    """
+    Parameters
+    ----------
+    *args, **kwargs: additionnal arguments are passed to QuestionAnsweringDataModule
+    passage_type_ids: bool, optional
+        Pass token_type_ids=1 for passages (see BertTokenizer for details).
+        This might be useful if you use a shared encoder to encode questions and passages.
+        Defaults to False (by default you use different models to encode questions and passages).
+    """
+    def __init__(self, *args, passage_type_ids=False, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.passage_type_ids = passage_type_ids
+
     def collate_fn(self, items):
         """
         Collate batch so that each question is associate with n_relevant_passages and M-n irrelevant ones.
@@ -525,6 +538,8 @@ class BiEncoderDataModule(QuestionAnsweringDataModule):
         else:
             all_passages_text = [p['passage'] for p in all_passages]
         context_inputs_text = self.tokenizer(all_passages_text, **self.tokenization_kwargs)
+        if self.passage_type_ids:
+            context_inputs_text['token_type_ids'][context_inputs_text['attention_mask'].bool()] = 1
         
         # wrap it up
         question_inputs = self.image_formatter.format_batch(question_inputs_text, items)
