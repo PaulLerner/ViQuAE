@@ -26,7 +26,7 @@ from ..data.loading import load_pretrained_in_kwargs
 
 def get_face_inputs(batch, n_faces=4, face_dim=512, bbox_dim=7):
     """
-    Formats pre-computed face features in nice square tensors similarly to MMTrainer.get_face_inputs
+    Formats pre-computed face features in nice square tensors similarly to PreComputedImageFeatures.get_face_inputs
         
     Parameters
     ----------
@@ -39,18 +39,18 @@ def get_face_inputs(batch, n_faces=4, face_dim=512, bbox_dim=7):
     -------
     face_inputs: dict[str, Tensor]
         {
-           * face: Tensor(batch_size, n_faces, face_dim)
-           * bbox: Tensor(batch_size, n_faces, bbox_dim)
-           * attention_mask: Tensor(batch_size, n_faces)
+           * face: Tensor(batch_size, 1, n_faces, face_dim)
+           * bbox: Tensor(batch_size, 1,  n_faces, bbox_dim)
+           * attention_mask: Tensor(batch_size, 1, n_faces)
         }
     """
     face_list = batch["face_embedding"]
     batch_size = len(face_list)
     # trim or pad, and convert to tensor
-    face_embeddings = torch.zeros((batch_size, n_faces, face_dim))
-    face_boxes = torch.zeros((batch_size, n_faces, bbox_dim))
+    face_embeddings = torch.zeros((batch_size, 1, n_faces, face_dim))
+    face_boxes = torch.zeros((batch_size, 1, n_faces, bbox_dim))
     # 0=masked, 1=not masked
-    attention_mask = torch.zeros((batch_size, n_faces), dtype=torch.long)
+    attention_mask = torch.zeros((batch_size, 1, n_faces), dtype=torch.long)
     if n_faces == 0:
         return {
                 "face": face_embeddings,
@@ -64,9 +64,9 @@ def get_face_inputs(batch, n_faces=4, face_dim=512, bbox_dim=7):
             # keep zero-padding/mask
             continue
         min_n = min(n_faces, len(face_embedding))
-        face_embeddings[i, : min_n] = torch.tensor(face_embedding[: min_n])
-        face_boxes[i, : min_n] = torch.tensor(bbox[: min_n])
-        attention_mask[i, : min_n] = 1
+        face_embeddings[i, 0, : min_n] = torch.tensor(face_embedding[: min_n])
+        face_boxes[i, 0, : min_n] = torch.tensor(bbox[: min_n])
+        attention_mask[i, 0, : min_n] = 1
 
     face_inputs = {
         "face": face_embeddings,
@@ -78,7 +78,7 @@ def get_face_inputs(batch, n_faces=4, face_dim=512, bbox_dim=7):
 
 def get_image_inputs(batch, image_kwargs):    
     """
-    Formats pre-computed full-image features in nice square tensors similarly to MMTrainer.get_image_inputs
+    Formats pre-computed full-image features in nice square tensors similarly to PreComputedImageFeatures.get_image_inputs
     
     Parameters
     ----------
@@ -91,16 +91,16 @@ def get_image_inputs(batch, image_kwargs):
     image_inputs: dict[str, dict[str,Tensor]]
         one key per image feature (the same as image_kwargs)
         {
-           * input: Tensor(batch_size, ?)
-           * attention_mask: Tensor(batch_size, )
+           * input: Tensor(batch_size, 1, ?)
+           * attention_mask: Tensor(batch_size, 1)
              None of the images are masked
         }
         """
     image_inputs = {}
     for name, image_kwarg in image_kwargs.items():
-        features = torch.tensor(batch[name])
+        features = torch.tensor(batch[name]).unsqueeze(1)
         # 0=masked, 1=not masked
-        attention_mask = torch.ones(features.shape[0], dtype=torch.long)
+        attention_mask = torch.ones((features.shape[0], 1), dtype=torch.long)
         image_inputs[name] = dict(input=features, attention_mask=attention_mask)
     return image_inputs  
 
