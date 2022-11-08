@@ -5,6 +5,7 @@ import warnings
 from functools import partial
 import re
 from pathlib import Path
+import json
 
 import numpy as np
 import ranx
@@ -18,7 +19,7 @@ from ..models.qa import get_best_spans
 from ..models.outputs import BiEncoderOutput
 from .optim import LinearLRWithWarmup
 from .metrics import retrieval, squad, get_run, to_latex
-from .data import ReRankerDataModule
+from .data import ReRankerDataModule, pad_and_cat
 
     
 class Trainee(pl.LightningModule):
@@ -396,12 +397,18 @@ class Reader(Trainee):
     ----------
     model_kwargs: dict[str, str]
         Passed to get_pretrained
+    tune_M: bool, optional
+        Instead of extracting answers from the top-M input passages, 
+        try every value in {2^i, s.t. 2^i <= M}
+        Defaults to False (use only self.trainer.datamodule.M)
     """
-    def __init__(self, *args, model_kwargs, **kwargs):
+    def __init__(self, *args, model_kwargs, tune_M=False, **kwargs):
         super().__init__(*args, **kwargs)
         # TODO refactor all get_pretrained calls like this, 
         # no need to have a bunch of '*_name_or_path' in each Trainee model
         self.model = get_pretrained(**model_kwargs)
+        self.tune_M = tune_M
+        
         self.post_init()   
         
     def forward(self, *args, **kwargs):
@@ -433,7 +440,7 @@ class Reader(Trainee):
     def eval_epoch_end(self, eval_outputs):        
         M = self.trainer.datamodule.M
         # gather all outputs
-        all_predictions, all_weighted_predictions, all_answer_strings = [], [], []
+        all_input_ids, all_start_log_probs, all_end_log_probs, all_passage_scores, all_answer_strings = [], [], [], [], []
         dataset_size = 0
         for batch in eval_outputs:
             input_ids = batch['input_ids']
@@ -451,20 +458,63 @@ class Reader(Trainee):
             start_log_probs = batch['start_log_probs'].detach().cpu().numpy().reshape(N, M, L)
             end_log_probs = batch['end_log_probs'].detach().cpu().numpy().reshape(N, M, L)
             
-            predictions = self.log_probs_to_answers(start_log_probs, end_log_probs, input_ids)
-            all_predictions.extend(predictions)
+            all_input_ids.append(input_ids)
+            all_start_log_probs.append(start_log_probs)
+            all_end_log_probs.append(end_log_probs)
             passage_scores = batch['passage_scores']
             if passage_scores is not None:
                 passage_scores = passage_scores.detach().cpu().numpy().reshape(N, M)
-                weighted_predictions = self.log_probs_to_answers(start_log_probs, end_log_probs, input_ids, weights=passage_scores)
-                all_weighted_predictions.extend(weighted_predictions)
+                all_passage_scores.append(passage_scores)
         assert len(all_answer_strings) == dataset_size
-        # compute metrics        
-        metrics = squad(predictions=all_predictions, references=all_answer_strings)
-        if weighted_predictions:
-            for k, v in squad(predictions=all_weighted_predictions, references=all_answer_strings).items():
-                metrics['weighted_'+k] = v
+        # concat gathered outputs
+        all_input_ids = pad_and_cat(all_input_ids)
+        all_start_log_probs = pad_and_cat(all_start_log_probs)
+        all_end_log_probs = pad_and_cat(all_end_log_probs)        
+        if all_passage_scores:
+            all_passage_scores = np.concatenate(all_passage_scores, axis=0)
+        else:
+            all_passage_scores = None
+        if self.tune_M:
+            return self.M_tuning(all_start_log_probs, all_end_log_probs, all_input_ids, all_answer_strings, all_passage_scores)   
+        predictions = self.log_probs_to_answers(all_start_log_probs, all_end_log_probs, all_input_ids)
+         # compute metrics        
+        metrics = squad(predictions=predictions, references=all_answer_strings)
+        if all_passage_scores is not None:
+            weighted_predictions = self.log_probs_to_answers(all_start_log_probs, all_end_log_probs, all_input_ids, weights=all_passage_scores)
+            weighted_metrics = squad(predictions=weighted_predictions, references=all_answer_strings)
+            for k, v in weighted_metrics.items():
+                 metrics['weighted_'+k] = v
         return {'metrics': metrics}
+     
+    def M_tuning(self, all_start_log_probs, all_end_log_probs, all_input_ids, all_answer_strings, all_passage_scores=None):
+        i = 0
+        N, M, L = all_input_ids.shape
+        metrics_wrt_m = []
+        # TODO tqdm
+        while True:
+            # TODO other step options
+            m = min(2**i, M)
+            input_ids = all_input_ids[:, :m]
+            start_log_probs = all_start_log_probs[:, :m]
+            end_log_probs = all_end_log_probs[:, :m]
+            predictions = self.log_probs_to_answers(start_log_probs, end_log_probs, input_ids)
+            metrics = squad(predictions=predictions, references=all_answer_strings)
+            metrics['@M'] = m
+            if all_passage_scores is not None:
+                passage_scores = all_passage_scores[:, :m]
+                weighted_predictions = self.log_probs_to_answers(start_log_probs, end_log_probs, input_ids, weights=passage_scores)
+                weighted_metrics = squad(predictions=weighted_predictions, references=all_answer_strings)
+                for k, v in weighted_metrics.items():
+                    metrics['weighted_'+k] = v
+            metrics_wrt_m.append(metrics)
+            if m >= M:
+                break
+            i += 1
+        with open(Path(self.trainer.log_dir)/'metrics.json', 'wt') as file:
+            json.dump(metrics_wrt_m, file)
+        # return metric with the best F1 score for logging
+        best = max(metrics_wrt_m, key=lambda metrics: metrics['f1'])
+        return {'metrics': best}
     
     def save_pretrained(self, ckpt_path, bert=False):
         assert not bert

@@ -18,6 +18,23 @@ import pytorch_lightning as pl
 from ..data.loading import get_pretrained, verbose_load_from_disk, load_image
 from ..models.utils import debug_shape
 
+
+def pad_and_cat(arrays, padding_index=-100):
+    N, M, L = arrays[0].shape
+    for array in arrays[1:]:
+        n, m, l = array.shape
+        assert m == M
+        L = max(l, L)
+        N += n
+    result = np.full_like(arrays[0], padding_index, shape=(N, M, L))
+    N = 0
+    for array in arrays:
+        n, _, l = array.shape
+        result[N:N+n, :, :l] = array
+        N += n
+    return result
+        
+
 # FIXME can we get rid of all these get_pretrained and automate the process in trainer.CLI?
 class DataModule(pl.LightningDataModule):
     """
