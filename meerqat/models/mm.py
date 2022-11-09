@@ -789,7 +789,9 @@ class IntermediateLinearFusion(PreTrainedModel):
         
         # reshape faces
         faces = face_inputs['face']
-        batch_size, n_faces, face_dim = faces.shape
+        batch_size, n_images, n_faces, face_dim = faces.shape
+        if n_images > 1:
+            raise NotImplementedError()
         if n_faces > 0:
             faces = faces.reshape(batch_size * n_faces, face_dim)
             # embed batch of size batch_size*n_faces
@@ -810,7 +812,7 @@ class IntermediateLinearFusion(PreTrainedModel):
             # mask images if at least one face was detected
             if self.config.face_and_image_are_exclusive:
                 image['input'][where_are_faces] = 0
-            output += self.image_embeddings[name](image['input'])
+            output += self.image_embeddings[name](image['input'].reshape(batch_size, -1))
         output = self.LayerNorm(output)
         output = self.dropout(output)
         return EncoderOutput(pooler_output=output)
