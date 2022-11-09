@@ -6,6 +6,7 @@ from functools import partial
 import re
 from pathlib import Path
 import json
+from tqdm import tqdm
 
 import numpy as np
 import ranx
@@ -15,7 +16,7 @@ from torch.optim import AdamW
 import pytorch_lightning as pl
 
 from ..data.loading import get_pretrained
-from ..models.qa import get_best_spans
+from ..models.qa import batched_get_best_spans
 from ..models.outputs import BiEncoderOutput
 from .optim import LinearLRWithWarmup
 from .metrics import retrieval, squad, get_run, to_latex
@@ -397,6 +398,16 @@ class ReRanker(Trainee):
         self.model.save_pretrained(ckpt_path)
 
 
+def power_range(maximum):
+    i = 0
+    while True:
+        p = min(2**i, maximum)
+        yield p
+        if p >= maximum:
+            break
+        i += 1
+        
+    
 class Reader(Trainee):
     """    
     Parameters
@@ -435,9 +446,12 @@ class Reader(Trainee):
         1. get span start and end positions from log-probabilities
         2. extract actual tokens (answer) from input_ids
         """
-        passage_indices, start_indices, end_indices = get_best_spans(start_probs=np.exp(start_log_probs),
-                                                                     end_probs=np.exp(end_log_probs),
-                                                                     **kwargs)
+        # TODO pass batch size
+        passage_indices, start_indices, end_indices = batched_get_best_spans(
+            start_probs=np.exp(start_log_probs),
+            end_probs=np.exp(end_log_probs),
+            **kwargs
+        )
         answers = []
         for i, (passage_index, start, end) in enumerate(zip(passage_indices, start_indices, end_indices)):
             answers.append(input_ids[i, passage_index, start: end])
@@ -493,13 +507,9 @@ class Reader(Trainee):
         return {'metrics': metrics}
      
     def M_tuning(self, all_start_log_probs, all_end_log_probs, all_input_ids, all_answer_strings, all_passage_scores=None):
-        i = 0
         N, M, L = all_input_ids.shape
         metrics_wrt_m = []
-        # TODO tqdm
-        while True:
-            # TODO other step options
-            m = min(2**i, M)
+        for m in tqdm(list(power_range(M))):
             input_ids = all_input_ids[:, :m]
             start_log_probs = all_start_log_probs[:, :m]
             end_log_probs = all_end_log_probs[:, :m]
@@ -513,12 +523,10 @@ class Reader(Trainee):
                 for k, v in weighted_metrics.items():
                     metrics['weighted_'+k] = v
             metrics_wrt_m.append(metrics)
-            if m >= M:
-                break
-            i += 1
-        with open(Path(self.trainer.log_dir)/'metrics.json', 'wt') as file:
+        with open(Path(self.trainer.log_dir)/'metrics_wrt_m.json', 'wt') as file:
             json.dump(metrics_wrt_m, file)
         # return metric with the best F1 score for logging
+        # TODO option for what is best
         best = max(metrics_wrt_m, key=lambda metrics: metrics['f1'])
         return {'metrics': best}
     

@@ -80,6 +80,29 @@ def get_best_spans(start_probs, end_probs, weights=None, cannot_be_first_token=T
     return passage_indices, start_indices, end_indices
 
 
+def batched_get_best_spans(start_probs, end_probs, weights=None, cannot_be_first_token=True, batch_size=256):
+    """
+    Computes get_best_spans in a mini-batch style instead of full batch.
+    That way, the memory requirements do not depend on the size of the dataset (N).
+    """
+    N, M, L = start_probs.shape
+    all_passage_indices, all_start_indices, all_end_indices = [], [], []
+    for i in range(0, N, batch_size):
+        passage_indices, start_indices, end_indices = get_best_spans(
+            start_probs[i: i+batch_size], 
+            end_probs[i: i+batch_size], 
+            weights[i: i+batch_size] if weights is not None else None, 
+            cannot_be_first_token=cannot_be_first_token
+        )
+        all_passage_indices.append(passage_indices)
+        all_start_indices.append(start_indices)
+        all_end_indices.append(end_indices)
+    all_passage_indices = np.concatenate(all_passage_indices)
+    all_start_indices = np.concatenate(all_start_indices)
+    all_end_indices = np.concatenate(all_end_indices)
+    return all_passage_indices, all_start_indices, all_end_indices
+
+
 class MultiPassageBERT(BertForQuestionAnswering):
     """
     PyTorch/Transformers implementation of Multi-passage BERT [1]_ (based on the global normalization [2]_)
