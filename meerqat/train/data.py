@@ -83,7 +83,6 @@ class DataModule(pl.LightningDataModule):
         self.train_batch_size = train_batch_size
         self.eval_batch_size = eval_batch_size
         self.M = M
-        assert n_relevant_passages <= M
         self.n_relevant_passages = n_relevant_passages
 
         # useful in some corner-cases like ICT. False for every other data modules
@@ -419,6 +418,7 @@ class QuestionAnsweringDataModule(DataModule):
                 - self.M
                 - self.search_key
         """
+        assert self.n_relevant_passages <= self.M
         # get passages from kb wrt search_key
         relevant_passages = []
         all_relevant_indices = item[self.search_key+"_provenance_indices"]
