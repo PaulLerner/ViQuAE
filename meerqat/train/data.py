@@ -386,8 +386,9 @@ class QuestionAnsweringDataModule(DataModule):
             2. irrelevant results from the search
         used during training (according to M and n_relevant_passages)
         Defaults to 'search'
+    filter_train_rels: bool, optional        
     """
-    def __init__(self, *args, kb, image_kb=None, search_key='search', **kwargs):
+    def __init__(self, *args, kb, image_kb=None, search_key='search', filter_train_rels=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.kb = verbose_load_from_disk(kb)
         if image_kb is not None:
@@ -401,7 +402,26 @@ class QuestionAnsweringDataModule(DataModule):
             self.add_image = self.add_image_features
         else:
             self.add_image = self.add_image_path
-                         
+        self.filter_train_rels = filter_train_rels
+        
+    def setup(self, stage=None):
+        super().setup(stage=stage)
+        if self.filter_train_rels and 'train' in self.dataset:
+            self.filter_rels('train')
+
+    def filter_rels(self, subset='train'):
+        """
+        Filter out questions of the dataset without any relevant passages.
+        """
+        before_len = len(self.dataset[subset])
+        self.dataset[subset] = self.dataset[subset].filter(
+            lambda item: len(item[f"{self.search_key}_provenance_indices"]) > 0, 
+            new_fingerprint=f"{subset}_{self.search_key}_provenance_indices"
+        )
+        after_len = len(self.dataset[subset])
+        print(f"Filtered {subset} dataset with empty '{self.search_key}_provenance_indices' from {before_len} to {after_len} items")
+        
+
     def get_training_passages(self, item):
         """
         Parameters
@@ -1013,27 +1033,3 @@ class ICT(DataModule):
         # wrap it up
         batch['labels'] = torch.zeros(len(items), dtype=torch.long)
         return batch
-
-    
-def filter_rels(dataset, search_key):
-    # TODO
-    """
-    Filter out questions of the dataset without any relevant passages.
-    
-    
-    Parameters
-    ----------
-    dataset: Dataset
-    search_key: str
-        see QuestionAnsweringTrainer
-    
-    Returns
-    -------
-    dataset: Dataset
-        With at least one relevant passage for all questions.
-    """
-    before_len = len(dataset)
-    dataset = dataset.filter(lambda item: len(item[f"{search_key}_provenance_indices"]) > 0)
-    after_len = len(dataset)
-    print(f"Filtered the dataset with empty '{search_key}_provenance_indices' from {before_len} to {after_len} items")
-    return dataset
