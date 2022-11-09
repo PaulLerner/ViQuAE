@@ -100,8 +100,11 @@ class Trainee(pl.LightningModule):
         """eval_epoch_end and log"""
         metrics = self.eval_epoch_end(*args, **kwargs)['metrics']
         print(to_latex(metrics))
+        log_dir = Path(self.trainer.log_dir)
         for k, v in metrics.items():
             self.log(f"test/{k}", v)
+        with open(log_dir/'metrics.json', 'wt') as file:
+            json.dump(metrics, file)
                 
     def get_weights_to_log(self, model):
         logs = {}
@@ -381,10 +384,13 @@ class ReRanker(Trainee):
         """eval_epoch_end, log and save run"""
         outputs = self.eval_epoch_end(*args, **kwargs)
         print(to_latex(outputs['metrics']))
+        log_dir = Path(self.trainer.log_dir)
         for k, v in outputs['metrics'].items():
             self.log(f"test/{k}", v)
+        with open(log_dir/'metrics.json', 'wt') as file:
+            json.dump(outputs['metrics'], file)
         if outputs['run'] is not None:
-            outputs['run'].save(Path(self.trainer.log_dir)/'run.json')
+            outputs['run'].save(log_dir/'run.json')
     
     def save_pretrained(self, ckpt_path, bert=False):
         assert not bert
