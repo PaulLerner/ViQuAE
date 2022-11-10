@@ -615,6 +615,8 @@ class ReRankerDataModule(QuestionAnsweringDataModule):
     def get_eval_passages(self, item):
         """Keep the top-M passages retrieved by the IR"""
         ir_results = self.run.run[item['id']]
+        if 'DUMMY_RUN' in ir_results:
+            return []
         # document ids in ranx are str so we map them back to indices (int)
         indices = list(map(int, ir_results.keys()))[: self.M]
             
@@ -728,6 +730,8 @@ class ReaderDataModule(QuestionAnsweringDataModule):
             scores = item[self.search_key+"_scores"][: self.M]
         else:
             ir_results = self.run.run[item['id']]
+            if 'DUMMY_RUN' in ir_results:
+                return []
             # document ids in ranx are str so we map them back to indices (int)
             indices = list(map(int, ir_results.keys()))[: self.M]
             scores = list(ir_results.values())[: self.M]

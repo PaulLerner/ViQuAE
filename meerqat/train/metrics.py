@@ -67,8 +67,15 @@ def get_run(eval_outputs, ir_run):
         question_ids = [batch['ids'][i] for i in range(0, N*M, M)]
         rankings = (-logits).argsort(axis=1)
         for ranking, logit, question_id in zip(rankings, logits, question_ids):
-            doc_ids = list(ir_run.run[question_id].keys())[: M]
-            run[question_id] = {doc_ids[i]: logit[i] for i in ranking}
+            ir_results = ir_run.run[question_id]
+            # nothing to re-rank. 
+            # this can happen if searching for something unavailable in the query
+            # e.g. no face was detected but you are searching for face similarity (see ir.search)
+            if 'DUMMY_RUN' in ir_results:
+                run[question_id] = ir_results
+            else:
+                doc_ids = list(ir_results.keys())[: M]
+                run[question_id] = {doc_ids[i]: logit[i] for i in ranking}
     return ranx.Run(run)
 
 
