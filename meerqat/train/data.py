@@ -35,6 +35,13 @@ def pad_and_cat(arrays, padding_index=-100):
     return result
         
 
+def keep_columns(dataset, columns):
+    to_remove = [c for c in dataset.column_names if c not in columns]
+    dataset = dataset.remove_columns(to_remove)
+    print(f"Removed {to_remove} from the dataset:\n{dataset}")
+    return dataset
+
+
 # FIXME can we get rid of all these get_pretrained and automate the process in trainer.CLI?
 class DataModule(pl.LightningDataModule):
     """
@@ -61,6 +68,8 @@ class DataModule(pl.LightningDataModule):
         Defaults to 24
     n_relevant_passages: int, optional
         Defaults to 1
+    keep_dataset_columns: list, optional
+        Keep only these features in the dataset (defaults to keep everything)
     tokenization_kwargs: dict, optional
         To be passed to self.tokenizer
     image_kwargs: dict, optional
@@ -71,7 +80,7 @@ class DataModule(pl.LightningDataModule):
     def __init__(self, tokenizer_class, tokenizer_name_or_path, 
                  dataset_path=None, train_path=None, validation_path=None, test_path=None, 
                  batch_size=8, train_batch_size=None, eval_batch_size=None, 
-                 M=24, n_relevant_passages=1, 
+                 M=24, n_relevant_passages=1, keep_dataset_columns=None,
                  tokenization_kwargs=None, image_kwargs={}, loader_kwargs={}):
         super().__init__()
         self.tokenizer = get_pretrained(tokenizer_class, pretrained_model_name_or_path=tokenizer_name_or_path)
@@ -84,7 +93,8 @@ class DataModule(pl.LightningDataModule):
         self.eval_batch_size = eval_batch_size
         self.M = M
         self.n_relevant_passages = n_relevant_passages
-
+        self.keep_dataset_columns = set(keep_dataset_columns) if keep_dataset_columns is not None else None
+        
         # useful in some corner-cases like ICT. False for every other data modules
         self.shuffle_eval = False
         default_tokenization_kwargs = dict(
@@ -108,7 +118,10 @@ class DataModule(pl.LightningDataModule):
                     self.dataset[subset] = verbose_load_from_disk(subset_path)
         else:
             self.dataset = verbose_load_from_disk(self.dataset_path)
-    
+        if self.keep_dataset_columns is not None:
+            for name, subset in self.dataset.items():
+                self.dataset[name] = keep_columns(subset, self.keep_dataset_columns)
+            
     def train_dataloader(self):    
         if 'train' not in self.dataset:
             return None    
@@ -386,14 +399,22 @@ class QuestionAnsweringDataModule(DataModule):
             2. irrelevant results from the search
         used during training (according to M and n_relevant_passages)
         Defaults to 'search'
-    filter_train_rels: bool, optional        
+    filter_train_rels: bool, optional     
+    keep_kb_columns: list, optional
+        Keep only these features in kb and image_kb (defaults to keep everything)
     """
-    def __init__(self, *args, kb, image_kb=None, search_key='search', filter_train_rels=False, **kwargs):
+    def __init__(self, *args, kb, image_kb=None, search_key='search', 
+                 filter_train_rels=False, keep_kb_columns=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.kb = verbose_load_from_disk(kb)
+        if keep_kb_columns is not None:
+            keep_kb_columns = set(keep_kb_columns)
+            self.kb = keep_columns(self.kb, keep_kb_columns)
         if image_kb is not None:
             self.image_kb = verbose_load_from_disk(image_kb)            
             self.padding_passage = [{'passage': ''}]
+            if keep_kb_columns is not None:
+                self.image_kb = keep_columns(self.image_kb, keep_kb_columns)
         else:
             self.image_kb = None
             self.padding_passage = ['']
