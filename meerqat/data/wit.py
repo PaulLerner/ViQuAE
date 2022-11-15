@@ -6,11 +6,10 @@ WIT for MICT
 Generates the WIT subset for Multimodal Inverse Cloze Task as described in the ECIR-submitted paper:
     - english-only subset
     - images paired with the sections
-    - filtering out images with irrelevant formats (e.g. .svg)
+    - filtering out images with irrelevant formats (e.g. .svg) or not downloaded (e.g. you got a 404)
     - splitting in train/validation/test without overlap between the articles
     - splitting sections in sentences (``meerqat.data.loading sentences``)
     - removing sections with a single sentence (DIY after)
-    - map the image url to its path (DIY after)
     - images should be resized to have a maximum height or width of 512 pixels using ``meerqat.image.resize`` (DIY after)
 
 You should end up with:
@@ -74,9 +73,12 @@ Docopt
 ======
 
 Usage:
-wit.py <root_path> <output_path>
-"""
+wit.py <root_path> <output_path> [--split]
 
+Options:
+    --split         Whether to split in train/dev/test sets
+"""
+import json
 from tqdm import tqdm
 from docopt import docopt
 import random
@@ -97,15 +99,19 @@ def check_encoding(url):
     return False
 
 
-def fill_wit_for_mict(wit_for_mict):
-    for _,row in tqdm(wit.iterrows(), total=len(wit)):
+def fill_wit_for_mict(wit_for_mict, downloaded_images):
+    for _, row in tqdm(wit.iterrows(), total=len(wit)):
         wit_for_mict.setdefault(row.page_title, {})
+        image_path = downloaded_images.get(row.image_url)
+        if image_path is None:
+            continue
         # filtering out images with irrelevant formats
         if not check_encoding(row.image_url):
             continue
         
         if row.is_main_image:
             wit_for_mict[row.page_title]['main_image_url'] = row.image_url
+            wit_for_mict[row.page_title]['main_image_path'] = image_path
         else:
             if not isinstance(row.context_section_description, str):
                 continue
@@ -115,14 +121,17 @@ def fill_wit_for_mict(wit_for_mict):
             # images paired with the sections
             wit_for_mict[row.page_title]['sections'][key] = {
                 "text": row.context_section_description,
-                "image_url": row.image_url
+                "image_url": row.image_url,
+                "image_path": image_path
             }
             
             
 def dict_to_dataset(d):
     table=[]
     for title, article in tqdm(d.items()):
-        for section in article['sections'].values():
+        if 'main_image_path' not in article:
+            continue
+        for section in article.get('sections', {}).values():
             section['title'] = title
             section['main_image_url'] = article['main_image_url']
             section['main_image_path'] = article['main_image_path']
@@ -136,30 +145,45 @@ def dict_to_dataset(d):
 if __name__ == '__main__':
     args = docopt(__doc__)
     root = Path(args['<root_path>'])
+    output = Path(args['<output_path>'])
+    output.mkdir(exist_ok=True)
     paths = sorted(root.glob('wit_v1.train.all-00*'))
-    
+    # TODO make this optional
+    train_images = pd.read_csv(
+        root/'train_images.tsv',
+        sep='\t',
+        # FIXME this is a hack for Jean Zay’s version which last rows are "url     downloaded      path"
+        nrows=11419528
+    )
+    downloaded_images = train_images.url[train_images.downloaded]
+    downloaded_images = dict(zip(downloaded_images.url, downloaded_images.path))
+    print(f"You have downloaded {len(downloaded_images)} out of {len(train_images)} images.")
     unique_wit_for_mict={}
     for path in tqdm(paths):
         wit = pd.read_csv(path, delimiter='\t')
         # english-only subset
         wit = wit[wit.language=='en']
-        fill_wit_for_mict(unique_wit_for_mict)
- 
+        fill_wit_for_mict(unique_wit_for_mict, downloaded_images)
+    with open(output/'english_wikipedia.json', 'wt') as file:
+        json.dump(unique_wit_for_mict, file)
     # split in test/validation/train without overlap between the articles
-    titles = list(fill_wit_for_mict)
-    random.shuffle(titles)
-    # 5% in test and validation, rest in train
-    n_in_test = round(len(titles)*0.05)
-    superset = {}
-    for title in titles[:n_in_test]:
-        superset['test'][title] = unique_wit_for_mict.pop(title)
-    for title in titles[n_in_test: n_in_test*2]:
-        superset['validation'][title] = unique_wit_for_mict.pop(title)
-    for title in titles[n_in_test*2: ]:
-        superset['train'][title] = unique_wit_for_mict.pop(title)
-        
-    dataset_dict = DatasetDict()
-    for name, subset in superset.values():
-        dataset_dict[name] = dict_to_dataset(subset)
-        
-    dataset_dict.save_to_disk(args['<output_path>'])
+    if args['--split']:
+        titles = list(fill_wit_for_mict)
+        random.shuffle(titles)
+        # 5% in test and validation, rest in train
+        n_in_test = round(len(titles)*0.05)
+        superset = {}
+        for title in titles[:n_in_test]:
+            superset['test'][title] = unique_wit_for_mict.pop(title)
+        for title in titles[n_in_test: n_in_test*2]:
+            superset['validation'][title] = unique_wit_for_mict.pop(title)
+        for title in titles[n_in_test*2: ]:
+            superset['train'][title] = unique_wit_for_mict.pop(title)
+            
+        dataset_dict = DatasetDict()
+        for name, subset in superset.values():
+            dataset_dict[name] = dict_to_dataset(subset)
+    else:
+        dataset_dict = dict_to_dataset(unique_wit_for_mict)
+    print(dataset_dict)
+    dataset_dict.save_to_disk(output)
