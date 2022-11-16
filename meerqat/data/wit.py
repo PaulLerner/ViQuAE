@@ -155,7 +155,7 @@ if __name__ == '__main__':
         # FIXME this is a hack for Jean Zay’s version which last rows are "url     downloaded      path"
         nrows=11419528
     )
-    downloaded_images = train_images.url[train_images.downloaded]
+    downloaded_images = train_images[train_images.downloaded]
     downloaded_images = dict(zip(downloaded_images.url, downloaded_images.path))
     print(f"You have downloaded {len(downloaded_images)} out of {len(train_images)} images.")
     unique_wit_for_mict={}
