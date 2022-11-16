@@ -9,6 +9,7 @@ Options:
 from datasets import load_from_disk
 from docopt import docopt
 import json
+from tqdm import tqdm
 from ranx import Run
 
 
@@ -73,7 +74,7 @@ def format_html(dataset_path, output, n=None, width=400,
     
     # do the actual formatting
     rows = []
-    for item in dataset:
+    for item in tqdm(dataset):
         row = dict(
                 url=item['url'],
                 width=width,
