@@ -16,10 +16,11 @@ from torch.optim import AdamW
 import pytorch_lightning as pl
 
 from ..data.loading import get_pretrained
+from ..data.utils import to_latex
 from ..models.qa import batched_get_best_spans
 from ..models.outputs import BiEncoderOutput
 from .optim import LinearLRWithWarmup
-from .metrics import retrieval, squad, get_run, to_latex
+from .metrics import retrieval, squad, get_run
 from .data import ReRankerDataModule, pad_and_cat
 
     

@@ -1,15 +1,10 @@
 """Metrics to be used in trainer."""
 import warnings
 from collections import Counter                                                                                                                                                                                    
-import pandas as pd
 
 import ranx
 
 from ..data.loading import answer_preprocess
-
-def to_latex(metrics):
-    table = pd.DataFrame([metrics])*100
-    return table.to_latex(float_format='%.1f')
     
 
 # TODO https://torchmetrics.readthedocs.io/en/stable/retrieval/mrr.html

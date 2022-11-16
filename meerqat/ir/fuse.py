@@ -6,6 +6,8 @@ import yaml
 
 from ranx import fuse, optimize_fusion, Run, Qrels, evaluate
 
+from ..data.utils import to_latex
+
 
 class Main:
     """Optimize fusion using ranx"""
@@ -46,7 +48,7 @@ class Main:
         )
         combined_run.save(self.output)
         if metrics is not None:
-            print(evaluate(self.qrels, combined_run, metrics))
+            print(to_latex(evaluate(self.qrels, combined_run, metrics)))
 
     
 if __name__ == '__main__':
