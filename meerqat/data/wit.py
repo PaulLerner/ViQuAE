@@ -112,6 +112,10 @@ def fill_wit_for_mict(wit_for_mict, downloaded_images):
         if row.is_main_image:
             wit_for_mict[row.page_title]['main_image_url'] = row.image_url
             wit_for_mict[row.page_title]['main_image_path'] = image_path
+            if not isinstance(row.context_section_description, str):
+                continue
+            # not used in ICT
+            wit_for_mict[row.page_title]['main_text'] = row.context_section_description
         else:
             if not isinstance(row.context_section_description, str):
                 continue
