@@ -110,12 +110,12 @@ def fill_wit_for_mict(wit_for_mict, downloaded_images):
             continue
         
         if row.is_main_image:
-            wit_for_mict[row.page_title]['main_image_url'] = row.image_url
-            wit_for_mict[row.page_title]['main_image_path'] = image_path
+            wit_for_mict[row.page_title]['context_image_url'] = row.image_url
+            wit_for_mict[row.page_title]['context_image_path'] = image_path
             if not isinstance(row.context_section_description, str):
                 continue
             # not used in ICT
-            wit_for_mict[row.page_title]['main_text'] = row.context_section_description
+            wit_for_mict[row.page_title]['context_text'] = row.context_section_description
         else:
             if not isinstance(row.context_section_description, str):
                 continue
@@ -133,12 +133,12 @@ def fill_wit_for_mict(wit_for_mict, downloaded_images):
 def dict_to_dataset(d):
     table=[]
     for title, article in tqdm(d.items()):
-        if 'main_image_path' not in article:
+        if 'context_image_path' not in article:
             continue
         for section in article.get('sections', {}).values():
             section['title'] = title
-            section['main_image_url'] = article['main_image_url']
-            section['main_image_path'] = article['main_image_path']
+            section['context_image_url'] = article['context_image_url']
+            section['context_image_path'] = article['context_image_path']
             table.append(section)
      
     df = pd.DataFrame(table)
