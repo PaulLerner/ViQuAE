@@ -73,7 +73,7 @@ Docopt
 ======
 
 Usage:
-wit.py <root_path> <output_path> [--split]
+wit.py (ict|caption) <root_path> <output_path> [--split]
 
 Options:
     --split         Whether to split in train/dev/test sets
@@ -84,7 +84,7 @@ from docopt import docopt
 import random
 
 import pandas as pd
-from datasets import Dataset, DatasetDict
+from datasets import Dataset, DatasetDict, concatenate_datasets
 
 from pathlib import Path
 
@@ -99,16 +99,10 @@ def check_encoding(url):
     return False
 
 
-def fill_wit_for_mict(wit_for_mict, downloaded_images):
+def fill_wit_for_mict(wit, wit_for_mict, downloaded_images):
     for _, row in tqdm(wit.iterrows(), total=len(wit)):
         wit_for_mict.setdefault(row.page_title, {})
-        image_path = downloaded_images.get(row.image_url)
-        if image_path is None:
-            continue
-        # filtering out images with irrelevant formats
-        if not check_encoding(row.image_url):
-            continue
-        
+        image_path = downloaded_images[row.image_url]        
         if row.is_main_image:
             wit_for_mict[row.page_title]['context_image_url'] = row.image_url
             wit_for_mict[row.page_title]['context_image_path'] = image_path
@@ -145,33 +139,26 @@ def dict_to_dataset(d):
     dataset = Dataset.from_pandas(df)
     return dataset
 
-    
-if __name__ == '__main__':
-    args = docopt(__doc__)
-    root = Path(args['<root_path>'])
-    output = Path(args['<output_path>'])
-    output.mkdir(exist_ok=True)
-    paths = sorted(root.glob('wit_v1.train.all-00*'))
-    # TODO make this optional
-    train_images = pd.read_csv(
-        root/'train_images.tsv',
-        sep='\t',
-        # FIXME this is a hack for Jean Zay’s version which last rows are "url     downloaded      path"
-        nrows=11419528
-    )
-    downloaded_images = train_images[train_images.downloaded]
-    downloaded_images = dict(zip(downloaded_images.url, downloaded_images.path))
-    print(f"You have downloaded {len(downloaded_images)} out of {len(train_images)} images.")
+
+def common_filter(wit, downloaded_images):
+    # english-only subset
+    wit = wit[wit.language=='en']
+    # downloaded and valid encoding
+    wit = wit[wit.image_url.isin(downloaded_images)]
+    wit = wit[wit.image_url.map(check_encoding)]
+    return wit
+
+
+def mict(paths, downloaded_images, output, split=False):
     unique_wit_for_mict={}
     for path in tqdm(paths):
         wit = pd.read_csv(path, delimiter='\t')
-        # english-only subset
-        wit = wit[wit.language=='en']
-        fill_wit_for_mict(unique_wit_for_mict, downloaded_images)
+        wit = common_filter(wit, downloaded_images)
+        fill_wit_for_mict(wit, unique_wit_for_mict, downloaded_images)
     with open(output/'english_wikipedia.json', 'wt') as file:
         json.dump(unique_wit_for_mict, file)
     # split in test/validation/train without overlap between the articles
-    if args['--split']:
+    if split:
         titles = list(fill_wit_for_mict)
         random.shuffle(titles)
         # 5% in test and validation, rest in train
@@ -191,3 +178,59 @@ if __name__ == '__main__':
         dataset_dict = dict_to_dataset(unique_wit_for_mict)
     print(dataset_dict)
     dataset_dict.save_to_disk(output)
+
+
+def is_unique(item, unique_pairs):
+    pair = (item['input'], item['image'])
+    if pair in unique_pairs:
+        return False
+    unique_pairs.add(pair)
+    return True
+
+   
+def caption(paths, downloaded_images, output, split=False):
+    dataset_list = []
+    for path in tqdm(paths):
+        wit = pd.read_csv(path, delimiter='\t')
+        wit = common_filter(wit, downloaded_images)
+        wit['image'] = [downloaded_images[url] for url in wit.image_url]
+        # duplicate caption_reference_description and caption_attribution_description
+        ref = wit[wit.caption_reference_description.notna()]
+        ref.rename(columns = {'caption_reference_description': 'input'}, inplace=True)
+        dataset_list.append(Dataset.from_pandas(ref))
+        attr = wit[wit.caption_attribution_description.notna()]
+        attr.rename(columns = {'caption_attribution_description': 'input'}, inplace=True)
+        dataset_list.append(Dataset.from_pandas(attr))
+    dataset = concatenate_datasets(dataset_list)
+    if split:
+        raise NotImplementedError()
+    print(dataset)
+    before = len(dataset)
+    unique_pairs = set()
+    # slower than numpy but saves 3.72 TiB of RAM
+    dataset = dataset.filter(is_unique, fn_kwargs=dict(unique_pairs=unique_pairs), batched=False)
+    print(f"De-duplication done. Removed {before-len(dataset)} image-caption pairs. {len(dataset)} remaining.")
+    dataset.save_to_disk(output)
+    
+        
+if __name__ == '__main__':
+    args = docopt(__doc__)
+    root = Path(args['<root_path>'])
+    output = Path(args['<output_path>'])
+    output.mkdir(exist_ok=True)
+    paths = sorted(root.glob('wit_v1.train.all-00*'))
+    # TODO make this optional
+    train_images = pd.read_csv(
+        root/'train_images.tsv',
+        sep='\t',
+        # FIXME this is a hack for Jean Zay’s version which last rows are "url     downloaded      path"
+        nrows=11419528
+    )
+    downloaded_images = train_images[train_images.downloaded]
+    downloaded_images = dict(zip(downloaded_images.url, downloaded_images.path))
+    print(f"You have downloaded {len(downloaded_images)} out of {len(train_images)} images.")
+    if args['ict']:
+        mict(paths, downloaded_images=downloaded_images, output=output, split=args['--split'])
+    elif args['caption']:
+        caption(paths, downloaded_images=downloaded_images, output=output, split=args['--split'])
+
