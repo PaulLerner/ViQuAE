@@ -12,10 +12,13 @@ import torch
 from torch import nn
 import torchvision
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize
+
+from transformers import FeatureExtractionMixin, BatchEncoding
+
 from datasets import load_from_disk, set_caching_enabled
 
 from ..models.utils import device
-from ..data.loading import load_image_batch
+from ..data.loading import load_image_batch, get_pretrained
 
 
 class ImageEncoder(nn.Module):
@@ -97,6 +100,9 @@ def get_model_and_transform(model_kwargs={}, transform_kwargs={}):
         clip_model, transform = clip.load(**model_kwargs, device=device)
         # only interested in the visual bottleneck here (for content-based image retrieval)
         model = clip_model.visual
+    elif model_type == "transformers":
+        model = get_pretrained(**model_kwargs)
+        transform = get_pretrained(**transform_kwargs)
     else:
         raise ValueError(f"Unexpected model type '{model_type}'")
 
@@ -108,12 +114,19 @@ def get_model_and_transform(model_kwargs={}, transform_kwargs={}):
     return dict(model=model, transform=transform)
 
 
-def embed(batch, model, transform, save_as='image_embedding', image_key='image'):
+def embed(batch, model, transform, save_as='image_embedding', image_key='image', call=None):
     images = load_image_batch(batch[image_key])
-    images = [transform(image).unsqueeze(0) for image in images]
-    images = torch.cat(images).to(device)
+    if isinstance(transform, FeatureExtractionMixin):
+        images = transform(images, return_tensors="pt")
+    else:
+        images = [transform(image).unsqueeze(0) for image in images]
+        images = torch.cat(images).to(device)
+    method = model if call is None else getattr(model, call)
     with torch.no_grad():
-        image_embeddings = model(images)
+        if isinstance(images, (dict, BatchEncoding)):
+            image_embeddings = method(**images)
+        else:
+            image_embeddings = method(images)
     batch[save_as] = image_embeddings.squeeze().cpu().numpy()
     return batch
 
