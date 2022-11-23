@@ -143,6 +143,9 @@ def get_inputs(batch, model, tokenizer, tokenization_kwargs={}, key='passage', k
     """
     text_inputs = tokenizer(batch[key], **tokenization_kwargs)
     model_config = getattr(model, "config", None)
+    # FIXME this does not hold for ViLT and CLIP
+    # TODO refactor to use the datamodule of train.data
+    # maybe implement in trainer.test ?
     if model_config is not None and isinstance(model_config, MMConfig):
         if kb is not None:
             features = {"face_embedding", "face_box"} | model.config.image_kwargs.keys()
@@ -162,7 +165,8 @@ def get_inputs(batch, model, tokenizer, tokenization_kwargs={}, key='passage', k
 
 
 def embed(batch, model, tokenizer, tokenization_kwargs={}, key='passage', 
-          save_as='text_embedding', output_key=None, forward_kwargs={}, layers=None, kb=None):
+          save_as='text_embedding', output_key=None, forward_kwargs={}, 
+          layers=None, kb=None, call=None):
     """
     Parameters
     ----------
@@ -178,12 +182,15 @@ def embed(batch, model, tokenizer, tokenization_kwargs={}, key='passage',
         if not None, expects that the output is a List[Tensor] 
         with each Tensor being shaped like (batch_size, sequence_length, hidden_size)
         In this case, it will save in {save_as}_layer_{layer} the representation of the first token (DPR-like), for each layer
+    call: str, optional
+        Name of the method to call on model. By default, the model should be callable and is called.
     """
     inputs = get_inputs(batch, model, tokenizer, tokenization_kwargs=tokenization_kwargs, key=key, kb=kb)
     # move to device
     inputs = prepare_inputs(inputs)
-    with torch.no_grad():
-        outputs = model(**inputs, **forward_kwargs)
+    method = model if call is None else getattr(model, call)
+    with torch.no_grad():        
+        outputs = method(**inputs, **forward_kwargs)
     # single output
     if isinstance(outputs, torch.Tensor):
         output = outputs
