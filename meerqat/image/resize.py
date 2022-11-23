@@ -6,14 +6,13 @@ Options:
 from pathlib import Path
 from docopt import docopt
 import json
-import warnings
 
 from multiprocessing import Pool
 
 from torchvision.transforms import Compose, Resize
 from datasets import load_from_disk, set_caching_enabled
 
-from ..data.loading import load_image
+from ..data.loading import load_image, save_image
 
 
 def get_transform(resize_kwargs=dict(size=512)):
@@ -30,10 +29,7 @@ def resize(file_name, transform, output_root):
     if image is None:
         return None
     image = transform(image)
-    try:
-        image.save(output_path)
-    except Exception as e:
-        warnings.warn(f"Caught exception '{e}' while saving image '{file_name}' (loaded as {type(image)})")
+    save_image(image, output_path)
 
 
 def batch_resize(file_names, transform, output_root):

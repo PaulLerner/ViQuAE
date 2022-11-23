@@ -87,6 +87,24 @@ def verbose_load_from_disk(dataset_path):
     return dataset
     
 
+def save_image(image, output_path):
+    try:
+        image.save(output_path)
+    except TypeError as te:
+        warnings.warn(f"Caught TypeError '{te}' while saving image to '{output_path}'. Setting transparency to None.")
+        if hasattr(image, 'encoderinfo'):
+            image.encoderinfo["transparency"] = None
+        if hasattr(image, 'info'):
+            image.info["transparency"] = None
+        # try one more time
+        try:
+            image.save(output_path)
+        except Exception as e:
+            warnings.warn(f"Caught exception '{e}' while saving image to '{output_path}'. (loaded as {type(image)})")
+    except Exception as e:
+        warnings.warn(f"Caught exception '{e}' while saving image to '{output_path}'. (loaded as {type(image)})")
+
+
 def load_image(file_name):
     path = IMAGE_PATH / file_name
     try:
