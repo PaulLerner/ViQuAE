@@ -6,6 +6,7 @@ Options:
 from pathlib import Path
 from docopt import docopt
 import json
+import warnings
 
 from torchvision.transforms import Compose, Resize
 from datasets import load_from_disk, set_caching_enabled
@@ -24,8 +25,13 @@ def resize(file_name, transform, output_root):
     if output_path.exists():
         return None
     image = load_image(file_name)
+    if image is None:
+        return None
     image = transform(image)
-    image.save(output_path)
+    try:
+        image.save(output_path)
+    except Exception as e:
+        warnings.warn(f"Caught exception '{e}' while saving image '{file_name}' (loaded as {type(image)})")
 
 
 def dataset_resize(dataset_path, output_path, map_kwargs={}, transform_kwargs={}, image_key='image', **fn_kwargs):
