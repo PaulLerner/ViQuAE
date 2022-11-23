@@ -6,6 +6,9 @@ Options:
 from pathlib import Path
 from docopt import docopt
 import json
+import warnings
+
+from multiprocessing import Pool
 
 from torchvision.transforms import Compose, Resize
 from datasets import load_from_disk, set_caching_enabled
@@ -28,12 +31,19 @@ def resize(file_name, transform, output_root):
     image.save(output_path)
 
 
+def batch_resize(file_names, transform, output_root):
+    # hacking the way into Pool
+    inputs = [(file_name, transform, output_root) for file_name in file_names]
+    with Pool() as pool:
+        pool.starmap(resize, inputs)
+        
+        
 def dataset_resize(dataset_path, output_path, map_kwargs={}, transform_kwargs={}, image_key='image', **fn_kwargs):
     dataset = load_from_disk(dataset_path)
     transform = get_transform(**transform_kwargs)
     fn_kwargs["transform"] = transform
     fn_kwargs["output_root"] = Path(output_path)
-    dataset.map(resize, batched=False, fn_kwargs=fn_kwargs, input_columns=image_key, **map_kwargs)
+    dataset.map(batch_resize, batched=True, fn_kwargs=fn_kwargs, input_columns=image_key, **map_kwargs)
 
 
 if __name__ == '__main__':
