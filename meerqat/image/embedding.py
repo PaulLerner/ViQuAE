@@ -13,7 +13,7 @@ from torch import nn
 import torchvision
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize
 
-from transformers import FeatureExtractionMixin, BatchEncoding
+from transformers import FeatureExtractionMixin
 
 from datasets import load_from_disk, set_caching_enabled
 
@@ -118,12 +118,13 @@ def embed(batch, model, transform, save_as='image_embedding', image_key='image',
     images = load_image_batch(batch[image_key])
     if isinstance(transform, FeatureExtractionMixin):
         images = transform(images, return_tensors="pt")
+        images = {k: v.to(device) for k, v in images.items()}
     else:
         images = [transform(image).unsqueeze(0) for image in images]
         images = torch.cat(images).to(device)
     method = model if call is None else getattr(model, call)
     with torch.no_grad():
-        if isinstance(images, (dict, BatchEncoding)):
+        if isinstance(images, dict):
             image_embeddings = method(**images)
         else:
             image_embeddings = method(images)
