@@ -20,8 +20,8 @@ from ..data.utils import to_latex
 from ..models.qa import batched_get_best_spans
 from ..models.outputs import BiEncoderOutput
 from .optim import LinearLRWithWarmup
+from .metrics import retrieval, squad, get_run
 from .data import ReRankerDataModule, pad_and_cat
-from . import metrics
 
     
 class Trainee(pl.LightningModule):
@@ -310,7 +310,7 @@ class BiEncoder(Trainee):
         return dict(loss=loss, log_probs=log_probs, labels=global_labels)   
     
     def eval_epoch_end(self, eval_outputs):
-        return {'metrics': metrics.retrieval(eval_outputs, ignore_index=self.loss_fct.ignore_index)}
+        return {'metrics': retrieval(eval_outputs, ignore_index=self.loss_fct.ignore_index)}
     
     def save_pretrained(self, ckpt_path, bert=False):
         question_model = self.question_model
@@ -374,12 +374,12 @@ class ReRanker(Trainee):
     def eval_epoch_end(self, eval_outputs):
         # rerank results of IR
         if isinstance(self.trainer.datamodule, ReRankerDataModule):
-            run = metrics.get_run(eval_outputs, ir_run=self.trainer.datamodule.run)
+            run = get_run(eval_outputs, ir_run=self.trainer.datamodule.run)
             metrics = ranx.evaluate(qrels=self.trainer.datamodule.qrels, run=run, **self.metrics_kwargs)
         # in-batch metrics (e.g. for ICT)
         else:
             run = None
-            metrics = metrics.retrieval(eval_outputs, ignore_index=self.loss_fct.ignore_index, output_key='logits')
+            metrics = retrieval(eval_outputs, ignore_index=self.loss_fct.ignore_index, output_key='logits')
         return {'metrics': metrics, 'run': run}
     
     def test_epoch_end(self, *args, **kwargs):
@@ -499,10 +499,10 @@ class Reader(Trainee):
             return self.M_tuning(all_start_log_probs, all_end_log_probs, all_input_ids, all_answer_strings, all_passage_scores)   
         predictions = self.log_probs_to_answers(all_start_log_probs, all_end_log_probs, all_input_ids)
          # compute metrics        
-        metrics = metrics.squad(predictions=predictions, references=all_answer_strings)
+        metrics = squad(predictions=predictions, references=all_answer_strings)
         if all_passage_scores is not None:
             weighted_predictions = self.log_probs_to_answers(all_start_log_probs, all_end_log_probs, all_input_ids, weights=all_passage_scores)
-            weighted_metrics = metrics.squad(predictions=weighted_predictions, references=all_answer_strings)
+            weighted_metrics = squad(predictions=weighted_predictions, references=all_answer_strings)
             for k, v in weighted_metrics.items():
                  metrics['weighted_'+k] = v
         return {'metrics': metrics}
@@ -515,12 +515,12 @@ class Reader(Trainee):
             start_log_probs = all_start_log_probs[:, :m]
             end_log_probs = all_end_log_probs[:, :m]
             predictions = self.log_probs_to_answers(start_log_probs, end_log_probs, input_ids)
-            metrics = metrics.squad(predictions=predictions, references=all_answer_strings)
+            metrics = squad(predictions=predictions, references=all_answer_strings)
             metrics['@M'] = m
             if all_passage_scores is not None:
                 passage_scores = all_passage_scores[:, :m]
                 weighted_predictions = self.log_probs_to_answers(start_log_probs, end_log_probs, input_ids, weights=passage_scores)
-                weighted_metrics = metrics.squad(predictions=weighted_predictions, references=all_answer_strings)
+                weighted_metrics = squad(predictions=weighted_predictions, references=all_answer_strings)
                 for k, v in weighted_metrics.items():
                     metrics['weighted_'+k] = v
             metrics_wrt_m.append(metrics)
