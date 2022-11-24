@@ -24,7 +24,11 @@ from .optim import LinearLRWithWarmup
 from .metrics import retrieval, squad, get_run
 from .data import ReRankerDataModule, pad_and_cat
 
-    
+
+def batched_cpu(batch):
+    return {k: v.detach().cpu() for k, v in batch.items()}
+
+
 class Trainee(pl.LightningModule):
     """
     Base class for all Trainee models (to be trained by a Trainer)
@@ -81,13 +85,13 @@ class Trainee(pl.LightningModule):
         """Step and log validation metrics"""
         outputs = self.step(batch, batch_idx)
         self.log("eval/loss", outputs['loss'])
-        return outputs
+        return batched_cpu(outputs)
     
     def test_step(self, batch, batch_idx):
         """Step and log test metrics"""
         outputs = self.step(batch, batch_idx)
         self.log("test/loss", outputs['loss'])
-        return outputs
+        return batched_cpu(outputs)
     
     def eval_epoch_end(self, eval_outputs):
         warnings.warn("eval_epoch_end is not implemented.")
@@ -190,7 +194,8 @@ class CrossModal(Trainee):
         self.model = get_pretrained(**model_kwargs)
 
     def step(self, batch, batch_idx):
-        return self.model(**batch, return_loss=True, return_dict=True)
+        outputs = self.model(**batch, return_loss=True, return_dict=True)
+        return {k: outputs[k] for k in ['loss', 'logits_per_image', 'logits_per_text']}
     
     def eval_epoch_end(self, eval_outputs):
         for batch in eval_outputs:
@@ -490,16 +495,16 @@ class Reader(Trainee):
             all_answer_strings.extend(answer_strings)
             
             # TODO keep in torch
-            input_ids = input_ids.detach().cpu().numpy().reshape(N, M, L)
-            start_log_probs = batch['start_log_probs'].detach().cpu().numpy().reshape(N, M, L)
-            end_log_probs = batch['end_log_probs'].detach().cpu().numpy().reshape(N, M, L)
+            input_ids = input_ids.numpy().reshape(N, M, L)
+            start_log_probs = batch['start_log_probs'].numpy().reshape(N, M, L)
+            end_log_probs = batch['end_log_probs'].numpy().reshape(N, M, L)
             
             all_input_ids.append(input_ids)
             all_start_log_probs.append(start_log_probs)
             all_end_log_probs.append(end_log_probs)
             passage_scores = batch['passage_scores']
             if passage_scores is not None:
-                passage_scores = passage_scores.detach().cpu().numpy().reshape(N, M)
+                passage_scores = passage_scores.numpy().reshape(N, M)
                 all_passage_scores.append(passage_scores)
         assert len(all_answer_strings) == dataset_size
         # concat gathered outputs

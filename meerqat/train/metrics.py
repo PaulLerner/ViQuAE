@@ -25,8 +25,8 @@ def retrieval(eval_outputs, ignore_index=-100, output_key='log_probs'):
     metrics = {}    
     mrr, hits_at_1, ignored_predictions, dataset_size = 0, 0, 0, 0
     for batch in eval_outputs:
-        log_probs = batch[output_key].detach().cpu().numpy()
-        labels = batch['labels'].detach().cpu().numpy()
+        log_probs = batch[output_key].numpy()
+        labels = batch['labels'].numpy()
         batch_size, _ = log_probs.shape
         dataset_size += batch_size
         # use argsort to rank the passages w.r.t. their log-probability (`-` to sort in desc. order)
@@ -57,7 +57,7 @@ def get_run(eval_outputs, ir_run):
     """
     run = {}
     for batch in eval_outputs:
-        logits = batch['logits'].detach().cpu().numpy()
+        logits = batch['logits'].numpy()
         N, M = logits.shape
         question_ids = [batch['ids'][i] for i in range(0, N*M, M)]
         rankings = (-logits).argsort(axis=1)
