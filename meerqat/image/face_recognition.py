@@ -19,7 +19,7 @@ import cv2
 from skimage import transform
 from PIL import Image
 
-from ..data.loading import DATA_ROOT_PATH, load_image_batch
+from ..data.loading import DATA_ROOT_PATH, load_image
 from ..models.utils import device
 
 
@@ -73,7 +73,7 @@ def compute_face_embedding(batch, model, preprocessor, tform, max_n_faces=1, ima
         # will be overwritten for not_None_values
         output.append(None)
         if landmarks is not None:
-            image = load_image_batch([image])[0]
+            image = load_image(image)
             landmarks = np.array(landmarks[:max_n_faces], dtype=np.float32)
             for landmark in landmarks:
                 face = similarity_transform(image, landmark, SRC, tform)
