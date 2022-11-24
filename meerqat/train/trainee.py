@@ -11,6 +11,7 @@ from tqdm import tqdm
 import numpy as np
 import ranx
 
+import torch
 import torch.nn as nn
 from torch.optim import AdamW
 import pytorch_lightning as pl
@@ -61,7 +62,7 @@ class Trainee(pl.LightningModule):
         if self.gradient_checkpointing:
             self.gradient_checkpointing_enable()
         
-    def step(self, *args, **kwargs):
+    def step(self, batch, batch_idx):
         raise NotImplementedError("Subclass and implement step.")
     
     def log(self, name, value, **kwargs):
@@ -70,21 +71,21 @@ class Trainee(pl.LightningModule):
             return None
         super().log(name, value, **kwargs)
             
-    def training_step(self, *args, **kwargs):
+    def training_step(self, batch, batch_idx):
         """Step and log training metrics"""
-        outputs = self.step(*args, **kwargs)
+        outputs = self.step(batch, batch_idx)
         self.log("train/loss", outputs['loss'])
         return outputs
     
-    def validation_step(self, *args, **kwargs):
+    def validation_step(self, batch, batch_idx):
         """Step and log validation metrics"""
-        outputs = self.step(*args, **kwargs)
+        outputs = self.step(batch, batch_idx)
         self.log("eval/loss", outputs['loss'])
         return outputs
     
-    def test_step(self, *args, **kwargs):
+    def test_step(self, batch, batch_idx):
         """Step and log test metrics"""
-        outputs = self.step(*args, **kwargs)
+        outputs = self.step(batch, batch_idx)
         self.log("test/loss", outputs['loss'])
         return outputs
     
@@ -183,6 +184,20 @@ class Trainee(pl.LightningModule):
         return any(getattr(m, "gradient_checkpointing", False) for m in self.modules())
 
 
+class CrossModal(Trainee):
+    def __init__(self, *args, model_kwargs: dict, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model = get_pretrained(**model_kwargs)
+
+    def step(self, batch, batch_idx):
+        return self.model(**batch, return_loss=True, return_dict=True)
+    
+    def eval_epoch_end(self, eval_outputs):
+        for batch in eval_outputs:
+            batch['labels'] = torch.arange(batch['logits_per_image'].shape[1], dtype=torch.long)
+        return {'metrics': retrieval(eval_outputs, output_key='logits_per_image')}
+
+        
 def _get_bert(dpr_encoder):
     if hasattr(dpr_encoder, 'question_encoder'):
         return dpr_encoder.question_encoder.bert_model

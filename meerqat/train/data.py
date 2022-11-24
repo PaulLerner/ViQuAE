@@ -370,6 +370,20 @@ class PreComputedImageFeatures:
         return image_inputs               
     
     
+class CrossModalDataModule(DataModule):
+    """Used for cross-modal retrieval (text-to-image or image-to-text)"""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.shuffle_eval = True
+        assert self.n_relevant_passages == 1
+        assert self.M == 1
+
+    def collate_fn(self, items):
+        text_inputs = self.tokenizer([item['input'] for item in items], **self.tokenization_kwargs)
+        batch = self.image_formatter.format_batch(text_inputs, items)        
+        return batch
+        
+    
 class QuestionAnsweringDataModule(DataModule):
     """
     Base class for Question Answering. Should work for both IR and RC.
