@@ -422,7 +422,7 @@ class Searcher:
     reference_kb_path: str, optional
         Path to the Dataset that hold the reference KB, used to evaluate the results.
         If it is one of self.kbs, it will only get loaded once.
-        Defaults to evaluate only from the cached 'provenance_indices' in the dataset (not recommanded).
+        Defaults to evaluate only from the cached '{self.reference_key}_provenance_indices' in the dataset (not recommanded).
     reference_key: str,
         Used to get the reference field in kb
         Defaults to 'passage'
@@ -489,6 +489,8 @@ class Searcher:
         # reference-only KB (not used to search) so we have to load it
         else:
             self.reference_kb = load_from_disk(reference_kb_path)
+        if self.reference_kb is not None:
+            self.reference_kb = self.reference_kb.remove_columns([c for c in self.reference_kb.column_names if c != reference_key])
         # N. B. the 'reference_kb' term is not so appropriate
         # it is not an instance of KnowledgeBase but Dataset !
         self.reference_key = reference_key
@@ -537,14 +539,14 @@ class Searcher:
                     # extend relevant documents with the retrieved
                     # /!\ this means you should not compute/interpret recall as it will vary depending on the run/system
                     find_relevant_batch(indices_batch, batch['output'], self.reference_kb,
-                                        reference_key=self.reference_key, relevant_batch=batch['provenance_indices'])
+                                        reference_key=self.reference_key, relevant_batch=batch[f'{self.reference_key}_provenance_indices'])
 
         # fuse the results of the searches
         if self.do_fusion:
             self.fuse_and_compute_metrics(batch)
 
         # add Qrels scores depending on the documents retrieved by the systems
-        str_indices_batch, non_empty_scores = format_qrels_indices(batch['provenance_indices'])
+        str_indices_batch, non_empty_scores = format_qrels_indices(batch[f'{self.reference_key}_provenance_indices'])
         self.qrels.add_multi(
             q_ids=batch['id'],
             doc_ids=str_indices_batch,
@@ -570,7 +572,7 @@ class Searcher:
             # extend relevant documents with the retrieved
             # /!\ this means you should not compute/interpret recall as it will vary depending on the run/system
             find_relevant_batch(indices_batch, batch['output'], self.reference_kb,
-                                reference_key=self.reference_key, relevant_batch=batch['provenance_indices'])
+                                reference_key=self.reference_key, relevant_batch=batch[f'{self.reference_key}_provenance_indices'])
 
         return batch
 
@@ -656,9 +658,6 @@ def dataset_search(dataset, k=100, metric_save_path=None, map_kwargs={}, **kwarg
         Passed to Searcher
     """
     searcher = Searcher(k=k, **kwargs)
-
-    # HACK: sleep until elasticsearch is good to go
-    time.sleep(60)
 
     # search expects a batch as input
     dataset = dataset.map(searcher, batched=True, **map_kwargs)
