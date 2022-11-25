@@ -2,13 +2,13 @@
 Script and functions related to metrics and ranx.
 
 (for docopt) Usage:
-metrics.py relevant <dataset> <passages> <title2index> <article2passage> [--disable_caching]
+metrics.py relevant <dataset> <passages> <title2index> [<article2passage> --reference=<reference> --save=<save> --disable_caching]
 metrics.py qrels <qrels>... --output=<path>
 metrics.py ranx --qrels=<path> [<run>... --output=<path> --filter=<path> --kwargs=<path> --cats=<path>]
 metrics.py (win|tie|loss) <metrics> [--metric=<metric>]
                                   
 Usages:
-    1. metrics.py relevant <dataset> <passages> <title2index> <article2passage> [--disable_caching]    
+    1. metrics.py relevant <dataset> <passages> <title2index> [<article2passage> --reference=<reference> --save=<save> --disable_caching]    
     2. metrics.py qrels <qrels>... --output=<path>    
     3. metrics.py ranx --qrels=<path> [<run>... --output=<path> --filter=<path> --kwargs=<path> --cats=<path>]     
     4. metrics.py (win|tie|loss) <metrics> [--metric=<metric>]  
@@ -18,11 +18,14 @@ Positional arguments:
     * <dataset>            Path to the dataset  
     * <passages>           Path to the passages (also a Dataset)
     * <title2index>        Path to the JSON file mapping article’s title to it’s index in the KB
-    * <article2passage>    Path to the JSON file mapping article’s index to its corresponging passage indices
+    * [<article2passage>]  Path to the JSON file mapping article’s index to its corresponging passage indices. 
+                           Optional, if not provided, we assume that <passages> is a collection of articles.
     * <qrels>...           Paths to the Qrels to merge
     * <metrics>            Path to the JSON metrics file (output of ranx)
 
 Options:
+    --reference=<reference> Name of the column that holds the text that should hold the answer. Defaults to 'passage'.    
+    --save=<save>           Name of the column under which to save the relevant indices. Defaults to 'provenance_indices'.
     --disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
     --output=<path>         1. qrels: output path to the JSON file
                             2. ranx: output path to the directory where to save metrics
@@ -120,7 +123,8 @@ def find_relevant_batch(retrieved_batch, ground_truth_output_batch, kb,
     return relevant_batch
 
 
-def find_relevant_item(item, passages, title2index, article2passage):
+def find_relevant_item(item, passages, title2index, article2passage=None, 
+                       reference_key='passage', save_as='provenance_indices'):
     """
     Applies ``find_relevant`` with passages of articles linked to the question.
     
@@ -130,8 +134,16 @@ def find_relevant_item(item, passages, title2index, article2passage):
     passages: Dataset
     title2index: dict[str, int]
         Mapping article’s title to it’s index in the KB
-    article2passage: dict[int, List[int]]
+    article2passage: dict[int, List[int]], optional
         Mapping article’s index to its corresponging passage indices
+        If None, we assume that passages is a collection of articles    
+    reference_key: str, optional
+        Used to get the reference field in kb
+        Defaults to 'passage'
+    save_as: str, optional
+        Results will be saved under this name in the dataset, 
+        with an 'original_answer_' prefix for passages that contain the original answer
+        Defaults to 'provenance_indices'
     """
     # ignore from which paragraph the answer comes from
     # (might have been quicker to do this mapping in make_passage)
@@ -141,12 +153,22 @@ def find_relevant_item(item, passages, title2index, article2passage):
         if title not in title2index:
             continue
         article_index = title2index[title]
-        passage_indices = article2passage.get(article_index, [])
-        o, r = find_relevant(passage_indices, item['output']['original_answer'], item['output']['answer'], passages)
+        if article2passage is None:
+            passage_indices = [article_index]
+        else:
+            passage_indices = article2passage.get(article_index, [])
+        o, r = find_relevant(
+            passage_indices, 
+            item['output']['original_answer'], 
+            item['output']['answer'], 
+            passages, 
+            reference_key=reference_key
+        )
         original_relevant.extend(o)
         relevant.extend(r)
-    item['original_answer_provenance_indices'] = original_relevant
-    item['provenance_indices'] = relevant
+    # TODO also save in Qrels files
+    item[f'original_answer_{save_as}'] = original_relevant
+    item[save_as] = relevant
     return item
 
 
@@ -344,9 +366,22 @@ if __name__ == '__main__':
         passages = load_from_disk(args['<passages>'])
         with open(args['<title2index>'], 'r') as file:
             title2index = json.load(file)
-        with open(args['<article2passage>'], 'r') as file:
-            article2passage = json.load(file, object_hook=json_integer_keys)
-        find_relevant_dataset(args['<dataset>'], passages=passages, title2index=title2index, article2passage=article2passage)
+        if args['<article2passage>'] is not None:
+            with open(args['<article2passage>'], 'r') as file:
+                article2passage = json.load(file, object_hook=json_integer_keys)
+        else:
+            article2passage = None
+        reference_key = args['--reference'] if args['--reference'] is not None else 'passage'
+        save_as = args['--save'] if args['--save'] is not None else 'provenance_indices'
+        passages = passages.remove_columns([c for c in passages.column_names if c != reference_key])
+        find_relevant_dataset(
+            args['<dataset>'], 
+            passages=passages, 
+            title2index=title2index, 
+            article2passage=article2passage,
+            reference_key=reference_key,
+            save_as=save_as
+        )
     
     elif args['qrels']:
         qrels = fuse_qrels(args['<qrels>'])
