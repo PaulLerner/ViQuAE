@@ -213,12 +213,16 @@ def embed(batch, model, tokenizer, tokenization_kwargs={}, key='passage',
     return batch
 
 
-def dataset_embed(dataset_path, map_kwargs={}, output_path=None, **fn_kwargs):
+def dataset_embed(dataset_path, map_kwargs={}, output_path=None, keep_columns=None, **fn_kwargs):
     """Loads dataset from path, maps it through embed, and saves it to output_path"""
     dataset = load_from_disk(dataset_path)
     # defaults to overwrite the dataset
     if output_path is None:
         output_path = dataset_path
+        assert keep_columns is None, f"You probably don't want to overwrite {dataset_path} by keeping only {keep_columns}"
+    elif keep_columns is not None:
+        keep_columns = set(keep_columns)
+        dataset = dataset.remove_columns([c for c in dataset.column_names if c not in keep_columns])
     dataset = dataset.map(embed, batched=True, fn_kwargs=fn_kwargs, **map_kwargs)
     dataset.save_to_disk(output_path)
 
