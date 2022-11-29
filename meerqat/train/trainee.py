@@ -201,6 +201,10 @@ class CrossModal(Trainee):
         for batch in eval_outputs:
             batch['labels'] = torch.arange(batch['logits_per_image'].shape[1], dtype=torch.long)
         return {'metrics': retrieval(eval_outputs, output_key='logits_per_image')}
+    
+    def save_pretrained(self, ckpt_path, bert=False):
+        assert not bert
+        self.model.save_pretrained(ckpt_path)
 
         
 def _get_bert(dpr_encoder):
