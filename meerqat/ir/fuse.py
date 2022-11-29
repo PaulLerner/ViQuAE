@@ -1,5 +1,34 @@
 # -*- coding: utf-8 -*-
+"""
+usage: fuse.py [-h] [--config CONFIG] [--print_config [={comments,skip_null,skip_default}+]] [--qrels QRELS] [--runs RUNS] [--norm NORM] [--method METHOD] [--output OUTPUT] [--defmin DEFMIN]
+               {fit,test} ...
 
+options:
+  -h, --help            Show this help message and exit.
+  --config CONFIG       Path to a configuration file.
+  --print_config [={comments,skip_null,skip_default}+]
+                        Print the configuration after applying all other arguments and exit.
+
+Optimize fusion using ranx:
+  --qrels QRELS, --qrels+ QRELS
+                        (type: Union[str, List[str], null], default: null)
+  --runs RUNS, --runs+ RUNS
+                        (type: Optional[List[str]], default: null)
+  --norm NORM, --norm+ NORM
+                        (type: Union[str, null, List[Optional[str]]], default: zmuv)
+  --method METHOD, --method+ METHOD
+                        (type: Union[str, null, List[Optional[str]]], default: wsum)
+  --output OUTPUT       (type: Optional[str], default: null)
+  --defmin DEFMIN, --defmin+ DEFMIN
+                        (type: Union[bool, null, List[Optional[bool]]], default: False)
+
+subcommands:
+  For more details of each subcommand add it as argument followed by --help.
+
+  {fit,test}
+    fit                 Finds best parameters
+    test                Applies best parameters
+"""
 from jsonargparse import CLI
 from typing import List, Optional, Union
 import yaml
