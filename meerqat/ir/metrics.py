@@ -196,12 +196,17 @@ def fuse_qrels(qrels_paths):
     if len(qrels_paths) == 1:
         return ranx.Qrels.from_file(qrels_paths[0])
     final_qrels = {}
-    for qrels_path in tqdm(qrels_paths):
+    for i, qrels_path in tqdm(enumerate(qrels_paths)):
         qrels = ranx.Qrels.from_file(qrels_path).qrels
         for q_id, rels in qrels.items():
             final_qrels.setdefault(q_id, {})
             for doc_id, score in rels.items():
-                final_qrels[q_id].setdefault(doc_id, {})
+                if doc_id in final_qrels[q_id] and final_qrels[q_id][doc_id] != score:
+                    raise ValueError(
+                        f"{qrels_path} contradicts a prior Qrels (one of {qrels_paths[:i]}).\n"
+                        f"Got {score} and {final_qrels[q_id][doc_id]} "
+                        f"for question '{q_id}' and document '{doc_id}'"
+                    )
                 final_qrels[q_id][doc_id] = score
     return ranx.Qrels.from_dict(final_qrels)
 
