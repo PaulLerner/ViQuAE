@@ -416,7 +416,7 @@ class Searcher:
     Parameters
     ----------
     kb_kwargs: dict
-        Each key identifies a KB and each valye is passed to KnowledgeBase
+        Each key identifies a KB and each value is passed to KnowledgeBase
     k: int, optional
         Searches for the top-k results
     reference_kb_path: str, optional
@@ -437,9 +437,11 @@ class Searcher:
     save_in_dataset: bool, optional
         Whether to save the dataset after searching (which will hold the results)
         or rely only on ranx to save.
+    do_fusion: bool, optional
+        Whether to fuse results of the indexes. Defaults to True if their are multiple indexes.
     """
     def __init__(self, kb_kwargs, k=100, reference_kb_path=None, reference_key='passage', request_timeout=1000,
-                 es_client_kwargs={}, fusion_kwargs={}, metrics_kwargs={}, save_in_dataset=True):
+                 es_client_kwargs={}, fusion_kwargs={}, metrics_kwargs={}, save_in_dataset=True, do_fusion=None):
         self.k = k
         self.kbs = {}
         self.qrels = ranx.Qrels()
@@ -465,16 +467,16 @@ class Searcher:
                 run.name = index_name
                 self.runs[index_name] = run
         assert not ({'search', 'fusion'} & self.runs.keys()), "'search', 'fusion' are reserved names"
-        if len(self.runs) > 1:
+        if do_fusion is None and len(self.runs) > 1:
+            self.do_fusion = True
+        else:
+            self.do_fusion = do_fusion
+        if self.do_fusion:
+            assert len(self.runs) > 1
             self.do_fusion = True
             run = ranx.Run()
             run.name = "fusion"
             self.runs["fusion"] = run
-            if not save_in_dataset:
-                save_in_dataset = True
-                warnings.warn("setting save_in_dataset=True to be able to fuse results")
-        else:
-            self.do_fusion = False
         self.save_in_dataset = save_in_dataset
 
         # no reference KB
@@ -521,10 +523,8 @@ class Searcher:
                 if index.normalization is not None:
                     scores_batch = normalize(scores_batch, **index.normalization)
 
-                # store result in the dataset
-                if self.save_in_dataset:
-                    batch[f'{index_name}_scores'] = scores_batch
-                    batch[f'{index_name}_indices'] = indices_batch
+                batch[f'{index_name}_scores'] = scores_batch
+                batch[f'{index_name}_indices'] = indices_batch
 
                 # store results in the run
                 str_indices_batch, non_empty_scores = format_run_indices(indices_batch, scores_batch)
