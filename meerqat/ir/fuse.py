@@ -35,9 +35,97 @@ import yaml
 from pathlib import Path
 import json
 
+import numpy as np
+
+from numba import njit, prange, types
+from numba.typed import List as TypedList, Dict as TypedDict
 from ranx import fuse, optimize_fusion, Run, Qrels, evaluate
 
 from ..data.utils import to_latex
+
+
+####################################
+# copied from ranx because private #
+####################################
+
+@njit(cache=True)
+def create_empty_results_dict():
+    return TypedDict.empty(
+        key_type=types.unicode_type,
+        value_type=types.float64,
+    )
+
+@njit(cache=True)
+def create_empty_results_dict_list(length):
+    return TypedList([create_empty_results_dict() for _ in range(length)])
+
+@njit(cache=True)
+def convert_results_dict_list_to_run(q_ids, results_dict_list):
+    combined_run = TypedDict()
+
+    for i, q_id in enumerate(q_ids):
+        combined_run[q_id] = results_dict_list[i]
+
+    return combined_run
+
+
+@njit(cache=True)
+def extract_scores(results):
+    """Extract the scores from a given results dictionary."""
+    scores = np.empty((len(results)))
+    for i, v in enumerate(results.values()):
+        scores[i] = v
+    return scores
+
+
+################
+# custom norms #
+################
+    
+@njit(cache=True)
+def _gzmuv_norm(results, mean_score, stdev_score):
+    """Apply `gzmuv norm` to a given results dictionary."""
+    denominator = max(stdev_score, 1e-9)
+
+    normalized_results = create_empty_results_dict()
+    for doc_id in results.keys():
+        normalized_results[doc_id] = (results[doc_id] - mean_score) / (
+            denominator
+        )
+
+    return normalized_results
+
+
+@njit(cache=True, parallel=True)
+def _gzmuv_norm_parallel(run):
+    """Apply `zmuv norm` to a each results dictionary of a run in parallel."""
+    q_ids = TypedList(run.keys())
+
+    normalized_run = create_empty_results_dict_list(len(q_ids))
+    # FIXME getting error np.concatenate(): expecting a non-empty tuple of arrays, got ListType[array(float64, 1d, C)]
+    #    results_lengths = [len(results) for results in run.values()]
+    #    all_scores = TypedList([np.empty(l) for l in results_lengths])
+    #    for i in prange(len(q_ids)):
+    #        all_scores[i] = extract_scores(run[q_ids[i]])
+    #    all_scores = np.concatenate(list(all_scores))
+    
+    # not very numba-esque hack
+    all_scores = np.array([v for results in run.values() for v in results.values()])
+    mean_score = np.mean(all_scores)
+    stdev_score = np.std(all_scores)
+    
+    for i in prange(len(q_ids)):
+        normalized_run[i] = _gzmuv_norm(run[q_ids[i]], mean_score, stdev_score)
+
+    return convert_results_dict_list_to_run(q_ids, normalized_run)
+
+
+def gzmuv_norm(run):
+    """Apply `gzmuv norm` to a run."""
+    normalized_run = Run()
+    normalized_run.name = run.name
+    normalized_run.run = _gzmuv_norm_parallel(run.run)
+    return normalized_run
 
 
 def default_minimum(runs):
@@ -56,7 +144,17 @@ def default_minimum(runs):
                 results.setdefault(d_id, minimum)
     
     return runs
-                    
+    
+                
+NORMS = {
+    "gzmuv": gzmuv_norm
+}
+
+
+##################
+# Main class/CLI #
+##################
+
 
 class Main:
     """Optimize fusion using ranx"""
@@ -87,11 +185,18 @@ class Main:
         norms = [self.norm] if isinstance(self.norm, str) else self.norm 
         methods = [self.method] if isinstance(self.method, str) else self.method 
         for norm in norms:
+            # custom norm: do it as a pre-processing and disable ranx norm
+            if norm in NORMS:
+                runs = [NORMS[norm](run) for run in self.runs]
+                norm_for_ranx = None
+            else:
+                runs = self.runs
+                norm_for_ranx = norm
             for method in methods:
                 best_params, report = optimize_fusion(
                     qrels=self.qrels,
-                    runs=self.runs,
-                    norm=norm,
+                    runs=runs,
+                    norm=norm_for_ranx,
                     method=method,
                     metric=metric,
                     return_optimization_report=True
@@ -103,6 +208,10 @@ class Main:
     
     def test(self, best_params: dict, metrics: List[str] = None):
         """Applies best parameters"""
+        # custom norm: do it as a pre-processing and disable ranx norm
+        if self.norm in NORMS:
+            self.runs = [NORMS[self.norm](run) for run in self.runs]
+            self.norm = None
         combined_run = fuse(
             runs=self.runs,
             norm=self.norm,       
