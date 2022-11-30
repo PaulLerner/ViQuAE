@@ -42,6 +42,7 @@ from numba.typed import List as TypedList, Dict as TypedDict
 from ranx import fuse, optimize_fusion, Run, Qrels, evaluate
 
 from ..data.utils import to_latex
+from .metrics import fuse_qrels
 
 
 ####################################
@@ -167,11 +168,13 @@ class Main:
         output: Optional[str] = None,
         defmin: Optional[bool] = False
     ):
-        # TODO if list: merge using metrics.fuse_qrels
-        self.qrels = Qrels.from_file(qrels)
-        self.runs = [Run.from_file(run) for run in runs]
+        if isinstance(qrels, str):
+            self.qrels = Qrels.from_file(qrels)
+        else:
+            self.qrels = fuse_qrels(qrels)
+        self.runs = [Run.from_file(run) for run in runs]   
         if defmin:
-            self.runs = default_minimum(self.runs)
+            self.runs = default_minimum(self.runs)         
         self.norm = norm
         self.method = method
         if output is not None:
