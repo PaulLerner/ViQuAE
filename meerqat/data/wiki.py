@@ -145,7 +145,12 @@ from tabulate import tabulate
 import pandas as pd
 
 import requests
-from SPARQLWrapper import SPARQLWrapper, JSON
+# TODO make it optional in requirements.txt
+try:
+    from SPARQLWrapper import SPARQLWrapper, JSON
+except ModuleNotFoundError as e:
+    JSON = "JSON"
+    warnings.warn(f"ModuleNotFoundError: {e}")
 from urllib.error import HTTPError
 from urllib3.exceptions import MaxRetryError
 from tqdm import tqdm
