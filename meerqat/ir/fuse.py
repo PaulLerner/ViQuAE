@@ -221,7 +221,7 @@ class Main:
             method=self.method,        
             params=best_params
         )
-        combined_run.save(self.output)
+        combined_run.save(self.output/"test_run.json")
         if metrics is not None:
             print(to_latex(evaluate(self.qrels, combined_run, metrics)))
 
