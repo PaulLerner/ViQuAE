@@ -105,4 +105,6 @@ if __name__ == '__main__':
     if args['--config'] is not None:
         with open(args['--config'], 'rt') as file:
             config = json.load(file)
+    else:
+        config = {}
     format_html(args['<dataset>'], args['<output>'], n=n, width=int(args['--width']), **config)
