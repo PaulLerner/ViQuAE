@@ -51,6 +51,7 @@ class Trainee(pl.LightningModule):
         super().__init__(*args, **kwargs)
         self.freeze_regex = freeze_regex
         self.gradient_checkpointing = gradient_checkpointing
+        self.weights_to_log = {}
         
         # scheduling and optimization
         self.warmup_steps = warmup_steps
@@ -79,6 +80,9 @@ class Trainee(pl.LightningModule):
         """Step and log training metrics"""
         outputs = self.step(batch, batch_idx)
         self.log("train/loss", outputs['loss'])
+        for name, tensor in self.weights_to_log.items():
+            self.log(name, tensor.cpu().detach().item())
+
         return outputs
     
     def validation_step(self, batch, batch_idx):
@@ -112,14 +116,7 @@ class Trainee(pl.LightningModule):
             self.log(f"test/{k}", v)
         with open(log_dir/'metrics.json', 'wt') as file:
             json.dump(metrics, file)
-                
-    def get_weights_to_log(self, model):
-        logs = {}
-        weights_to_log = getattr(model, 'weights_to_log', {})
-        for name, tensor in weights_to_log.items():
-            logs[name] = tensor.cpu().detach().item()
-        return logs
-    
+                    
     def freeze(self, regex):
         """
         Overrides freeze to freeze only parameters that match the regex.
@@ -254,9 +251,14 @@ class BiEncoder(Trainee):
             self.context_model = self.question_model
             print(f"Sharing {self.question_model.__class__.__name__} to encode both questions and passages")
             self.shared_encoders = True
+            self.weights_to_log.update(getattr(self.question_model, 'weights_to_log', {}))
         else:
             self.shared_encoders = False
             self.context_model = get_pretrained(context_class, pretrained_model_name_or_path=context_model_name_or_path)
+            for name, weight in getattr(self.question_model, 'weights_to_log', {}).items():
+                self.weights_to_log[f"question_{name}"] = weight
+            for name, weight in getattr(self.context_model, 'weights_to_log', {}).items():
+                self.weights_to_log[f"context_{name}"] = weight
         
         # loss and metrics
         self.log_softmax = nn.LogSoftmax(1)
@@ -278,22 +280,7 @@ class BiEncoder(Trainee):
         return BiEncoderOutput(
             question_pooler_output=question_outputs.pooler_output,
             context_pooler_output=context_outputs.pooler_output)
-    
-    def log_question_and_context(self):
-        """Maybe add weights of question and context model to the logs"""
-        logs = {}
-        # TODO
-        return logs
-        question_logs = self.get_weights_to_log(self.question_model)
-        # add "question_" prefix
-        logs.update({f"question_{k}": question_logs[k] for k in list(question_logs.keys())})
         
-        context_logs = self.get_weights_to_log(self.context_model)
-        # add "context_" prefix
-        logs.update({f"context_{k}": context_logs[k] for k in list(context_logs.keys())})
-
-        return logs
-    
     def step(self, inputs, _):
         """
         Calculates In-batch negatives schema loss and supports to run it in DDP mode 
@@ -375,6 +362,7 @@ class ReRanker(Trainee):
         default_metrics_kwargs = dict(metrics=[f"{m}@{k}" for m in ["mrr", "precision", "hit_rate"] for k in ks])
         default_metrics_kwargs.update(metric_kwargs)
         self.metrics_kwargs = default_metrics_kwargs
+        self.weights_to_log.update(getattr(self.model, 'weights_to_log', {}))
         self.post_init()   
 
     def forward(self, *args, **kwargs):
@@ -449,6 +437,7 @@ class Reader(Trainee):
         # TODO refactor all get_pretrained calls like this, 
         # no need to have a bunch of '*_name_or_path' in each Trainee model
         self.model = get_pretrained(**model_kwargs)
+        self.weights_to_log.update(getattr(self.model, 'weights_to_log', {}))
         self.tune_M = tune_M
         
         self.post_init()   
