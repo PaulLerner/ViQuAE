@@ -26,7 +26,7 @@ from .data import ReRankerDataModule, pad_and_cat
 
 
 def batched_cpu(batch):
-    return {k: v.detach().cpu() for k, v in batch.items()}
+    return {k: (v.detach().cpu() if isinstance(v, torch.Tensor) else v) for k, v in batch.items()}
 
 
 class Trainee(pl.LightningModule):
