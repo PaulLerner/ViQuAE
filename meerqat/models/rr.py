@@ -4,7 +4,7 @@ from torch import nn
 from transformers import BertModel
 from transformers.models.bert import BertPreTrainedModel
 
-from .mm import ECAEncoder
+from .mm import ECAEncoder, FlamantModel
 from .outputs import ReRankerOutput
 
 
@@ -64,4 +64,19 @@ class ECAReRanker(ECAEncoder):
         )
 
         
-
+class FlamantReRanker(FlamantModel):
+    """Like BertReRanker with a Flamant backbone instead of BERT"""
+    def __init__(self, config):
+        super().__init__(config)        
+        self.classifier = nn.Linear(config.hidden_size, 1)
+        # Initialize weights and apply final processing
+        self.post_init()
+    
+    def forward(self, *args, return_dict=True, **kwargs):
+        outputs = super().forward(*args, return_dict=return_dict, **kwargs)        
+        logits = self.classifier(outputs.pooler_output)        
+        return ReRankerOutput(
+            logits=logits, 
+            hidden_states=outputs.hidden_states,
+            attentions=outputs.attentions
+        )
