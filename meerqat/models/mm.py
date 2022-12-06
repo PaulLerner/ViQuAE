@@ -341,7 +341,8 @@ class FlamantEncoder(nn.Module):
             cross_attentions=all_cross_attentions,
         )
     
-    
+
+# TODO: refactor with *PreTrainedModel abstract classes
 class FlamantModel(BertPreTrainedModel):
     """
     Fuses modalities with gated cross-attention layers like in Flamingo [2]_
@@ -351,14 +352,18 @@ class FlamantModel(BertPreTrainedModel):
     load_tf_weights = None
     
     def __init__(self, config, add_pooling_layer=False):
-        if config.n_images > 1:
-            raise NotImplementedError()
         super().__init__(config)
         self.config = config
 
         self.embeddings = BertEmbeddings(config)
         self.encoder = FlamantEncoder(config)
         self.pooler = BertPooler(config) if add_pooling_layer else None
+        
+        if self.config.n_images > 1:
+            self.image_type_embeddings = nn.Embedding(self.config.n_images, self.config.hidden_size)
+            image_layer_norm = self.config.layer_norm_eps
+        else:
+            image_layer_norm = None
 
         if self.config.n_faces > 0:
             self.face_embedding = FaceEmbedding(embedding_dim=self.config.hidden_size,
@@ -371,6 +376,7 @@ class FlamantModel(BertPreTrainedModel):
         for name, image_kwarg in self.config.image_kwargs.items():
             self.image_embeddings[name] = ImageEmbedding(embedding_dim=self.config.hidden_size,
                                                          dropout=self.config.hidden_dropout_prob,
+                                                         layer_norm_eps=image_layer_norm,
                                                          **image_kwarg)
         self.weights_to_log = {}
         # add pointers to the gate parameters so that they are logged in trainer
@@ -381,6 +387,14 @@ class FlamantModel(BertPreTrainedModel):
                     self.weights_to_log[f"ffw_gate_{i}"] = layer_module.ffw_gate.gate_param
                     
         self.post_init()
+        
+    def _init_weights(self, module):
+        # same as BERT
+        if isinstance(module, nn.Embedding):
+            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
+            if module.padding_idx is not None:
+                module.weight.data[module.padding_idx].zero_()
+        # keep torch defaults for linear layers
         
     def get_input_embeddings(self):
         return self.embeddings.word_embeddings
@@ -407,46 +421,63 @@ class FlamantModel(BertPreTrainedModel):
             usual BERT inputs, see transformers.BertModel
         face_inputs: dict[str, torch.FloatTensor]
             {
-                "face": (batch_size, n_faces, face_dim),
-                "bbox": (batch_size, n_faces, bbox_dim),
-                "attention_mask": (batch_size, n_faces)
+                "face": (batch_size, n_images, n_faces, face_dim),
+                "bbox": (batch_size, n_images, n_faces, bbox_dim),
+                "attention_mask": (batch_size, n_images, n_faces)
             }
         image_inputs: dict[str, dict[str, torch.FloatTensor]]
             {
                 model:
                 {
-                    "input": (batch_size, image_dim)
-                    "attention_mask": (batch_size, )
+                    "input": (batch_size, n_images, image_dim)
+                    "attention_mask": (batch_size, n_images)
                 }
             }
         """
         # reshape faces
         faces = face_inputs['face']
-        batch_size, n_faces, face_dim = faces.shape
+        batch_size, n_images, n_faces, face_dim = faces.shape
         if n_faces > 0:
-            faces = faces.reshape(batch_size * n_faces, face_dim)
-            # embed batch of size batch_size*n_faces
-            face_output = self.face_embedding(face=faces, bbox=face_inputs['bbox'].reshape(batch_size * n_faces, -1))
-            face_output = face_output.reshape(batch_size, n_faces, -1)
+            if n_images > 1:
+                image_type_ids = torch.zeros((batch_size, n_images, n_faces), dtype=torch.long, device=faces.device)
+                # broadcast arange to the right shape
+                image_type_ids += torch.arange(n_images, dtype=torch.long, device=faces.device).reshape(1, n_images, 1)
+                image_type_embeddings = self.image_type_embeddings(image_type_ids.reshape(batch_size*n_images*n_faces))
+            else:
+                image_type_embeddings = None
+            faces = faces.reshape(batch_size*n_images*n_faces, face_dim)
+            bbox = face_inputs['bbox'].reshape(batch_size*n_images*n_faces, -1)
+            face_output = self.face_embedding(face=faces, bbox=bbox, image_type_embeddings=image_type_embeddings)
+            face_output = face_output.reshape(batch_size, n_images*n_faces, -1)
         else:
             face_output = torch.zeros(batch_size, 0, self.config.hidden_size, device=faces.device)
-
+        face_attention_mask = face_inputs["attention_mask"].reshape(batch_size, n_images*n_faces)
+        
         # embed images
         if image_inputs:
+            if n_images > 1:
+                image_type_ids = torch.zeros((batch_size, n_images), dtype=torch.long, device=faces.device)
+                image_type_ids += torch.arange(n_images, dtype=torch.long, device=faces.device)
+                image_type_embeddings = self.image_type_embeddings(image_type_ids.reshape(batch_size*n_images))
+            else:
+                image_type_embeddings = None
+
             image_outputs, image_attention_mask = [], []
             for name, image in image_inputs.items():
-                image_output = self.image_embeddings[name](image['input']).unsqueeze(0)
-                image_outputs.append(image_output)
-                image_attention_mask.append(image['attention_mask'].unsqueeze(0))
-            # (n_models, batch_size, embedding_dim) -> (batch_size, n_models, embedding_dim)
-            image_outputs = torch.cat(image_outputs, 0).transpose(0, 1)
-            image_attention_mask = torch.cat(image_attention_mask, 0).transpose(0, 1)
+                image_output = self.image_embeddings[name](
+                    image['input'].reshape(batch_size*n_images, -1), 
+                    image_type_embeddings=image_type_embeddings
+                )
+                image_outputs.append(image_output.reshape(batch_size, n_images, -1))
+                image_attention_mask.append(image['attention_mask'])
+            # (n_models, batch_size, n_images, embedding_dim) -> (batch_size, n_images*n_models, embedding_dim)
+            image_outputs = torch.cat(image_outputs, dim=1)
+            image_attention_mask = torch.cat(image_attention_mask, dim=1)
         else:
             image_outputs = torch.zeros(batch_size, 0, self.config.hidden_size, device=faces.device)
             image_attention_mask = torch.zeros(batch_size, 0, device=faces.device)
         
         if self.config.face_and_image_are_exclusive:
-            face_attention_mask = face_inputs["attention_mask"]
             # indices at the batch level: at least one face detected (i.e. not masked)
             where_are_faces = face_attention_mask.nonzero()[:,0].unique()
             # mask images if at least one face was detected
@@ -464,7 +495,7 @@ class FlamantModel(BertPreTrainedModel):
 
         # (batch_size, n_faces+n_models, embedding_dim)
         image_embeddings = torch.cat((face_output, image_outputs), dim=1)
-        image_attention_mask = torch.cat((face_inputs['attention_mask'], image_attention_mask), dim=1)
+        image_attention_mask = torch.cat((face_attention_mask, image_attention_mask), dim=1)
         # N. B. looks like this produces the same output as get_extended_attention_mask
         # I stick to what is in BertModel implementation
         image_attention_mask = self.invert_attention_mask(image_attention_mask)
