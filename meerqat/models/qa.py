@@ -189,9 +189,9 @@ class MultiPassageBERT(BertForQuestionAnswering):
         
 class MultiPassageECA(ECAEncoder):
     """Like MultiPassageBERT with a ECA backbone instead of BERT"""
-    def __init__(self, config):
+    def __init__(self, config, **kwargs):
         assert not config.no_text, "no_text option is only for IR"
-        super().__init__(config)
+        super().__init__(config, **kwargs)
         
         # like BertForQuestionAnswering
         self.num_labels = config.num_labels

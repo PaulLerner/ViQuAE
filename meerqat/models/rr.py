@@ -48,8 +48,8 @@ class BertReRanker(BertPreTrainedModel):
 
 class ECAReRanker(ECAEncoder):
     """Like BertReRanker with a ECA backbone instead of BERT"""
-    def __init__(self, config):
-        super().__init__(config)        
+    def __init__(self, config, **kwargs):
+        super().__init__(config, **kwargs)        
         self.classifier = nn.Linear(config.hidden_size, 1)
         # Initialize weights and apply final processing
         self.post_init()
@@ -66,8 +66,8 @@ class ECAReRanker(ECAEncoder):
         
 class FlamantReRanker(FlamantModel):
     """Like BertReRanker with a Flamant backbone instead of BERT"""
-    def __init__(self, config):
-        super().__init__(config)        
+    def __init__(self, config, **kwargs):
+        super().__init__(config, **kwargs)        
         self.classifier = nn.Linear(config.hidden_size, 1)
         # Initialize weights and apply final processing
         self.post_init()
