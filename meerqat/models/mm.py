@@ -574,7 +574,11 @@ class ECAEncoder(PreTrainedModel):
     load_tf_weights = None
     base_model_prefix = "bert_model"
 
-    def __init__(self, config):
+    def __init__(self, config, init_weights_like_bert=False):
+        if init_weights_like_bert:
+            self._init_weights = self._init_weights_like_bert
+        else:
+            self._init_weights = self._init_weights_like_ict
         super().__init__(config)
         self.config = config
         self.bert_model = BertModel(config, add_pooling_layer=False)
@@ -611,14 +615,30 @@ class ECAEncoder(PreTrainedModel):
             else:
                 self.image_gates[name] = nn.Identity()
                                 
-    def _init_weights(self, module):
+    def _init_weights_like_ict(self, module):
         # same as BERT
         if isinstance(module, nn.Embedding):
             module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
             if module.padding_idx is not None:
                 module.weight.data[module.padding_idx].zero_()
         # keep torch defaults for linear layers
-    
+        
+    def _init_weights_like_bert(self, module):
+        # taken from BertPreTrainedModel
+        if isinstance(module, nn.Linear):
+            # Slightly different from the TF version which uses truncated_normal for initialization
+            # cf https://github.com/pytorch/pytorch/pull/5617
+            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
+            if module.bias is not None:
+                module.bias.data.zero_()
+        elif isinstance(module, nn.Embedding):
+            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
+            if module.padding_idx is not None:
+                module.weight.data[module.padding_idx].zero_()
+        elif isinstance(module, nn.LayerNorm):
+            module.bias.data.zero_()
+            module.weight.data.fill_(1.0)
+            
     def forward(self, text_inputs, face_inputs, image_inputs,
                 output_attentions=False,
                 output_hidden_states=False,
