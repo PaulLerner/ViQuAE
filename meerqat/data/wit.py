@@ -73,10 +73,12 @@ Docopt
 ======
 
 Usage:
-wit.py (ict|caption) <root_path> <output_path> [--split]
+wit.py ict <root_path> <output_path> [--split]
+wit.py caption <root_path> <output_path> [--split --dedup]
 
 Options:
     --split         Whether to split in train/dev/test sets
+    --dedup         Whether to de-duplicate identical caption-image pairs
 """
 import json
 from tqdm import tqdm
@@ -188,7 +190,7 @@ def is_unique(item, unique_pairs):
     return True
 
    
-def caption(paths, downloaded_images, output, split=False):
+def caption(paths, downloaded_images, output, split=False, dedup=False):
     dataset_list = []
     for path in tqdm(paths):
         wit = pd.read_csv(path, delimiter='\t')
@@ -202,14 +204,15 @@ def caption(paths, downloaded_images, output, split=False):
         attr.rename(columns = {'caption_attribution_description': 'input'}, inplace=True)
         dataset_list.append(Dataset.from_pandas(attr))
     dataset = concatenate_datasets(dataset_list)
+    print(dataset)
+    if dedup:
+        before = len(dataset)
+        unique_pairs = set()
+        # slower than numpy but saves 3.72 TiB of RAM
+        dataset = dataset.filter(is_unique, fn_kwargs=dict(unique_pairs=unique_pairs), batched=False)
+        print(f"De-duplication done. Removed {before-len(dataset)} image-caption pairs. {len(dataset)} remaining.")
     if split:
         raise NotImplementedError()
-    print(dataset)
-    before = len(dataset)
-    unique_pairs = set()
-    # slower than numpy but saves 3.72 TiB of RAM
-    dataset = dataset.filter(is_unique, fn_kwargs=dict(unique_pairs=unique_pairs), batched=False)
-    print(f"De-duplication done. Removed {before-len(dataset)} image-caption pairs. {len(dataset)} remaining.")
     dataset.save_to_disk(output)
     
         
@@ -232,5 +235,6 @@ if __name__ == '__main__':
     if args['ict']:
         mict(paths, downloaded_images=downloaded_images, output=output, split=args['--split'])
     elif args['caption']:
-        caption(paths, downloaded_images=downloaded_images, output=output, split=args['--split'])
+        caption(paths, downloaded_images=downloaded_images, output=output, 
+                split=args['--split'], dedup=args['--dedup'])
 
