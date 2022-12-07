@@ -387,15 +387,7 @@ class FlamantModel(BertPreTrainedModel):
                     self.weights_to_log[f"ffw_gate_{i}"] = layer_module.ffw_gate.gate_param
                     
         self.post_init()
-        
-    def _init_weights(self, module):
-        # same as BERT
-        if isinstance(module, nn.Embedding):
-            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
-            if module.padding_idx is not None:
-                module.weight.data[module.padding_idx].zero_()
-        # keep torch defaults for linear layers
-        
+                
     def get_input_embeddings(self):
         return self.embeddings.word_embeddings
 
