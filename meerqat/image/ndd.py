@@ -56,12 +56,18 @@ HTML_TEMPLATE = """<html>
 QUERY_TEMPLATE = """<td><img src="{url}" width="400"></td>"""
 RESULT_TEMPLATE = """<td><img src="{url}" width="400"><p>{score}</p></td>"""
 
+VALID_ENCODING = {'jpeg', 'jpg', 'png'}
 
-class NearDuplicateDetection:
+
+class NearDuplicateDetection:    
     def list(self, dataset_path: Path):
         """Save all paths to the dataset images in an external file"""
         dataset = load_from_disk(dataset_path)
-        images = set(str(IMAGE_PATH/image) for image in dataset['image'])
+        def add_image_path(image, images):
+            if image.split('.')[-1].lower() in VALID_ENCODING:
+                images.add(str(IMAGE_PATH/image))
+        images = set()
+        dataset.map(add_image_path, input_columns='image', fn_kwargs=dict(images=images))
         with open(dataset_path/'images.lst', 'wt') as file:
             file.write('\n'.join(images))
             
