@@ -74,6 +74,7 @@ class NearDuplicateDetection:
     def show(self, results: Path_fr, ref: Path_fr, queries: Path_fr, output: Path, 
              n: int = 50, k: int = 5, minimum: float = None, maximum: float = None):
         """Parses search_direct_binary output to show results"""
+        output.mkdir(exist_ok=True)
         results = pd.read_csv(results, sep=' ', header=None)
         K = (results.shape[1]-1)//2
         scores = pd.concat([results[i*2+1] for i in range(K)])
