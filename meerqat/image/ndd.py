@@ -1,24 +1,23 @@
 # -*- coding: utf-8 -*-
 """
-usage: ndd.py [-h] [--config CONFIG] [--print_config[=flags]]
-              {list,show} ...
+usage: ndd.py [-h] [--config CONFIG]
+              [--print_config [={comments,skip_null,skip_default}+]]
+              {filter,list,show} ...
 
 Set of tools to bridge meerqat and compute_dlphash and search_direct_binary
 
 optional arguments:
   -h, --help            Show this help message and exit.
   --config CONFIG       Path to a configuration file.
-  --print_config[=flags]
+  --print_config [={comments,skip_null,skip_default}+]
                         Print the configuration after applying all other
-                        arguments and exit. The optional flags are one or more
-                        keywords separated by comma which modify the output.
-                        The supported flags are: comments, skip_default,
-                        skip_null.
+                        arguments and exit.
 
 subcommands:
   For more details of each subcommand add it as argument followed by --help.
 
-  {list,show}
+  {filter,list,show}
+    filter              Filters images from dataset that have a distance under threshold
     list                Save all paths to the dataset images in an external
                         file
     show                Parses search_direct_binary output to show results
@@ -62,6 +61,8 @@ VALID_ENCODING = {'jpeg', 'jpg', 'png'}
 class NearDuplicateDetection:    
     def list(self, dataset_path: Path):
         """Save all paths to the dataset images in an external file"""
+        # N. B. URLs should be filtered out before because, in the end, 
+        # we filter only from results of the search
         dataset = load_from_disk(dataset_path)
         def add_image_path(image, images):
             if image.split('.')[-1].lower() in VALID_ENCODING:
@@ -116,6 +117,26 @@ class NearDuplicateDetection:
         html = HTML_TEMPLATE.format(top_headers=top_headers, rows = "\n".join(rows))
         with open(output/f"{n}_top_{k}_min_{minimum}_max_{maximum}.html", 'wt') as file:
             file.write(html)
+        
+    def filter(self, dataset_path: Path, output: Path, run: Path_fr, threshold: float, num_proc: int = None):   
+        """Filters images from dataset that have a distance under threshold"""
+        dataset = load_from_disk(dataset_path)
+        before = len(dataset)
+        with open(run, 'rt') as file:
+            run = json.load(file)
+        todel = set()
+        for results in run.values():
+            for path, score in results.items():                                                                                                    
+                if score < threshold:
+                    todel.add(path)
+        print(f"About to delete {len(todel)} unique images")
+        dataset = dataset.filter(
+            lambda image: str(IMAGE_PATH/image) not in todel, 
+            input_columns='image',             
+            num_proc=num_proc
+        )
+        print(f"Filtered the dataset from {before} to {len(dataset)} rows")
+        dataset.save_to_disk(output)
                 
         
 if __name__ == '__main__':
