@@ -221,6 +221,7 @@ def make_mapping(value, index, mapping, inverse=False, one2many=False):
 def make_mapping_dataset(dataset_path, key, save_name, **kwargs):
     dataset = load_from_disk(dataset_path)
     mapping = {}
+    dataset = dataset.remove_columns([c for c in dataset.column_names if c != key])
     dataset.map(make_mapping, input_columns=key, with_indices=True, fn_kwargs=dict(mapping=mapping, **kwargs))
     with open(dataset_path/save_name, 'w') as file:
         json.dump(mapping, file)
