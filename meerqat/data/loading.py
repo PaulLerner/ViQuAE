@@ -118,8 +118,10 @@ def load_image(file_name):
     return image
 
 
-def load_image_batch(file_names):
-    return [load_image(file_name) for file_name in file_names]
+def load_image_batch(file_names, pool=None):
+    if pool is None:
+        return [load_image(file_name) for file_name in file_names]
+    return pool.map(load_image, file_names)
 
 
 def load_faces(image, root_face_path, max_n_faces=None):

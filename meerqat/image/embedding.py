@@ -9,6 +9,10 @@ from docopt import docopt
 import json
 from collections import OrderedDict
 
+from multiprocessing import Pool
+
+import numpy as np
+
 import torch
 from torch import nn
 import torchvision
@@ -115,14 +119,27 @@ def get_model_and_transform(model_kwargs={}, transform_kwargs={}):
     return dict(model=model, transform=transform)
 
 
-def embed(batch, model, transform, save_as='image_embedding', image_key='image', call=None):
-    images = load_image_batch(batch[image_key])
+def embed(batch, model, transform, save_as='image_embedding', image_key='image', 
+          call=None, pool=None):
+    images = load_image_batch(batch[image_key], pool=pool)
     if isinstance(transform, FeatureExtractionMixin):
-        images = transform(images, return_tensors="pt")
-        images = {k: v.to(device) for k, v in images.items()}
+        if pool is not None:
+            image_list = pool.map(transform, images)
+            images = {}
+            for k in image_list[0].keys():
+                images[k] = torch.tensor(
+                    np.concatenate([image[k] for image in image_list]), 
+                    device=device
+                )
+        else:
+            images = transform(images, return_tensors="pt")
+            images = {k: v.to(device) for k, v in images.items()}
     else:
-        images = [transform(image).unsqueeze(0) for image in images]
-        images = torch.cat(images).to(device)
+        if pool is not None:
+            raise NotImplementedError()
+        else:
+            images = [transform(image).unsqueeze(0) for image in images]
+            images = torch.cat(images).to(device)
     method = model if call is None else getattr(model, call)
     with torch.no_grad():
         if isinstance(images, dict):
@@ -134,7 +151,7 @@ def embed(batch, model, transform, save_as='image_embedding', image_key='image',
 
 
 def dataset_embed(dataset_path, map_kwargs={}, model_kwargs={}, transform_kwargs={}, 
-                  output_path=None, keep_columns=None, **fn_kwargs):
+                  output_path=None, keep_columns=None, processes=None, **fn_kwargs):
     dataset = load_from_disk(dataset_path)
     # defaults to overwrite the dataset
     if output_path is None:
@@ -143,8 +160,9 @@ def dataset_embed(dataset_path, map_kwargs={}, model_kwargs={}, transform_kwargs
     elif keep_columns is not None:
         keep_columns = set(keep_columns)
         dataset = dataset.remove_columns([c for c in dataset.column_names if c not in keep_columns])
-
+        
     fn_kwargs.update(get_model_and_transform(model_kwargs=model_kwargs, transform_kwargs=transform_kwargs))
+    fn_kwargs['pool'] = None if processes is None else Pool(processes=processes)
     dataset = dataset.map(embed, batched=True, fn_kwargs=fn_kwargs, **map_kwargs)
     dataset.save_to_disk(output_path)
 
