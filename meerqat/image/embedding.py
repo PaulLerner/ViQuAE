@@ -1,7 +1,8 @@
-"""Usage: embedding.py <dataset> [<config> --disable_caching]
+"""Usage: embedding.py <dataset> [<config> --disable_caching --output=<path>]
 
 Options:
---disable_caching                       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
+--disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
+--output=<path>         Optionally save the resulting dataset there instead of overwriting the input dataset.
 """
 
 from docopt import docopt
@@ -132,11 +133,20 @@ def embed(batch, model, transform, save_as='image_embedding', image_key='image',
     return batch
 
 
-def dataset_embed(dataset_path, map_kwargs={}, model_kwargs={}, transform_kwargs={}, **fn_kwargs):
+def dataset_embed(dataset_path, map_kwargs={}, model_kwargs={}, transform_kwargs={}, 
+                  output_path=None, keep_columns=None, **fn_kwargs):
     dataset = load_from_disk(dataset_path)
+    # defaults to overwrite the dataset
+    if output_path is None:
+        output_path = dataset_path
+        assert keep_columns is None, f"You probably don't want to overwrite {dataset_path} by keeping only {keep_columns}"
+    elif keep_columns is not None:
+        keep_columns = set(keep_columns)
+        dataset = dataset.remove_columns([c for c in dataset.column_names if c not in keep_columns])
+
     fn_kwargs.update(get_model_and_transform(model_kwargs=model_kwargs, transform_kwargs=transform_kwargs))
     dataset = dataset.map(embed, batched=True, fn_kwargs=fn_kwargs, **map_kwargs)
-    dataset.save_to_disk(dataset_path)
+    dataset.save_to_disk(output_path)
 
 
 if __name__ == '__main__':
@@ -149,4 +159,4 @@ if __name__ == '__main__':
     else:
         config = {}
 
-    dataset_embed(args['<dataset>'], **config)
+    dataset_embed(args['<dataset>'], output_path=args['--output'], **config)
