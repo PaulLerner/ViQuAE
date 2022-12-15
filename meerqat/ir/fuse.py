@@ -185,8 +185,8 @@ class Main:
     
     def fit(self, metric: str = "mrr@100"):
         """Finds best parameters"""
-        norms = [self.norm] if isinstance(self.norm, str) else self.norm 
-        methods = [self.method] if isinstance(self.method, str) else self.method 
+        norms = [self.norm] if self.norm is None or isinstance(self.norm, str) else self.norm 
+        methods = [self.method] if self.method is None or isinstance(self.method, str) else self.method 
         for norm in norms:
             # custom norm: do it as a pre-processing and disable ranx norm
             if norm in NORMS:
