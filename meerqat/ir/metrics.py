@@ -71,6 +71,8 @@ def find_relevant(retrieved, original_answer, alternative_answers, kb, reference
     original_relevant, relevant = [], []
     for i in retrieved:
         i = int(i)
+        # N. B. loading kb[reference_key] in-memory and passing a List[str]
+        # might not be so efficient because it requires to load the whole KB instead of a small retrieved subset
         passage = answer_preprocess(kb[i][reference_key])
 
         answer = answer_preprocess(original_answer)
@@ -85,42 +87,6 @@ def find_relevant(retrieved, original_answer, alternative_answers, kb, reference
                 relevant.append(i)
                 break
     return original_relevant, relevant
-
-
-def find_relevant_batch(retrieved_batch, ground_truth_output_batch, kb, 
-                        relevant_batch=None, reference_key='passage', original_answer_only=False):
-    """
-    Applies ``find_relevant`` on a batch (output of ir.search)
-    
-    Parameters
-    ----------
-    retrieved_batch: List[List[int]]
-    ground_truth_output_batch: List[dict]
-    kb: Dataset
-    relevant_batch: List[List[int]], optional
-        Each item in relevant_batch will be extended with the other relevant indices we find with ``find_relevant``
-        Defaults to a batch of empty lists.
-    reference_key: str, optional
-        Used to get the reference field in kb
-        Defaults to 'passage'
-    original_answer_only: bool, optional
-        Consider that only the original answer is relevant, not alternative ones.
-    """
-    if relevant_batch is None:
-        batch_size = len(ground_truth_output_batch)
-        relevant_batch = [[] for _ in range(batch_size)]
-
-    for retrieved, relevant, ground_truth_output in zip(retrieved_batch, relevant_batch, ground_truth_output_batch):
-        # we already know that relevant indices are relevant, no need to compute it twice
-        retrieved_todo = set(retrieved) - set(relevant)
-        if original_answer_only:
-            alternative_answers = []
-        else:
-            alternative_answers = ground_truth_output['answer']
-        _, r = find_relevant(retrieved_todo, ground_truth_output['original_answer'], alternative_answers, kb, reference_key=reference_key)
-        relevant.extend(r)
-
-    return relevant_batch
 
 
 def find_relevant_item(item, passages, title2index, article2passage=None, 
