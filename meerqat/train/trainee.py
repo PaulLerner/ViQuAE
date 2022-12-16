@@ -81,7 +81,7 @@ class Trainee(pl.LightningModule):
         outputs = self.step(batch, batch_idx)
         self.log("train/loss", outputs['loss'])
         for name, tensor in self.weights_to_log.items():
-            self.log(name, tensor.cpu().detach().item())
+            self.log(f"weights/{name}", tensor.cpu().detach().item())
 
         return outputs
     
@@ -238,7 +238,8 @@ class BiEncoder(Trainee):
     def __init__(self, *args, question_class, question_model_name_or_path, 
                  context_class=None, context_model_name_or_path=None, **kwargs):
         super().__init__(*args, **kwargs)
-        # TODO pass kwargs to question/context models
+        # TODO pass kwargs to question/context models: 
+        # will allow to modifiy model’s config directly from trainer’s config
         
         # default to symmetric encoders
         context_class = question_class if context_class is None else context_class
