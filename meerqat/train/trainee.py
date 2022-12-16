@@ -445,8 +445,10 @@ class Reader(Trainee):
     def forward(self, *args, **kwargs):
         return self.model(*args, **kwargs)
     
-    def step(self, inputs, _):   
-        keep_for_eval = {k: inputs.pop(k, None) for k in ['answer_strings', 'passage_scores']}
+    def step(self, inputs, _):           
+        keep_for_eval = {k: inputs.pop(k, None) for k in ['answer_strings']}
+        if not self.model.fuse_ir_score:
+            keep_for_eval['passage_scores'] = inputs.pop('passage_scores', None)
         model_outputs = self(**inputs)
         if 'text_inputs' in inputs:
             keep_for_eval['input_ids'] = inputs['text_inputs']['input_ids']
@@ -495,7 +497,7 @@ class Reader(Trainee):
             all_input_ids.append(input_ids)
             all_start_log_probs.append(start_log_probs)
             all_end_log_probs.append(end_log_probs)
-            passage_scores = batch['passage_scores']
+            passage_scores = batch.get('passage_scores')
             if passage_scores is not None:
                 passage_scores = passage_scores.numpy().reshape(N, M)
                 all_passage_scores.append(passage_scores)

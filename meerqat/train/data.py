@@ -457,12 +457,15 @@ class QuestionAnsweringDataModule(DataModule):
         print(f"Filtered {subset} dataset with empty '{self.search_key}_provenance_indices' from {before_len} to {after_len} items")
         
 
-    def get_training_passages(self, item):
+    def get_training_passages(self, item, with_scores=False):
         """
         Parameters
         ----------
         item: dict
             item (e.g. question) from self.train_dataset or self.eval_dataset.
+        with_scores: bool, optional
+            Also return the scores corresponding to the passages
+            Defaults to False.
         
         Returns
         -------
@@ -472,23 +475,35 @@ class QuestionAnsweringDataModule(DataModule):
                 - self.n_relevant_passages
                 - self.M
                 - self.search_key
+        relevant_scores: np.ndarray, optional
+            Shape (self.n_relevant_passages, )
+            Returned only if with_scores
+        irrelevant_scores: np.ndarray, optional 
+            Shape (self.M-self.n_relevant_passages, )
+            Returned only if with_scores
         """
         assert self.n_relevant_passages <= self.M
         # get passages from kb wrt search_key
-        relevant_passages = []
+        relevant_passages, relevant_scores = [], []
         all_relevant_indices = item[self.search_key+"_provenance_indices"]
         n_relevant = min(len(all_relevant_indices), self.n_relevant_passages)
         if n_relevant > 0:
-            relevant_indices = np.random.choice(all_relevant_indices, n_relevant, replace=False)
-            if len(relevant_indices) > 0:
-                relevant_passages = self.kb.select(relevant_indices)
-        irrelevant_passages = []
+            i = np.arange(n_relevant)
+            np.random.shuffle(i)
+            relevant_indices = np.array(all_relevant_indices)[i]
+            if with_scores:
+                relevant_scores = np.array(item[self.search_key+"_provenance_scores"], dtype=np.float32)[i]
+            relevant_passages = self.kb.select(relevant_indices)
+        irrelevant_passages, irrelevant_scores = [], []
         all_irrelevant_indices = item[self.search_key+"_irrelevant_indices"]
         n_irrelevant = min(len(all_irrelevant_indices), self.M-self.n_relevant_passages)
         if n_irrelevant > 0:
-            irrelevant_indices = np.random.choice(all_irrelevant_indices, n_irrelevant, replace=False)
-            if len(irrelevant_indices) > 0:
-                irrelevant_passages = self.kb.select(irrelevant_indices)
+            i = np.arange(n_irrelevant)
+            np.random.shuffle(i)
+            irrelevant_indices = np.array(all_irrelevant_indices)[i]
+            if with_scores:
+                irrelevant_scores = np.array(item[self.search_key+"_irrelevant_scores"], dtype=np.float32)[i]
+            irrelevant_passages = self.kb.select(irrelevant_indices)
         elif n_relevant <= 0:
             warnings.warn(f"Didn't find any passage for question {item['id']}")
         
@@ -500,8 +515,11 @@ class QuestionAnsweringDataModule(DataModule):
                 irrelevant_passages = irrelevant_passages['passage']
         else:
             relevant_passages = self.add_image(list(relevant_passages))
-            irrelevant_passages = self.add_image(list(irrelevant_passages))          
-        return relevant_passages, irrelevant_passages  
+            irrelevant_passages = self.add_image(list(irrelevant_passages))     
+        if with_scores:
+            return relevant_passages, irrelevant_passages, relevant_scores, irrelevant_scores
+        else:
+            return relevant_passages, irrelevant_passages
                     
     def add_image_features(self, passages):
         """
@@ -840,12 +858,16 @@ class ReaderDataModule(QuestionAnsweringDataModule):
             # oracle -> use only relevant passages
             if (self.trainer.state.stage != "train") and not self.oracle:
                 passage, score = self.get_eval_passages(item)
-                passage_scores.extend(score)
                 if len(score) < self.M:
-                    passage_scores.extend([0]*(self.M-len(score)))
+                    score.extend([0]*(self.M-len(score)))
+                passage_scores.append(score)
             else:
-                relevant_passage, irrelevant_passage = self.get_training_passages(item)
+                relevant_passage, irrelevant_passage, relevant_scores, irrelevant_scores = self.get_training_passages(item, with_scores=True)
                 passage = relevant_passage + irrelevant_passage
+                passage_scores.append(relevant_scores)
+                passage_scores.append(irrelevant_scores)
+                if (len(relevant_scores) + len(irrelevant_scores)) < self.M:
+                    passage_scores.append(np.zeros(self.M-(len(relevant_scores) + len(irrelevant_scores)), dtype=np.float32))
 
             passages.extend(passage)
             # all passages have at least 1 non-masked answer (set to 0 for irrelevant passages)
@@ -884,8 +906,7 @@ class ReaderDataModule(QuestionAnsweringDataModule):
         batch = self.image_formatter.format_batch(batch, questions, passages)
         batch.update(answer_position)
         batch['answer_strings'] = answer_strings
-        if passage_scores:
-            batch['passage_scores'] = torch.tensor(passage_scores)
+        batch['passage_scores'] = torch.tensor(np.concatenate(passage_scores, dtype=np.float32))
 
         return batch
     

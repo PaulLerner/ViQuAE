@@ -124,8 +124,20 @@ class MultiPassageBERT(BertForQuestionAnswering):
        In Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), 
        pages 845–855, Melbourne, Australia. Association for Computational Linguistics.
     """
+    def __init__(self, *args, fuse_ir_score=False, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fuse_ir_score = fuse_ir_score
+        if fuse_ir_score:
+            # easier than overriding Bert wieght initialization
+            self.score_proj_w = nn.Parameter(torch.ones((1,1)))
+            self.score_proj_b = nn.Parameter(torch.zeros(1))
+            self.weights_to_log = {
+                "score_proj_w": self.score_proj_w, 
+                "score_proj_b": self.score_proj_b
+            }
+        
     def forward(self,
-                input_ids,
+                input_ids, passage_scores=None,
                 start_positions=None, end_positions=None, answer_mask=None,
                 return_dict=None, **kwargs):
         """
@@ -139,6 +151,9 @@ class MultiPassageBERT(BertForQuestionAnswering):
         input_ids: Tensor[int]
             shape (N * M, L)
             There should always be a constant number of passages (relevant or not) per question
+        passage_scores: FloatTensor, optional
+            shape (N * M, )
+            If self.fuse_ir_score, will be fused with start_logits and end_logits before computing loss
         start_positions, end_positions: Tensor[int], optional
             shape (N, M, max_n_answers)
             The answer might be found several time in the same passage, maximum ``max_n_answers`` times
@@ -156,7 +171,12 @@ class MultiPassageBERT(BertForQuestionAnswering):
         start_logits, end_logits = logits.split(1, dim=-1)
         start_logits = start_logits.squeeze(-1).contiguous()
         end_logits = end_logits.squeeze(-1).contiguous()
-
+        
+        if self.fuse_ir_score:
+            passage_scores = passage_scores.unsqueeze(1) @ self.score_proj_w + self.score_proj_b
+            start_logits += passage_scores
+            end_logits += passage_scores
+        
         # compute loss
         if start_positions is not None and end_positions is not None:
             pack = multi_passage_rc_loss(
