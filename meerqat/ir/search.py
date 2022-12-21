@@ -296,15 +296,12 @@ class Searcher:
         Passed to the fusion method (see fuse). Default method is interpolation_fusion.
     metrics_kwargs: dict, optional
         Passed to ranx.compare. Defaults to "mrr", "precision", "hit_rate" at ranks [1, 5, 10, 20, 100]
-    save_in_dataset: bool, optional
-        Whether to save the dataset after searching (which will hold the results)
-        or rely only on ranx to save.
     do_fusion: bool, optional
         Whether to fuse results of the indexes. Defaults to True if their are multiple indexes.
     """
     def __init__(self, kb_kwargs, k=100, reference_kb_path=None, reference_key='passage', 
                  qrels=None, request_timeout=1000, es_client_kwargs={}, fusion_kwargs={}, 
-                 metrics_kwargs={}, save_in_dataset=True, do_fusion=None):
+                 metrics_kwargs={}, do_fusion=None):
         self.k = k
         self.kbs = {}
         if qrels is None:
@@ -341,7 +338,6 @@ class Searcher:
             assert len(self.runs) > 1
             self.do_fusion = True
             self.runs["fusion"] = {}
-        self.save_in_dataset = save_in_dataset
 
         # no reference KB
         if reference_kb_path is None:
@@ -469,10 +465,6 @@ def dataset_search(dataset, k=100, metric_save_path=None, map_kwargs={}, **kwarg
             file.write(report.to_latex())
         for index_name, run in searcher.runs.items():
             run.save(metric_save_path/f"{index_name}.json")
-    
-    if searcher.save_in_dataset:
-        return dataset
-    return None
 
 
 if __name__ == '__main__':
@@ -488,8 +480,4 @@ if __name__ == '__main__':
 
     k = int(args['--k'])
 
-    dataset = dataset_search(dataset, k,
-                             metric_save_path=Path(args['--metrics']),
-                             **config)
-    if dataset is not None:
-        dataset.save_to_disk(dataset_path)
+    dataset_search(dataset, k, metric_save_path=Path(args['--metrics']), **config)
