@@ -100,6 +100,9 @@ def get_model_and_transform(model_kwargs={}, transform_kwargs={}):
     if model_type == "torchvision":
         model = get_torchvision_model(**model_kwargs)
         transform = get_transform(**transform_kwargs)
+    elif model_type == "torchscript":
+        model = torch.jit.load(**model_kwargs)
+        transform = get_transform(**transform_kwargs)
     elif model_type == "clip":
         import clip
         clip_model, transform = clip.load(**model_kwargs, device=device)
