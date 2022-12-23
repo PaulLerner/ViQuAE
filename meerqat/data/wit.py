@@ -3,7 +3,7 @@
 WIT for MICT
 ============
 
-Generates the WIT subset for Multimodal Inverse Cloze Task as described in the ECIR-submitted paper:
+Generates the WIT subset for Multimodal Inverse Cloze Task as described in the ECIR-2023 paper:
     - english-only subset
     - images paired with the sections
     - filtering out images with irrelevant formats (e.g. .svg) or not downloaded (e.g. you got a 404)

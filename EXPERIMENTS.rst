@@ -19,7 +19,7 @@ We train the models based on HF ``transformers.Trainer``, itself based
 on ``torch``. Even when not training models, all of our code is based on
 ``torch``.
 
-Instructions specific to the ECIR-submitted Multimodal ICT paper are marked with "(MICT)",
+Instructions specific to the ECIR-2023 Multimodal ICT paper are marked with "(MICT)",
 while the instructions specific to the SIGIR ViQuAE dataset paper are marqued with "(ViQuAE)".
 Note that, while face detection (MTCNN) and recognition (ArcFace) are not specific to ViQuAE,
 they did not give promising results with MICT.

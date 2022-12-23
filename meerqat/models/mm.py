@@ -1,6 +1,5 @@
-"""Implements the two main architectures presented in the ECIR-submitted paper."""
+"""Implements the two main architectures presented in the ECIR-2023 paper."""
 import warnings
-
 from typing import Optional, Tuple
 
 import torch
