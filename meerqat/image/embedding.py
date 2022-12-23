@@ -139,7 +139,8 @@ def embed(batch, model, transform, save_as='image_embedding', image_key='image',
             images = {k: v.to(device) for k, v in images.items()}
     else:
         if pool is not None:
-            raise NotImplementedError()
+            images = pool.map(transform, images)
+            images = torch.stack(images).contiguous().to(device)
         else:
             images = [transform(image).unsqueeze(0) for image in images]
             images = torch.cat(images).to(device)
