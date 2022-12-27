@@ -212,6 +212,7 @@ class MultiPassageECA(ECAEncoder):
     def __init__(self, config, **kwargs):
         assert not config.no_text, "no_text option is only for IR"
         super().__init__(config, **kwargs)
+        self.fuse_ir_score = False
         
         # like BertForQuestionAnswering
         self.num_labels = config.num_labels
@@ -462,6 +463,7 @@ class MultiPassageVilt(ViltPreTrainedModel):
     def __init__(self, config, add_pooling_layer=False):
         super().__init__(config)
         self.vilt = ViltMultiImageModel(config, add_pooling_layer=add_pooling_layer)
+        self.fuse_ir_score = False
         
         # like BertForQuestionAnswering
         self.num_labels = config.num_labels
