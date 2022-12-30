@@ -76,12 +76,15 @@ class DataModule(pl.LightningDataModule):
         Passed to ImageFormatter. Optional for text-only models.
     loader_kwargs: dict, optional
         Passed to the data loaders (e.g. self.train_dataloader())
+    dataset_format: dict, optional
+        see Dataset.set_format
+        Overrides keep_dataset_columns.
     """
     def __init__(self, tokenizer_class, tokenizer_name_or_path, 
                  dataset_path=None, train_path=None, validation_path=None, test_path=None, 
                  batch_size=8, train_batch_size=None, eval_batch_size=None, 
                  M=24, n_relevant_passages=1, keep_dataset_columns=None,
-                 tokenization_kwargs=None, image_kwargs={}, loader_kwargs={}):
+                 tokenization_kwargs=None, image_kwargs={}, loader_kwargs={}, dataset_format=None):
         super().__init__()
         self.tokenizer = get_pretrained(tokenizer_class, pretrained_model_name_or_path=tokenizer_name_or_path)
         self.dataset_path = dataset_path
@@ -94,6 +97,7 @@ class DataModule(pl.LightningDataModule):
         self.M = M
         self.n_relevant_passages = n_relevant_passages
         self.keep_dataset_columns = set(keep_dataset_columns) if keep_dataset_columns is not None else None
+        self.dataset_format = dataset_format
         
         # useful in some corner-cases like ICT. False for every other data modules
         self.shuffle_eval = False
@@ -118,7 +122,9 @@ class DataModule(pl.LightningDataModule):
                     self.dataset[subset] = verbose_load_from_disk(subset_path)
         else:
             self.dataset = verbose_load_from_disk(self.dataset_path)
-        if self.keep_dataset_columns is not None:
+        if self.dataset_format is not None:
+            self.dataset.set_format(**self.dataset_format)
+        elif self.keep_dataset_columns is not None:
             for name, subset in self.dataset.items():
                 self.dataset[name] = keep_columns(subset, self.keep_dataset_columns)
             
@@ -416,18 +422,27 @@ class QuestionAnsweringDataModule(DataModule):
     filter_train_rels: bool, optional     
     keep_kb_columns: list, optional
         Keep only these features in kb and image_kb (defaults to keep everything)
+    kb_format, image_kb_format: dict, optional
+        see Dataset.set_format
+        Overrides keep_kb_columns.
     """
     def __init__(self, *args, kb, image_kb=None, search_key='search', 
-                 filter_train_rels=False, keep_kb_columns=None, **kwargs):
+                 filter_train_rels=False, keep_kb_columns=None, 
+                 kb_format=None, image_kb_format=None, **kwargs):
         super().__init__(*args, **kwargs)
+        #TODO wiki.set_format('torch', ['clip-RN50'])
         self.kb = verbose_load_from_disk(kb)
-        if keep_kb_columns is not None:
+        if kb_format is not None:
+            self.kb.set_format(**kb_format)
+        elif keep_kb_columns is not None:
             keep_kb_columns = set(keep_kb_columns)
             self.kb = keep_columns(self.kb, keep_kb_columns)
         if image_kb is not None:
             self.image_kb = verbose_load_from_disk(image_kb)            
             self.padding_passage = [{'passage': ''}]
-            if keep_kb_columns is not None:
+            if image_kb_format is not None:
+                self.image_kb.set_format(**image_kb_format)
+            elif keep_kb_columns is not None:
                 self.image_kb = keep_columns(self.image_kb, keep_kb_columns)
         else:
             self.image_kb = None
