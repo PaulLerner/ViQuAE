@@ -234,19 +234,18 @@ class BiEncoder(Trainee):
         Will set shared_encoders=True 
     context_model_name_or_path: str
         Analog to question_model_name_or_path for context_model. Defaults to question_model_name_or_path.
+    question_kwargs, context_kwargs: dict, optional
     """
     def __init__(self, *args, question_class, question_model_name_or_path, 
-                 context_class=None, context_model_name_or_path=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        # TODO pass kwargs to question/context models: 
-        # will allow to modifiy model’s config directly from trainer’s config
-        
+                 context_class=None, context_model_name_or_path=None, 
+                 question_kwargs={}, context_kwargs=None, **kwargs):
+        super().__init__(*args, **kwargs)        
         # default to symmetric encoders
         context_class = question_class if context_class is None else context_class
         context_model_name_or_path = question_model_name_or_path if context_model_name_or_path is None else context_model_name_or_path
-        
+        context_kwargs = question_kwargs.copy() if context_kwargs is None else context_kwargs
         # init encoders
-        self.question_model = get_pretrained(question_class, pretrained_model_name_or_path=question_model_name_or_path)
+        self.question_model = get_pretrained(question_class, pretrained_model_name_or_path=question_model_name_or_path, **question_kwargs)
         if context_class == 'shared':
             assert context_model_name_or_path == question_model_name_or_path
             self.context_model = self.question_model
@@ -255,7 +254,7 @@ class BiEncoder(Trainee):
             self.weights_to_log.update(getattr(self.question_model, 'weights_to_log', {}))
         else:
             self.shared_encoders = False
-            self.context_model = get_pretrained(context_class, pretrained_model_name_or_path=context_model_name_or_path)
+            self.context_model = get_pretrained(context_class, pretrained_model_name_or_path=context_model_name_or_path, **context_kwargs)
             for name, weight in getattr(self.question_model, 'weights_to_log', {}).items():
                 self.weights_to_log[f"question_{name}"] = weight
             for name, weight in getattr(self.context_model, 'weights_to_log', {}).items():
