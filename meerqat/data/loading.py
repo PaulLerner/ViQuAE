@@ -173,10 +173,13 @@ def get_class_from_name(class_name):
     raise ValueError(f"Could not find {class_name} in {modules}")
     
 
-def get_pretrained(class_name, **kwargs):
-    # TODO: if pretrained_model_name_or_path is None, then init from scratch using Class.config_class
+def get_pretrained(class_name, pretrained_model_name_or_path, **kwargs):
     Class = get_class_from_name(class_name)
-    model = Class.from_pretrained(**kwargs)        
+    if pretrained_model_name_or_path is None:
+        model = Class(Class.config_class(**kwargs))
+        print(f"Randomly initialized model:\n{model}")
+    else:
+        model = Class.from_pretrained(pretrained_model_name_or_path, **kwargs)        
     return model
 
 
