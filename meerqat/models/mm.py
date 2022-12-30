@@ -7,13 +7,13 @@ from torch import nn
 from transformers.modeling_outputs import BaseModelOutputWithPastAndCrossAttentions
 from transformers import (
     PreTrainedModel, BertModel, DPRQuestionEncoder, DPRContextEncoder, 
-    ViltPreTrainedModel, ViltModel, CLIPModel, CLIPConfig
+    ViltPreTrainedModel, ViltModel, CLIPModel, CLIPConfig, PretrainedConfig
 )
 from transformers.models.bert import BertConfig, BertPreTrainedModel
 
 from .outputs import EncoderOutput, ECAEncoderOutput
 from .image import ImageEmbedding, FaceEmbedding
-from .utils import TanhGate
+from .utils import TanhGate, ResidualAttention
 from .bert import BertAttention, BertEmbeddings, BertIntermediate, BertOutput, BertPooler, BertLayer
 
 
@@ -554,26 +554,54 @@ class CLIPForIR(PreTrainedModel):
         return EncoderOutput(pooler_output=multimodal_output)
         
     
-class ICAConfig(BertConfig):
+class ICAConfig(PretrainedConfig):
     """
+    Adapted from BertConfig.
+    
     Parameters
     ----------
     *args, **kwargs: 
-        additional arguments are passed to BertConfig.
+        additional arguments are passed to PretrainedConfig.
+    bert_attention: bool, optional
+        Defaults to use BertAttention, with num_attention_heads etc.
+        If false, will have a simple attention without projecting in a latent space (ResidualAttention).
+        Then, the num_attention_heads and attention_probs_dropout_prob arguments will have no effect.
+    hidden_size: int, optional
+    num_attention_heads: int, optional
+    hidden_dropout_prob: float, optional
+    attention_probs_dropout_prob: float, optional
+    initializer_range: float, optional
+    layer_norm_eps: float, optional
+        The epsilon used by the layer normalization layers.
     image_input_dim: int, optional
     max_context_length: int, optional
     """
     def __init__(
             self,
-             *args,
-             image_input_dim = 512,
-             max_context_length = 512,
-             **kwargs
+            *args,
+            bert_attention=True,
+            hidden_size=768,
+            num_attention_heads=12,
+            hidden_dropout_prob=0.1,
+            attention_probs_dropout_prob=0.1,
+            initializer_range=0.02,
+            layer_norm_eps=1e-12,
+            image_input_dim = 512,
+            max_context_length = 512,
+            **kwargs
         ):
         super().__init__(*args, **kwargs)
+        self.bert_attention = bert_attention
+        self.hidden_size = hidden_size
+        self.num_attention_heads = num_attention_heads
+        self.hidden_dropout_prob = hidden_dropout_prob
+        self.attention_probs_dropout_prob = attention_probs_dropout_prob
+        self.initializer_range = initializer_range
+        self.layer_norm_eps = layer_norm_eps
+        self.position_embedding_type = "absolute"
         self.image_input_dim = image_input_dim
         self.max_context_length = max_context_length
-        
+                
 
 class ICAEncoder(PreTrainedModel):
     """
@@ -598,8 +626,11 @@ class ICAEncoder(PreTrainedModel):
             self.config.hidden_size,
             dropout=self.config.hidden_dropout_prob
         )
-        self.crossattention = BertAttention(overwrite_bert_config(config), 
-                                            position_embedding_type="absolute")
+        if self.config.bert_attention:
+            self.crossattention = BertAttention(overwrite_bert_config(config), 
+                                                position_embedding_type="absolute")
+        else:
+            self.crossattention = ResidualAttention()
         self.register_buffer("context_pos_ids", torch.arange(self.config.max_context_length).expand((1, -1)))
                                 
     def _init_weights_like_ict(self, module):
