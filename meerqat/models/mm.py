@@ -668,7 +668,8 @@ class ICAEncoder(PreTrainedModel):
             context = image_context
             context_attention_mask = image_attention_mask
             
-        pos_embeddings = self.pos_embedding(self.context_pos_ids)
+        _, context_length, _ = context.shape
+        pos_embeddings = self.pos_embedding(self.context_pos_ids[:, :context_length])
         context = context + pos_embeddings
         context_attention_mask = self.invert_attention_mask(context_attention_mask)
         
