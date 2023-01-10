@@ -192,11 +192,10 @@ to reproduce our experiments
 Reference
 =========
 
-If you use this code or the ViQuAE dataset, please cite our paper:
-
+If you use the ViQuAE dataset or KB, please cite:
 ::
 
-   @inproceedings{lerner2022,
+   @inproceedings{lerner2022viquae,
       author = {Paul Lerner and Olivier Ferret and Camille Guinaudeau and Le Borgne, Hervé  and Romaric
       Besançon and Moreno, Jose G  and Lovón Melgarejo, Jesús },
       year={2022},
@@ -210,6 +209,23 @@ If you use this code or the ViQuAE dataset, please cite our paper:
       publisher = {Association for Computing Machinery},
       address = {New York, NY, USA}
    }
+   
+If you use this code for multimodal information retrieval, please cite:
+::
+
+    @unpublished{lerner2023ict,
+      TITLE = {{Multimodal Inverse Cloze Task for Knowledge-based Visual Question Answering}},
+      AUTHOR = {Lerner, Paul and Ferret, Olivier and Guinaudeau, Camille},
+      URL = {https://hal.science/hal-03933089},
+      NOTE = {working paper or preprint. accepted at ECIR 2023.},
+      YEAR = {2023},
+      MONTH = Jan,
+      KEYWORDS = {Visual Question Answering ; Pre-training ; Multimodal Fusion},
+      PDF = {https://hal.science/hal-03933089/file/main.pdf},
+      HAL_ID = {hal-03933089},
+      HAL_VERSION = {v1},
+    }
+
 
 Installation
 ============
