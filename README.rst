@@ -2,10 +2,10 @@
 ===========
 
 Source code and data used in the papers:
-    - `ViQuAE, a Dataset for Knowledge-based Visual Question Answering about Named Entities <https://hal.archives-ouvertes.fr/hal-03650618>`__ 
+    - `ViQuAE, a Dataset for Knowledge-based Visual Question Answering about Named Entities <https://hal.science/hal-03650618>`__ 
       (Lerner et al., SIGIR’22) 
-    - "Multimodal Inverse Cloze Task for Knowledge-based Visual Question Answering" 
-      (Lerner et al., submitted to ECIR 2023) TODO: add link or preprint.
+    - `Multimodal Inverse Cloze Task for Knowledge-based Visual Question Answering <https://hal.science/hal-03933089>`__  
+      (Lerner et al., ECIR'23)
 
 See also `MEERQAT project <https://www.meerqat.fr/>`__.
 
