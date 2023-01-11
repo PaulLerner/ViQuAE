@@ -2,10 +2,10 @@
 ===========
 
 Source code and data used in the papers:
-    - `ViQuAE, a Dataset for Knowledge-based Visual Question Answering about Named Entities <https://hal.archives-ouvertes.fr/hal-03650618>`__ 
+    - `ViQuAE, a Dataset for Knowledge-based Visual Question Answering about Named Entities <https://hal.science/hal-03650618>`__ 
       (Lerner et al., SIGIR’22) 
-    - "Multimodal Inverse Cloze Task for Knowledge-based Visual Question Answering" 
-      (Lerner et al., submitted to ECIR 2023) TODO: add link or preprint.
+    - `Multimodal Inverse Cloze Task for Knowledge-based Visual Question Answering <https://hal.science/hal-03933089>`__  
+      (Lerner et al., ECIR'23)
 
 See also `MEERQAT project <https://www.meerqat.fr/>`__.
 
@@ -173,9 +173,8 @@ Formatting WIT for multimodal ICT
 WIT (Srinavasan et al. http://arxiv.org/abs/2103.01913) is available at https://github.com/google-research-datasets/wit.
 (By any chance, if you have access to Jean Zay, it is available at ``$DSDIR/WIT``).
 
-Follow instructions at ``meerqat.data.wit`` (see ``meerqat.data.wit.html``).
-
-TODO also upload the dataset to huggingface so it's easier.
+Follow instructions at ``meerqat.data.wit`` (see ``meerqat.data.wit.html``) or get it
+from https://huggingface.co/datasets/PaulLerner/wit_for_mict (``load_dataset('PaulLerner/wit_for_mict')``)
 
 Annotation of the ViQuAE data
 =============================
@@ -192,11 +191,10 @@ to reproduce our experiments
 Reference
 =========
 
-If you use this code or the ViQuAE dataset, please cite our paper:
-
+If you use the ViQuAE dataset or KB, please cite:
 ::
 
-   @inproceedings{lerner2022,
+   @inproceedings{lerner2022viquae,
       author = {Paul Lerner and Olivier Ferret and Camille Guinaudeau and Le Borgne, Hervé  and Romaric
       Besançon and Moreno, Jose G  and Lovón Melgarejo, Jesús },
       year={2022},
@@ -210,6 +208,23 @@ If you use this code or the ViQuAE dataset, please cite our paper:
       publisher = {Association for Computing Machinery},
       address = {New York, NY, USA}
    }
+   
+If you use this code for multimodal information retrieval, please cite:
+::
+
+    @unpublished{lerner2023ict,
+      TITLE = {{Multimodal Inverse Cloze Task for Knowledge-based Visual Question Answering}},
+      AUTHOR = {Lerner, Paul and Ferret, Olivier and Guinaudeau, Camille},
+      URL = {https://hal.science/hal-03933089},
+      NOTE = {working paper or preprint. accepted at ECIR 2023.},
+      YEAR = {2023},
+      MONTH = Jan,
+      KEYWORDS = {Visual Question Answering ; Pre-training ; Multimodal Fusion},
+      PDF = {https://hal.science/hal-03933089/file/main.pdf},
+      HAL_ID = {hal-03933089},
+      HAL_VERSION = {v1},
+    }
+
 
 Installation
 ============
