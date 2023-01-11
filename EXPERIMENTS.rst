@@ -313,12 +313,17 @@ i.e. with the "image_kwargs" and "n_faces" parameters.
 Unlike the above DPR pre-training, here we use a single NVIDIA V100 GPU with 32 GB of RAM,
 but using gradient checkpointing.
 
-TODO provide pre-trained models.
+Alternatively, use the provided pre-trained models following instructions below.
 
 ILF
 ^^^
 Notice how ILF fully freezes BERT during this stage with the regex ``".*dpr_encoder.*"``
 ``python -m meerqat.train.trainer experiments/ict/ilf/config.json``
+
+Pre-trained models available:
+- https://huggingface.co/PaulLerner/question_ilf_l12_wit_mict
+- https://huggingface.co/PaulLerner/context_ilf_l12_wit_mict
+
 
 ECA
 ^^^^^^^
@@ -328,6 +333,10 @@ ECA uses internally ``BertModel`` instead of ``DPR*Encoder`` so you need to run
 Again, notice how the last six layers of BERT are frozen thanks to the regex.
 
 ``python -m meerqat.train.trainer experiments/ict/eca/config.json``
+
+Pre-trained models available:
+- https://huggingface.co/PaulLerner/question_eca_l6_wit_mict
+- https://huggingface.co/PaulLerner/context_eca_l6_wit_mict
 
 
 As a sanity check, you can check the performance of the models on WIT’s test set.
@@ -347,6 +356,8 @@ You can use the provided test config to split the BiEncoder:
 ``python -m meerqat.train.split_biencoder experiments/ict/eca/test/config.json``
 ``python -m meerqat.train.split_biencoder experiments/ict/ilf/test/config.json``
 
+If you want to start from the pre-trained models we provide, use ``"PaulLerner/<model>"`` in the config files,
+e.g. ``"dpr_question_model_name_or_path": "PaulLerner/question_eca_l6_wit_mict"``
 
 Notice that all layers of the model are trainable during this stage.
 

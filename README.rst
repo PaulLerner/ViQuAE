@@ -173,9 +173,8 @@ Formatting WIT for multimodal ICT
 WIT (Srinavasan et al. http://arxiv.org/abs/2103.01913) is available at https://github.com/google-research-datasets/wit.
 (By any chance, if you have access to Jean Zay, it is available at ``$DSDIR/WIT``).
 
-Follow instructions at ``meerqat.data.wit`` (see ``meerqat.data.wit.html``).
-
-TODO also upload the dataset to huggingface so it's easier.
+Follow instructions at ``meerqat.data.wit`` (see ``meerqat.data.wit.html``) or get it
+from https://huggingface.co/datasets/PaulLerner/wit_for_mict (``load_dataset('PaulLerner/wit_for_mict')``)
 
 Annotation of the ViQuAE data
 =============================
