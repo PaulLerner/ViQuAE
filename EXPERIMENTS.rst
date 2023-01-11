@@ -321,8 +321,8 @@ Notice how ILF fully freezes BERT during this stage with the regex ``".*dpr_enco
 ``python -m meerqat.train.trainer experiments/ict/ilf/config.json``
 
 Pre-trained models available:
-- https://huggingface.co/PaulLerner/question_ilf_l12_wit_mict
-- https://huggingface.co/PaulLerner/context_ilf_l12_wit_mict
+ - https://huggingface.co/PaulLerner/question_ilf_l12_wit_mict
+ - https://huggingface.co/PaulLerner/context_ilf_l12_wit_mict
 
 
 ECA
@@ -335,8 +335,8 @@ Again, notice how the last six layers of BERT are frozen thanks to the regex.
 ``python -m meerqat.train.trainer experiments/ict/eca/config.json``
 
 Pre-trained models available:
-- https://huggingface.co/PaulLerner/question_eca_l6_wit_mict
-- https://huggingface.co/PaulLerner/context_eca_l6_wit_mict
+ - https://huggingface.co/PaulLerner/question_eca_l6_wit_mict
+ - https://huggingface.co/PaulLerner/context_eca_l6_wit_mict
 
 
 As a sanity check, you can check the performance of the models on WIT’s test set.
