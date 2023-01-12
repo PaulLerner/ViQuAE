@@ -12,6 +12,8 @@ from docopt import docopt
 import json
 from pathlib import Path
 
+import numpy as np
+
 from datasets import load_from_disk, set_caching_enabled
 
 from facenet_pytorch import MTCNN as facenet_MTCNN
@@ -130,10 +132,10 @@ def detect_face(file_names, model, save_root_path=None):
                 )
         # save the faces at the right index
         for prob, box, landmark, i in zip(probs, boxes, landmarks, batch['indices']):
-            prob_batch[i] = prob
-            box_batch[i] = box
-            landmarks_batch[i] = landmark
-
+            # HACK: convert to list to fix https://github.com/PaulLerner/ViQuAE/issues/1
+            prob_batch[i] = prob.tolist() if isinstance(prob, np.ndarray) else prob
+            box_batch[i] = box.tolist() if box is not None and isinstance(box, np.ndarray) else box
+            landmarks_batch[i] = landmark.tolist() if landmark is not None and isinstance(landmark, np.ndarray) else landmark
     return prob_batch, box_batch, landmarks_batch
 
 
