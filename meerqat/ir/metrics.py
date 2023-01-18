@@ -88,7 +88,7 @@ def find_relevant(retrieved, original_answer, alternative_answers, kb, reference
                 break
     return original_relevant, relevant
 
-
+    
 def find_relevant_item(item, passages, title2index, article2passage=None, 
                        reference_key='passage', save_as='provenance_indices'):
     """
@@ -299,9 +299,9 @@ def cat_breakdown(qrels_path, runs_paths, cats, runs_dict={}, output_path=None,
         df = pd.DataFrame(metric_by_cat)
         means = df.mean()
         df = df.T
-        df['micro-avg'] = means
+        df['macro-avg'] = means
         print(metric)
-        print(df.to_latex(float_format='{:,.1%}'.format))
+        print((df * 100).to_latex(float_format='%.1f'))
         print('\n***********\n')
         if output_path is not None:
             df.to_csv(output_path/f'{metric}.csv')
