@@ -7,13 +7,13 @@ from torch import nn
 from transformers.modeling_outputs import BaseModelOutputWithPastAndCrossAttentions
 from transformers import (
     PreTrainedModel, BertModel, DPRQuestionEncoder, DPRContextEncoder, 
-    ViltPreTrainedModel, ViltModel, CLIPModel, CLIPConfig, PretrainedConfig
+    ViltPreTrainedModel, ViltModel, CLIPModel, CLIPConfig
 )
 from transformers.models.bert import BertConfig, BertPreTrainedModel
 
 from .outputs import EncoderOutput, ECAEncoderOutput
 from .image import ImageEmbedding, FaceEmbedding
-from .utils import TanhGate, ResidualAttention
+from .utils import TanhGate
 from .bert import BertAttention, BertEmbeddings, BertIntermediate, BertOutput, BertPooler, BertLayer
 
 
@@ -552,175 +552,6 @@ class CLIPForIR(PreTrainedModel):
         outputs = self.clip(*args, return_dict=return_dict, return_loss=return_loss, **kwargs)
         multimodal_output = outputs.text_embeds + outputs.image_embeds
         return EncoderOutput(pooler_output=multimodal_output)
-        
-    
-class ICAConfig(PretrainedConfig):
-    """
-    Adapted from BertConfig.
-    
-    Parameters
-    ----------
-    *args, **kwargs: 
-        additional arguments are passed to PretrainedConfig.
-    bert_attention: bool, optional
-        Defaults to use BertAttention, with num_attention_heads etc.
-        If false, will have a simple attention without projecting in a latent space (ResidualAttention).
-        Then, the num_attention_heads and attention_probs_dropout_prob arguments will have no effect.
-    hidden_size: int, optional
-    num_attention_heads: int, optional
-    hidden_dropout_prob: float, optional
-    attention_probs_dropout_prob: float, optional
-    initializer_range: float, optional
-    layer_norm_eps: float, optional
-        The epsilon used by the layer normalization layers.
-    image_input_dim: int, optional
-    max_context_length: int, optional
-    """
-    def __init__(
-            self,
-            *args,
-            bert_attention=True,
-            hidden_size=768,
-            num_attention_heads=12,
-            hidden_dropout_prob=0.1,
-            attention_probs_dropout_prob=0.1,
-            initializer_range=0.02,
-            layer_norm_eps=1e-12,
-            image_input_dim = 512,
-            max_context_length = 512,
-            **kwargs
-        ):
-        super().__init__(*args, **kwargs)
-        self.bert_attention = bert_attention
-        self.hidden_size = hidden_size
-        self.num_attention_heads = num_attention_heads
-        self.hidden_dropout_prob = hidden_dropout_prob
-        self.attention_probs_dropout_prob = attention_probs_dropout_prob
-        self.initializer_range = initializer_range
-        self.layer_norm_eps = layer_norm_eps
-        self.position_embedding_type = "absolute"
-        self.image_input_dim = image_input_dim
-        self.max_context_length = max_context_length
-                
-
-class ICAEncoder(PreTrainedModel):
-    """
-    Intermediate Cross-Attention fusion.
-    Contextualizes the pre-computed embedding of a text by cross-attending to surrounding text and images,
-    like a Transformer Decoder in an encoder-decoder framework.
-    """
-    config_class = ICAConfig
-    load_tf_weights = None
-    base_model_prefix = ""
-
-    def __init__(self, config, init_weights_like_bert=False):
-        if init_weights_like_bert:
-            self._init_weights = self._init_weights_like_bert
-        else:
-            self._init_weights = self._init_weights_like_ict
-        super().__init__(config)
-        self.config = config
-        self.pos_embedding = nn.Embedding(self.config.max_context_length, self.config.hidden_size)
-        self.image_embedding = ImageEmbedding(
-            self.config.image_input_dim, 
-            self.config.hidden_size,
-            dropout=self.config.hidden_dropout_prob
-        )
-        if self.config.bert_attention:
-            self.crossattention = BertAttention(overwrite_bert_config(config), 
-                                                position_embedding_type="absolute")
-        else:
-            self.crossattention = ResidualAttention()
-        self.register_buffer("context_pos_ids", torch.arange(self.config.max_context_length).expand((1, -1)))
-                                
-    def _init_weights_like_ict(self, module):
-        # same as BERT
-        if isinstance(module, nn.Embedding):
-            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
-            if module.padding_idx is not None:
-                module.weight.data[module.padding_idx].zero_()
-        # keep torch defaults for linear layers
-        
-    def _init_weights_like_bert(self, module):
-        # taken from BertPreTrainedModel
-        if isinstance(module, nn.Linear):
-            # Slightly different from the TF version which uses truncated_normal for initialization
-            # cf https://github.com/pytorch/pytorch/pull/5617
-            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
-            if module.bias is not None:
-                module.bias.data.zero_()
-        elif isinstance(module, nn.Embedding):
-            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
-            if module.padding_idx is not None:
-                module.weight.data[module.padding_idx].zero_()
-        elif isinstance(module, nn.LayerNorm):
-            module.bias.data.zero_()
-            module.weight.data.fill_(1.0)
-            
-    def forward(self, embeddings, image_context, text_context=None, 
-                image_attention_mask=None, text_attention_mask=None, return_dict=True):
-        """
-        
-        Arguments
-        ---------
-        embeddings: FloatTensor
-            (batch_size, hidden_size)
-        image_context: FloatTensor
-            (batch_size, image_context_length, image_input_dim)
-        text_context: FloatTensor, optional
-            (batch_size, text_context_length, hidden_size)
-            If no text_context is provided, embeddings only cross-attends image_context
-            image_context_length + text_context_length <= max_context_length
-        image_attention_mask: FloatTensor, optional
-            (batch_size, image_context_length)
-        text_attention_mask: FloatTensor, optional
-            (batch_size, text_context_length)
-        return_dict: bool, optional
-        
-        Returns
-        -------        
-        embeddings: FloatTensor
-            (batch_size, hidden_size)
-        """           
-        image_context = self.image_embedding(image_context)
-        
-        if image_attention_mask is None:            
-            # 0=masked, 1=not masked
-            batch_size, image_context_length, _ = image_context.shape
-            image_attention_mask = torch.ones((batch_size, image_context_length), device=image_context.device) 
-        if text_context is not None:
-            context = torch.cat((image_context, text_context), axis=1)          
-            if text_attention_mask is None:                 
-                # 0=masked, 1=not masked
-                batch_size, text_context_length, _ = text_context.shape
-                text_attention_mask = torch.ones((batch_size, text_context_length), device=text_context.device)
-            context_attention_mask = torch.cat((image_attention_mask, text_attention_mask), axis=1)  
-        else:
-            context = image_context
-            context_attention_mask = image_attention_mask
-            
-        _, context_length, _ = context.shape
-        pos_embeddings = self.pos_embedding(self.context_pos_ids[:, :context_length])
-        context = context + pos_embeddings
-        context_attention_mask = self.invert_attention_mask(context_attention_mask)
-        
-        embeddings = embeddings.unsqueeze(1)
-        # this does attn + dropout + res connection + layernorm
-        embeddings = self.crossattention(
-            embeddings, # query
-            attention_mask=None, # not used by BertAttention
-            head_mask=None,
-            encoder_hidden_states=context, # key and value
-            encoder_attention_mask=context_attention_mask,
-            past_key_value=None,
-            output_attentions=False
-        )[0]
-        embeddings = embeddings.squeeze(1)
-        
-        if not return_dict:
-            return embeddings
-        
-        return EncoderOutput(pooler_output=embeddings)
         
         
 class ECAEncoder(PreTrainedModel):
