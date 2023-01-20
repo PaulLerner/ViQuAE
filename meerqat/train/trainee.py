@@ -19,7 +19,7 @@ import pytorch_lightning as pl
 from ..data.loading import get_pretrained
 from ..data.utils import to_latex
 from ..models.qa import batched_get_best_spans
-from ..models.outputs import BiEncoderOutput
+from ..models.outputs import BiEncoderOutput, JointBiEncoderAndClipOutput
 from .optim import LinearLRWithWarmup
 from .metrics import retrieval, squad, get_run
 from .data import ReRankerDataModule, pad_and_cat
@@ -235,10 +235,13 @@ class BiEncoder(Trainee):
     context_model_name_or_path: str
         Analog to question_model_name_or_path for context_model. Defaults to question_model_name_or_path.
     question_kwargs, context_kwargs: dict, optional
+    superclass: bool, optional
+        Means that BiEncoder is instantiated from a subclass. Disables post_init.
+        Defaults to False.
     """
     def __init__(self, *args, question_class, question_model_name_or_path, 
                  context_class=None, context_model_name_or_path=None, 
-                 question_kwargs={}, context_kwargs=None, **kwargs):
+                 question_kwargs={}, context_kwargs=None, superclass=False, **kwargs):
         super().__init__(*args, **kwargs)        
         # default to symmetric encoders
         context_class = question_class if context_class is None else context_class
@@ -264,7 +267,8 @@ class BiEncoder(Trainee):
         self.log_softmax = nn.LogSoftmax(1)
         self.loss_fct = nn.NLLLoss(reduction='mean')
         
-        self.post_init()        
+        if not superclass:
+            self.post_init()        
         
     def forward(self, question_inputs, context_inputs):
         """        
@@ -341,8 +345,125 @@ class BiEncoder(Trainee):
                 context_path = ckpt_path/'context_model'
             question_model.save_pretrained(question_path)
             context_model.save_pretrained(context_path)
+    
+    
+class JointBiEncoderAndClip(BiEncoder):
+    def __init__(self, *args, clip, question_weight=1/3, image_weight=1/3, cm_weight=1/3, 
+                 learn_weights=False, **kwargs):        
+        super().__init__(*args, superclass=True, **kwargs)      
+        self.clip = get_pretrained(**clip)
+        self.question_weight = nn.Parameter(
+            torch.tensor([question_weight]), 
+            requires_grad=learn_weights
+        )
+        self.image_weight = nn.Parameter(
+            torch.tensor([image_weight]), 
+            requires_grad=learn_weights
+        )
+        self.cm_weight = nn.Parameter(
+            torch.tensor([cm_weight]), 
+            requires_grad=learn_weights
+        )
+        self.weights_to_log.update({
+            "question_weight": self.question_weight,
+            "image_weight": self.image_weight,
+            "cm_weight": self.cm_weight
+        })
         
-  
+        self.post_init()        
+        
+    def forward(self, question_inputs, context_inputs):
+        # TODO do not compute for modules with weight=0
+        
+        # embed question-image and context_image
+        question_images = self.clip.get_image_features(
+            question_inputs.pop('pixel_values'), 
+            return_dict=False
+        )
+        question_images = question_images / question_images.norm(p=2, dim=-1, keepdim=True)
+        context_images = self.clip.get_image_features(
+            context_inputs.pop('pixel_values'),
+            return_dict=False
+        )
+        context_images = context_images / context_images.norm(p=2, dim=-1, keepdim=True)
+        
+        # embed context titles
+        context_titles = self.clip.get_text_features(
+            **context_inputs.pop('titles'), 
+            return_dict=False
+        )
+        context_titles = context_titles / context_titles.norm(p=2, dim=-1, keepdim=True)
+        
+        # embed questions and contexts
+        question_outputs = self.question_model(**question_inputs)
+        context_outputs = self.context_model(**context_inputs)
+
+        return JointBiEncoderAndClipOutput(
+            question_pooler_output=question_outputs.pooler_output,
+            context_pooler_output=context_outputs.pooler_output,
+            question_images=question_images,
+            context_images=context_images,
+            context_titles=context_titles
+        )
+        
+    def step(self, inputs, _):       
+        # TODO multi-gpu
+        local_labels = inputs.pop('labels')  # (N, )
+        outputs = self(**inputs)
+                
+        question_similarities = self.question_weight * (outputs.question_pooler_output @ outputs.context_pooler_output.T)  # (N, N*M)
+        image_similarities = self.image_weight * (outputs.question_images @ outputs.context_images.T)
+        cm_similarities = self.cm_weight * (outputs.question_images @ outputs.context_titles.T)
+        similarities = question_similarities + image_similarities + cm_similarities
+        
+        log_probs = self.log_softmax(similarities)
+        loss = self.loss_fct(log_probs, local_labels)
+        
+        return dict(
+            loss=loss, log_probs=log_probs, labels=local_labels,
+            question_similarities=question_similarities, image_similarities=image_similarities,
+            cm_similarities=cm_similarities
+        )   
+        
+    def eval_epoch_end(self, eval_outputs):
+        metrics = retrieval(eval_outputs, ignore_index=self.loss_fct.ignore_index)
+        for model in ['question', 'image', 'cm']:
+            model_metrics = retrieval(
+                eval_outputs, 
+                ignore_index=self.loss_fct.ignore_index, 
+                output_key=f"{model}_similarities"
+            )
+            metrics.update({f"{model}_{k}": v for k, v in model_metrics.items()})
+        return {'metrics': metrics}
+    
+    def save_pretrained(self, ckpt_path, bert=False):            
+        self.clip.save_pretrained(ckpt_path/'clip')
+        question_model = self.question_model
+        if self.shared_encoders:
+            if bert:
+                question_model = _get_bert(question_model)
+            question_model.save_pretrained(ckpt_path/'bert')
+        else:
+            context_model = self.context_model
+            if bert:
+                question_model = _get_bert(question_model)
+                context_model = _get_bert(context_model)
+                question_path = ckpt_path/'question_model_bert'
+                context_path = ckpt_path/'context_model_bert'
+            else:
+                question_path = ckpt_path/'question_model'
+                context_path = ckpt_path/'context_model'
+            question_model.save_pretrained(question_path)
+            context_model.save_pretrained(context_path)
+        mm_weights = {                
+            "question_weight": self.question_weight.item(),
+            "image_weight": self.image_weight.item(),
+            "cm_weight": self.cm_weight.item()
+        }
+        with open(ckpt_path/'mm_weights.json','wt') as file:
+            json.dump(mm_weights, file)
+    
+    
 # TODO override load_from_checkpoint to use from_pretrained instead ?   
 # see lightning/src/pytorch_lightning/core/saving.py
 class ReRanker(Trainee):

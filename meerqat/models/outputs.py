@@ -43,6 +43,11 @@ class BiEncoderOutput(ModelOutput):
     question_pooler_output: Optional[torch.FloatTensor] = None
     context_pooler_output: Optional[torch.FloatTensor] = None
     
+@dataclass 
+class JointBiEncoderAndClipOutput(BiEncoderOutput):
+    question_images: Optional[torch.FloatTensor] = None
+    context_images: Optional[torch.FloatTensor] = None
+    context_titles: Optional[torch.FloatTensor] = None
     
 @dataclass
 class ReRankerOutput(ModelOutput):

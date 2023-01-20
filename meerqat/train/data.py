@@ -471,7 +471,6 @@ class QuestionAnsweringDataModule(DataModule):
         after_len = len(self.dataset[subset])
         print(f"Filtered {subset} dataset with empty '{self.search_key}_provenance_indices' from {before_len} to {after_len} items")
         
-
     def get_training_passages(self, item, with_scores=False):
         """
         Parameters
@@ -653,7 +652,64 @@ class BiEncoderDataModule(QuestionAnsweringDataModule):
         batch = dict(question_inputs=question_inputs, context_inputs=context_inputs, labels=labels)
         return batch
         
-                  
+    
+class JointBiEncoderAndClipDataModule(BiEncoderDataModule):
+    def __init__(self, *args, cm_tokenizer_class, cm_tokenizer_name_or_path, cm_tokenization_kwargs=None, **kwargs):
+        super().__init__(*args, **kwargs)       
+        self.cm_tokenizer = get_pretrained(cm_tokenizer_class, pretrained_model_name_or_path=cm_tokenizer_name_or_path)
+        default_tokenization_kwargs = self.tokenization_kwargs.copy()
+        if cm_tokenization_kwargs is not None:
+            default_tokenization_kwargs.update(cm_tokenization_kwargs)
+        self.cm_tokenization_kwargs = default_tokenization_kwargs
+        
+    def collate_fn(self, items):           
+        # TODO do not load/process for modules with weight=0
+        assert self.n_relevant_passages == 1
+        n_irrelevant_passages = self.M-self.n_relevant_passages
+        questions, relevant_passages, irrelevant_passages, labels = [], [], [], []
+        relevant_titles, irrelevant_titles = [], []
+        for i, item in enumerate(items):
+            relevant_passage, irrelevant_passage = self.get_training_passages(item)
+            for p in relevant_passage:
+                relevant_titles.append(p['passage'][:p['passage'].find('[SEP]')-1])
+            if len(relevant_passage) < 1:
+                relevant_passage = self.padding_passage
+                labels.append(self.trainer.lightning_module.loss_fct.ignore_index)
+                relevant_titles.append('')
+            else:
+                labels.append(i)
+            for p in irrelevant_passage:
+                irrelevant_titles.append(p['passage'][:p['passage'].find('[SEP]')-1])
+            if len(irrelevant_passage) < n_irrelevant_passages:
+                irrelevant_passage.extend(self.padding_passage*(n_irrelevant_passages-len(irrelevant_passage)))
+                irrelevant_titles.extend(['']*(n_irrelevant_passages-len(irrelevant_passage)))
+            questions.append(item['input'])
+            relevant_passages.extend(relevant_passage)
+            irrelevant_passages.extend(irrelevant_passage)
+        # tokenize questions
+        question_inputs_text = self.tokenizer(questions, **self.tokenization_kwargs)
+        # concatenate titles and tokenize 
+        all_titles = relevant_titles + irrelevant_titles
+        all_titles = self.cm_tokenizer(all_titles, **self.cm_tokenization_kwargs)        
+        # concatenate passages and tokenize
+        all_passages = relevant_passages + irrelevant_passages
+        if self.image_kb is None:
+            all_passages_text = all_passages
+        else:
+            all_passages_text = [p['passage'] for p in all_passages]
+        context_inputs_text = self.tokenizer(all_passages_text, **self.tokenization_kwargs)
+        if self.passage_type_ids:
+            context_inputs_text['token_type_ids'][context_inputs_text['attention_mask'].bool()] = 1
+        
+        # wrap it up
+        question_inputs = self.image_formatter.format_batch(question_inputs_text, items)
+        context_inputs = self.image_formatter.format_batch(context_inputs_text, all_passages)
+        context_inputs['titles'] = all_titles
+        labels = torch.tensor(labels)
+        batch = dict(question_inputs=question_inputs, context_inputs=context_inputs, labels=labels)
+        return batch
+        
+       
 class ReRankerDataModule(QuestionAnsweringDataModule):    
     """
     Parameters
