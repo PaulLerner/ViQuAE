@@ -1,7 +1,4 @@
 """Misc. utility functions."""
-from typing import Optional, Tuple
-import math
-
 import torch
 from torch import nn
 import numpy as np
@@ -27,56 +24,6 @@ class TanhGate(nn.Module):
         
     def forward(self, x):
         return x * self.tanh(self.gate_param)
-
-
-class ResidualAttention(nn.Module):
-    """
-    Attention as described in Vaswani et al. without any projection, 
-    i.e. the attention is computed in the input space.
-    
-    Includes a residual connection to be used as a drop-in replacement for BertAttention
-    
-    Adapted from BertSelfAttention.
-    """
-    def forward(
-        self,
-        hidden_states: torch.Tensor,
-        attention_mask: Optional[torch.FloatTensor] = None,
-        head_mask: Optional[torch.FloatTensor] = None,
-        encoder_hidden_states: Optional[torch.FloatTensor] = None,
-        encoder_attention_mask: Optional[torch.FloatTensor] = None,
-        past_key_value: Optional[Tuple[Tuple[torch.FloatTensor]]] = None,
-        output_attentions: Optional[bool] = False
-    ) -> Tuple[torch.Tensor]:
-        assert head_mask is None and past_key_value is None
-        # If this is instantiated as a cross-attention module, the keys
-        # and values come from an encoder; the attention mask needs to be
-        # such that the encoder's padding tokens are not attended to.
-        if encoder_hidden_states is not None:
-            attention_mask = encoder_attention_mask
-            key = encoder_hidden_states
-            value = encoder_hidden_states
-        else:
-            key = hidden_states
-            value = hidden_states
-
-        # Take the dot product between "query" and "key" to get the raw attention scores.
-        attention_scores = torch.matmul(hidden_states, key.transpose(-1, -2))
-        scale = math.sqrt(hidden_states.shape[2])
-        attention_scores = attention_scores / scale
-        if attention_mask is not None:
-            # Apply the attention mask is (precomputed for all layers in BertModel forward() function)
-            attention_scores = attention_scores + attention_mask.squeeze(1)
-            
-        # Normalize the attention scores to probabilities.
-        attention_probs = nn.functional.softmax(attention_scores, dim=-1)
-        
-        context_layer = torch.matmul(attention_probs, value)
-        
-        # residual connection
-        output = context_layer + hidden_states
-        outputs = (output, attention_probs) if output_attentions else (output,)
-        return outputs
 
 
 def map_if_not_None(values, function, *args, default_value=None, **kwargs):
