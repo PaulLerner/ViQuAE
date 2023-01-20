@@ -37,8 +37,11 @@ def pad_and_cat(arrays, padding_index=-100):
 
 def keep_columns(dataset, columns):
     to_remove = [c for c in dataset.column_names if c not in columns]
-    dataset = dataset.remove_columns(to_remove)
-    print(f"Removed {to_remove} from the dataset:\n{dataset}")
+    if to_remove:
+        dataset = dataset.remove_columns(to_remove)
+        print(f"Removed {to_remove} from the dataset:\n{dataset}")
+    else:        
+        print(f"Nothing to remove from the dataset:\n{dataset}")
     return dataset
 
 
