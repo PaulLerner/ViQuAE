@@ -58,7 +58,8 @@ class Trainee(pl.LightningModule):
         self.lr = lr
         self.betas = betas
         self.eps = eps
-        self.weight_decay = weight_decay
+        self.weight_decay = weight_decay        
+        self.param_groups = self.parameters()
         
     # should be called at the end of each subclass __init__
     def post_init(self):
@@ -137,7 +138,7 @@ class Trainee(pl.LightningModule):
     # TODO delete once I understand how to setup scheduling interval in config.yaml
     def configure_optimizers(self):
         """Prepare optimizer and schedule (linear warmup and decay)"""
-        optimizer = AdamW(self.parameters(), lr=self.lr, betas=self.betas, eps=self.eps, weight_decay=self.weight_decay)
+        optimizer = AdamW(self.param_groups, lr=self.lr, betas=self.betas, eps=self.eps, weight_decay=self.weight_decay)
         
         # FIXME: this will be overwritten when loading state from ckpt_path
         # so if you want to keep training by increasing total_steps, 
@@ -349,7 +350,7 @@ class BiEncoder(Trainee):
     
 class JointBiEncoderAndClip(BiEncoder):
     def __init__(self, *args, clip, question_weight=1/3, image_weight=1/3, cm_weight=1/3, 
-                 learn_weights=False, **kwargs):        
+                 learn_weights=False, clip_lr=None, mm_weights_lr=None, **kwargs):        
         super().__init__(*args, superclass=True, **kwargs)      
         self.clip = get_pretrained(**clip)
         self.question_weight = nn.Parameter(
@@ -369,6 +370,19 @@ class JointBiEncoderAndClip(BiEncoder):
             "image_weight": self.image_weight,
             "cm_weight": self.cm_weight
         })
+            
+        self.param_groups = [
+            {'params': self.question_model.parameters()},
+            {'params': self.context_model.parameters()},
+            {
+                'params': self.clip.parameters(),
+                'lr': clip_lr if clip_lr is not None else self.lr
+            },            
+            {
+                'params': [self.question_weight, self.image_weight, self.cm_weight],
+                'lr': mm_weights_lr if mm_weights_lr is not None else self.lr
+            },
+        ]
         
         self.post_init()        
         
