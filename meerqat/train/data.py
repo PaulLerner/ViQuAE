@@ -82,12 +82,15 @@ class DataModule(pl.LightningDataModule):
     dataset_format: dict, optional
         see Dataset.set_format
         Overrides keep_dataset_columns.
+    input_key: str, optional
+        Holds input text (e.g. question, caption), defaults to 'input'
     """
     def __init__(self, tokenizer_class, tokenizer_name_or_path, 
                  dataset_path=None, train_path=None, validation_path=None, test_path=None, 
                  batch_size=8, train_batch_size=None, eval_batch_size=None, 
                  M=24, n_relevant_passages=1, keep_dataset_columns=None,
-                 tokenization_kwargs=None, image_kwargs={}, loader_kwargs={}, dataset_format=None):
+                 tokenization_kwargs=None, image_kwargs={}, loader_kwargs={}, 
+                 dataset_format=None, input_key='input'):
         super().__init__()
         self.tokenizer = get_pretrained(tokenizer_class, pretrained_model_name_or_path=tokenizer_name_or_path)
         self.dataset_path = dataset_path
@@ -101,6 +104,7 @@ class DataModule(pl.LightningDataModule):
         self.n_relevant_passages = n_relevant_passages
         self.keep_dataset_columns = set(keep_dataset_columns) if keep_dataset_columns is not None else None
         self.dataset_format = dataset_format
+        self.input_key = input_key
         
         # useful in some corner-cases like ICT. False for every other data modules
         self.shuffle_eval = False
@@ -388,8 +392,8 @@ class CrossModalDataModule(DataModule):
         assert self.M == 1
 
     def collate_fn(self, items):
-        text_inputs = self.tokenizer([item['input'] for item in items], **self.tokenization_kwargs)
-        batch = self.image_formatter.format_batch(text_inputs, items)        
+        text_inputs = self.tokenizer([item[self.input_key] for item in items], **self.tokenization_kwargs)
+        batch = self.image_formatter.format_batch(text_inputs, items)    
         return batch
         
     
@@ -632,7 +636,7 @@ class BiEncoderDataModule(QuestionAnsweringDataModule):
                 labels.append(i)
             if len(irrelevant_passage) < n_irrelevant_passages:
                 irrelevant_passage.extend(self.padding_passage*(n_irrelevant_passages-len(irrelevant_passage)))
-            questions.append(item['input'])
+            questions.append(item[self.input_key])
             relevant_passages.extend(relevant_passage)
             irrelevant_passages.extend(irrelevant_passage)
 
@@ -686,7 +690,7 @@ class JointBiEncoderAndClipDataModule(BiEncoderDataModule):
             if len(irrelevant_passage) < n_irrelevant_passages:
                 irrelevant_passage.extend(self.padding_passage*(n_irrelevant_passages-len(irrelevant_passage)))
                 irrelevant_titles.extend(['']*(n_irrelevant_passages-len(irrelevant_passage)))
-            questions.append(item['input'])
+            questions.append(item[self.input_key])
             relevant_passages.extend(relevant_passage)
             irrelevant_passages.extend(irrelevant_passage)
         # tokenize questions
@@ -797,7 +801,7 @@ class ReRankerDataModule(QuestionAnsweringDataModule):
             passages_text = passages
         else:
             passages_text = [p['passage'] for p in passages]
-        questions_text = [q['input'] for q in questions]
+        questions_text = [q[self.input_key] for q in questions]
         batch = self.tokenizer(*(questions_text, passages_text), **self.tokenization_kwargs)
         batch = self.image_formatter.format_batch(batch, questions, passages)
         if labels:
@@ -974,7 +978,7 @@ class ReaderDataModule(QuestionAnsweringDataModule):
             passages_text = passages
         else:
             passages_text = [p['passage'] for p in passages]
-        questions_text = [q['input'] for q in questions]
+        questions_text = [q[self.input_key] for q in questions]
         batch = self.tokenizer(*(questions_text, passages_text), **self.tokenization_kwargs)
         answer_position = self.get_answer_position(batch, answers, answer_mask)            
         batch = self.image_formatter.format_batch(batch, questions, passages)
@@ -1111,13 +1115,13 @@ class ICT(DataModule):
                 context_inputs["text_inputs"][k] = torch.tile(v, (n_hard_negatives+1, 1))
             # shift relevant images
             for k, v in context_inputs['image_inputs'].items():
-                shifted_input, shifted_mask = [v['input']], [v['attention_mask']]
+                shifted_input, shifted_mask = [v[self.input_key]], [v['attention_mask']]
                 for shift in range(n_hard_negatives):
                     # shift along axis 0 (batch axis)
-                    shifted_input.append(torch.roll(v['input'], shift+1, 0))
+                    shifted_input.append(torch.roll(v[self.input_key], shift+1, 0))
                     shifted_mask.append(torch.roll(v['attention_mask'], shift+1, 0))
                 # cat along axis 0 (batch axis)
-                v['input'] = torch.cat(shifted_input, 0)
+                v[self.input_key] = torch.cat(shifted_input, 0)
                 v['attention_mask'] = torch.cat(shifted_mask, 0)
             # shift relevant faces
             shifted_faces, shifted_boxes = [context_inputs['face_inputs']["face"]], [context_inputs['face_inputs']["bbox"]]
