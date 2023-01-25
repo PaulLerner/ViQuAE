@@ -368,7 +368,8 @@ class JointBiEncoderAndClip(BiEncoder):
         self.weights_to_log.update({
             "question_weight": self.question_weight,
             "image_weight": self.image_weight,
-            "cm_weight": self.cm_weight
+            "cm_weight": self.cm_weight,
+            "temperature": self.clip.logit_scale,
         })
             
         self.param_groups = [
@@ -426,8 +427,8 @@ class JointBiEncoderAndClip(BiEncoder):
         outputs = self(**inputs)
                 
         question_similarities = self.question_weight * (outputs.question_pooler_output @ outputs.context_pooler_output.T)  # (N, N*M)
-        image_similarities = self.image_weight * (outputs.question_images @ outputs.context_images.T)
-        cm_similarities = self.cm_weight * (outputs.question_images @ outputs.context_titles.T)
+        image_similarities = self.image_weight * self.clip.logit_scale.exp() * (outputs.question_images @ outputs.context_images.T)
+        cm_similarities = self.cm_weight * self.clip.logit_scale.exp() * (outputs.question_images @ outputs.context_titles.T)
         similarities = question_similarities + image_similarities + cm_similarities
         
         log_probs = self.log_softmax(similarities)
