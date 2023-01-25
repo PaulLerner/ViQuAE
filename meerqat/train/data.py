@@ -188,14 +188,14 @@ class ImageFormatter:
         else:
             self.feature_extractor = get_pretrained(*args, **kwargs)
                  
-    def format_pixels(self, items):
+    def format_pixels(self, items, image_key='image'):
         """Load images and convert to tensors while handling padded passages"""
         images, indices = [], []
         for i, item in enumerate(items):
             # in case of padding passage
-            if 'image' not in item:
+            if image_key not in item:
                 continue
-            image = load_image(item['image'])
+            image = load_image(item[image_key])
             # trouble during loading. user is already warned
             if image is None:
                 continue
@@ -384,16 +384,30 @@ class PreComputedImageFeatures:
     
     
 class CrossModalDataModule(DataModule):
-    """Used for cross-modal retrieval (text-to-image or image-to-text)"""
-    def __init__(self, *args, **kwargs):
+    """
+    Used for cross-modal retrieval (text-to-image or image-to-text) and optionally
+    for joint cross-modal and image-image retrieval.
+    
+    Parameters
+    ----------
+    *args, **kwargs: additionnal arguments are passed to DataModule
+    paired_image: str, optional
+        If not None (default), should hold the key for the path to an image paired with 'image',
+        so that a joint image-image contrastive loss may be applied in CrossModal(Trainee).
+    """
+    def __init__(self, *args, paired_image=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.paired_image = paired_image
         self.shuffle_eval = True
         assert self.n_relevant_passages == 1
         assert self.M == 1
 
     def collate_fn(self, items):
         text_inputs = self.tokenizer([item[self.input_key] for item in items], **self.tokenization_kwargs)
-        batch = self.image_formatter.format_batch(text_inputs, items)    
+        batch = self.image_formatter.format_batch(text_inputs, items) 
+        if self.paired_image is not None:
+            for k, v in self.image_formatter.format_pixels(items, image_key=self.paired_image):
+                batch[f"paired_{k}"] = v
         return batch
         
     
