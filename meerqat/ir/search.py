@@ -27,6 +27,7 @@ from datasets.search import ElasticSearchIndex, FaissIndex
 import ranx
 
 from .metrics import find_relevant
+from .fuse import Fusion
 from ..data.utils import json_integer_keys
 
 
@@ -269,15 +270,17 @@ class Searcher:
     es_client_kwargs: dict, optional
         Passed to Elasticsearch
     fusion_kwargs: dict, optional
-        Passed to the fusion method (see fuse). Default method is interpolation_fusion.
+        Passed to Fusion (see fuse)
     metrics_kwargs: dict, optional
         Passed to ranx.compare. Defaults to "mrr", "precision", "hit_rate" at ranks [1, 5, 10, 20, 100]
     do_fusion: bool, optional
         Whether to fuse results of the indexes. Defaults to True if their are multiple indexes.
+    keep_kb_columns: list, optional
+        Keep only these features in reference_kb (defaults to keep everything)
     """
     def __init__(self, kb_kwargs, k=100, reference_kb_path=None, reference_key='passage', 
                  qrels=None, request_timeout=1000, es_client_kwargs={}, fusion_kwargs={}, 
-                 metrics_kwargs={}, do_fusion=None):
+                 metrics_kwargs={}, do_fusion=None, keep_kb_columns=None):
         self.k = k
         self.kbs = {}
         if qrels is None:
@@ -310,10 +313,7 @@ class Searcher:
         else:
             self.do_fusion = do_fusion
         if self.do_fusion:
-            raise NotImplementedError()
             assert len(self.runs) > 1
-            self.do_fusion = True
-            self.runs["fusion"] = {}
 
         # no reference KB
         if reference_kb_path is None:
@@ -328,12 +328,15 @@ class Searcher:
         # reference-only KB (not used to search) so we have to load it
         else:
             self.reference_kb = load_from_disk(reference_kb_path)
-        if self.reference_kb is not None:
+            # reference-only so we do not need any other features
             self.reference_kb = self.reference_kb.remove_columns([c for c in self.reference_kb.column_names if c != reference_key])
+        if keep_kb_columns is not None:
+            self.reference_kb = self.reference_kb.remove_columns([c for c in self.reference_kb.column_names if c not in keep_kb_columns])
+            
         # N. B. the 'reference_kb' term is not so appropriate
         # it is not an instance of KnowledgeBase but Dataset !
+        
         self.reference_key = reference_key
-        self.fusion_method = fusion_kwargs.pop('method', 'interpolation')
         self.fusion_kwargs = fusion_kwargs
         # I advise against using any kind of metric that uses recall (mAP, R-Precision, …) since we estimate
         # relevant document on the go so the number of relevant documents will *depend on the systemS* you use
@@ -387,9 +390,6 @@ class Searcher:
                         self.qrels.setdefault(q_id, {})
                         self.qrels[q_id].update({str(i): 1 for i in relevant})                
                         
-        # fuse the results of the searches
-        if self.do_fusion:
-            raise NotImplementedError()
         return batch
 
 
@@ -415,11 +415,7 @@ def dataset_search(dataset, k=100, metric_save_path=None, map_kwargs={}, **kwarg
     # search expects a batch as input
     dataset = dataset.map(searcher, batched=True, **map_kwargs)
     
-    # qrels and runs should not be empty
-    for q_id in dataset['id']:
-        searcher.qrels.setdefault(q_id, {"DUMMY_QREL": 0})
-        for name, run in searcher.runs.items():
-            run.setdefault(q_id, {"DUMMY_RUN": 0})
+    # dict to ranx Qrels/Run
     searcher.qrels = ranx.Qrels(searcher.qrels)
     for name, run in searcher.runs.items():
         searcher.runs[name] = ranx.Run(run, name=name)
@@ -441,6 +437,18 @@ def dataset_search(dataset, k=100, metric_save_path=None, map_kwargs={}, **kwarg
             file.write(report.to_latex())
         for index_name, run in searcher.runs.items():
             run.save(metric_save_path/f"{index_name}.json")
+            
+    # fuse the results of the searches
+    if searcher.do_fusion:
+        subcommand = searcher.fusion_kwargs.pop('subcommand')
+        subcommand_kwargs = searcher.fusion_kwargs.pop('subcommand_kwargs', {})
+        fuser = Fusion(
+            qrels=searcher.qrels,
+            runs=searcher.runs,        
+            output=metric_save_path,
+            **searcher.fusion_kwargs
+        )
+        getattr(fuser, subcommand)(**subcommand_kwargs)    
 
 
 if __name__ == '__main__':

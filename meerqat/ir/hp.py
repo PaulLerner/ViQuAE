@@ -5,7 +5,7 @@ Usage:
 hp.py <type> <config> [--train=<dataset> --k=<k> --disable_caching --cleanup_cache_files --metrics=<path> --test=<dataset>]
 
 Positional arguments:
-    1. <type>      'fusion'|'bm25' to optimize fusion or BM25 hyperparameters, respectively.
+    1. <type>      'bm25' to optimize BM25 hyperparameters
     2. <config>    Path to the JSON configuration file (passed as kwargs)
     
 Options:
@@ -121,88 +121,6 @@ class Objective:
         self.searcher.reference_kb = None
 
 
-class FusionObjective(Objective):
-    """
-    Used to optimize hyperparameters of fusion.
-    
-    Parameters
-    ----------
-    hyp_hyp: dict, optional
-        Contains hyper-hyperparameters: the bounds and steps of grid search for each searcher.
-        Defaults to ``{"bounds": (0, 1.1), "step": 0.1}``, for each searcher.
-    """
-    def __init__(self, *args, hyp_hyp=None, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        fusion_method = self.searcher.fusion_method
-
-        # default parameters
-        if hyp_hyp is None:
-            if fusion_method == 'interpolation':
-                hyp_hyp = {}
-                default = {
-                    "bounds": (0, 1.1),
-                    "step": 0.1
-                }
-                for kb in self.searcher.kbs.values():
-                    for index_name in kb.indexes.keys():
-                        hyp_hyp[f"{index_name}.interpolation_weight"] = default
-            else:
-                raise NotImplementedError()
-
-        self.hyp_hyp = hyp_hyp
-
-    def __call__(self, trial):
-        fusion_method = self.searcher.fusion_method
-        if fusion_method == 'interpolation':
-            interpolation_weight_sum = 0
-            for kb in self.searcher.kbs.values():
-                for index_name, index in kb.indexes.items():
-                    hp_name = f"{index_name}.interpolation_weight"
-                    hyp_hyp = self.hyp_hyp[hp_name]
-                    index.interpolation_weight = trial.suggest_float(
-                        # bounds are mandatory, step is optional (defaults to None)
-                        hp_name, *hyp_hyp["bounds"], step=hyp_hyp.get('step')
-                    )
-                    interpolation_weight_sum += index.interpolation_weight
-            # constrain all weights to sum to 1, do not compute trial otherwise
-            if abs(1 - interpolation_weight_sum) > 1e-6:
-                raise optuna.TrialPruned
-        else:
-            raise NotImplementedError()
-
-        self.dataset.map(self.searcher.fuse_and_compute_metrics, fn_kwargs=self.fn_kwargs, batched=True, **self.map_kwargs)
-        if self.cleanup_cache_files:
-            self.dataset.cleanup_cache_files()
-        metric = ranx.evaluate(self.searcher.qrels, self.searcher.runs["fusion"], self.metric_for_best_model)
-        return metric
-
-    def evaluate(self, best_params):
-        # reset to erase qrels and runs of the validation set
-        self.searcher.qrels = ranx.Qrels()
-        run = ranx.Run()
-        run.name = "fusion"
-        self.searcher.runs = dict(fusion=run)
-        # fill qrels
-        self.eval_dataset.map(self.cache_relevant, batched=True, fn_kwargs=dict(do_copy=True), **self.map_kwargs)
-
-        fusion_method = self.searcher.fusion_method
-        if fusion_method == 'interpolation':
-            for kb in self.searcher.kbs.values():
-                for index_name, index in kb.indexes.items():
-                    index.interpolation_weight = best_params[f"{index_name}.interpolation_weight"]
-        else:
-            raise NotImplementedError()
-
-        self.eval_dataset = self.eval_dataset.map(self.searcher.fuse_and_compute_metrics, fn_kwargs=self.fn_kwargs, batched=True, **self.map_kwargs)
-        report = ranx.compare(
-            self.searcher.qrels,
-            runs=self.searcher.runs.values(),
-            **self.searcher.metrics_kwargs
-        )
-        return report
-
-
 class BM25Objective(Objective):
     """
     Used to optimize hyperparameters of BM25.
@@ -265,10 +183,9 @@ class BM25Objective(Objective):
         self.es_client.indices.open(self.es_index_name)
 
         self.dataset.map(self.searcher, fn_kwargs=self.fn_kwargs, batched=True, **self.map_kwargs)
-        if self.searcher.do_fusion:
-            run = self.searcher.runs["fusion"]
-        else:           
-            run = self.searcher.runs[self.index_name]
+        if self.searcher.do_fusion:            
+            raise NotImplementedError()  
+        run = self.searcher.runs[self.index_name]
         metric = ranx.evaluate(self.searcher.qrels, run, self.metric_for_best_model)
         return metric
 
@@ -282,9 +199,7 @@ class BM25Objective(Objective):
                 run.name = index_name
                 self.searcher.runs[index_name] = run
         if self.searcher.do_fusion:
-            run = ranx.Run()
-            run.name = "fusion"
-            self.searcher.runs["fusion"] = run
+            raise NotImplementedError()
         
         settings = self.settings
 
@@ -311,8 +226,8 @@ def get_objective(objective_type, train_dataset, **objective_kwargs):
     Parameters
     ----------
     objective_type: str
-        'fusion'|'bm25' to use FusionObjective or BM25Objective, respectively.
-        FusionObjective caches relevant results while BM25Objective recomputes relevant results every time
+        'bm25' to use BM25Objective
+        BM25Objective recomputes relevant results every time
     train_dataset: Dataset
     **objective_kwargs:
         passed to Objective
@@ -324,19 +239,7 @@ def get_objective(objective_type, train_dataset, **objective_kwargs):
         Default sampler (GridSampler) and direction ('maximize'), 
         passed to optuna.create_study if not overwritten.
     """
-    if objective_type == 'fusion':
-        objective = FusionObjective(train_dataset, do_cache_relevant=True, **objective_kwargs)
-        if objective.searcher.fusion_method == 'interpolation':
-            search_space = {}
-            for kb in objective.searcher.kbs.values():
-                for index_name in kb.indexes.keys():
-                    hp_name = f"{index_name}.interpolation_weight"
-                    hyp_hyp = objective.hyp_hyp[hp_name]
-                    search_space[hp_name] = np.arange(*hyp_hyp["bounds"], hyp_hyp["step"]).tolist()
-            default_study_kwargs = dict(direction='maximize', sampler=optuna.samplers.GridSampler(search_space))
-        else:
-            default_study_kwargs = {}
-    elif objective_type == 'bm25':
+    if objective_type == 'bm25':
         objective = BM25Objective(train_dataset, do_cache_relevant=False, **objective_kwargs)
         hyp_hyp = objective.hyp_hyp
         search_space = dict(b=np.arange(*hyp_hyp['b']["bounds"], hyp_hyp['b']["step"]).tolist(),

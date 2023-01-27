@@ -140,6 +140,8 @@ def default_minimum(runs):
     # set default-minimum in runs
     for run in runs:
         for q_id, results in run.run.items():
+            if len(results) == 0:
+                continue
             minimum = min(results.values())
             for d_id in all_documents[q_id]:
                 results.setdefault(d_id, minimum)
@@ -157,7 +159,7 @@ NORMS = {
 ##################
 
 
-class Main:
+class Fusion:
     """Optimize fusion using ranx"""
     def __init__(
         self,
@@ -168,7 +170,7 @@ class Main:
         output: Optional[str] = None,
         defmin: Optional[bool] = False
     ):
-        if isinstance(qrels, str):
+        if isinstance(qrels, (str, Path)):
             self.qrels = Qrels.from_file(qrels)
         else:
             self.qrels = fuse_qrels(qrels)
@@ -227,4 +229,4 @@ class Main:
 
     
 if __name__ == '__main__':
-    CLI(Main)
+    CLI(Fusion)

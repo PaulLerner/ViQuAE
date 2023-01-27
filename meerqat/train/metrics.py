@@ -66,7 +66,7 @@ def get_run(eval_outputs, ir_run):
             # nothing to re-rank. 
             # this can happen if searching for something unavailable in the query
             # e.g. no face was detected but you are searching for face similarity (see ir.search)
-            if 'DUMMY_RUN' in ir_results:
+            if not ir_results:
                 run[question_id] = ir_results
             else:
                 doc_ids = list(ir_results.keys())[: M]
