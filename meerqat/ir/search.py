@@ -18,7 +18,6 @@ import warnings
 from docopt import docopt
 import json
 import re
-import enum
 from pathlib import Path
 
 import numpy as np
@@ -37,14 +36,6 @@ def L2norm(queries):
     return queries/norms
 
 
-class IndexKind(enum.Enum):
-    """Will be used later on for data-specific fusion"""
-    TEXT = enum.auto()
-    FACE = enum.auto()
-    # short for "full-image", as opposed to "FACE"
-    IMAGE = enum.auto()
-
-
 class Index:
     """
     Dataclass to hold information about an index (either FaissIndex or ESIndex)
@@ -53,32 +44,20 @@ class Index:
     ----------
     key: str
         Associated key in the dataset where the queries are stored
-    kind_str: str, optional
-        One of IndexKind
     es: bool, optional
         Linked to an ESIndex or FaissIndex
     do_L2norm: bool, optional
         Whether to apply ``L2norm`` to the queries
-    normalization: str, optional
-        If not None, applies this kind of ``normalize`` to the results scores
-    interpolation_weight: float, optional
-        Used to fuse the results of multiple Indexes
         
     Notes
     -----
     Difficult to create a hierarchy like FaissIndex and ESIndex since public methods, 
     such as search_batch, are defined in Dataset and take as input the index name.
     """
-    def __init__(self, key, kind_str=None, es=False, do_L2norm=False, normalization=None, interpolation_weight=None):
+    def __init__(self, key, es=False, do_L2norm=False):
         self.key = key
-        if kind_str is None:
-            self.kind = None
-        else:
-            self.kind = IndexKind[kind_str]
         self.es = es
         self.do_L2norm = do_L2norm
-        self.normalization = normalization
-        self.interpolation_weight = interpolation_weight
 
 
 class KnowledgeBase:
@@ -159,8 +138,7 @@ class KnowledgeBase:
             indices_batch[i] = not_None_indices_batch[j]
         return scores_batch, indices_batch
 
-    def add_or_load_index(self, column=None, index_name=None, es=False, kind_str=None, key=None,
-                          normalization=None, interpolation_weight=None, **index_kwarg):
+    def add_or_load_index(self, column=None, index_name=None, es=False, key=None, **index_kwarg):
         """
         Calls either ``add_or_load_elasticsearch_index`` or ``add_or_load_faiss_index``according to es.
         Unless column is None, then it does not actually add the index. 
@@ -173,8 +151,6 @@ class KnowledgeBase:
         index_name: str, optional
             Index identifier. Defaults to ``column``
         es: bool, optional
-        kind_str, key, normalization, interpolation_weight: 
-            see Index
         **index_kwarg:
             Passed to ``add_or_load_elasticsearch_index`` or ``add_or_load_faiss_index``
         """
@@ -190,7 +166,7 @@ class KnowledgeBase:
                 do_L2norm = False
             else:                
                 do_L2norm = self.add_or_load_faiss_index(column, index_name=index_name, **index_kwarg)
-        index = Index(key=key, kind_str=kind_str, es=es, do_L2norm=do_L2norm, normalization=normalization, interpolation_weight=interpolation_weight)
+        index = Index(key=key, es=es, do_L2norm=do_L2norm)
         self.indexes[index_name] = index
 
     def add_or_load_faiss_index(self, column, index_name=None, load=False, save_path=None, string_factory=None, device=None, **kwargs):
