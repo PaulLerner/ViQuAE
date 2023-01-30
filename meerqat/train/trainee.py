@@ -472,8 +472,8 @@ class JointBiEncoderAndClip(BiEncoder):
             context_model.save_pretrained(context_path)
         mm_weights = {                
             "question_weight": self.question_weight.item(),
-            "image_weight": self.image_weight.item(),
-            "cm_weight": self.cm_weight.item()
+            "image_weight": (self.image_weight * self.clip.logit_scale.exp()).item(),
+            "cm_weight": (self.cm_weight * self.clip.logit_scale.exp()).item()
         }
         with open(ckpt_path/'mm_weights.json','wt') as file:
             json.dump(mm_weights, file)
