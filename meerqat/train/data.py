@@ -406,7 +406,7 @@ class CrossModalDataModule(DataModule):
         text_inputs = self.tokenizer([item[self.input_key] for item in items], **self.tokenization_kwargs)
         batch = self.image_formatter.format_batch(text_inputs, items) 
         if self.paired_image is not None:
-            for k, v in self.image_formatter.format_pixels(items, image_key=self.paired_image):
+            for k, v in self.image_formatter.format_pixels(items, image_key=self.paired_image).items():
                 batch[f"paired_{k}"] = v
         return batch
         

@@ -7,6 +7,7 @@ import re
 from pathlib import Path
 import json
 from tqdm import tqdm
+from typing import Optional, Union
 
 import numpy as np
 import ranx
@@ -19,7 +20,7 @@ import pytorch_lightning as pl
 from ..data.loading import get_pretrained
 from ..data.utils import to_latex
 from ..models.qa import batched_get_best_spans
-from ..models.outputs import BiEncoderOutput, JointBiEncoderAndClipOutput
+from ..models.outputs import BiEncoderOutput, JointBiEncoderAndClipOutput, JointMonoAndCrossModalOutput
 from .optim import LinearLRWithWarmup
 from .metrics import retrieval, squad, get_run
 from .data import ReRankerDataModule, pad_and_cat
@@ -207,7 +208,110 @@ class CrossModal(Trainee):
     def save_pretrained(self, ckpt_path, bert=False):
         assert not bert
         self.model.save_pretrained(ckpt_path)
+        
+        
+class JointMonoAndCrossModal(Trainee):
+    def __init__(self, *args, model_kwargs: dict, image_weight=0.5, cm_weight=0.5, 
+                 learn_weights=False, mm_weights_lr=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model = get_pretrained(**model_kwargs)
+        self.log_softmax = nn.LogSoftmax(1)
+        self.loss_fct = nn.NLLLoss(reduction='mean')
+        self.image_weight = nn.Parameter(
+            torch.tensor([image_weight]), 
+            requires_grad=learn_weights
+        )
+        self.cm_weight = nn.Parameter(
+            torch.tensor([cm_weight]), 
+            requires_grad=learn_weights
+        )
+        self.weights_to_log.update({
+            "image_weight": self.image_weight,
+            "cm_weight": self.cm_weight,
+            "temperature": self.model.logit_scale,
+        })
+            
+        self.param_groups = [
+            {'params': self.model.parameters()},            
+            {
+                'params': [self.image_weight, self.cm_weight],
+                'lr': mm_weights_lr if mm_weights_lr is not None else self.lr
+            },
+        ]
+        
+        self.post_init()   
+        
+    def forward(
+        self,
+        input_ids: Optional[torch.LongTensor] = None,
+        pixel_values: Optional[torch.FloatTensor] = None,
+        paired_pixel_values: Optional[torch.FloatTensor] = None,
+        attention_mask: Optional[torch.Tensor] = None,
+        position_ids: Optional[torch.LongTensor] = None
+    ):       
+        question_images = self.model.vision_model(pixel_values)
+        question_images = self.model.visual_projection(question_images[1])
+        question_images = question_images / question_images.norm(p=2, dim=-1, keepdim=True)
 
+        context_titles = self.model.text_model(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            position_ids=position_ids
+        )
+        context_titles = self.model.text_projection(context_titles[1])
+        context_titles = context_titles / context_titles.norm(p=2, dim=-1, keepdim=True)
+        
+        context_images = self.model.vision_model(paired_pixel_values)
+        context_images = self.model.visual_projection(context_images[1])
+        context_images = context_images / context_images.norm(p=2, dim=-1, keepdim=True)
+            
+        return JointMonoAndCrossModalOutput(
+            question_images=question_images,
+            context_images=context_images,
+            context_titles=context_titles
+        )
+
+        
+    def step(self, inputs, _):       
+        # TODO multi-gpu
+        outputs = self(**inputs)
+        local_labels = torch.arange(len(outputs.question_images), device=outputs.question_images.device)
+                
+        image_similarities = self.model.logit_scale.exp() * (outputs.question_images @ outputs.context_images.T)
+        cm_similarities = self.model.logit_scale.exp() * (outputs.question_images @ outputs.context_titles.T)
+        similarities = self.image_weight*image_similarities + self.cm_weight*cm_similarities
+        
+        # note that this loss is asymmetrical unlike CLIP implemented in CrossModal
+        log_probs = self.log_softmax(similarities)
+        loss = self.loss_fct(log_probs, local_labels)
+        
+        return dict(
+            loss=loss, log_probs=log_probs, labels=local_labels,
+            image_similarities=image_similarities,
+            cm_similarities=cm_similarities
+        )   
+        
+    def eval_epoch_end(self, eval_outputs):
+        metrics = retrieval(eval_outputs, ignore_index=self.loss_fct.ignore_index)
+        for model in ['image', 'cm']:
+            model_metrics = retrieval(
+                eval_outputs, 
+                ignore_index=self.loss_fct.ignore_index, 
+                output_key=f"{model}_similarities"
+            )
+            metrics.update({f"{model}_{k}": v for k, v in model_metrics.items()})
+        return {'metrics': metrics}
+    
+    def save_pretrained(self, ckpt_path, bert=False):
+        assert not bert
+        self.model.save_pretrained(ckpt_path)
+        mm_weights = {                
+            "image_weight": (self.image_weight * self.model.logit_scale.exp()).item(),
+            "cm_weight": (self.cm_weight * self.model.logit_scale.exp()).item()
+        }
+        with open(ckpt_path/'mm_weights.json','wt') as file:
+            json.dump(mm_weights, file)
+            
         
 def _get_bert(dpr_encoder):
     if hasattr(dpr_encoder, 'question_encoder'):
