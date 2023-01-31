@@ -192,6 +192,11 @@ class CrossModal(Trainee):
         self.model = get_pretrained(**model_kwargs)
 
     def step(self, batch, batch_idx):
+        paired_pixels = batch.pop('paired_pixel_values', None)
+        if paired_pixels is not None:
+            raise NotImplementedError()
+            paired_images = self.clip.get_image_features(paired_pixels, return_dict=False)
+            paired_images = paired_images / paired_images.norm(p=2, dim=-1, keepdim=True)
         outputs = self.model(**batch, return_loss=True, return_dict=True)
         return {k: outputs[k] for k in ['loss', 'logits_per_image', 'logits_per_text']}
     
