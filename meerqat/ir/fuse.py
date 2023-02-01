@@ -163,18 +163,23 @@ class Fusion:
     """Optimize fusion using ranx"""
     def __init__(
         self,
-        qrels: Union[str, List[str]] = None,
-        runs: List[str] = None,        
+        qrels: Union[str, Path, Qrels, List[str]] = None,
+        runs: Union[List[str], List[Run]] = None,        
         norm: Union[Optional[str], List[Optional[str]]] = "zmuv",
         method: Union[Optional[str], List[Optional[str]]] = "wsum",
         output: Optional[str] = None,
         defmin: Optional[bool] = False
     ):
-        if isinstance(qrels, (str, Path)):
+        if isinstance(qrels, Qrels):
+            self.qrels = qrels
+        elif isinstance(qrels, (str, Path)):
             self.qrels = Qrels.from_file(qrels)
         else:
             self.qrels = fuse_qrels(qrels)
-        self.runs = [Run.from_file(run) for run in runs]   
+        if isinstance(runs[0], Run):
+            self.runs = runs
+        else:
+            self.runs = [Run.from_file(run) for run in runs]   
         if defmin:
             self.runs = default_minimum(self.runs)         
         self.norm = norm

@@ -444,7 +444,7 @@ def dataset_search(dataset, k=100, metric_save_path=None, map_kwargs={}, **kwarg
         subcommand_kwargs = searcher.fusion_kwargs.pop('subcommand_kwargs', {})
         fuser = Fusion(
             qrels=searcher.qrels,
-            runs=searcher.runs,        
+            runs=list(searcher.runs.values()),        
             output=metric_save_path,
             **searcher.fusion_kwargs
         )
