@@ -394,20 +394,37 @@ class CrossModalDataModule(DataModule):
     paired_image: str, optional
         If not None (default), should hold the key for the path to an image paired with 'image',
         so that a joint image-image contrastive loss may be applied in CrossModal(Trainee).
+    deduplicate: bool, optional
+        Will remove text (and paired_image) duplicates. 
+        Defaults to False (assumes there are no duplicates).
     """
-    def __init__(self, *args, paired_image=None, **kwargs):
+    def __init__(self, *args, paired_image=None,  deduplicate=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.paired_image = paired_image
-        self.shuffle_eval = True
+        self.shuffle_eval = True        
+        self.deduplicate = deduplicate
+        
         assert self.n_relevant_passages == 1
         assert self.M == 1
 
     def collate_fn(self, items):
-        text_inputs = self.tokenizer([item[self.input_key] for item in items], **self.tokenization_kwargs)
+        strings = [item[self.input_key] for item in items]
+        text_inputs = self.tokenizer(strings, **self.tokenization_kwargs)
         batch = self.image_formatter.format_batch(text_inputs, items) 
+        if self.deduplicate:
+            _, where, labels = np.unique(strings, return_index=True, return_inverse=True)
+            where, labels = torch.tensor(where), torch.tensor(labels)
+            for k in batch.keys()-{'pixel_values'}:
+                batch[k] = batch[k][where]
+        else:
+            labels = torch.arange(strings)
         if self.paired_image is not None:
             for k, v in self.image_formatter.format_pixels(items, image_key=self.paired_image).items():
-                batch[f"paired_{k}"] = v
+                if self.deduplicate:
+                    batch[f"paired_{k}"] = v[where]
+                else:
+                    batch[f"paired_{k}"] = v 
+        batch['labels'] = labels
         return batch
         
     
