@@ -277,10 +277,13 @@ class Searcher:
         Whether to fuse results of the indexes. Defaults to True if their are multiple indexes.
     keep_kb_columns: list, optional
         Keep only these features in reference_kb (defaults to keep everything)
+    qnonrels: str, optional
+        Path towards a JSON collection of irrelevant documents. Used as cache to make search faster.
+        Defaults to look for all results.
     """
     def __init__(self, kb_kwargs, k=100, reference_kb_path=None, reference_key='passage', 
                  qrels=None, request_timeout=1000, es_client_kwargs={}, fusion_kwargs={}, 
-                 metrics_kwargs={}, do_fusion=None, keep_kb_columns=None):
+                 metrics_kwargs={}, do_fusion=None, keep_kb_columns=None, qnonrels=None):
         self.k = k
         self.kbs = {}
         if qrels is None:
@@ -288,6 +291,13 @@ class Searcher:
         else:
             with open(qrels, 'rt') as file:
                 self.qrels = json.load(file)
+                
+        if qnonrels is None:
+            self.qnonrels = {}
+        else:
+            with open(qnonrels, 'rt') as file:
+                self.qnonrels = json.load(file)
+                
         self.runs = {}
         # FIXME maybe check if ES is needed before instantiating client?
         # this does not require ES to run anyway
@@ -380,15 +390,18 @@ class Searcher:
                     if self.reference_kb is not None:
                         # extend relevant documents with the retrieved
                         # /!\ this means you should not compute/interpret recall as it will vary depending on the run/system
+                        self.qrels.setdefault(q_id, {})                        
+                        self.qnonrels.setdefault(q_id, {})
+                        retrieved = self.runs[index_name][q_id].keys()-(self.qrels[q_id].keys()|self.qnonrels[q_id].keys())
                         _, relevant = find_relevant(
-                            self.runs[index_name][q_id].keys(), 
+                            retrieved, 
                             gt['original_answer'], 
                             gt['answer'], 
                             self.reference_kb, 
                             reference_key=self.reference_key
                         )
-                        self.qrels.setdefault(q_id, {})
-                        self.qrels[q_id].update({str(i): 1 for i in relevant})                
+                        self.qrels[q_id].update({str(i): 1 for i in relevant})   
+                        self.qnonrels[q_id].update({i: 0 for i in retrieved-self.qrels[q_id].keys()})
                         
         return batch
 
