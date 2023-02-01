@@ -197,6 +197,12 @@ class CrossModal(Trainee):
         return self.model(*args, **kwargs)
     
     def step(self, batch, batch_idx):
+        labels = batch.pop('labels', None)
+        if labels is not None:
+            warnings.warn(
+                f"The loss is computed by {self.model.__class__.__name__}, "
+                f"labels will have no effect."
+            )
         outputs = self(**batch, return_loss=True, return_dict=True)
         return {k: outputs[k] for k in ['loss', 'logits_per_image', 'logits_per_text']}
     
@@ -252,7 +258,7 @@ class JointMonoAndCrossModal(Trainee):
         question_images = self.model.vision_model(pixel_values)
         question_images = self.model.visual_projection(question_images[1])
         question_images = question_images / question_images.norm(p=2, dim=-1, keepdim=True)
-
+        
         context_titles = self.model.text_model(
             input_ids=input_ids,
             attention_mask=attention_mask,
@@ -274,8 +280,8 @@ class JointMonoAndCrossModal(Trainee):
         
     def step(self, inputs, _):       
         # TODO multi-gpu
+        local_labels = inputs.pop('labels')
         outputs = self(**inputs)
-        local_labels = torch.arange(len(outputs.question_images), device=outputs.question_images.device)
                 
         image_similarities = self.model.logit_scale.exp() * (outputs.question_images @ outputs.context_images.T)
         cm_similarities = self.model.logit_scale.exp() * (outputs.question_images @ outputs.context_titles.T)
