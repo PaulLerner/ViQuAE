@@ -59,6 +59,10 @@ class Index:
         self.key = key
         self.es = es
         self.do_L2norm = do_L2norm
+        # TODO replace do_L2norm by
+     #   In [43]:         projected = kb._indexes['sscd_disc_mixup'].faiss_index.sa_encode.sa_encode(foo)
+    #...:         projected = np.frombuffer(projected, dtype=np.float32).reshape(1,512)
+
 
 
 class KnowledgeBase:
@@ -139,7 +143,7 @@ class KnowledgeBase:
             indices_batch[i] = not_None_indices_batch[j]
         return scores_batch, indices_batch
 
-    def add_or_load_index(self, column=None, index_name=None, es=False, key=None, **index_kwarg):
+    def add_or_load_index(self, column, index_name=None, es=False, key=None, **index_kwarg):
         """
         Calls either ``add_or_load_elasticsearch_index`` or ``add_or_load_faiss_index``according to es.
         Unless column is None, then it does not actually add the index. 
@@ -147,7 +151,7 @@ class KnowledgeBase:
         
         Parameters
         ----------
-        column: str, optional
+        column: str
             Name/key of the column that holds the pre-computed embeddings.
         index_name: str, optional
             Index identifier. Defaults to ``column``
@@ -155,18 +159,13 @@ class KnowledgeBase:
         **index_kwarg:
             Passed to ``add_or_load_elasticsearch_index`` or ``add_or_load_faiss_index``
         """
-        # do not actually add the index. 
-        # This is useful for hyperparameter search if you want to use pre-computed results (see ir.hp).
-        if column is None:
+        if index_name is None:
+            index_name = column
+        if es:
+            self.add_or_load_elasticsearch_index(column, index_name=index_name, **index_kwarg)
             do_L2norm = False
-        else:
-            if index_name is None:
-                index_name = column
-            if es:
-                self.add_or_load_elasticsearch_index(column, index_name=index_name, **index_kwarg)
-                do_L2norm = False
-            else:                
-                do_L2norm = self.add_or_load_faiss_index(column, index_name=index_name, **index_kwarg)
+        else:                
+            do_L2norm = self.add_or_load_faiss_index(column, index_name=index_name, **index_kwarg)
         index = Index(key=key, es=es, do_L2norm=do_L2norm)
         self.indexes[index_name] = index
 
