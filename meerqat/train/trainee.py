@@ -763,10 +763,15 @@ class Reader(Trainee):
         if self.tune_M:
             return self.M_tuning(all_start_log_probs, all_end_log_probs, all_input_ids, all_answer_strings, all_passage_scores)   
         predictions = self.log_probs_to_answers(all_start_log_probs, all_end_log_probs, all_input_ids)
+        root_log = Path(self.trainer.log_dir)
+        with open(root_log/'predictions.json', 'wt') as file:
+            json.dump(predictions, file)
          # compute metrics        
         metrics = squad(predictions=predictions, references=all_answer_strings)
         if all_passage_scores is not None:
             weighted_predictions = self.log_probs_to_answers(all_start_log_probs, all_end_log_probs, all_input_ids, weights=all_passage_scores)
+            with open(root_log/'weighted_predictions.json', 'wt') as file:
+                json.dump(weighted_predictions, file)
             weighted_metrics = squad(predictions=weighted_predictions, references=all_answer_strings)
             for k, v in weighted_metrics.items():
                  metrics['weighted_'+k] = v
