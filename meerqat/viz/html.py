@@ -1,15 +1,34 @@
 # -*- coding: utf-8 -*-
 """
-Usage: html.py <dataset> <output> [--n=<n> --width=<width> --config=<path>]
+usage: html.py [-h] [--config CONFIG] [--print_config [={comments,skip_null,skip_default}+]] [--n N] [--width WIDTH] [--passages_path PASSAGES_PATH] [--wiki_path WIKI_PATH] [--search_run SEARCH_RUN]
+               [--other_search_run OTHER_SEARCH_RUN]
+               dataset_path output
 
-Options:
---n=<n>                 Number of examples to output after shuffling. Defaults to all without shuffling.
---width=<width>         Width of the image in HTML [default: 400]. 
+options:
+  -h, --help            Show this help message and exit.
+  --config CONFIG       Path to a configuration file.
+  --print_config [={comments,skip_null,skip_default}+]
+                        Print the configuration after applying all other arguments and exit.
+
+Visualize dataset in HTML:
+  dataset_path          (required, type: str)
+  output                (required, type: str)
+  --n N                 Number of examples to output after shuffling. Defaults to all without shuffling. (type: Optional[int], default: null)
+  --width WIDTH         Width of the image in HTML [default: 400]. (type: int, default: 400)
+  --passages_path PASSAGES_PATH
+                        (type: Optional[str], default: null)
+  --wiki_path WIKI_PATH
+                        (type: Optional[str], default: null)
+  --search_run SEARCH_RUN
+                        (type: Optional[str], default: null)
+  --other_search_run OTHER_SEARCH_RUN
+                        (type: Optional[str], default: null)        
 """
-from datasets import load_from_disk
-from docopt import docopt
 import json
 from tqdm import tqdm
+from jsonargparse import CLI
+
+from datasets import load_from_disk
 from ranx import Run
 
 
@@ -29,8 +48,33 @@ def get_top_1(item, run):
     return int(top1)
 
 
-def format_html(dataset_path, output, n=None, width=400, 
-                passages_path=None, wiki_path=None, search_run=None, other_search_run=None):
+def format_html(
+        dataset_path: str, 
+        output: str, 
+        n: int = None, 
+        width: int = 400, 
+        passages_path: str = None,
+        wiki_path: str = None, 
+        search_run: str = None, 
+        other_search_run: str = None
+    ):
+    """
+    Visualize dataset in HTML
+    
+    Parameters
+    ----------
+    dataset_path: str
+    output: str
+    n: int
+        Number of examples to output after shuffling. 
+        Defaults to all without shuffling.
+    width: int 
+        Width of the image in HTML [default: 400].
+    passages_path: str
+    wiki_path: str
+    search_run: str
+    other_search_run: str
+    """
     # complete template according to parameters
     if search_run is not None:
         search_run = Run.from_file(search_run)
@@ -100,11 +144,4 @@ def format_html(dataset_path, output, n=None, width=400,
     
     
 if __name__ == '__main__':
-    args = docopt(__doc__)
-    n = int(args['--n']) if args['--n'] is not None else None
-    if args['--config'] is not None:
-        with open(args['--config'], 'rt') as file:
-            config = json.load(file)
-    else:
-        config = {}
-    format_html(args['<dataset>'], args['<output>'], n=n, width=int(args['--width']), **config)
+    CLI(format_html)
