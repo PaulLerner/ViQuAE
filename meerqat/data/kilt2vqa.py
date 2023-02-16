@@ -3,7 +3,7 @@
 ========
 Overview
 ========
-.. image:: ../../docs/kilt2vqa_big_picture.png
+.. image:: ../source_docs/kilt2vqa_big_picture.png
 
 All the data should be stored in the `data` folder, at the root of this repo.
 
@@ -14,7 +14,7 @@ by an ambiguous one and illustrate the question with an image (that depicts the 
 -------
 ``ner``
 -------
-.. image:: ../../docs/kilt2vqa_nlp.png
+.. image:: ../source_docs/kilt2vqa_nlp.png
 
 Slight misnomer, does a bit more than NER, i.e. dependency parsing.  
 Detected entities with valid type and dependency are replaced by a placeholder along with its syntactic children.  
@@ -26,7 +26,7 @@ are replaced by the placeholder.
 -------
 ``ner``
 -------
-.. image:: ../../docs/kilt2vqa_nlp.png
+.. image:: ../source_docs/kilt2vqa_nlp.png
 
 Disambiguate entity mentions using Wikipedia pages provided in KILT.  
 TriviaQA was originally framed as a reading-comprehension problem so the authors applied off-the-shelf NED and filtered
@@ -39,7 +39,7 @@ just run `kilt2vqa.py count_entities` first to save a dict with all disambiguate
 ---------------------
 ``generate mentions``
 ---------------------
-.. image:: ../../docs/kilt2vqa_mentiong_gen.png
+.. image:: ../source_docs/kilt2vqa_mentiong_gen.png
 
 Generate ambiguous entity mentions that can be used to replace the placeholder 
 in the input question (you need to run `wiki.py data` first):  
