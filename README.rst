@@ -249,6 +249,4 @@ The rest should be installed using ``pip``:
 Docs
 ====
 
-TODO add readthedocs. Until then, have a look at ``docs/build/meerqat.html``
-
-Building the docs: ``sphinx-build -b html docs/source/ docs/build/``
+`Read the docs! <https://paullerner.github.io/ViQuAE/meerqat.ir.search.html>`__
