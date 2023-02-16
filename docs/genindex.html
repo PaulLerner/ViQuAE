@@ -1,0 +1,1425 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Index &#8212; meerqat v3.0.0-alpha documentation</title>
+  <script>
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+<link href="_static/styles/pydata-sphinx-theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+
+  
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/6.1.2/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b">
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'genindex';</script>
+    <link rel="index" title="Index" href="#" />
+    <link rel="search" title="Search" href="search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="docsearch:language" content="en">
+  </head>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__primary" id="__primary">
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__secondary" id="__secondary">
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+      
+<form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+    </div>
+  </div>
+
+  
+  <nav class="bd-header navbar navbar-expand-lg bd-navbar" id="navbar-main"><div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+      <span class="fas fa-bars"></span>
+  </label>
+  <div id="navbar-start">
+    
+    
+  
+
+
+<a class="navbar-brand logo" href="index.html">
+
+  
+  
+  
+  
+  
+  
+  
+
+  
+  
+    <p class="title logo__title">meerqat v3.0.0-alpha documentation</p>
+  
+</a>
+    
+  </div>
+
+  
+  <div class="col-lg-9 navbar-header-items">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+    </ul>
+</nav>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      <div class="navbar-end-item navbar-end__search-button-container">
+        
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+
+
+  
+  <div class="search-button-container--mobile">
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+  </div>
+
+  
+  <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fas fa-outdent"></span>
+  </label>
+  
+
+</div>
+  </nav>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+    </ul>
+</nav>
+      </div>
+      
+      </div>
+    
+
+    
+    
+    <div class="sidebar-header-items__end">
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+    
+  </div>
+
+  
+
+  
+  <div class="sidebar-end-items sidebar-primary__section">
+    <div class="sidebar-end-items__item">
+    </div>
+  </div>
+
+      </div>
+      <main class="bd-main">
+        
+        
+        <div class="bd-content">
+          <div class="bd-article-container">
+            
+            <div class="bd-header-article">
+                
+            </div>
+            
+            
+            <article class="bd-article" role="main">
+              
+
+<h1 id="index">Index</h1>
+
+<div class="genindex-jumpbox">
+ <a href="#A"><strong>A</strong></a>
+ | <a href="#B"><strong>B</strong></a>
+ | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
+ | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
+ | <a href="#I"><strong>I</strong></a>
+ | <a href="#J"><strong>J</strong></a>
+ | <a href="#K"><strong>K</strong></a>
+ | <a href="#L"><strong>L</strong></a>
+ | <a href="#M"><strong>M</strong></a>
+ | <a href="#N"><strong>N</strong></a>
+ | <a href="#O"><strong>O</strong></a>
+ | <a href="#P"><strong>P</strong></a>
+ | <a href="#Q"><strong>Q</strong></a>
+ | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
+ | <a href="#U"><strong>U</strong></a>
+ | <a href="#W"><strong>W</strong></a>
+ 
+</div>
+<h2 id="A">A</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.MMTrainer.add_image_features">add_image_features() (meerqat.train.trainer.MMTrainer method)</a>
+</li>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.KnowledgeBase.add_or_load_elasticsearch_index">add_or_load_elasticsearch_index() (meerqat.ir.search.KnowledgeBase method)</a>
+</li>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.KnowledgeBase.add_or_load_faiss_index">add_or_load_faiss_index() (meerqat.ir.search.KnowledgeBase method)</a>
+</li>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.KnowledgeBase.add_or_load_index">add_or_load_index() (meerqat.ir.search.KnowledgeBase method)</a>
+</li>
+      <li><a href="meerqat.data.labelstudio.html#meerqat.data.labelstudio.agree">agree() (in module meerqat.data.labelstudio)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.data.labelstudio.html#meerqat.data.labelstudio.annotator_agreement">annotator_agreement() (in module meerqat.data.labelstudio)</a>
+</li>
+      <li><a href="meerqat.data.loading.html#meerqat.data.loading.answer_preprocess">answer_preprocess() (in module meerqat.data.loading)</a>
+</li>
+      <li><a href="meerqat.data.labelstudio.html#meerqat.data.labelstudio.assign">assign() (in module meerqat.data.labelstudio)</a>
+</li>
+      <li><a href="meerqat.data.labelstudio.html#meerqat.data.labelstudio.assign_annotations">assign_annotations() (in module meerqat.data.labelstudio)</a>
+</li>
+      <li><a href="meerqat.models.mm.html#meerqat.models.mm.ECAEncoderOutput.attentions">attentions (meerqat.models.mm.ECAEncoderOutput attribute)</a>
+
+      <ul>
+        <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput.attentions">(meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="B">B</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.models.mm.html#meerqat.models.mm.ECAEncoder.base_model_prefix">base_model_prefix (meerqat.models.mm.ECAEncoder attribute)</a>
+
+      <ul>
+        <li><a href="meerqat.models.mm.html#meerqat.models.mm.IntermediateLinearFusion.base_model_prefix">(meerqat.models.mm.IntermediateLinearFusion attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.BiEncoder">BiEncoder (class in meerqat.train.trainee)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.BiEncoderOutput">BiEncoderOutput (class in meerqat.train.trainee)</a>
+</li>
+      <li><a href="meerqat.ir.hp.html#meerqat.ir.hp.BM25Objective">BM25Objective (class in meerqat.ir.hp)</a>
+</li>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.bytes2dict">bytes2dict() (in module meerqat.data.wiki)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="C">C</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.ir.hp.html#meerqat.ir.hp.Objective.cache_relevant">cache_relevant() (meerqat.ir.hp.Objective method)</a>
+</li>
+      <li><a href="meerqat.ir.hp.html#meerqat.ir.hp.Objective.cache_relevant_dataset">cache_relevant_dataset() (meerqat.ir.hp.Objective method)</a>
+</li>
+      <li><a href="meerqat.ir.metrics.html#meerqat.ir.metrics.cat_breakdown">cat_breakdown() (in module meerqat.ir.metrics)</a>
+</li>
+      <li><a href="meerqat.data.wit.html#meerqat.data.wit.check_encoding">check_encoding() (in module meerqat.data.wit)</a>
+</li>
+      <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.DPRBiEncoderTrainer.collate_fn">collate_fn() (meerqat.train.trainer.DPRBiEncoderTrainer method)</a>
+
+      <ul>
+        <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.ICTTrainer.collate_fn">(meerqat.train.trainer.ICTTrainer method)</a>
+</li>
+        <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.MMTrainer.collate_fn">(meerqat.train.trainer.MMTrainer method)</a>
+</li>
+        <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.MultiPassageBERTTrainer.collate_fn">(meerqat.train.trainer.MultiPassageBERTTrainer method)</a>
+</li>
+      </ul></li>
+      <li><a href="meerqat.ir.metrics.html#meerqat.ir.metrics.compare">compare() (in module meerqat.ir.metrics)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.image.face_recognition.html#meerqat.image.face_recognition.compute_face_embedding">compute_face_embedding() (in module meerqat.image.face_recognition)</a>
+</li>
+      <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.DPRBiEncoderTrainer.compute_loss">compute_loss() (meerqat.train.trainer.DPRBiEncoderTrainer method)</a>
+</li>
+      <li><a href="meerqat.models.mm.html#meerqat.models.mm.ECAEncoder.config_class">config_class (meerqat.models.mm.ECAEncoder attribute)</a>
+
+      <ul>
+        <li><a href="meerqat.models.mm.html#meerqat.models.mm.IntermediateLinearFusion.config_class">(meerqat.models.mm.IntermediateLinearFusion attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.DPRBiEncoderOutput.context_attentions">context_attentions (meerqat.train.trainee.DPRBiEncoderOutput attribute)</a>
+</li>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.DPRBiEncoderOutput.context_hidden_states">context_hidden_states (meerqat.train.trainee.DPRBiEncoderOutput attribute)</a>
+</li>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.BiEncoderOutput.context_pooler_output">context_pooler_output (meerqat.train.trainee.BiEncoderOutput attribute)</a>
+
+      <ul>
+        <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.DPRBiEncoderOutput.context_pooler_output">(meerqat.train.trainee.DPRBiEncoderOutput attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.count_entities">count_entities() (in module meerqat.data.kilt2vqa)</a>
+
+      <ul>
+        <li><a href="meerqat.data.mscelebs.html#meerqat.data.mscelebs.count_entities">(in module meerqat.data.mscelebs)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.image.face_recognition.html#meerqat.image.face_recognition.dataset_compute_face_embedding">dataset_compute_face_embedding() (in module meerqat.image.face_recognition)</a>
+</li>
+      <li><a href="meerqat.image.face_detection.html#meerqat.image.face_detection.dataset_detect_face">dataset_detect_face() (in module meerqat.image.face_detection)</a>
+</li>
+      <li><a href="meerqat.image.face_detection.html#meerqat.image.face_detection.dataset_detect_faces">dataset_detect_faces() (in module meerqat.image.face_detection)</a>
+</li>
+      <li><a href="meerqat.image.embedding.html#meerqat.image.embedding.dataset_embed">dataset_embed() (in module meerqat.image.embedding)</a>
+
+      <ul>
+        <li><a href="meerqat.ir.embedding.html#meerqat.ir.embedding.dataset_embed">(in module meerqat.ir.embedding)</a>
+</li>
+      </ul></li>
+      <li><a href="meerqat.image.resize.html#meerqat.image.resize.dataset_resize">dataset_resize() (in module meerqat.image.resize)</a>
+</li>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.dataset_search">dataset_search() (in module meerqat.ir.search)</a>
+</li>
+      <li><a href="meerqat.viz.stats.html#meerqat.viz.stats.dataset_stats">dataset_stats() (in module meerqat.viz.stats)</a>
+</li>
+      <li><a href="meerqat.models.utils.html#meerqat.models.utils.debug_shape">debug_shape() (in module meerqat.models.utils)</a>
+</li>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.depiction_instanceof_heuristic">depiction_instanceof_heuristic() (in module meerqat.data.wiki)</a>
+</li>
+      <li><a href="meerqat.image.face_detection.html#meerqat.image.face_detection.detect_face">detect_face() (in module meerqat.image.face_detection)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.dict2scores">dict2scores() (in module meerqat.ir.search)</a>
+</li>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.dict_batch2scores">dict_batch2scores() (in module meerqat.ir.search)</a>
+</li>
+      <li><a href="meerqat.data.wit.html#meerqat.data.wit.dict_to_dataset">dict_to_dataset() (in module meerqat.data.wit)</a>
+</li>
+      <li><a href="meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.disambiguate">disambiguate() (in module meerqat.data.kilt2vqa)</a>
+</li>
+      <li><a href="meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.download_image">download_image() (in module meerqat.data.kilt2vqa)</a>
+</li>
+      <li><a href="meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.download_images">download_images() (in module meerqat.data.kilt2vqa)</a>
+</li>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.DPRBiEncoder">DPRBiEncoder (class in meerqat.train.trainee)</a>
+</li>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.DPRBiEncoderOutput">DPRBiEncoderOutput (class in meerqat.train.trainee)</a>
+</li>
+      <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.DPRBiEncoderTrainer">DPRBiEncoderTrainer (class in meerqat.train.trainer)</a>
+</li>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.DPRReaderForQuestionAnswering">DPRReaderForQuestionAnswering (class in meerqat.train.trainee)</a>
+</li>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput">DPRReaderForQuestionAnsweringOutput (class in meerqat.train.trainee)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.models.mm.html#meerqat.models.mm.ECAEncoder">ECAEncoder (class in meerqat.models.mm)</a>
+</li>
+      <li><a href="meerqat.models.mm.html#meerqat.models.mm.ECAEncoderOutput">ECAEncoderOutput (class in meerqat.models.mm)</a>
+</li>
+      <li><a href="meerqat.image.embedding.html#meerqat.image.embedding.embed">embed() (in module meerqat.image.embedding)</a>
+
+      <ul>
+        <li><a href="meerqat.ir.embedding.html#meerqat.ir.embedding.embed">(in module meerqat.ir.embedding)</a>
+</li>
+      </ul></li>
+      <li><a href="meerqat.models.mm.html#meerqat.models.mm.EncoderOutput">EncoderOutput (class in meerqat.models.mm)</a>
+</li>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.MultiPassageBERTOutput.end_log_probs">end_log_probs (meerqat.train.trainee.MultiPassageBERTOutput attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput.end_logits">end_logits (meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput attribute)</a>
+</li>
+      <li><a href="meerqat.ir.hp.html#meerqat.ir.hp.BM25Objective.evaluate">evaluate() (meerqat.ir.hp.BM25Objective method)</a>
+
+      <ul>
+        <li><a href="meerqat.ir.hp.html#meerqat.ir.hp.FusionObjective.evaluate">(meerqat.ir.hp.FusionObjective method)</a>
+</li>
+        <li><a href="meerqat.ir.hp.html#meerqat.ir.hp.Objective.evaluate">(meerqat.ir.hp.Objective method)</a>
+</li>
+      </ul></li>
+      <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.MultiPassageBERTTrainer.evaluation_loop">evaluation_loop() (meerqat.train.trainer.MultiPassageBERTTrainer method)</a>
+</li>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.exclude_classes">exclude_classes() (in module meerqat.data.wiki)</a>
+</li>
+      <li><a href="meerqat.data.mscelebs.html#meerqat.data.mscelebs.extract">extract() (in module meerqat.data.mscelebs)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.IndexKind.FACE">FACE (meerqat.ir.search.IndexKind attribute)</a>
+</li>
+      <li><a href="meerqat.models.image.html#meerqat.models.image.FaceEmbedding">FaceEmbedding (class in meerqat.models.image)</a>
+</li>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.file_name_to_thumbnail">file_name_to_thumbnail() (in module meerqat.data.wiki)</a>
+</li>
+      <li><a href="meerqat.data.wit.html#meerqat.data.wit.fill_wit_for_mict">fill_wit_for_mict() (in module meerqat.data.wit)</a>
+</li>
+      <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.filter_rels">filter_rels() (in module meerqat.train.trainer)</a>
+</li>
+      <li><a href="meerqat.data.wikidump.html#meerqat.data.wikidump.find">find() (in module meerqat.data.wikidump)</a>
+</li>
+      <li><a href="meerqat.ir.metrics.html#meerqat.ir.metrics.find_relevant">find_relevant() (in module meerqat.ir.metrics)</a>
+</li>
+      <li><a href="meerqat.ir.metrics.html#meerqat.ir.metrics.find_relevant_batch">find_relevant_batch() (in module meerqat.ir.metrics)</a>
+</li>
+      <li><a href="meerqat.ir.metrics.html#meerqat.ir.metrics.find_relevant_dataset">find_relevant_dataset() (in module meerqat.ir.metrics)</a>
+</li>
+      <li><a href="meerqat.ir.metrics.html#meerqat.ir.metrics.find_relevant_item">find_relevant_item() (in module meerqat.ir.metrics)</a>
+</li>
+      <li><a href="meerqat.data.wikidump.html#meerqat.data.wikidump.find_text">find_text() (in module meerqat.data.wikidump)</a>
+</li>
+      <li><a href="meerqat.viz.html.html#meerqat.viz.html.format_html">format_html() (in module meerqat.viz.html)</a>
+</li>
+      <li><a href="meerqat.models.qa.html#meerqat.models.qa.format_predictions_for_squad">format_predictions_for_squad() (in module meerqat.models.qa)</a>
+</li>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.format_qrels_indices">format_qrels_indices() (in module meerqat.ir.search)</a>
+</li>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.format_run_indices">format_run_indices() (in module meerqat.ir.search)</a>
+</li>
+      <li><a href="meerqat.image.embedding.html#meerqat.image.embedding.ImageEncoder.forward">forward() (meerqat.image.embedding.ImageEncoder method)</a>
+
+      <ul>
+        <li><a href="meerqat.image.face_detection.html#meerqat.image.face_detection.MTCNN.forward">(meerqat.image.face_detection.MTCNN method)</a>
+</li>
+        <li><a href="meerqat.models.image.html#meerqat.models.image.FaceEmbedding.forward">(meerqat.models.image.FaceEmbedding method)</a>
+</li>
+        <li><a href="meerqat.models.image.html#meerqat.models.image.ImageEmbedding.forward">(meerqat.models.image.ImageEmbedding method)</a>
+</li>
+        <li><a href="meerqat.models.mm.html#meerqat.models.mm.ECAEncoder.forward">(meerqat.models.mm.ECAEncoder method)</a>
+</li>
+        <li><a href="meerqat.models.mm.html#meerqat.models.mm.IntermediateLinearFusion.forward">(meerqat.models.mm.IntermediateLinearFusion method)</a>
+</li>
+        <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.BiEncoder.forward">(meerqat.train.trainee.BiEncoder method)</a>
+</li>
+        <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.DPRBiEncoder.forward">(meerqat.train.trainee.DPRBiEncoder method)</a>
+</li>
+        <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.DPRReaderForQuestionAnswering.forward">(meerqat.train.trainee.DPRReaderForQuestionAnswering method)</a>
+</li>
+        <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.MultiPassageBERT.forward">(meerqat.train.trainee.MultiPassageBERT method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.viz.umap.html#meerqat.viz.umap.fplot">fplot() (in module meerqat.viz.umap)</a>
+</li>
+      <li><a href="meerqat.data.mscelebs.html#meerqat.data.mscelebs.freebase2wikidata">freebase2wikidata() (in module meerqat.data.mscelebs)</a>
+</li>
+      <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.MeerqatTrainer.freeze">freeze() (meerqat.train.trainer.MeerqatTrainer method)</a>
+</li>
+      <li><a href="meerqat.image.embedding.html#meerqat.image.embedding.from_pretrained">from_pretrained() (in module meerqat.image.embedding)</a>
+
+      <ul>
+        <li><a href="meerqat.image.face_recognition.html#meerqat.image.face_recognition.from_pretrained">(in module meerqat.image.face_recognition)</a>
+</li>
+      </ul></li>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.Searcher.fuse">fuse() (meerqat.ir.search.Searcher method)</a>
+</li>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.Searcher.fuse_and_compute_metrics">fuse_and_compute_metrics() (meerqat.ir.search.Searcher method)</a>
+</li>
+      <li><a href="meerqat.ir.metrics.html#meerqat.ir.metrics.fuse_qrels">fuse_qrels() (in module meerqat.ir.metrics)</a>
+</li>
+      <li><a href="meerqat.ir.hp.html#meerqat.ir.hp.FusionObjective">FusionObjective (class in meerqat.ir.hp)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="G">G</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.generate_mention">generate_mention() (in module meerqat.data.kilt2vqa)</a>
+</li>
+      <li><a href="meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.generate_mentions">generate_mentions() (in module meerqat.data.kilt2vqa)</a>
+</li>
+      <li><a href="meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.generate_vq">generate_vq() (in module meerqat.data.kilt2vqa)</a>
+</li>
+      <li><a href="meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.generate_vqs">generate_vqs() (in module meerqat.data.kilt2vqa)</a>
+</li>
+      <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.MultiPassageBERTTrainer.get_answer_position">get_answer_position() (meerqat.train.trainer.MultiPassageBERTTrainer method)</a>
+</li>
+      <li><a href="meerqat.models.qa.html#meerqat.models.qa.get_best_spans">get_best_spans() (in module meerqat.models.qa)</a>
+</li>
+      <li><a href="meerqat.data.loading.html#meerqat.data.loading.get_biencoder">get_biencoder() (in module meerqat.data.loading)</a>
+</li>
+      <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.get_checkpoint">get_checkpoint() (in module meerqat.train.trainer)</a>
+</li>
+      <li><a href="meerqat.data.loading.html#meerqat.data.loading.get_class_from_name">get_class_from_name() (in module meerqat.data.loading)</a>
+</li>
+      <li><a href="meerqat.image.embedding.html#meerqat.image.embedding.get_encoder">get_encoder() (in module meerqat.image.embedding)</a>
+</li>
+      <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.MultiPassageBERTTrainer.get_eval_passages">get_eval_passages() (meerqat.train.trainer.MultiPassageBERTTrainer method)</a>
+</li>
+      <li><a href="meerqat.ir.embedding.html#meerqat.ir.embedding.get_face_inputs">get_face_inputs() (in module meerqat.ir.embedding)</a>
+
+      <ul>
+        <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.MMTrainer.get_face_inputs">(meerqat.train.trainer.MMTrainer method)</a>
+</li>
+      </ul></li>
+      <li><a href="meerqat.data.wikidump.html#meerqat.data.wikidump.get_field">get_field() (in module meerqat.data.wikidump)</a>
+</li>
+      <li><a href="meerqat.ir.embedding.html#meerqat.ir.embedding.get_image_inputs">get_image_inputs() (in module meerqat.ir.embedding)</a>
+
+      <ul>
+        <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.MMTrainer.get_image_inputs">(meerqat.train.trainer.MMTrainer method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.ir.embedding.html#meerqat.ir.embedding.get_inputs">get_inputs() (in module meerqat.ir.embedding)</a>
+</li>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.get_license">get_license() (in module meerqat.data.wiki)</a>
+</li>
+      <li><a href="meerqat.image.embedding.html#meerqat.image.embedding.get_model_and_transform">get_model_and_transform() (in module meerqat.image.embedding)</a>
+</li>
+      <li><a href="meerqat.image.embedding.html#meerqat.image.embedding.get_nn_module">get_nn_module() (in module meerqat.image.embedding)</a>
+</li>
+      <li><a href="meerqat.ir.hp.html#meerqat.ir.hp.get_objective">get_objective() (in module meerqat.ir.hp)</a>
+</li>
+      <li><a href="meerqat.image.face_recognition.html#meerqat.image.face_recognition.get_pil_preprocessor">get_pil_preprocessor() (in module meerqat.image.face_recognition)</a>
+</li>
+      <li><a href="meerqat.data.loading.html#meerqat.data.loading.get_pretrained">get_pretrained() (in module meerqat.data.loading)</a>
+</li>
+      <li><a href="meerqat.viz.umap.html#meerqat.viz.umap.get_ranx_run">get_ranx_run() (in module meerqat.viz.umap)</a>
+</li>
+      <li><a href="meerqat.viz.html.html#meerqat.viz.html.get_top_1">get_top_1() (in module meerqat.viz.html)</a>
+</li>
+      <li><a href="meerqat.image.embedding.html#meerqat.image.embedding.get_torchvision_model">get_torchvision_model() (in module meerqat.image.embedding)</a>
+</li>
+      <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.ICTTrainer.get_training_passages">get_training_passages() (meerqat.train.trainer.ICTTrainer method)</a>
+
+      <ul>
+        <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.QuestionAnsweringTrainer.get_training_passages">(meerqat.train.trainer.QuestionAnsweringTrainer method)</a>
+</li>
+      </ul></li>
+      <li><a href="meerqat.image.embedding.html#meerqat.image.embedding.get_transform">get_transform() (in module meerqat.image.embedding)</a>
+
+      <ul>
+        <li><a href="meerqat.image.resize.html#meerqat.image.resize.get_transform">(in module meerqat.image.resize)</a>
+</li>
+      </ul></li>
+      <li><a href="meerqat.ir.metrics.html#meerqat.ir.metrics.get_wtl_table">get_wtl_table() (in module meerqat.ir.metrics)</a>
+</li>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.BiEncoder.gradient_checkpointing_disable">gradient_checkpointing_disable() (meerqat.train.trainee.BiEncoder method)</a>
+</li>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.BiEncoder.gradient_checkpointing_enable">gradient_checkpointing_enable() (meerqat.train.trainee.BiEncoder method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.models.mm.html#meerqat.models.mm.ECAEncoderOutput.hidden_states">hidden_states (meerqat.models.mm.ECAEncoderOutput attribute)</a>
+
+      <ul>
+        <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput.hidden_states">(meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.ir.hp.html#meerqat.ir.hp.hyperparameter_search">hyperparameter_search() (in module meerqat.ir.hp)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.ICTTrainer">ICTTrainer (class in meerqat.train.trainer)</a>
+</li>
+      <li><a href="meerqat.models.mm.html#meerqat.models.mm.ILFConfig">ILFConfig (class in meerqat.models.mm)</a>
+</li>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.IndexKind.IMAGE">IMAGE (meerqat.ir.search.IndexKind attribute)</a>
+</li>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.image_heuristic">image_heuristic() (in module meerqat.data.wiki)</a>
+</li>
+      <li><a href="meerqat.models.image.html#meerqat.models.image.ImageEmbedding">ImageEmbedding (class in meerqat.models.image)</a>
+</li>
+      <li><a href="meerqat.image.embedding.html#meerqat.image.embedding.ImageEncoder">ImageEncoder (class in meerqat.image.embedding)</a>
+</li>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.Index">Index (class in meerqat.ir.search)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.IndexKind">IndexKind (class in meerqat.ir.search)</a>
+</li>
+      <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.instantiate_trainer">instantiate_trainer() (in module meerqat.train.trainer)</a>
+</li>
+      <li><a href="meerqat.models.mm.html#meerqat.models.mm.IntermediateLinearFusion">IntermediateLinearFusion (class in meerqat.models.mm)</a>
+</li>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.Searcher.interpolation_fusion">interpolation_fusion() (meerqat.ir.search.Searcher method)</a>
+</li>
+      <li><a href="meerqat.viz.umap.html#meerqat.viz.umap.iplot">iplot() (in module meerqat.viz.umap)</a>
+</li>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.BiEncoder.is_gradient_checkpointing">is_gradient_checkpointing (meerqat.train.trainee.BiEncoder property)</a>
+</li>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.iso2year">iso2year() (in module meerqat.data.wiki)</a>
+</li>
+      <li><a href="meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.item2placeholder">item2placeholder() (in module meerqat.data.kilt2vqa)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="J">J</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.data.utils.html#meerqat.data.utils.json_integer_keys">json_integer_keys() (in module meerqat.data.utils)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="K">K</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.keep_classes">keep_classes() (in module meerqat.data.wiki)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.keep_prominent_depictions">keep_prominent_depictions() (in module meerqat.data.wiki)</a>
+</li>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.KnowledgeBase">KnowledgeBase (class in meerqat.ir.search)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.L2norm">L2norm() (in module meerqat.ir.search)</a>
+</li>
+      <li><a href="meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.labelstudio">labelstudio() (in module meerqat.data.kilt2vqa)</a>
+</li>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.license_score">license_score() (in module meerqat.data.wiki)</a>
+</li>
+      <li><a href="meerqat.data.labelstudio.html#meerqat.data.labelstudio.load_completions">load_completions() (in module meerqat.data.labelstudio)</a>
+</li>
+      <li><a href="meerqat.data.loading.html#meerqat.data.loading.load_faces">load_faces() (in module meerqat.data.loading)</a>
+</li>
+      <li><a href="meerqat.data.loading.html#meerqat.data.loading.load_image">load_image() (in module meerqat.data.loading)</a>
+</li>
+      <li><a href="meerqat.data.loading.html#meerqat.data.loading.load_image_batch">load_image_batch() (in module meerqat.data.loading)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.data.loading.html#meerqat.data.loading.load_pretrained_in_kwargs">load_pretrained_in_kwargs() (in module meerqat.data.loading)</a>
+</li>
+      <li><a href="meerqat.ir.metrics.html#meerqat.ir.metrics.load_runs">load_runs() (in module meerqat.ir.metrics)</a>
+</li>
+      <li><a href="meerqat.models.mm.html#meerqat.models.mm.ECAEncoder.load_tf_weights">load_tf_weights (meerqat.models.mm.ECAEncoder attribute)</a>
+
+      <ul>
+        <li><a href="meerqat.models.mm.html#meerqat.models.mm.IntermediateLinearFusion.load_tf_weights">(meerqat.models.mm.IntermediateLinearFusion attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.MeerqatTrainer.log">log() (meerqat.train.trainer.MeerqatTrainer method)</a>
+</li>
+      <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.MultiPassageBERTTrainer.log_probs_to_answers">log_probs_to_answers() (meerqat.train.trainer.MultiPassageBERTTrainer method)</a>
+</li>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput.loss">loss (meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="M">M</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.data.labelstudio.html#meerqat.data.labelstudio.main">main() (in module meerqat.data.labelstudio)</a>
+
+      <ul>
+        <li><a href="meerqat.viz.stats.html#meerqat.viz.stats.main">(in module meerqat.viz.stats)</a>
+</li>
+        <li><a href="meerqat.viz.umap.html#meerqat.viz.umap.main">(in module meerqat.viz.umap)</a>
+</li>
+      </ul></li>
+      <li><a href="meerqat.data.loading.html#meerqat.data.loading.make_mapping">make_mapping() (in module meerqat.data.loading)</a>
+</li>
+      <li><a href="meerqat.data.loading.html#meerqat.data.loading.make_mapping_dataset">make_mapping_dataset() (in module meerqat.data.loading)</a>
+</li>
+      <li><a href="meerqat.data.loading.html#meerqat.data.loading.make_passage_dataset">make_passage_dataset() (in module meerqat.data.loading)</a>
+</li>
+      <li><a href="meerqat.data.loading.html#meerqat.data.loading.make_passage_item">make_passage_item() (in module meerqat.data.loading)</a>
+</li>
+      <li><a href="meerqat.data.loading.html#meerqat.data.loading.make_passages">make_passages() (in module meerqat.data.loading)</a>
+</li>
+      <li><a href="meerqat.data.loading.html#meerqat.data.loading.make_sentences_dataset">make_sentences_dataset() (in module meerqat.data.loading)</a>
+</li>
+      <li><a href="meerqat.data.loading.html#meerqat.data.loading.make_sentences_item">make_sentences_item() (in module meerqat.data.loading)</a>
+</li>
+      <li><a href="meerqat.models.utils.html#meerqat.models.utils.map_if_not_None">map_if_not_None() (in module meerqat.models.utils)</a>
+</li>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.KnowledgeBase.map_indices">map_indices() (meerqat.ir.search.KnowledgeBase method)</a>
+</li>
+      <li><a href="meerqat.data.loading.html#meerqat.data.loading.map_kilt_triviaqa">map_kilt_triviaqa() (in module meerqat.data.loading)</a>
+</li>
+      <li><a href="meerqat.ir.embedding.html#meerqat.ir.embedding.map_passage_to_kb">map_passage_to_kb() (in module meerqat.ir.embedding)</a>
+</li>
+      <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.max_memory_usage">max_memory_usage() (in module meerqat.train.trainer)</a>
+</li>
+      <li><a href="meerqat.data.utils.html#meerqat.data.utils.md5">md5() (in module meerqat.data.utils)</a>
+</li>
+      <li>
+    meerqat
+
+      <ul>
+        <li><a href="meerqat.html#module-meerqat">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.data
+
+      <ul>
+        <li><a href="meerqat.data.html#module-meerqat.data">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.data.kilt2vqa
+
+      <ul>
+        <li><a href="meerqat.data.kilt2vqa.html#module-meerqat.data.kilt2vqa">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.data.kvqa
+
+      <ul>
+        <li><a href="meerqat.data.kvqa.html#module-meerqat.data.kvqa">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.data.labelstudio
+
+      <ul>
+        <li><a href="meerqat.data.labelstudio.html#module-meerqat.data.labelstudio">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.data.loading
+
+      <ul>
+        <li><a href="meerqat.data.loading.html#module-meerqat.data.loading">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.data.mscelebs
+
+      <ul>
+        <li><a href="meerqat.data.mscelebs.html#module-meerqat.data.mscelebs">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.data.utils
+
+      <ul>
+        <li><a href="meerqat.data.utils.html#module-meerqat.data.utils">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.data.wiki
+
+      <ul>
+        <li><a href="meerqat.data.wiki.html#module-meerqat.data.wiki">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.data.wikidump
+
+      <ul>
+        <li><a href="meerqat.data.wikidump.html#module-meerqat.data.wikidump">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.data.wit
+
+      <ul>
+        <li><a href="meerqat.data.wit.html#module-meerqat.data.wit">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.image
+
+      <ul>
+        <li><a href="meerqat.image.html#module-meerqat.image">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.image.embedding
+
+      <ul>
+        <li><a href="meerqat.image.embedding.html#module-meerqat.image.embedding">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.image.face_box
+
+      <ul>
+        <li><a href="meerqat.image.face_box.html#module-meerqat.image.face_box">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.image.face_detection
+
+      <ul>
+        <li><a href="meerqat.image.face_detection.html#module-meerqat.image.face_detection">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.image.face_recognition
+
+      <ul>
+        <li><a href="meerqat.image.face_recognition.html#module-meerqat.image.face_recognition">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.image.resize
+
+      <ul>
+        <li><a href="meerqat.image.resize.html#module-meerqat.image.resize">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.ir
+
+      <ul>
+        <li><a href="meerqat.ir.html#module-meerqat.ir">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.ir.embedding
+
+      <ul>
+        <li><a href="meerqat.ir.embedding.html#module-meerqat.ir.embedding">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.ir.hp
+
+      <ul>
+        <li><a href="meerqat.ir.hp.html#module-meerqat.ir.hp">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.ir.metrics
+
+      <ul>
+        <li><a href="meerqat.ir.metrics.html#module-meerqat.ir.metrics">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.ir.search
+
+      <ul>
+        <li><a href="meerqat.ir.search.html#module-meerqat.ir.search">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.models
+
+      <ul>
+        <li><a href="meerqat.models.html#module-meerqat.models">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.models.image
+
+      <ul>
+        <li><a href="meerqat.models.image.html#module-meerqat.models.image">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.models.mm
+
+      <ul>
+        <li><a href="meerqat.models.mm.html#module-meerqat.models.mm">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.models.qa
+
+      <ul>
+        <li><a href="meerqat.models.qa.html#module-meerqat.models.qa">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    meerqat.models.utils
+
+      <ul>
+        <li><a href="meerqat.models.utils.html#module-meerqat.models.utils">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.train
+
+      <ul>
+        <li><a href="meerqat.train.html#module-meerqat.train">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.train.losses
+
+      <ul>
+        <li><a href="meerqat.train.losses.html#module-meerqat.train.losses">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.train.metrics
+
+      <ul>
+        <li><a href="meerqat.train.metrics.html#module-meerqat.train.metrics">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.train.split_biencoder
+
+      <ul>
+        <li><a href="meerqat.train.split_biencoder.html#module-meerqat.train.split_biencoder">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.train.trainee
+
+      <ul>
+        <li><a href="meerqat.train.trainee.html#module-meerqat.train.trainee">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.train.trainer
+
+      <ul>
+        <li><a href="meerqat.train.trainer.html#module-meerqat.train.trainer">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.viz
+
+      <ul>
+        <li><a href="meerqat.viz.html#module-meerqat.viz">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.viz.html
+
+      <ul>
+        <li><a href="meerqat.viz.html.html#module-meerqat.viz.html">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.viz.stats
+
+      <ul>
+        <li><a href="meerqat.viz.stats.html#module-meerqat.viz.stats">module</a>
+</li>
+      </ul></li>
+      <li>
+    meerqat.viz.umap
+
+      <ul>
+        <li><a href="meerqat.viz.umap.html#module-meerqat.viz.umap">module</a>
+</li>
+      </ul></li>
+      <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.MeerqatTrainer">MeerqatTrainer (class in meerqat.train.trainer)</a>
+</li>
+      <li><a href="meerqat.data.labelstudio.html#meerqat.data.labelstudio.merge">merge() (in module meerqat.data.labelstudio)</a>
+</li>
+      <li><a href="meerqat.models.mm.html#meerqat.models.mm.MMConfig">MMConfig (class in meerqat.models.mm)</a>
+</li>
+      <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.MMTrainer">MMTrainer (class in meerqat.train.trainer)</a>
+</li>
+      <li>
+    module
+
+      <ul>
+        <li><a href="meerqat.html#module-meerqat">meerqat</a>
+</li>
+        <li><a href="meerqat.data.html#module-meerqat.data">meerqat.data</a>
+</li>
+        <li><a href="meerqat.data.kilt2vqa.html#module-meerqat.data.kilt2vqa">meerqat.data.kilt2vqa</a>
+</li>
+        <li><a href="meerqat.data.kvqa.html#module-meerqat.data.kvqa">meerqat.data.kvqa</a>
+</li>
+        <li><a href="meerqat.data.labelstudio.html#module-meerqat.data.labelstudio">meerqat.data.labelstudio</a>
+</li>
+        <li><a href="meerqat.data.loading.html#module-meerqat.data.loading">meerqat.data.loading</a>
+</li>
+        <li><a href="meerqat.data.mscelebs.html#module-meerqat.data.mscelebs">meerqat.data.mscelebs</a>
+</li>
+        <li><a href="meerqat.data.utils.html#module-meerqat.data.utils">meerqat.data.utils</a>
+</li>
+        <li><a href="meerqat.data.wiki.html#module-meerqat.data.wiki">meerqat.data.wiki</a>
+</li>
+        <li><a href="meerqat.data.wikidump.html#module-meerqat.data.wikidump">meerqat.data.wikidump</a>
+</li>
+        <li><a href="meerqat.data.wit.html#module-meerqat.data.wit">meerqat.data.wit</a>
+</li>
+        <li><a href="meerqat.image.html#module-meerqat.image">meerqat.image</a>
+</li>
+        <li><a href="meerqat.image.embedding.html#module-meerqat.image.embedding">meerqat.image.embedding</a>
+</li>
+        <li><a href="meerqat.image.face_box.html#module-meerqat.image.face_box">meerqat.image.face_box</a>
+</li>
+        <li><a href="meerqat.image.face_detection.html#module-meerqat.image.face_detection">meerqat.image.face_detection</a>
+</li>
+        <li><a href="meerqat.image.face_recognition.html#module-meerqat.image.face_recognition">meerqat.image.face_recognition</a>
+</li>
+        <li><a href="meerqat.image.resize.html#module-meerqat.image.resize">meerqat.image.resize</a>
+</li>
+        <li><a href="meerqat.ir.html#module-meerqat.ir">meerqat.ir</a>
+</li>
+        <li><a href="meerqat.ir.embedding.html#module-meerqat.ir.embedding">meerqat.ir.embedding</a>
+</li>
+        <li><a href="meerqat.ir.hp.html#module-meerqat.ir.hp">meerqat.ir.hp</a>
+</li>
+        <li><a href="meerqat.ir.metrics.html#module-meerqat.ir.metrics">meerqat.ir.metrics</a>
+</li>
+        <li><a href="meerqat.ir.search.html#module-meerqat.ir.search">meerqat.ir.search</a>
+</li>
+        <li><a href="meerqat.models.html#module-meerqat.models">meerqat.models</a>
+</li>
+        <li><a href="meerqat.models.image.html#module-meerqat.models.image">meerqat.models.image</a>
+</li>
+        <li><a href="meerqat.models.mm.html#module-meerqat.models.mm">meerqat.models.mm</a>
+</li>
+        <li><a href="meerqat.models.qa.html#module-meerqat.models.qa">meerqat.models.qa</a>
+</li>
+        <li><a href="meerqat.models.utils.html#module-meerqat.models.utils">meerqat.models.utils</a>
+</li>
+        <li><a href="meerqat.train.html#module-meerqat.train">meerqat.train</a>
+</li>
+        <li><a href="meerqat.train.losses.html#module-meerqat.train.losses">meerqat.train.losses</a>
+</li>
+        <li><a href="meerqat.train.metrics.html#module-meerqat.train.metrics">meerqat.train.metrics</a>
+</li>
+        <li><a href="meerqat.train.split_biencoder.html#module-meerqat.train.split_biencoder">meerqat.train.split_biencoder</a>
+</li>
+        <li><a href="meerqat.train.trainee.html#module-meerqat.train.trainee">meerqat.train.trainee</a>
+</li>
+        <li><a href="meerqat.train.trainer.html#module-meerqat.train.trainer">meerqat.train.trainer</a>
+</li>
+        <li><a href="meerqat.viz.html#module-meerqat.viz">meerqat.viz</a>
+</li>
+        <li><a href="meerqat.viz.html.html#module-meerqat.viz.html">meerqat.viz.html</a>
+</li>
+        <li><a href="meerqat.viz.stats.html#module-meerqat.viz.stats">meerqat.viz.stats</a>
+</li>
+        <li><a href="meerqat.viz.umap.html#module-meerqat.viz.umap">meerqat.viz.umap</a>
+</li>
+      </ul></li>
+      <li><a href="meerqat.image.face_detection.html#meerqat.image.face_detection.MTCNN">MTCNN (class in meerqat.image.face_detection)</a>
+</li>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.MultiPassageBERT">MultiPassageBERT (class in meerqat.train.trainee)</a>
+</li>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.MultiPassageBERTOutput">MultiPassageBERTOutput (class in meerqat.train.trainee)</a>
+</li>
+      <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.MultiPassageBERTTrainer">MultiPassageBERTTrainer (class in meerqat.train.trainer)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.ned">ned() (in module meerqat.data.kilt2vqa)</a>
+</li>
+      <li><a href="meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.ner">ner() (in module meerqat.data.kilt2vqa)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.norm_mean_std">norm_mean_std() (in module meerqat.ir.search)</a>
+</li>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.normalize">normalize() (in module meerqat.ir.search)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.ir.hp.html#meerqat.ir.hp.Objective">Objective (class in meerqat.ir.hp)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.data.loading.html#meerqat.data.loading.paragraphs_preprocess">paragraphs_preprocess() (in module meerqat.data.loading)</a>
+</li>
+      <li><a href="meerqat.data.wikidump.html#meerqat.data.wikidump.parse_file">parse_file() (in module meerqat.data.wikidump)</a>
+</li>
+      <li><a href="meerqat.models.mm.html#meerqat.models.mm.ECAEncoderOutput.pooler_output">pooler_output (meerqat.models.mm.ECAEncoderOutput attribute)</a>
+
+      <ul>
+        <li><a href="meerqat.models.mm.html#meerqat.models.mm.EncoderOutput.pooler_output">(meerqat.models.mm.EncoderOutput attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.models.utils.html#meerqat.models.utils.prepare_inputs">prepare_inputs() (in module meerqat.models.utils)</a>
+</li>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.print_stats">print_stats() (in module meerqat.data.wiki)</a>
+</li>
+      <li><a href="meerqat.data.wikidump.html#meerqat.data.wikidump.process_article">process_article() (in module meerqat.data.wikidump)</a>
+</li>
+      <li><a href="meerqat.data.wikidump.html#meerqat.data.wikidump.process_articles">process_articles() (in module meerqat.data.wikidump)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Q">Q</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.query_commons_subcategories">query_commons_subcategories() (in module meerqat.data.wiki)</a>
+</li>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.query_depicted_entities">query_depicted_entities() (in module meerqat.data.wiki)</a>
+</li>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.query_feminine_labels">query_feminine_labels() (in module meerqat.data.wiki)</a>
+</li>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.query_image">query_image() (in module meerqat.data.wiki)</a>
+</li>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.query_sparql_entities">query_sparql_entities() (in module meerqat.data.wiki)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.query_superclasses">query_superclasses() (in module meerqat.data.wiki)</a>
+</li>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.DPRBiEncoderOutput.question_attentions">question_attentions (meerqat.train.trainee.DPRBiEncoderOutput attribute)</a>
+</li>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.DPRBiEncoderOutput.question_hidden_states">question_hidden_states (meerqat.train.trainee.DPRBiEncoderOutput attribute)</a>
+</li>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.BiEncoderOutput.question_pooler_output">question_pooler_output (meerqat.train.trainee.BiEncoderOutput attribute)</a>
+
+      <ul>
+        <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.DPRBiEncoderOutput.question_pooler_output">(meerqat.train.trainee.DPRBiEncoderOutput attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.QuestionAnsweringTrainer">QuestionAnsweringTrainer (class in meerqat.train.trainer)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.viz.umap.html#meerqat.viz.umap.reduce">reduce() (in module meerqat.viz.umap)</a>
+</li>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput.relevance_logits">relevance_logits (meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput attribute)</a>
+</li>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.remove_alive_humans">remove_alive_humans() (in module meerqat.data.wiki)</a>
+</li>
+      <li><a href="meerqat.data.loading.html#meerqat.data.loading.remove_articles">remove_articles() (in module meerqat.data.loading)</a>
+</li>
+      <li><a href="meerqat.data.loading.html#meerqat.data.loading.remove_punc">remove_punc() (in module meerqat.data.loading)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.data.loading.html#meerqat.data.loading.remove_special_fields">remove_special_fields() (in module meerqat.data.loading)</a>
+</li>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.request">request() (in module meerqat.data.wiki)</a>
+</li>
+      <li><a href="meerqat.image.resize.html#meerqat.image.resize.resize">resize() (in module meerqat.image.resize)</a>
+</li>
+      <li><a href="meerqat.train.metrics.html#meerqat.train.metrics.retrieval">retrieval() (in module meerqat.train.metrics)</a>
+</li>
+      <li><a href="meerqat.data.labelstudio.html#meerqat.data.labelstudio.retrieve_vqa">retrieve_vqa() (in module meerqat.data.labelstudio)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.save_image">save_image() (in module meerqat.data.wiki)</a>
+</li>
+      <li><a href="meerqat.data.labelstudio.html#meerqat.data.labelstudio.save_images">save_images() (in module meerqat.data.labelstudio)</a>
+</li>
+      <li><a href="meerqat.image.face_box.html#meerqat.image.face_box.scale_box">scale_box() (in module meerqat.image.face_box)</a>
+</li>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.scores2dict">scores2dict() (in module meerqat.ir.search)</a>
+</li>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.KnowledgeBase.search_batch">search_batch() (meerqat.ir.search.KnowledgeBase method)</a>
+</li>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.KnowledgeBase.search_batch_if_not_None">search_batch_if_not_None() (meerqat.ir.search.KnowledgeBase method)</a>
+</li>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.Searcher">Searcher (class in meerqat.ir.search)</a>
+</li>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.set_reference_images">set_reference_images() (in module meerqat.data.wiki)</a>
+</li>
+      <li><a href="meerqat.image.face_recognition.html#meerqat.image.face_recognition.similarity_transform">similarity_transform() (in module meerqat.image.face_recognition)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.special_path_to_file_name">special_path_to_file_name() (in module meerqat.data.wiki)</a>
+</li>
+      <li><a href="meerqat.train.split_biencoder.html#meerqat.train.split_biencoder.split_biencoder">split_biencoder() (in module meerqat.train.split_biencoder)</a>
+</li>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.MultiPassageBERTOutput.start_log_probs">start_log_probs (meerqat.train.trainee.MultiPassageBERTOutput attribute)</a>
+</li>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput.start_logits">start_logits (meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput attribute)</a>
+</li>
+      <li><a href="meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.stats">stats() (in module meerqat.data.kilt2vqa)</a>
+
+      <ul>
+        <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.stats">(in module meerqat.data.wiki)</a>
+</li>
+      </ul></li>
+      <li><a href="meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.stringify">stringify() (in module meerqat.data.kilt2vqa)</a>
+</li>
+      <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.subsample_dataset">subsample_dataset() (in module meerqat.train.trainer)</a>
+</li>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.BiEncoder.supports_gradient_checkpointing">supports_gradient_checkpointing (meerqat.train.trainee.BiEncoder attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.IndexKind.TEXT">TEXT (meerqat.ir.search.IndexKind attribute)</a>
+</li>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.thumbnail_to_file_name">thumbnail_to_file_name() (in module meerqat.data.wiki)</a>
+</li>
+      <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.Trainee">Trainee (class in meerqat.train.trainee)</a>
+</li>
+      <li><a href="meerqat.image.embedding.html#meerqat.image.embedding.ImageEncoder.training">training (meerqat.image.embedding.ImageEncoder attribute)</a>
+
+      <ul>
+        <li><a href="meerqat.image.face_detection.html#meerqat.image.face_detection.MTCNN.training">(meerqat.image.face_detection.MTCNN attribute)</a>
+</li>
+        <li><a href="meerqat.models.image.html#meerqat.models.image.FaceEmbedding.training">(meerqat.models.image.FaceEmbedding attribute)</a>
+</li>
+        <li><a href="meerqat.models.image.html#meerqat.models.image.ImageEmbedding.training">(meerqat.models.image.ImageEmbedding attribute)</a>
+</li>
+        <li><a href="meerqat.models.mm.html#meerqat.models.mm.ECAEncoder.training">(meerqat.models.mm.ECAEncoder attribute)</a>
+</li>
+        <li><a href="meerqat.models.mm.html#meerqat.models.mm.IntermediateLinearFusion.training">(meerqat.models.mm.IntermediateLinearFusion attribute)</a>
+</li>
+        <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.BiEncoder.training">(meerqat.train.trainee.BiEncoder attribute)</a>
+</li>
+        <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.DPRBiEncoder.training">(meerqat.train.trainee.DPRBiEncoder attribute)</a>
+</li>
+        <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.DPRReaderForQuestionAnswering.training">(meerqat.train.trainee.DPRReaderForQuestionAnswering attribute)</a>
+</li>
+        <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.MultiPassageBERT.training">(meerqat.train.trainee.MultiPassageBERT attribute)</a>
+</li>
+        <li><a href="meerqat.train.trainee.html#meerqat.train.trainee.Trainee.training">(meerqat.train.trainee.Trainee attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.data.loading.html#meerqat.data.loading.uniform_passages">uniform_passages() (in module meerqat.data.loading)</a>
+</li>
+      <li><a href="meerqat.data.loading.html#meerqat.data.loading.uniform_passages_of_sentences">uniform_passages_of_sentences() (in module meerqat.data.loading)</a>
+</li>
+      <li><a href="meerqat.ir.search.html#meerqat.ir.search.Searcher.union_results">union_results() (meerqat.ir.search.Searcher method)</a>
+</li>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.update_from_commons_rest">update_from_commons_rest() (in module meerqat.data.wiki)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.update_from_commons_sparql">update_from_commons_sparql() (in module meerqat.data.wiki)</a>
+</li>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.update_from_data">update_from_data() (in module meerqat.data.wiki)</a>
+</li>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.uri_to_qid">uri_to_qid() (in module meerqat.data.wiki)</a>
+</li>
+      <li><a href="meerqat.data.wiki.html#meerqat.data.wiki.uris_to_qids">uris_to_qids() (in module meerqat.data.wiki)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="W">W</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.wer">wer() (in module meerqat.data.kilt2vqa)</a>
+</li>
+      <li><a href="meerqat.data.loading.html#meerqat.data.loading.white_space_fix">white_space_fix() (in module meerqat.data.loading)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="meerqat.data.mscelebs.html#meerqat.data.mscelebs.wikidata2freebase">wikidata2freebase() (in module meerqat.data.mscelebs)</a>
+</li>
+      <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.MeerqatTrainer.write_metrics">write_metrics() (meerqat.train.trainer.MeerqatTrainer method)</a>
+</li>
+      <li><a href="meerqat.train.trainer.html#meerqat.train.trainer.MeerqatTrainer.write_predictions">write_predictions() (meerqat.train.trainer.MeerqatTrainer method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+
+
+            </article>
+            
+            
+            
+            <footer class="bd-footer-article">
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+            </footer>
+            
+          </div>
+          
+          
+          
+            <div class="bd-sidebar-secondary bd-toc">
+              
+<div class="toc-item">
+  
+</div>
+
+<div class="toc-item">
+  
+</div>
+
+            </div>
+          
+          
+        </div>
+        <footer class="bd-footer-content">
+          <div class="bd-footer-content__inner">
+            
+          </div>
+        </footer>
+        
+      </main>
+    </div>
+  </div>
+
+  
+    
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b"></script>
+
+  <footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    
+<p class="copyright">
+
+    &copy; Copyright 2022, CNRS.<br>
+
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+<p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.1.1.<br>
+</p>
+
+  </div>
+  
+</div>
+  </footer>
+  </body>
+</html>
