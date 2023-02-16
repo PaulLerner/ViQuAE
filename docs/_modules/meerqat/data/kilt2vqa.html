@@ -1,0 +1,1022 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>meerqat.data.kilt2vqa &#8212; meerqat v3.0.0-alpha documentation</title>
+  <script>
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+
+  
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/6.1.2/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b">
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/meerqat/data/kilt2vqa';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="docsearch:language" content="en">
+  </head>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__primary" id="__primary">
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__secondary" id="__secondary">
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+      
+<form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+    </div>
+  </div>
+
+  
+  <nav class="bd-header navbar navbar-expand-lg bd-navbar" id="navbar-main"><div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+      <span class="fas fa-bars"></span>
+  </label>
+  <div id="navbar-start">
+    
+    
+  
+
+
+<a class="navbar-brand logo" href="../../../index.html">
+
+  
+  
+  
+  
+  
+  
+  
+
+  
+  
+    <p class="title logo__title">meerqat v3.0.0-alpha documentation</p>
+  
+</a>
+    
+  </div>
+
+  
+  <div class="col-lg-9 navbar-header-items">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+    </ul>
+</nav>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      <div class="navbar-end-item navbar-end__search-button-container">
+        
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+
+
+  
+  <div class="search-button-container--mobile">
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+  </div>
+
+  
+  <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fas fa-outdent"></span>
+  </label>
+  
+
+</div>
+  </nav>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+    </ul>
+</nav>
+      </div>
+      
+      </div>
+    
+
+    
+    
+    <div class="sidebar-header-items__end">
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+    
+  </div>
+
+  
+
+  
+  <div class="sidebar-end-items sidebar-primary__section">
+    <div class="sidebar-end-items__item">
+    </div>
+  </div>
+
+      </div>
+      <main class="bd-main">
+        
+        
+        <div class="bd-content">
+          <div class="bd-article-container">
+            
+            <div class="bd-header-article">
+                
+            </div>
+            
+            
+            <article class="bd-article" role="main">
+              
+  <h1>Source code for meerqat.data.kilt2vqa</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding: utf-8</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">========</span>
+<span class="sd">Overview</span>
+<span class="sd">========</span>
+<span class="sd">.. image:: ../source_docs/kilt2vqa_big_picture.png</span>
+
+<span class="sd">All the data should be stored in the `data` folder, at the root of this repo.</span>
+
+<span class="sd">The goal is to generate questions suitable for VQA by replacing explicit entity mentions in existing textual QA datasets</span>
+<span class="sd">by an ambiguous one and illustrate the question with an image (that depicts the entity).</span>
+
+
+<span class="sd">-------</span>
+<span class="sd">``ner``</span>
+<span class="sd">-------</span>
+<span class="sd">.. image:: ../source_docs/kilt2vqa_nlp.png</span>
+
+<span class="sd">Slight misnomer, does a bit more than NER, i.e. dependency parsing.  </span>
+<span class="sd">Detected entities with valid type and dependency are replaced by a placeholder along with its syntactic children.  </span>
+<span class="sd">e.g. &#39;Who wrote *the opera **Carmen***?&#39; &amp;rarr; &#39;Who wrote `{mention}`&#39;  </span>
+<span class="sd">Note that, not only the entity mention (&#39;Carmen&#39;) but its syntactic children (&#39;the opera&#39;)</span>
+<span class="sd">are replaced by the placeholder.</span>
+<span class="sd">    </span>
+
+<span class="sd">-------</span>
+<span class="sd">``ner``</span>
+<span class="sd">-------</span>
+<span class="sd">.. image:: ../source_docs/kilt2vqa_nlp.png</span>
+
+<span class="sd">Disambiguate entity mentions using Wikipedia pages provided in KILT.  </span>
+<span class="sd">TriviaQA was originally framed as a reading-comprehension problem so the authors applied off-the-shelf NED and filtered</span>
+<span class="sd">out pages that didn&#39;t contain the answer.  </span>
+<span class="sd">For every entity mention we compute Word Error Rate (WER, i.e. word-level Levenshtein distance) for every wikipedia title</span>
+<span class="sd">and aliases. We save the minimal match and WER and recommand filtering out WER &gt; 0.5  </span>
+<span class="sd">More data about these entities is gathered in `wiki.py`, </span>
+<span class="sd">just run `kilt2vqa.py count_entities` first to save a dict with all disambiguated entities (outputs `entities.json`).</span>
+
+<span class="sd">---------------------</span>
+<span class="sd">``generate mentions``</span>
+<span class="sd">---------------------</span>
+<span class="sd">.. image:: ../source_docs/kilt2vqa_mentiong_gen.png</span>
+
+<span class="sd">Generate ambiguous entity mentions that can be used to replace the placeholder </span>
+<span class="sd">in the input question (you need to run `wiki.py data` first):  </span>
+<span class="sd">    - if the gender is available (not animal sex):</span>
+<span class="sd">        - &#39;this man&#39; or &#39;this woman&#39; (respecting transgender)</span>
+<span class="sd">        - &#39;he/him/his&#39; or &#39;she/her/hers&#39; w.r.t mention dependency              </span>
+<span class="sd">    - if human and occupation is available : &#39;this `{occupation}`&#39; (respecting gender if relevant, e.g. for &#39;actress&#39;)</span>
+<span class="sd">    - else if non-human:</span>
+<span class="sd">        - if a taxon : &#39;this `{taxon rank}`&#39; (e.g. &#39;species&#39;) </span>
+<span class="sd">        - else &#39;this `{class}`&#39; (e.g. &#39;this tower&#39;)   </span>
+<span class="sd">    </span>
+<span class="sd">---------------</span>
+<span class="sd">``generate vq``</span>
+<span class="sd">---------------  </span>
+<span class="sd">Make the VQA triple by choosing:  </span>
+<span class="sd">    - uniformly a mention type and a mention from this mention type (generated in the previous step)  </span>
+<span class="sd">    - the image with the best score (according to the heuristics computed in `wiki.py commons heuristics`).</span>
+<span class="sd">      Tries to use a unique image per entity.</span>
+
+<span class="sd">---------------</span>
+<span class="sd">``labelstudio``</span>
+<span class="sd">---------------</span>
+<span class="sd">First calls `generate vq` i.e. no need to call both!  </span>
+<span class="sd">The dataset is then converted to the Label Studio JSON format so you can annotate and convert the errors of the automatic pipeline (see [`ANNOTATION.md`](./ANNOTATION.md)).</span>
+
+<span class="sd">------------</span>
+<span class="sd">``download``</span>
+<span class="sd">------------</span>
+<span class="sd">Downloads images (set in `meerqat.data.wiki data entities`) from Wikimedia Commons using `meerqat.data.wiki.save_image`.  </span>
+<span class="sd">This might take a while (thus the sharding options), any help/advice is appreciated :)</span>
+<span class="sd">    </span>
+<span class="sd">==============</span>
+<span class="sd">For ``docopt``</span>
+<span class="sd">==============</span>
+<span class="sd">Usage:</span>
+<span class="sd">kilt2vqa.py ner &lt;subset&gt; [--disable_caching]</span>
+<span class="sd">kilt2vqa.py ned &lt;subset&gt; [--map_kwargs=&lt;path&gt; --disable_caching]</span>
+<span class="sd">kilt2vqa.py generate mentions &lt;subset&gt; [--threshold=&lt;threshold&gt; --disable_caching]</span>
+<span class="sd">kilt2vqa.py generate vq &lt;subset&gt; [--image_width=&lt;n&gt; --map_kwargs=&lt;path&gt; --disable_caching &lt;categories_to_exclude&gt;...]</span>
+<span class="sd">kilt2vqa.py count_entities &lt;subset&gt; [--threshold=&lt;threshold&gt; --map_kwargs=&lt;path&gt; --disable_caching]</span>
+<span class="sd">kilt2vqa.py labelstudio &lt;subset&gt; [--image_width=&lt;n&gt; --alternative_images=&lt;n&gt; --disable_caching &lt;categories_to_exclude&gt;...]</span>
+<span class="sd">kilt2vqa.py download &lt;subset&gt; [--image_width=&lt;n&gt; --map_kwargs=&lt;path&gt; --disable_caching --num_shards=&lt;n&gt; --shard_index=&lt;n&gt;]</span>
+
+<span class="sd">Options:</span>
+<span class="sd">--threshold=&lt;threshold&gt;         Threshold for Word Error Rate (WER, i.e. word-level Levenshtein distance)</span>
+<span class="sd">                                to consider the entity disambiguated [default: 0.5].</span>
+<span class="sd">--alternative_images=&lt;n&gt;        Number of alternative images to provide [default: 8].</span>
+<span class="sd">--image_width=&lt;n&gt;               Desired thumbnail width in pixels for the image url. Defaults to full-size</span>
+<span class="sd">--map_kwargs=&lt;path&gt;             Path towards a JSON file containing key-words arguments for the dataset.map function (e.g. batch size)</span>
+<span class="sd">--disable_caching               Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()</span>
+<span class="sd">--num_shards=&lt;n&gt;                Shard the dataset in n parts when downloading images</span>
+<span class="sd">--shard_index=&lt;n&gt;               Index of the desired shard when downloading images (use along with --num_shards)</span>
+
+<span class="sd">=========</span>
+<span class="sd">Functions</span>
+<span class="sd">=========</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">spacy</span>
+<span class="kn">from</span> <span class="nn">spacy.gold</span> <span class="kn">import</span> <span class="n">align</span>
+<span class="kn">from</span> <span class="nn">spacy.symbols</span> <span class="kn">import</span> <span class="n">DATE</span><span class="p">,</span> <span class="n">TIME</span><span class="p">,</span> <span class="n">PERCENT</span><span class="p">,</span> <span class="n">MONEY</span><span class="p">,</span> <span class="n">QUANTITY</span><span class="p">,</span> <span class="n">ORDINAL</span><span class="p">,</span> <span class="n">CARDINAL</span>
+<span class="kn">from</span> <span class="nn">spacy.symbols</span> <span class="kn">import</span> <span class="n">dobj</span><span class="p">,</span> <span class="n">nsubj</span><span class="p">,</span> <span class="n">pobj</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">nsubjpass</span><span class="p">,</span> <span class="n">poss</span><span class="p">,</span> <span class="n">obl</span><span class="p">,</span> <span class="n">root</span>
+
+<span class="kn">from</span> <span class="nn">docopt</span> <span class="kn">import</span> <span class="n">docopt</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span> <span class="nn">tabulate</span> <span class="kn">import</span> <span class="n">tabulate</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="kn">from</span> <span class="nn">datasets</span> <span class="kn">import</span> <span class="n">load_dataset</span><span class="p">,</span> <span class="n">load_from_disk</span><span class="p">,</span> <span class="n">set_caching_enabled</span>
+<span class="kn">from</span> <span class="nn">.loading</span> <span class="kn">import</span> <span class="n">map_kilt_triviaqa</span><span class="p">,</span> <span class="n">DATA_ROOT_PATH</span>
+<span class="kn">from</span> <span class="nn">.wiki</span> <span class="kn">import</span> <span class="n">HUMAN</span><span class="p">,</span> <span class="n">RESERVED_IMAGES</span><span class="p">,</span> <span class="n">special_path_to_file_name</span><span class="p">,</span> <span class="n">file_name_to_thumbnail</span><span class="p">,</span> <span class="n">thumbnail_to_file_name</span><span class="p">,</span> <span class="n">save_image</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">md5</span>
+
+<span class="c1"># spacy constants for NER</span>
+<span class="n">INVALID_ENTITIES</span> <span class="o">=</span> <span class="p">{</span><span class="n">DATE</span><span class="p">,</span> <span class="n">TIME</span><span class="p">,</span> <span class="n">PERCENT</span><span class="p">,</span> <span class="n">MONEY</span><span class="p">,</span> <span class="n">QUANTITY</span><span class="p">,</span> <span class="n">ORDINAL</span><span class="p">,</span> <span class="n">CARDINAL</span><span class="p">}</span>
+<span class="c1"># TODO check root and obj: in practice, it never happened on TriviaQA dev set</span>
+<span class="n">VALID_DEP</span> <span class="o">=</span> <span class="p">{</span><span class="n">dobj</span><span class="p">,</span> <span class="n">nsubj</span><span class="p">,</span> <span class="n">pobj</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">nsubjpass</span><span class="p">,</span> <span class="n">poss</span><span class="p">,</span> <span class="n">obl</span><span class="p">,</span> <span class="n">root</span><span class="p">}</span>
+
+<span class="c1"># spacy constants for pronoun-mention generation</span>
+<span class="n">HE_SHE_DEP</span> <span class="o">=</span> <span class="p">{</span><span class="n">spacy</span><span class="o">.</span><span class="n">symbols</span><span class="o">.</span><span class="n">NAMES</span><span class="p">[</span><span class="n">dep</span><span class="p">]</span> <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="p">[</span><span class="n">nsubj</span><span class="p">,</span> <span class="n">nsubjpass</span><span class="p">]}</span>
+<span class="n">HIM_HER_DEP</span> <span class="o">=</span> <span class="p">{</span><span class="n">spacy</span><span class="o">.</span><span class="n">symbols</span><span class="o">.</span><span class="n">NAMES</span><span class="p">[</span><span class="n">dep</span><span class="p">]</span> <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="p">[</span><span class="n">dobj</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">obl</span><span class="p">]}</span>
+<span class="n">HIS_HERS_DEP</span> <span class="o">=</span> <span class="p">{</span><span class="n">spacy</span><span class="o">.</span><span class="n">symbols</span><span class="o">.</span><span class="n">NAMES</span><span class="p">[</span><span class="n">poss</span><span class="p">]}</span>
+
+<span class="c1"># Wikidata constants for pronoun-mention generation</span>
+<span class="c1">#            &#39;male&#39;      &#39;trans. male&#39;</span>
+<span class="n">HE_GENDER</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Q6581097&#39;</span><span class="p">,</span> <span class="s1">&#39;Q2449503&#39;</span><span class="p">}</span>
+<span class="c1">#             &#39;female&#39;    &#39;trans. female&#39;</span>
+<span class="n">SHE_GENDER</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Q6581072&#39;</span><span class="p">,</span> <span class="s1">&#39;Q1052281&#39;</span><span class="p">}</span>
+<span class="c1">#            &#39;intersex&#39;  &#39;non-binary&#39;</span>
+<span class="n">NA_GENDER</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Q1097630&#39;</span><span class="p">,</span> <span class="s1">&#39;Q48270&#39;</span><span class="p">}</span>
+<span class="c1">#             &#39;male&#39;    &#39;female&#39;</span>
+<span class="n">ANIMAL_SEX</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Q44148&#39;</span><span class="p">,</span> <span class="s1">&#39;Q43445&#39;</span><span class="p">}</span>
+
+<span class="c1"># set random seed to get consistent random examples</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="wer"><a class="viewcode-back" href="../../../meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.wer">[docs]</a><span class="k">def</span> <span class="nf">wer</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute Word Error Rate (word-level Levenshtein distance) using spacy&quot;&quot;&quot;</span>
+    <span class="n">length</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">align</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">length</span></div>
+
+
+<div class="viewcode-block" id="item2placeholder"><a class="viewcode-back" href="../../../meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.item2placeholder">[docs]</a><span class="k">def</span> <span class="nf">item2placeholder</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Make input question suitable for VQA</span>
+<span class="sd">    by replacing an explicit entity mention and its syntactic children by a placeholder.</span>
+<span class="sd">    e.g. &#39;Who wrote the opera Carmen?&#39; -&gt; &#39;Who wrote {mention}&#39;</span>
+<span class="sd">    Note that, not only the entity mention (&#39;Carmen&#39;) but its syntactic children (&#39;the opera&#39;)</span>
+<span class="sd">    are replaced by the placeholder.</span>
+
+<span class="sd">    The final goal is to find an image that represents the entity</span>
+<span class="sd">    and fill the placeholder with an appropriate (ambiguous) mention (e.g. &#39;this opera&#39;, &#39;it&#39;)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    item: dict</span>
+<span class="sd">        original question should be in &#39;input&#39; key</span>
+<span class="sd">    model: spacy.lang.en.English</span>
+<span class="sd">        Full spacy pipeline, we use both NER and dependency parsing</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    item: dict</span>
+<span class="sd">        same as input with extra keys:</span>
+<span class="sd">        - &quot;placeholder&quot;: List[dict]</span>
+<span class="sd">          One dict like {&quot;input&quot;: str, &quot;entity&quot;: dict, &quot;dependency&quot;: str}</span>
+<span class="sd">        - &quot;spacy_input&quot;: dict</span>
+<span class="sd">          Original input, POS and NER-tagged with spacy in dict format</span>
+<span class="sd">          (using Doc.to_json())</span>
+
+<span class="sd">    Usage</span>
+<span class="sd">    -----</span>
+<span class="sd">    hugging_face_dataset.map(item2placeholder, fn_kwargs={&quot;model&quot;: spacy_model})</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">item</span><span class="p">[</span><span class="s1">&#39;placeholder&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">question</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">])</span>
+    <span class="n">item</span><span class="p">[</span><span class="s1">&#39;spacy_input&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">question</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>
+    <span class="c1"># filter questions without entities</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">question</span><span class="o">.</span><span class="n">ents</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">item</span>
+    <span class="n">potential_questions</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">question</span><span class="o">.</span><span class="n">ents</span><span class="p">:</span>
+        <span class="c1"># filter invalid entities</span>
+        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">label</span> <span class="ow">in</span> <span class="n">INVALID_ENTITIES</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># filter invalid dependencies</span>
+            <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">dep</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">VALID_DEP</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="c1"># get leftmost and rightmost syntactic children</span>
+            <span class="c1"># min/max hack is in case the &quot;valid dependency token&quot; is not the head in the entity span</span>
+            <span class="c1"># e.g. &quot;Who wrote the poem ‘The Lady of the Lake’?&quot;, &quot;Lake&quot; is pobj but a leaf</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">left_edge</span><span class="o">.</span><span class="n">i</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">right_edge</span><span class="o">.</span><span class="n">i</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">end</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">potential_questions</span><span class="p">[(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">token</span><span class="p">)</span>
+    <span class="c1"># keep only the biggest span for overlapping mentions</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">),</span> <span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">token</span><span class="p">)</span> <span class="ow">in</span> <span class="n">potential_questions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">included</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">other_start</span><span class="p">,</span> <span class="n">other_end</span> <span class="ow">in</span> <span class="n">potential_questions</span><span class="p">:</span>
+            <span class="c1"># included from the left</span>
+            <span class="k">if</span> <span class="n">start</span> <span class="o">&gt;=</span> <span class="n">other_start</span> <span class="ow">and</span> <span class="n">end</span> <span class="o">&lt;</span> <span class="n">other_end</span><span class="p">:</span>
+                <span class="n">included</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="c1"># included from the right</span>
+            <span class="k">elif</span> <span class="n">start</span> <span class="o">&gt;</span> <span class="n">other_start</span> <span class="ow">and</span> <span class="n">end</span> <span class="o">&lt;=</span> <span class="n">other_end</span><span class="p">:</span>
+                <span class="n">included</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">included</span><span class="p">:</span>
+            <span class="c1"># replace entity and its syntactic children by a placeholder</span>
+            <span class="n">placeholder</span> <span class="o">=</span> <span class="n">question</span><span class="p">[:</span><span class="n">start</span><span class="p">]</span><span class="o">.</span><span class="n">text_with_ws</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">{mention}</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">token</span><span class="o">.</span><span class="n">right_edge</span><span class="o">.</span><span class="n">whitespace_</span> <span class="o">+</span> <span class="n">question</span><span class="p">[</span><span class="n">end</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">text</span>
+            <span class="n">item</span><span class="p">[</span><span class="s1">&#39;placeholder&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;input&#39;</span><span class="p">:</span> <span class="n">placeholder</span><span class="p">,</span>
+                                        <span class="s1">&#39;entity&#39;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">as_doc</span><span class="p">()</span><span class="o">.</span><span class="n">to_json</span><span class="p">(),</span>
+                                        <span class="s1">&#39;dependency&#39;</span><span class="p">:</span> <span class="n">token</span><span class="o">.</span><span class="n">dep_</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">item</span></div>
+
+
+<div class="viewcode-block" id="stats"><a class="viewcode-back" href="../../../meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.stats">[docs]</a><span class="k">def</span> <span class="nf">stats</span><span class="p">(</span><span class="n">kilt_subset</span><span class="p">):</span>
+    <span class="n">stat_dict</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;placeholders&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;originals&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">kilt_subset</span><span class="p">),</span>
+        <span class="s2">&quot;distinct source&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;vqs&quot;</span><span class="p">:</span> <span class="mi">0</span>
+    <span class="p">}</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">kilt_subset</span><span class="p">:</span>
+        <span class="n">len_placeholder</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;placeholder&quot;</span><span class="p">])</span>
+        <span class="n">stat_dict</span><span class="p">[</span><span class="s2">&quot;placeholders&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">len_placeholder</span>
+        <span class="n">stat_dict</span><span class="p">[</span><span class="s2">&quot;distinct source&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">len_placeholder</span><span class="p">)</span>
+        <span class="n">stat_dict</span><span class="p">[</span><span class="s2">&quot;vqs&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;vq&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+        <span class="k">for</span> <span class="n">vq</span> <span class="ow">in</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;placeholder&#39;</span><span class="p">]:</span>
+            <span class="n">stat_dict</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">vq</span><span class="p">[</span><span class="s1">&#39;dependency&#39;</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">stat_dict</span><span class="p">[</span><span class="n">vq</span><span class="p">[</span><span class="s1">&#39;dependency&#39;</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">tabulate</span><span class="p">([</span><span class="n">stat_dict</span><span class="p">],</span> <span class="n">headers</span><span class="o">=</span><span class="s2">&quot;keys&quot;</span><span class="p">,</span> <span class="n">tablefmt</span><span class="o">=</span><span class="s1">&#39;latex&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="stringify"><a class="viewcode-back" href="../../../meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.stringify">[docs]</a><span class="k">def</span> <span class="nf">stringify</span><span class="p">(</span><span class="n">kilt_subset</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s2">&quot;placeholder&quot;</span><span class="p">,</span> <span class="n">include_answer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">include_provenance</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">include_dep</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">invalid</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">kilt_subset</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="n">field</span><span class="p">]:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;Q: </span><span class="si">{</span><span class="n">item</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">vq</span> <span class="ow">in</span> <span class="n">item</span><span class="p">[</span><span class="n">field</span><span class="p">]:</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;-&gt; </span><span class="si">{</span><span class="n">vq</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">vq</span><span class="p">[</span><span class="s1">&#39;dependency&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">include_dep</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">include_answer</span><span class="p">:</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;A: </span><span class="si">{</span><span class="n">item</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">][</span><span class="s1">&#39;answer&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">include_provenance</span> <span class="ow">and</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">][</span><span class="s1">&#39;provenance&#39;</span><span class="p">]:</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{</span><span class="n">item</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">][</span><span class="s1">&#39;provenance&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;title&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">invalid</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s1">&#39;spacy_input&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n\n\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">results</span><span class="p">),</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">invalid</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ner"><a class="viewcode-back" href="../../../meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.ner">[docs]</a><span class="k">def</span> <span class="nf">ner</span><span class="p">(</span><span class="n">subset</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    1st step: Named Entity Recognition (NER):</span>
+<span class="sd">    Goes through the kilt subset and apply &#39;item2placeholder&#39; function (see its docstring)</span>
+<span class="sd">    Save the resulting dataset to f&quot;{DATA_ROOT_PATH}/meerqat_{subset}&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># load model and data</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">spacy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;en_core_web_lg&quot;</span><span class="p">)</span>
+    <span class="n">kilt_tasks</span> <span class="o">=</span> <span class="n">map_kilt_triviaqa</span><span class="p">()</span>
+    <span class="n">kilt_subset</span> <span class="o">=</span> <span class="n">kilt_tasks</span><span class="p">[</span><span class="n">subset</span><span class="p">]</span>
+
+    <span class="c1"># go through the dataset and make input question suitable for VQA</span>
+    <span class="n">fn_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model</span><span class="p">}</span>
+    <span class="n">kilt_subset</span> <span class="o">=</span> <span class="n">kilt_subset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">item2placeholder</span><span class="p">,</span> <span class="n">fn_kwargs</span><span class="o">=</span><span class="n">fn_kwargs</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">(</span><span class="n">kilt_subset</span><span class="p">))</span>
+
+    <span class="c1"># save data</span>
+    <span class="n">output_path</span> <span class="o">=</span> <span class="n">DATA_ROOT_PATH</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;meerqat_</span><span class="si">{</span><span class="n">subset</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">kilt_subset</span><span class="o">.</span><span class="n">save_to_disk</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully saved output to &#39;</span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+    <span class="c1"># show N random examples</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">kilt_subset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+    <span class="n">randoms</span> <span class="o">=</span> <span class="p">[</span><span class="n">kilt_subset</span><span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">item</span><span class="p">()]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">[:</span><span class="n">N</span><span class="p">]]</span>
+    <span class="n">results</span><span class="p">,</span> <span class="n">invalid</span> <span class="o">=</span> <span class="n">stringify</span><span class="p">(</span><span class="n">randoms</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Generated questions out of </span><span class="si">{</span><span class="n">N</span><span class="si">}</span><span class="s2"> random examples:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Pruned questions out of </span><span class="si">{</span><span class="n">N</span><span class="si">}</span><span class="s2"> random examples:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">invalid</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="disambiguate"><a class="viewcode-back" href="../../../meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.disambiguate">[docs]</a><span class="k">def</span> <span class="nf">disambiguate</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">wikipedia</span><span class="p">,</span> <span class="n">wikipedia_ids</span><span class="p">,</span> <span class="n">pedia_index</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Go through candidate pages from TriviaQA and compute WER between entity mention and Wikipedia title/aliases</span>
+<span class="sd">    One should filter entities with a minimal WER of 0.5 (see &#39;wer&#39; key)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">vq</span> <span class="ow">in</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;placeholder&quot;</span><span class="p">]:</span>
+        <span class="n">ent</span> <span class="o">=</span> <span class="n">vq</span><span class="p">[</span><span class="s2">&quot;entity&quot;</span><span class="p">][</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">wers</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># process each wikipedia article only once (answer might come from different paragraphs but it&#39;s irrelevant for this)</span>
+        <span class="n">provenances</span> <span class="o">=</span> <span class="p">{</span><span class="n">provenance</span><span class="p">[</span><span class="s1">&#39;wikipedia_id&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;\(.+\)&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">provenance</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span>
+                       <span class="n">provenance</span> <span class="ow">in</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">][</span><span class="s1">&#39;provenance&#39;</span><span class="p">]}</span>
+        <span class="k">for</span> <span class="n">wid</span><span class="p">,</span> <span class="n">title</span> <span class="ow">in</span> <span class="n">provenances</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">aliases</span> <span class="o">=</span> <span class="p">{</span><span class="n">title</span><span class="p">}</span>
+            <span class="c1"># get aliases from wikipedia</span>
+            <span class="n">pedia_index</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">wid</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">wikipedia_ids</span> <span class="o">==</span> <span class="n">wid</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+            <span class="n">wiki_item</span> <span class="o">=</span> <span class="n">wikipedia</span><span class="p">[</span><span class="n">pedia_index</span><span class="p">[</span><span class="n">wid</span><span class="p">]]</span>
+            <span class="n">aliases</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">alias</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">alias</span> <span class="ow">in</span> <span class="n">wiki_item</span><span class="p">[</span><span class="s1">&#39;wikidata_info&#39;</span><span class="p">][</span><span class="s1">&#39;aliases&#39;</span><span class="p">][</span><span class="s1">&#39;alias&#39;</span><span class="p">]})</span>
+            <span class="c1"># compute WER and keep minimal for all aliases</span>
+            <span class="n">word_er</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="n">wer</span><span class="p">(</span><span class="n">ent</span><span class="p">,</span> <span class="n">alias</span><span class="o">.</span><span class="n">split</span><span class="p">())</span> <span class="k">for</span> <span class="n">alias</span> <span class="ow">in</span> <span class="n">aliases</span><span class="p">])</span>
+            <span class="n">wers</span><span class="p">[</span><span class="n">wid</span><span class="p">]</span> <span class="o">=</span> <span class="n">word_er</span>
+        <span class="c1"># keep minimal WER for all candidate articles</span>
+        <span class="n">best_provenance</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">wers</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">wers</span><span class="o">.</span><span class="n">get</span><span class="p">)</span>
+        <span class="n">best_wer</span> <span class="o">=</span> <span class="n">wers</span><span class="p">[</span><span class="n">best_provenance</span><span class="p">]</span>
+        <span class="n">wiki_item</span> <span class="o">=</span> <span class="n">wikipedia</span><span class="p">[</span><span class="n">pedia_index</span><span class="p">[</span><span class="n">best_provenance</span><span class="p">]]</span>
+        <span class="n">vq</span><span class="p">[</span><span class="s2">&quot;entity&quot;</span><span class="p">][</span><span class="s1">&#39;wikidata_info&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wiki_item</span><span class="p">[</span><span class="s1">&#39;wikidata_info&#39;</span><span class="p">]</span>
+        <span class="n">vq</span><span class="p">[</span><span class="s2">&quot;entity&quot;</span><span class="p">][</span><span class="s1">&#39;wikipedia_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wiki_item</span><span class="p">[</span><span class="s1">&#39;wikipedia_id&#39;</span><span class="p">]</span>
+        <span class="n">vq</span><span class="p">[</span><span class="s2">&quot;entity&quot;</span><span class="p">][</span><span class="s2">&quot;wer&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">best_wer</span>
+    <span class="k">return</span> <span class="n">item</span></div>
+
+
+<div class="viewcode-block" id="ned"><a class="viewcode-back" href="../../../meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.ned">[docs]</a><span class="k">def</span> <span class="nf">ned</span><span class="p">(</span><span class="n">subset</span><span class="p">,</span> <span class="o">**</span><span class="n">map_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    2nd step: Named Entity Disambiguation (NED) using TriviaQA provided list</span>
+<span class="sd">    Assumes that you already ran NER and loads dataset from f&quot;{DATA_ROOT_PATH}/meerqat_{subset}&quot;</span>
+<span class="sd">    and wikipedia from DATA_ROOT_PATH</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># load data</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">load_from_disk</span><span class="p">(</span><span class="n">DATA_ROOT_PATH</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;meerqat_</span><span class="si">{</span><span class="n">subset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">wikipedia</span> <span class="o">=</span> <span class="n">load_dataset</span><span class="p">(</span><span class="s1">&#39;kilt_wikipedia&#39;</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="n">DATA_ROOT_PATH</span><span class="p">)[</span><span class="s1">&#39;full&#39;</span><span class="p">]</span>
+    <span class="n">wikipedia_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">wikipedia</span><span class="p">[</span><span class="s2">&quot;wikipedia_id&quot;</span><span class="p">])</span>
+    <span class="n">pedia_index</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">fn_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;wikipedia&quot;</span><span class="p">:</span> <span class="n">wikipedia</span><span class="p">,</span> <span class="s2">&quot;wikipedia_ids&quot;</span><span class="p">:</span> <span class="n">wikipedia_ids</span><span class="p">,</span> <span class="s2">&quot;pedia_index&quot;</span><span class="p">:</span> <span class="n">pedia_index</span><span class="p">}</span>
+
+    <span class="c1"># go through dataset</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">disambiguate</span><span class="p">,</span> <span class="n">fn_kwargs</span><span class="o">=</span><span class="n">fn_kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">map_kwargs</span><span class="p">)</span>
+
+    <span class="c1"># save data</span>
+    <span class="n">output_path</span> <span class="o">=</span> <span class="n">DATA_ROOT_PATH</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;meerqat_</span><span class="si">{</span><span class="n">subset</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">dataset</span><span class="o">.</span><span class="n">save_to_disk</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully saved output to &#39;</span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="count_entities"><a class="viewcode-back" href="../../../meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.count_entities">[docs]</a><span class="k">def</span> <span class="nf">count_entities</span><span class="p">(</span><span class="n">subset</span><span class="p">,</span> <span class="n">wer_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">DATA_ROOT_PATH</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;meerqat_</span><span class="si">{</span><span class="n">subset</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">load_from_disk</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">entities</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">total</span><span class="p">,</span> <span class="n">disambiguated</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">dataset</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">vq</span> <span class="ow">in</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;placeholder&#39;</span><span class="p">]:</span>
+            <span class="n">total</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">entity</span> <span class="o">=</span> <span class="n">vq</span><span class="p">[</span><span class="s1">&#39;entity&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">entity</span><span class="p">[</span><span class="s1">&#39;wer&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">wer_threshold</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">disambiguated</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">wikidata_id</span> <span class="o">=</span> <span class="n">entity</span><span class="p">[</span><span class="s1">&#39;wikidata_info&#39;</span><span class="p">][</span><span class="s1">&#39;wikidata_id&#39;</span><span class="p">]</span>
+            <span class="n">entities</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">wikidata_id</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="n">entities</span><span class="p">[</span><span class="n">wikidata_id</span><span class="p">][</span><span class="s2">&quot;wikipedia_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">entity</span><span class="p">[</span><span class="s2">&quot;wikipedia_id&quot;</span><span class="p">]</span>
+            <span class="n">entities</span><span class="p">[</span><span class="n">wikidata_id</span><span class="p">]</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;n_questions&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">entities</span><span class="p">[</span><span class="n">wikidata_id</span><span class="p">][</span><span class="s2">&quot;n_questions&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">output_path</span> <span class="o">=</span> <span class="n">path</span> <span class="o">/</span> <span class="s2">&quot;entities.json&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">entities</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Successfully saved output to </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Disambiguated </span><span class="si">{</span><span class="n">disambiguated</span><span class="si">}</span><span class="s2"> questions (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">entities</span><span class="p">)</span><span class="si">}</span><span class="s2"> unique entities) &quot;</span>
+          <span class="sa">f</span><span class="s2">&quot;out of </span><span class="si">{</span><span class="n">total</span><span class="si">}</span><span class="s2"> questions with a threshold of </span><span class="si">{</span><span class="n">wer_threshold</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">entity</span><span class="p">[</span><span class="s2">&quot;n_questions&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span><span class="o">.</span><span class="n">describe</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="generate_mention"><a class="viewcode-back" href="../../../meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.generate_mention">[docs]</a><span class="k">def</span> <span class="nf">generate_mention</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">entities</span><span class="p">,</span> <span class="n">wer_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">feminine_labels</span><span class="o">=</span><span class="p">{}):</span>
+    <span class="k">for</span> <span class="n">vq</span> <span class="ow">in</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;placeholder&quot;</span><span class="p">]:</span>
+        <span class="n">entity</span> <span class="o">=</span> <span class="n">vq</span><span class="p">[</span><span class="s1">&#39;entity&#39;</span><span class="p">]</span>
+        <span class="n">ambiguous_mentions</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;pronouns&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;man_woman&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;occupation&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;instanceof&quot;</span><span class="p">:</span> <span class="p">[]</span>
+        <span class="p">}</span>
+
+        <span class="c1"># filter ambiguous entities and skip filtered entities</span>
+        <span class="n">qid</span> <span class="o">=</span> <span class="n">entity</span><span class="p">[</span><span class="s1">&#39;wikidata_info&#39;</span><span class="p">][</span><span class="s1">&#39;wikidata_id&#39;</span><span class="p">]</span>
+        <span class="n">entity_data</span> <span class="o">=</span> <span class="n">entities</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">qid</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">entity</span><span class="p">[</span><span class="s1">&#39;wer&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">wer_threshold</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">entity_data</span><span class="p">:</span>
+            <span class="n">vq</span><span class="p">[</span><span class="s1">&#39;ambiguous_mentions&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ambiguous_mentions</span>
+            <span class="k">continue</span>
+
+        <span class="n">dependency</span> <span class="o">=</span> <span class="n">vq</span><span class="p">[</span><span class="s1">&#39;dependency&#39;</span><span class="p">]</span>
+
+        <span class="n">gender</span> <span class="o">=</span> <span class="n">entity_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;gender&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+        <span class="n">gender</span> <span class="o">=</span> <span class="n">gender</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">gender</span> <span class="k">else</span> <span class="n">gender</span>
+        <span class="n">human</span> <span class="o">=</span> <span class="n">HUMAN</span> <span class="ow">in</span> <span class="n">entity_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;instanceof&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">taxon_rankLabel</span> <span class="o">=</span> <span class="n">entity_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;taxon_rankLabel&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+        <span class="c1"># man_woman and pronouns</span>
+        <span class="k">if</span> <span class="n">gender</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ANIMAL_SEX</span><span class="p">:</span>
+            <span class="c1"># man_woman</span>
+            <span class="k">if</span> <span class="n">gender</span> <span class="ow">in</span> <span class="n">HE_GENDER</span><span class="p">:</span>
+                <span class="n">ambiguous_mentions</span><span class="p">[</span><span class="s2">&quot;man_woman&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;this man&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">gender</span> <span class="ow">in</span> <span class="n">SHE_GENDER</span><span class="p">:</span>
+                <span class="n">ambiguous_mentions</span><span class="p">[</span><span class="s2">&quot;man_woman&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;this woman&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">gender</span> <span class="ow">in</span> <span class="n">NA_GENDER</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">gender</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No case were set for this gender: &#39;</span><span class="si">{</span><span class="n">gender</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+            <span class="c1"># pronouns</span>
+            <span class="k">if</span> <span class="n">dependency</span> <span class="ow">in</span> <span class="n">HE_SHE_DEP</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">gender</span> <span class="ow">in</span> <span class="n">HE_GENDER</span><span class="p">:</span>
+                    <span class="n">ambiguous_mentions</span><span class="p">[</span><span class="s2">&quot;pronouns&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;he&quot;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">gender</span> <span class="ow">in</span> <span class="n">SHE_GENDER</span><span class="p">:</span>
+                    <span class="n">ambiguous_mentions</span><span class="p">[</span><span class="s2">&quot;pronouns&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;she&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">dependency</span> <span class="ow">in</span> <span class="n">HIM_HER_DEP</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">gender</span> <span class="ow">in</span> <span class="n">HE_GENDER</span><span class="p">:</span>
+                    <span class="n">ambiguous_mentions</span><span class="p">[</span><span class="s2">&quot;pronouns&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;him&quot;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">gender</span> <span class="ow">in</span> <span class="n">SHE_GENDER</span><span class="p">:</span>
+                    <span class="n">ambiguous_mentions</span><span class="p">[</span><span class="s2">&quot;pronouns&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;her&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">dependency</span> <span class="ow">in</span> <span class="n">HIS_HERS_DEP</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">gender</span> <span class="ow">in</span> <span class="n">HE_GENDER</span><span class="p">:</span>
+                    <span class="n">ambiguous_mentions</span><span class="p">[</span><span class="s2">&quot;pronouns&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;his&quot;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">gender</span> <span class="ow">in</span> <span class="n">SHE_GENDER</span><span class="p">:</span>
+                    <span class="n">ambiguous_mentions</span><span class="p">[</span><span class="s2">&quot;pronouns&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;hers&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No case were set for this dependency: &#39;</span><span class="si">{</span><span class="n">dependency</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+        <span class="c1"># occupation</span>
+        <span class="k">if</span> <span class="n">entity_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;occupation&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">human</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">occupation</span> <span class="ow">in</span> <span class="n">entity_data</span><span class="p">[</span><span class="s1">&#39;occupation&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="n">feminine_label</span> <span class="o">=</span> <span class="n">feminine_labels</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">occupation</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">feminine_label</span> <span class="ow">and</span> <span class="n">gender</span> <span class="ow">in</span> <span class="n">SHE_GENDER</span><span class="p">:</span>
+                    <span class="n">occupation_label</span> <span class="o">=</span> <span class="n">feminine_label</span>
+                <span class="c1"># default label is default value since most names in English don&#39;t have genders</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">occupation_label</span> <span class="o">=</span> <span class="n">occupation</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">]</span>
+                <span class="n">ambiguous_mentions</span><span class="p">[</span><span class="s1">&#39;occupation&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;this </span><span class="si">{</span><span class="n">occupation_label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="c1"># taxon rank (e.g. &quot;species&quot;) or class (aka instanceof)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">human</span><span class="p">:</span>
+            <span class="c1"># taxon rank</span>
+            <span class="k">if</span> <span class="n">taxon_rankLabel</span><span class="p">:</span>
+                <span class="n">ambiguous_mentions</span><span class="p">[</span><span class="s1">&#39;instanceof&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;this </span><span class="si">{</span><span class="n">taxon_rankLabel</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="c1"># class (instanceof)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">instanceof</span> <span class="ow">in</span> <span class="n">entity_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;instanceof&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                    <span class="n">feminine_label</span> <span class="o">=</span> <span class="n">feminine_labels</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">instanceof</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">feminine_label</span> <span class="ow">and</span> <span class="n">gender</span> <span class="ow">in</span> <span class="n">SHE_GENDER</span><span class="p">:</span>
+                        <span class="n">instanceof_label</span> <span class="o">=</span> <span class="n">feminine_label</span>
+                    <span class="c1"># default label is default value since most names in English don&#39;t have genders</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">instanceof_label</span> <span class="o">=</span> <span class="n">instanceof</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">]</span>
+                    <span class="n">ambiguous_mentions</span><span class="p">[</span><span class="s1">&#39;instanceof&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;this </span><span class="si">{</span><span class="n">instanceof_label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">vq</span><span class="p">[</span><span class="s1">&#39;ambiguous_mentions&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ambiguous_mentions</span>
+
+    <span class="k">return</span> <span class="n">item</span></div>
+
+
+<div class="viewcode-block" id="generate_mentions"><a class="viewcode-back" href="../../../meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.generate_mentions">[docs]</a><span class="k">def</span> <span class="nf">generate_mentions</span><span class="p">(</span><span class="n">subset</span><span class="p">,</span> <span class="n">wer_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">**</span><span class="n">map_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;3rd step: generate ambiguous mentions given entities attributes (run `wiki.py data` first)&quot;&quot;&quot;</span>
+    <span class="c1"># load data</span>
+    <span class="n">dataset_path</span> <span class="o">=</span> <span class="n">DATA_ROOT_PATH</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;meerqat_</span><span class="si">{</span><span class="n">subset</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">load_from_disk</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">dataset_path</span> <span class="o">/</span> <span class="s2">&quot;entities.json&quot;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">entities</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="n">feminine_labels_path</span> <span class="o">=</span> <span class="n">dataset_path</span> <span class="o">/</span> <span class="s2">&quot;feminine_labels.json&quot;</span>
+    <span class="k">if</span> <span class="n">feminine_labels_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">feminine_labels_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">feminine_labels</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">feminine_labels</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">fn_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;entities&quot;</span><span class="p">:</span> <span class="n">entities</span><span class="p">,</span>
+        <span class="s2">&quot;wer_threshold&quot;</span><span class="p">:</span> <span class="n">wer_threshold</span><span class="p">,</span>
+        <span class="s2">&quot;feminine_labels&quot;</span><span class="p">:</span> <span class="n">feminine_labels</span>
+    <span class="p">}</span>
+
+    <span class="c1"># go through dataset</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">generate_mention</span><span class="p">,</span> <span class="n">fn_kwargs</span><span class="o">=</span><span class="n">fn_kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">map_kwargs</span><span class="p">)</span>
+
+    <span class="c1"># save data</span>
+    <span class="n">dataset</span><span class="o">.</span><span class="n">save_to_disk</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully saved output to &#39;</span><span class="si">{</span><span class="n">dataset_path</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+    <span class="n">total</span><span class="p">,</span> <span class="n">with_mention</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">dataset</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">vq</span> <span class="ow">in</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;placeholder&quot;</span><span class="p">]:</span>
+            <span class="n">total</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="p">[</span><span class="n">mention</span> <span class="k">for</span> <span class="n">mention_type</span> <span class="ow">in</span> <span class="n">vq</span><span class="p">[</span><span class="s1">&#39;ambiguous_mentions&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">mention</span> <span class="ow">in</span> <span class="n">mention_type</span><span class="p">]:</span>
+                <span class="n">with_mention</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">with_mention</span><span class="o">*</span><span class="mi">100</span><span class="o">/</span><span class="n">total</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">% of the visual questions have at least one ambiguous mention&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="generate_vq"><a class="viewcode-back" href="../../../meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.generate_vq">[docs]</a><span class="k">def</span> <span class="nf">generate_vq</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">entities</span><span class="p">,</span> <span class="n">image_width</span><span class="o">=</span><span class="mi">512</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a image (url), question, answer triple by choosing:</span>
+<span class="sd">        - uniformly a mention type and a mention from this mention type</span>
+<span class="sd">        - the image with the best score (with its title sorted last in &quot;titles&quot;).</span>
+<span class="sd">                Tries to use a unique image per entity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    item: Dataset item</span>
+<span class="sd">    entities: dict (see wiki.py)</span>
+<span class="sd">    image_width: int, optional</span>
+<span class="sd">        desired thumbnail width in pixels for the image url</span>
+<span class="sd">        Defaults to 512</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    item: Dataset item</span>
+<span class="sd">        with a new &#39;vq&#39; key (List[dict])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">item</span><span class="p">[</span><span class="s1">&#39;vq&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">kilt_id</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">placeholder</span> <span class="ow">in</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;placeholder&#39;</span><span class="p">]:</span>
+        <span class="n">mention_types</span> <span class="o">=</span> <span class="p">[</span><span class="n">mention_type</span> <span class="k">for</span> <span class="n">mention_type</span> <span class="ow">in</span> <span class="n">placeholder</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ambiguous_mentions&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">mention_type</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">mention_types</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">qid</span> <span class="o">=</span> <span class="n">placeholder</span><span class="p">[</span><span class="s1">&#39;entity&#39;</span><span class="p">][</span><span class="s1">&#39;wikidata_info&#39;</span><span class="p">][</span><span class="s1">&#39;wikidata_id&#39;</span><span class="p">]</span>
+        <span class="n">description</span> <span class="o">=</span> <span class="n">placeholder</span><span class="p">[</span><span class="s1">&#39;entity&#39;</span><span class="p">][</span><span class="s1">&#39;wikidata_info&#39;</span><span class="p">][</span><span class="s1">&#39;description&#39;</span><span class="p">]</span>
+        <span class="c1"># entity might have been filtered before-hand -&gt; get qid instead of &quot;[qid]&quot;</span>
+        <span class="n">entity</span> <span class="o">=</span> <span class="n">entities</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">qid</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">titles</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;titles&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">titles</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="c1"># try to use unique images per entity -&gt; pop titles</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">titles</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># note we assume that the images are sorted in ascending order w.r.t. their score</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="n">titles</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="n">titles</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">file_name_to_thumbnail</span><span class="p">(</span><span class="n">title</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="s2">&quot;File:&quot;</span><span class="p">):],</span> <span class="n">image_width</span><span class="o">=</span><span class="n">image_width</span><span class="p">)</span>
+
+        <span class="c1"># choose mention type (e.g. pronoun or occupation) uniformly from all types (that are not empty)</span>
+        <span class="n">mention_type</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">mention_types</span><span class="p">)</span>
+        <span class="c1"># choose mention uniformly from all mentions in this type (e.g. Barack Obama is a politician and a statesperson)</span>
+        <span class="n">mention</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">mention_type</span><span class="p">)</span>
+
+        <span class="n">inp</span> <span class="o">=</span> <span class="n">placeholder</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mention</span><span class="o">=</span><span class="n">mention</span><span class="p">)</span>
+        <span class="n">meerqat_id</span> <span class="o">=</span> <span class="n">md5</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">kilt_id</span><span class="p">,</span> <span class="n">qid</span><span class="p">,</span> <span class="n">inp</span><span class="p">,</span> <span class="n">url</span><span class="p">)))</span>
+        <span class="n">vq</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;input&#39;</span><span class="p">:</span> <span class="n">inp</span><span class="p">,</span>
+              <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="n">url</span><span class="p">,</span>
+              <span class="s1">&#39;wikidata_id&#39;</span><span class="p">:</span> <span class="n">qid</span><span class="p">,</span>
+              <span class="s1">&#39;meerqat_id&#39;</span><span class="p">:</span> <span class="n">meerqat_id</span><span class="p">,</span>
+              <span class="s1">&#39;mentions&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">mention</span> <span class="k">for</span> <span class="n">mention_type</span> <span class="ow">in</span> <span class="n">mention_types</span> <span class="k">for</span> <span class="n">mention</span> <span class="ow">in</span> <span class="n">mention_type</span><span class="p">],</span>
+              <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="n">description</span>
+              <span class="p">}</span>
+        <span class="n">item</span><span class="p">[</span><span class="s1">&#39;vq&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vq</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">item</span></div>
+
+
+<div class="viewcode-block" id="generate_vqs"><a class="viewcode-back" href="../../../meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.generate_vqs">[docs]</a><span class="k">def</span> <span class="nf">generate_vqs</span><span class="p">(</span><span class="n">subset</span><span class="p">,</span> <span class="n">exclude_categories</span><span class="o">=</span><span class="nb">set</span><span class="p">(),</span> <span class="n">image_width</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="o">**</span><span class="n">map_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    subset: str</span>
+<span class="sd">        Name of the subset to load (e.g. validation_triviaqa)</span>
+<span class="sd">    exclude_categories: set, optional</span>
+<span class="sd">        Exclude image where these keywords are included in one of its categories</span>
+<span class="sd">        e.g. {&#39;cosplay&#39;} might save you some trouble with GDPR</span>
+<span class="sd">        Defaults to empty set (i.e. keep all)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># load data</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;loading data...&quot;</span><span class="p">)</span>
+    <span class="n">dataset_path</span> <span class="o">=</span> <span class="n">DATA_ROOT_PATH</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;meerqat_</span><span class="si">{</span><span class="n">subset</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">load_from_disk</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">dataset_path</span> <span class="o">/</span> <span class="s2">&quot;entities.json&quot;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">entities</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
+    <span class="c1"># sort images and remove forbidden ones (move to wiki.py if it&#39;s too slow?)</span>
+    <span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">entities</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Processing images&quot;</span><span class="p">):</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;images&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">images</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># remove reserved images (e.g. illustrative_image) from the candidates</span>
+        <span class="k">for</span> <span class="n">reserved_image_key</span> <span class="ow">in</span> <span class="n">RESERVED_IMAGES</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">reserved_image</span> <span class="ow">in</span> <span class="nb">map</span><span class="p">(</span><span class="n">special_path_to_file_name</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">reserved_image_key</span><span class="p">,</span> <span class="p">{})):</span>
+                <span class="n">images</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">reserved_image</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="c1"># Exclude image where these keywords are included in one of its categories</span>
+        <span class="k">if</span> <span class="n">exclude_categories</span><span class="p">:</span>
+            <span class="n">todel</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">title</span><span class="p">,</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">images</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">del_image</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">image_categories</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;categories&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">image_categories</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">for</span> <span class="n">image_category</span> <span class="ow">in</span> <span class="n">image_categories</span><span class="p">:</span>
+                    <span class="n">image_category</span> <span class="o">=</span> <span class="n">image_category</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">category_to_exclude</span> <span class="ow">in</span> <span class="n">exclude_categories</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">category_to_exclude</span> <span class="ow">in</span> <span class="n">image_category</span><span class="p">:</span>
+                            <span class="n">del_image</span> <span class="o">=</span> <span class="kc">True</span>
+                            <span class="k">break</span>
+                    <span class="k">if</span> <span class="n">del_image</span><span class="p">:</span>
+                        <span class="n">todel</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+                        <span class="k">break</span>
+            <span class="k">for</span> <span class="n">title</span> <span class="ow">in</span> <span class="n">todel</span><span class="p">:</span>
+                <span class="n">images</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+
+        <span class="c1"># sort images w.r.t. their score in ASCENDING order (allows simpler use of pop)</span>
+        <span class="n">entity</span><span class="p">[</span><span class="s2">&quot;titles&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">title</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">[</span><span class="n">title</span><span class="p">][</span><span class="s1">&#39;heuristics&#39;</span><span class="p">]))</span>
+
+    <span class="c1"># go through dataset</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">generate_vq</span><span class="p">,</span> <span class="n">fn_kwargs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">entities</span><span class="o">=</span><span class="n">entities</span><span class="p">,</span> <span class="n">image_width</span><span class="o">=</span><span class="n">image_width</span><span class="p">),</span> <span class="o">**</span><span class="n">map_kwargs</span><span class="p">)</span>
+
+    <span class="c1"># save data</span>
+    <span class="n">dataset</span><span class="o">.</span><span class="n">save_to_disk</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully saved output to &#39;</span><span class="si">{</span><span class="n">dataset_path</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">(</span><span class="n">dataset</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">entities</span></div>
+
+
+<div class="viewcode-block" id="labelstudio"><a class="viewcode-back" href="../../../meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.labelstudio">[docs]</a><span class="k">def</span> <span class="nf">labelstudio</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">image_width</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">alternative_images</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;run generate_vqs and convert dataset to the Label Studio JSON format&quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Generating visual questions...&quot;</span><span class="p">)</span>
+    <span class="n">dataset</span><span class="p">,</span> <span class="n">entities</span> <span class="o">=</span> <span class="n">generate_vqs</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">image_width</span><span class="o">=</span><span class="n">image_width</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c1"># convert dataset to the Label Studio JSON format</span>
+    <span class="n">ls</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Converting to Label Studio&quot;</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">vq</span> <span class="ow">in</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;vq&quot;</span><span class="p">]:</span>
+            <span class="c1"># make some names more explicit and copy some stuff from original QA</span>
+            <span class="n">vq</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vq</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;url&#39;</span><span class="p">)</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="n">thumbnail_to_file_name</span><span class="p">(</span><span class="n">vq</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">)</span>
+            <span class="n">caption</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(.+)\.\w+&quot;</span><span class="p">,</span> <span class="n">title</span><span class="p">)</span>
+            <span class="n">caption</span> <span class="o">=</span> <span class="n">caption</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">caption</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">title</span>
+            <span class="n">vq</span><span class="p">[</span><span class="s2">&quot;image_caption&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">caption</span>
+            <span class="n">vq</span><span class="p">[</span><span class="s1">&#39;question&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">]</span>
+            <span class="n">vq</span><span class="p">[</span><span class="s2">&quot;vq&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vq</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;input&#39;</span><span class="p">)</span>
+            <span class="n">vq</span><span class="p">[</span><span class="s1">&#39;answer&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">][</span><span class="s1">&#39;answer&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">vq</span><span class="p">[</span><span class="s1">&#39;mentions&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">vq</span><span class="p">[</span><span class="s1">&#39;mentions&#39;</span><span class="p">])</span>
+            <span class="n">qid</span> <span class="o">=</span> <span class="n">vq</span><span class="p">[</span><span class="s1">&#39;wikidata_id&#39;</span><span class="p">]</span>
+            <span class="n">entity</span> <span class="o">=</span> <span class="n">entities</span><span class="p">[</span><span class="n">qid</span><span class="p">]</span>
+            <span class="n">vq</span><span class="p">[</span><span class="s1">&#39;entityLabel&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;entityLabel&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">vq</span><span class="p">[</span><span class="s1">&#39;entity_image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;reference_image&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+            <span class="c1"># gather alternative images to vq[&quot;image&quot;]</span>
+            <span class="c1"># remember images are sorted in ASC order wrt their score, thus the [::-1] to reverse the list</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">title</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">entity</span><span class="p">[</span><span class="s2">&quot;titles&quot;</span><span class="p">][</span><span class="o">-</span><span class="n">alternative_images</span><span class="p">:</span> <span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="c1"># remove &quot;File:&quot; prefix and extension</span>
+                <span class="n">caption</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;File:(.+)\.\w+&quot;</span><span class="p">,</span> <span class="n">title</span><span class="p">)</span>
+                <span class="n">caption</span> <span class="o">=</span> <span class="n">caption</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">caption</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">title</span>
+                <span class="c1"># title to url</span>
+                <span class="n">url</span> <span class="o">=</span> <span class="n">file_name_to_thumbnail</span><span class="p">(</span><span class="n">title</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="s2">&quot;File:&quot;</span><span class="p">):],</span> <span class="n">image_width</span><span class="o">=</span><span class="n">image_width</span><span class="p">)</span>
+                <span class="n">vq</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;altimage</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">url</span>
+                <span class="n">vq</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;altimage</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">caption&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">caption</span>
+            <span class="c1"># no missing values: use empty string instead</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">alternative_images</span><span class="p">):</span>
+                <span class="n">vq</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;altimage</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+                <span class="n">vq</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;altimage</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">caption&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+            <span class="n">ls</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">vq</span><span class="p">}</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># save output</span>
+    <span class="n">out_path</span> <span class="o">=</span> <span class="n">DATA_ROOT_PATH</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;meerqat_</span><span class="si">{</span><span class="n">subset</span><span class="si">}</span><span class="s2">&quot;</span> <span class="o">/</span> <span class="s2">&quot;labelstudio.json&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">out_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">ls</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully saved output to &#39;</span><span class="si">{</span><span class="n">out_path</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="download_image"><a class="viewcode-back" href="../../../meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.download_image">[docs]</a><span class="k">def</span> <span class="nf">download_image</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">image_width</span><span class="o">=</span><span class="mi">512</span><span class="p">):</span>
+    <span class="n">file_name</span> <span class="o">=</span> <span class="n">thumbnail_to_file_name</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">])</span>
+    <span class="n">thumbnail</span> <span class="o">=</span> <span class="n">file_name_to_thumbnail</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">image_width</span><span class="o">=</span><span class="n">image_width</span><span class="p">)</span>
+    <span class="n">file_path</span> <span class="o">=</span> <span class="n">save_image</span><span class="p">(</span><span class="n">thumbnail</span><span class="p">,</span> <span class="n">session</span><span class="p">)</span>
+    <span class="n">file_name</span> <span class="o">=</span> <span class="n">file_path</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">file_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">item</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">file_name</span>
+    <span class="k">return</span> <span class="n">item</span></div>
+
+
+<div class="viewcode-block" id="download_images"><a class="viewcode-back" href="../../../meerqat.data.kilt2vqa.html#meerqat.data.kilt2vqa.download_images">[docs]</a><span class="k">def</span> <span class="nf">download_images</span><span class="p">(</span><span class="n">subset</span><span class="p">,</span> <span class="n">fn_kwargs</span><span class="p">,</span> <span class="n">num_shards</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shard_index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">map_kwargs</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;loading data...&quot;</span><span class="p">)</span>
+    <span class="n">dataset_path</span> <span class="o">=</span> <span class="n">DATA_ROOT_PATH</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;meerqat_</span><span class="si">{</span><span class="n">subset</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">load_from_disk</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">num_shards</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">shard</span><span class="p">(</span><span class="n">num_shards</span><span class="p">,</span> <span class="n">shard_index</span><span class="p">)</span>
+
+    <span class="n">fn_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">session</span><span class="o">=</span><span class="n">requests</span><span class="o">.</span><span class="n">Session</span><span class="p">())</span>
+
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">download_image</span><span class="p">,</span> <span class="n">fn_kwargs</span><span class="o">=</span><span class="n">fn_kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">map_kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">num_shards</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">save_to_disk</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">save_to_disk</span><span class="p">(</span><span class="n">dataset_path</span><span class="o">/</span><span class="sa">f</span><span class="s2">&quot;shard_</span><span class="si">{</span><span class="n">shard_index</span><span class="si">}</span><span class="s2">_of_</span><span class="si">{</span><span class="n">num_shards</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c1"># parse arguments</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">docopt</span><span class="p">(</span><span class="vm">__doc__</span><span class="p">)</span>
+    <span class="n">subset</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;&lt;subset&gt;&#39;</span><span class="p">]</span>
+    <span class="n">map_kwargs_path</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;--map_kwargs&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">map_kwargs_path</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">map_kwargs_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">map_kwargs</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">map_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">set_caching_enabled</span><span class="p">(</span><span class="ow">not</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;--disable_caching&#39;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;ner&#39;</span><span class="p">]:</span>
+        <span class="n">ner</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;ned&#39;</span><span class="p">]:</span>
+        <span class="n">ned</span><span class="p">(</span><span class="n">subset</span><span class="p">,</span> <span class="o">**</span><span class="n">map_kwargs</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;count_entities&#39;</span><span class="p">]:</span>
+        <span class="n">wer_threshold</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;--threshold&#39;</span><span class="p">])</span>
+        <span class="n">count_entities</span><span class="p">(</span><span class="n">subset</span><span class="p">,</span> <span class="n">wer_threshold</span><span class="o">=</span><span class="n">wer_threshold</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;generate&#39;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;mentions&#39;</span><span class="p">]:</span>
+            <span class="n">wer_threshold</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;--threshold&#39;</span><span class="p">])</span>
+            <span class="n">generate_mentions</span><span class="p">(</span><span class="n">subset</span><span class="p">,</span> <span class="n">wer_threshold</span><span class="o">=</span><span class="n">wer_threshold</span><span class="p">,</span> <span class="o">**</span><span class="n">map_kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;vq&#39;</span><span class="p">]:</span>
+            <span class="n">exclude_categories</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;&lt;categories_to_exclude&gt;&#39;</span><span class="p">])</span>
+            <span class="n">image_width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;--image_width&#39;</span><span class="p">])</span> <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;--image_width&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">generate_vqs</span><span class="p">(</span><span class="n">subset</span><span class="p">,</span> <span class="n">exclude_categories</span><span class="p">,</span> <span class="n">image_width</span><span class="o">=</span><span class="n">image_width</span><span class="p">,</span> <span class="o">**</span><span class="n">map_kwargs</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;labelstudio&#39;</span><span class="p">]:</span>
+        <span class="n">exclude_categories</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;&lt;categories_to_exclude&gt;&#39;</span><span class="p">])</span>
+        <span class="n">alternative_images</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;--alternative_images&#39;</span><span class="p">])</span>
+        <span class="n">image_width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;--image_width&#39;</span><span class="p">])</span> <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;--image_width&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">labelstudio</span><span class="p">(</span><span class="n">subset</span><span class="p">,</span> <span class="n">exclude_categories</span><span class="o">=</span><span class="n">exclude_categories</span><span class="p">,</span> <span class="n">alternative_images</span><span class="o">=</span><span class="n">alternative_images</span><span class="p">,</span> <span class="n">image_width</span><span class="o">=</span><span class="n">image_width</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;download&#39;</span><span class="p">]:</span>
+        <span class="n">image_width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;--image_width&#39;</span><span class="p">])</span> <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;--image_width&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">num_shards</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;--num_shards&#39;</span><span class="p">])</span> <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;--num_shards&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">shard_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;--shard_index&#39;</span><span class="p">])</span> <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;--shard_index&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">download_images</span><span class="p">(</span><span class="n">subset</span><span class="p">,</span> <span class="n">fn_kwargs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">image_width</span><span class="o">=</span><span class="n">image_width</span><span class="p">),</span> <span class="n">num_shards</span><span class="o">=</span><span class="n">num_shards</span><span class="p">,</span> <span class="n">shard_index</span><span class="o">=</span><span class="n">shard_index</span><span class="p">,</span> <span class="o">**</span><span class="n">map_kwargs</span><span class="p">)</span>
+
+</pre></div>
+
+            </article>
+            
+            
+            
+            <footer class="bd-footer-article">
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+            </footer>
+            
+          </div>
+          
+          
+          
+            <div class="bd-sidebar-secondary bd-toc">
+              
+<div class="toc-item">
+  
+</div>
+
+<div class="toc-item">
+  
+</div>
+
+            </div>
+          
+          
+        </div>
+        <footer class="bd-footer-content">
+          <div class="bd-footer-content__inner">
+            
+          </div>
+        </footer>
+        
+      </main>
+    </div>
+  </div>
+
+  
+    
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b"></script>
+
+  <footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    
+<p class="copyright">
+
+    &copy; Copyright 2022, CNRS.<br>
+
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+<p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.1.1.<br>
+</p>
+
+  </div>
+  
+</div>
+  </footer>
+  </body>
+</html>
