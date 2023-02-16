@@ -1,0 +1,1450 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Welcome to meerqat’s documentation! &#8212; meerqat v3.0.0-alpha documentation</title>
+  <script>
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+<link href="_static/styles/pydata-sphinx-theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+
+  
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/6.1.2/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b">
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'index';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="docsearch:language" content="en">
+  </head>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__primary" id="__primary">
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__secondary" id="__secondary">
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+      
+<form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+    </div>
+  </div>
+
+  
+  <nav class="bd-header navbar navbar-expand-lg bd-navbar" id="navbar-main"><div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+      <span class="fas fa-bars"></span>
+  </label>
+  <div id="navbar-start">
+    
+    
+  
+
+
+<a class="navbar-brand logo" href="#">
+
+  
+  
+  
+  
+  
+  
+  
+
+  
+  
+    <p class="title logo__title">meerqat v3.0.0-alpha documentation</p>
+  
+</a>
+    
+  </div>
+
+  
+  <div class="col-lg-9 navbar-header-items">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+    </ul>
+</nav>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      <div class="navbar-end-item navbar-end__search-button-container">
+        
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+
+
+  
+  <div class="search-button-container--mobile">
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+  </div>
+
+  
+  <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fas fa-outdent"></span>
+  </label>
+  
+
+</div>
+  </nav>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+    </ul>
+</nav>
+      </div>
+      
+      </div>
+    
+
+    
+    
+    <div class="sidebar-header-items__end">
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+    
+  </div>
+
+  
+
+  
+  <div class="sidebar-end-items sidebar-primary__section">
+    <div class="sidebar-end-items__item">
+    </div>
+  </div>
+
+      </div>
+      <main class="bd-main">
+        
+        
+        <div class="bd-content">
+          <div class="bd-article-container">
+            
+            <div class="bd-header-article">
+                
+            </div>
+            
+            
+            <article class="bd-article" role="main">
+              
+  <div class="section" id="welcome-to-meerqat-s-documentation">
+<h1>Welcome to meerqat’s documentation!<a class="headerlink" href="#welcome-to-meerqat-s-documentation" title="Permalink to this heading">#</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<div class="section" id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</div>
+<div class="section" id="meerqat">
+<h2><code class="docutils literal notranslate"><span class="pre">meerqat</span></code><a class="headerlink" href="#meerqat" title="Permalink to this heading">#</a></h2>
+<dl class="simple">
+<dt>Source code and data used in the papers:</dt><dd><ul class="simple">
+<li><p><a class="reference external" href="https://hal.archives-ouvertes.fr/hal-03650618">ViQuAE, a Dataset for Knowledge-based Visual Question Answering about Named Entities</a>
+(Lerner et al., SIGIR’22)</p></li>
+<li><p>“Multimodal Inverse Cloze Task for Knowledge-based Visual Question Answering”
+(Lerner et al., submitted to ECIR 2023) TODO: add link or preprint.</p></li>
+</ul>
+</dd>
+</dl>
+<p>See also <a class="reference external" href="https://www.meerqat.fr/">MEERQAT project</a>.</p>
+</div>
+<div class="section" id="getting-the-viquae-dataset-and-kb">
+<h2>Getting the ViQuAE dataset and KB<a class="headerlink" href="#getting-the-viquae-dataset-and-kb" title="Permalink to this heading">#</a></h2>
+<p>The data is provided in two formats: HF’s <code class="docutils literal notranslate"><span class="pre">datasets</span></code> (based on Apache
+Arrow) and plain-text JSONL files (one JSON object per line). Both
+formats can be used in the same way as <code class="docutils literal notranslate"><span class="pre">datasets</span></code> parses objects into
+python <code class="docutils literal notranslate"><span class="pre">dict</span></code> (see below), however our code only supports (and is
+heavily based upon) <code class="docutils literal notranslate"><span class="pre">datasets</span></code>. Images are distributed separately, in
+standard formats (e.g. jpg). Both dataset formats are distributed in two
+versions, with (TODO) and without pre-computed features. The
+pre-computed feature version allows you to skip one or several step
+described in <a class="reference external" href="./EXPERIMENTS.rst">EXPERIMENTS.rst</a> (e.g. face
+detection).</p>
+<div class="section" id="the-images">
+<h3>The images<a class="headerlink" href="#the-images" title="Permalink to this heading">#</a></h3>
+<p>Here’s how to get the images grounding the questions of the dataset:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># get the images. TODO integrate this in a single dataset</span>
+git clone https://huggingface.co/datasets/PaulLerner/viquae_images
+<span class="c1"># to get ALL images (dataset+KB) use https://huggingface.co/datasets/PaulLerner/viquae_all_images instead</span>
+<span class="nb">cd</span> viquae_images
+<span class="c1"># in viquae_all_images, the archive is split into parts of 5GB</span>
+<span class="c1"># cat parts/* &gt; images.tar.gz</span>
+tar -xzvf images.tar.gz
+<span class="nb">export</span> <span class="nv">VIQUAE_IMAGES_PATH</span><span class="o">=</span><span class="nv">$PWD</span>/images
+</pre></div>
+</div>
+<p>Alternatively, you can download images from Wikimedia Commons using
+<code class="docutils literal notranslate"><span class="pre">meerqat.data.kilt2vqa</span> <span class="pre">download</span></code> (see below).</p>
+</div>
+<div class="section" id="the-viquae-dataset">
+<h3>The ViQuAE dataset<a class="headerlink" href="#the-viquae-dataset" title="Permalink to this heading">#</a></h3>
+<p>If you don’t want to use <code class="docutils literal notranslate"><span class="pre">datasets</span></code> you can get the data directly from
+<a class="reference external" href="https://huggingface.co/datasets/PaulLerner/viquae_dataset">https://huggingface.co/datasets/PaulLerner/viquae_dataset</a>
+(e.g. <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://huggingface.co/datasets/PaulLerner/viquae_dataset</span></code>).</p>
+<p>The dataset format largely follows
+<a class="reference external" href="https://huggingface.co/datasets/kilt_tasks">KILT</a>. Here I’ll
+describe the dataset without pre-computed features. Pre-computed
+features are basically the output of each step described in
+<a class="reference external" href="./EXPERIMENTS.rst">EXPERIMENTS.rst</a>.</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="kn">from</span> <span class="nn">datasets</span> <span class="kn">import</span> <span class="n">load_dataset</span>
+   <span class="o">...</span><span class="p">:</span> <span class="n">dataset</span> <span class="o">=</span> <span class="n">load_dataset</span><span class="p">(</span><span class="s1">&#39;PaulLerner/viquae_dataset&#39;</span><span class="p">)</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="n">dataset</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+<span class="n">DatasetDict</span><span class="p">({</span>
+    <span class="n">train</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">({</span>
+        <span class="n">features</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">,</span> <span class="s1">&#39;input&#39;</span><span class="p">,</span> <span class="s1">&#39;kilt_id&#39;</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;meta&#39;</span><span class="p">,</span> <span class="s1">&#39;original_question&#39;</span><span class="p">,</span> <span class="s1">&#39;output&#39;</span><span class="p">,</span> <span class="s1">&#39;url&#39;</span><span class="p">,</span> <span class="s1">&#39;wikidata_id&#39;</span><span class="p">],</span>
+        <span class="n">num_rows</span><span class="p">:</span> <span class="mi">1190</span>
+    <span class="p">})</span>
+    <span class="n">validation</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">({</span>
+        <span class="n">features</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">,</span> <span class="s1">&#39;input&#39;</span><span class="p">,</span> <span class="s1">&#39;kilt_id&#39;</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;meta&#39;</span><span class="p">,</span> <span class="s1">&#39;original_question&#39;</span><span class="p">,</span> <span class="s1">&#39;output&#39;</span><span class="p">,</span> <span class="s1">&#39;url&#39;</span><span class="p">,</span> <span class="s1">&#39;wikidata_id&#39;</span><span class="p">],</span>
+        <span class="n">num_rows</span><span class="p">:</span> <span class="mi">1250</span>
+    <span class="p">})</span>
+    <span class="n">test</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">({</span>
+        <span class="n">features</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">,</span> <span class="s1">&#39;input&#39;</span><span class="p">,</span> <span class="s1">&#39;kilt_id&#39;</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;meta&#39;</span><span class="p">,</span> <span class="s1">&#39;original_question&#39;</span><span class="p">,</span> <span class="s1">&#39;output&#39;</span><span class="p">,</span> <span class="s1">&#39;url&#39;</span><span class="p">,</span> <span class="s1">&#39;wikidata_id&#39;</span><span class="p">],</span>
+        <span class="n">num_rows</span><span class="p">:</span> <span class="mi">1257</span>
+    <span class="p">})</span>
+<span class="p">})</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="n">item</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;test&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="c1"># this is now a dict, like the JSON object loaded from the JSONL files</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">4</span><span class="p">]:</span> <span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">4</span><span class="p">]:</span> <span class="nb">dict</span>
+
+<span class="c1"># url of the grounding image</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">5</span><span class="p">]:</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">]</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">5</span><span class="p">]:</span> <span class="s1">&#39;http://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Jackie_Wilson.png/512px-Jackie_Wilson.png&#39;</span>
+
+<span class="c1"># file name of the grounding image as stored in $VIQUAE_IMAGES_PATH</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">6</span><span class="p">]:</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">6</span><span class="p">]:</span> <span class="s1">&#39;512px-Jackie_Wilson.png&#39;</span>
+
+<span class="c1"># you can thus load the image from $VIQUAE_IMAGES_PATH/item[&#39;image&#39;]</span>
+<span class="c1"># meerqat.data.loading.load_image_batch does that for you</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">7</span><span class="p">]:</span> <span class="kn">from</span> <span class="nn">meerqat.data.loading</span> <span class="kn">import</span> <span class="n">load_image_batch</span>
+<span class="c1"># fake batch of size 1</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">8</span><span class="p">]:</span> <span class="n">image</span> <span class="o">=</span> <span class="n">load_image_batch</span><span class="p">([</span><span class="n">item</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]])[</span><span class="mi">0</span><span class="p">]</span>
+<span class="c1"># it returns a PIL Image, all images have been resized to a width of 512</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">9</span><span class="p">]:</span> <span class="nb">type</span><span class="p">(</span><span class="n">image</span><span class="p">),</span> <span class="n">image</span><span class="o">.</span><span class="n">size</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">9</span><span class="p">]:</span> <span class="p">(</span><span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">,</span> <span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">526</span><span class="p">))</span>
+
+<span class="c1"># question string</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">10</span><span class="p">]:</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">]</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">10</span><span class="p">]:</span> <span class="s2">&quot;this singer&#39;s re-issued song became the UK Christmas number one after helping to advertise what brand?&quot;</span>
+
+<span class="c1"># answer string</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">11</span><span class="p">]:</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">][</span><span class="s1">&#39;original_answer&#39;</span><span class="p">]</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">11</span><span class="p">]:</span> <span class="s2">&quot;Levi&#39;s&quot;</span>
+
+<span class="c1"># processing the data:</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">12</span><span class="p">]:</span> <span class="n">dataset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">my_function</span><span class="p">)</span>
+<span class="c1"># this is almost the same as (see how can you adapt the code if you don’t want to use the `datasets` library)</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">13</span><span class="p">]:</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">dataset</span><span class="p">:</span>
+    <span class="o">...</span><span class="p">:</span>     <span class="n">my_function</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="the-viquae-knowledge-base-kb">
+<h3>The ViQuAE Knowledge Base (KB)<a class="headerlink" href="#the-viquae-knowledge-base-kb" title="Permalink to this heading">#</a></h3>
+<p>Again, the format of the KB is very similar to <a class="reference external" href="https://huggingface.co/datasets/kilt_wikipedia">KILT’s
+Wikipedia</a> so I will
+not describe all fields exhaustively.</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># again you can also clone directly from https://huggingface.co/datasets/PaulLerner/viquae_wikipedia to get the raw data</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">data_files</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">humans_with_faces</span><span class="o">=</span><span class="s1">&#39;humans_with_faces.jsonl.gz&#39;</span><span class="p">,</span>
+    <span class="n">humans_without_faces</span><span class="o">=</span><span class="s1">&#39;humans_without_faces.jsonl.gz&#39;</span><span class="p">,</span>
+    <span class="n">non_humans</span><span class="o">=</span><span class="s1">&#39;non_humans.jsonl.gz&#39;</span>
+<span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">kb</span> <span class="o">=</span> <span class="n">load_dataset</span><span class="p">(</span><span class="s1">&#39;PaulLerner/viquae_wikipedia&#39;</span><span class="p">,</span> <span class="n">data_files</span><span class="o">=</span><span class="n">data_files</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">kb</span>
+<span class="n">DatasetDict</span><span class="p">({</span>
+    <span class="n">humans_with_faces</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">({</span>
+        <span class="n">features</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;anchors&#39;</span><span class="p">,</span> <span class="s1">&#39;categories&#39;</span><span class="p">,</span> <span class="s1">&#39;image&#39;</span><span class="p">,</span> <span class="s1">&#39;kilt_id&#39;</span><span class="p">,</span> <span class="s1">&#39;text&#39;</span><span class="p">,</span> <span class="s1">&#39;url&#39;</span><span class="p">,</span> <span class="s1">&#39;wikidata_info&#39;</span><span class="p">,</span> <span class="s1">&#39;wikipedia_id&#39;</span><span class="p">,</span> <span class="s1">&#39;wikipedia_title&#39;</span><span class="p">],</span>
+        <span class="n">num_rows</span><span class="p">:</span> <span class="mi">506237</span>
+    <span class="p">})</span>
+    <span class="n">humans_without_faces</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">({</span>
+        <span class="n">features</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;anchors&#39;</span><span class="p">,</span> <span class="s1">&#39;categories&#39;</span><span class="p">,</span> <span class="s1">&#39;image&#39;</span><span class="p">,</span> <span class="s1">&#39;kilt_id&#39;</span><span class="p">,</span> <span class="s1">&#39;text&#39;</span><span class="p">,</span> <span class="s1">&#39;url&#39;</span><span class="p">,</span> <span class="s1">&#39;wikidata_info&#39;</span><span class="p">,</span> <span class="s1">&#39;wikipedia_id&#39;</span><span class="p">,</span> <span class="s1">&#39;wikipedia_title&#39;</span><span class="p">],</span>
+        <span class="n">num_rows</span><span class="p">:</span> <span class="mi">35736</span>
+    <span class="p">})</span>
+    <span class="n">non_humans</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">({</span>
+        <span class="n">features</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;anchors&#39;</span><span class="p">,</span> <span class="s1">&#39;categories&#39;</span><span class="p">,</span> <span class="s1">&#39;image&#39;</span><span class="p">,</span> <span class="s1">&#39;kilt_id&#39;</span><span class="p">,</span> <span class="s1">&#39;text&#39;</span><span class="p">,</span> <span class="s1">&#39;url&#39;</span><span class="p">,</span> <span class="s1">&#39;wikidata_info&#39;</span><span class="p">,</span> <span class="s1">&#39;wikipedia_id&#39;</span><span class="p">,</span> <span class="s1">&#39;wikipedia_title&#39;</span><span class="p">],</span>
+        <span class="n">num_rows</span><span class="p">:</span> <span class="mi">953379</span>
+    <span class="p">})</span>
+<span class="p">})</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">item</span> <span class="o">=</span> <span class="n">kb</span><span class="p">[</span><span class="s1">&#39;humans_with_faces&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;wikidata_info&#39;</span><span class="p">][</span><span class="s1">&#39;wikidata_id&#39;</span><span class="p">],</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;wikidata_info&#39;</span><span class="p">][</span><span class="s1">&#39;wikipedia_title&#39;</span><span class="p">]</span>
+<span class="p">(</span><span class="s1">&#39;Q313590&#39;</span><span class="p">,</span> <span class="s1">&#39;Alain Connes&#39;</span><span class="p">)</span>
+<span class="c1"># file name of the reference image as stored in $VIQUAE_IMAGES_PATH</span>
+<span class="c1"># you can use meerqat.data.loading.load_image_batch like above</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span>
+<span class="s1">&#39;512px-Alain_Connes.jpg&#39;</span>
+<span class="c1"># the text is stored in a list of string, one per paragraph</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">][</span><span class="s1">&#39;paragraph&#39;</span><span class="p">]),</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">][</span><span class="s1">&#39;paragraph&#39;</span><span class="p">])</span>
+<span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="mi">25</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">][</span><span class="s1">&#39;paragraph&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+<span class="s2">&quot;Alain Connes (; born 1 April 1947) is a French mathematician, </span><span class="se">\</span>
+<span class="s2">currently Professor at the Collège de France, IHÉS, Ohio State University and Vanderbilt University. </span><span class="se">\</span>
+<span class="s2">He was an Invited Professor at the Conservatoire national des arts et métiers (2000).</span><span class="se">\n</span><span class="s2">&quot;</span>
+</pre></div>
+</div>
+<p>To format the articles into text passages, follow instructions at
+<a class="reference external" href="./EXPERIMENTS.rst">EXPERIMENTS.rst</a> (Preprocessing passages section).
+Alternatively, get them from
+<a class="reference external" href="https://huggingface.co/datasets/PaulLerner/viquae_passages">https://huggingface.co/datasets/PaulLerner/viquae_passages</a>
+(<code class="docutils literal notranslate"><span class="pre">load_dataset('PaulLerner/viquae_passages')</span></code>).
+FIXME: passages of ‘PaulLerner/viquae_passages’ contain one extra article (less than 10 passages)
+compared to ‘PaulLerner/viquae_wikipedia’. Experiments in MICT fixed this but indices of the provided
+ViQuAE runs correspond to ‘PaulLerner/viquae_passages’ so they won’t match the new version.</p>
+</div>
+</div>
+<div class="section" id="formatting-wit-for-multimodal-ict">
+<h2>Formatting WIT for multimodal ICT<a class="headerlink" href="#formatting-wit-for-multimodal-ict" title="Permalink to this heading">#</a></h2>
+<p>WIT (Srinavasan et al. <a class="reference external" href="http://arxiv.org/abs/2103.01913">http://arxiv.org/abs/2103.01913</a>) is available at <a class="reference external" href="https://github.com/google-research-datasets/wit">https://github.com/google-research-datasets/wit</a>.
+(By any chance, if you have access to Jean Zay, it is available at <code class="docutils literal notranslate"><span class="pre">$DSDIR/WIT</span></code>).</p>
+<p>TODO add instructions to format WIT or upload the dataset to huggingface.</p>
+<p>Images should be resized to have a maximum height or width of 512 pixels using <code class="docutils literal notranslate"><span class="pre">meerqat.image.resize</span></code>.</p>
+</div>
+<div class="section" id="annotation-of-the-viquae-data">
+<h2>Annotation of the ViQuAE data<a class="headerlink" href="#annotation-of-the-viquae-data" title="Permalink to this heading">#</a></h2>
+<p>Please refer to <a class="reference external" href="./ANNOTATION.md">ANNOTATION.md</a> for the
+annotation instructions</p>
+</div>
+<div class="section" id="experiments">
+<h2>Experiments<a class="headerlink" href="#experiments" title="Permalink to this heading">#</a></h2>
+<p>Please refer to <a class="reference external" href="./EXPERIMENTS.rst">EXPERIMENTS.rst</a> for instructions
+to reproduce our experiments</p>
+</div>
+<div class="section" id="reference">
+<h2>Reference<a class="headerlink" href="#reference" title="Permalink to this heading">#</a></h2>
+<p>If you use this code or the ViQuAE dataset, please cite our paper:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>@inproceedings{lerner2022,
+   author = {Paul Lerner and Olivier Ferret and Camille Guinaudeau and Le Borgne, Hervé  and Romaric
+   Besançon and Moreno, Jose G  and Lovón Melgarejo, Jesús },
+   year={2022},
+   title={{ViQuAE}, a
+   Dataset for Knowledge-based Visual Question Answering about Named
+   Entities},
+   booktitle = {Proceedings of The 45th International ACM SIGIR Conference on Research and Development in Information Retrieval},
+    series = {SIGIR’22},
+   URL = {https://hal.archives-ouvertes.fr/hal-03650618},
+   DOI = {10.1145/3477495.3531753},
+   publisher = {Association for Computing Machinery},
+   address = {New York, NY, USA}
+}
+</pre></div>
+</div>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">#</a></h2>
+<p>Install PyTorch 1.9.0 following <a class="reference external" href="https://pytorch.org/get-started/locally/">the official document wrt to your
+distribution</a> (preferably
+in a virtual environment)</p>
+<p>Also install
+<a class="reference external" href="https://www.elastic.co/guide/en/elastic-stack-get-started/current/get-started-elastic-stack.html#install-elasticsearch">ElasticSearch</a>
+(and run it) if you want to do sparse retrieval.</p>
+<p>The rest should be installed using <code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/PaulLerner/ViQuAE.git
+$ pip install -e ViQuAE
+$ python
+&gt;&gt;&gt; import meerqat
+</pre></div>
+</div>
+</div>
+<div class="section" id="docs">
+<h2>Docs<a class="headerlink" href="#docs" title="Permalink to this heading">#</a></h2>
+<p>TODO add readthedocs. Until then, have a look at <code class="docutils literal notranslate"><span class="pre">docs/build/meerqat.html</span></code></p>
+<p>Building the docs: <code class="docutils literal notranslate"><span class="pre">sphinx-build</span> <span class="pre">-b</span> <span class="pre">html</span> <span class="pre">docs/source/</span> <span class="pre">docs/build/</span></code></p>
+</div>
+<div class="section" id="id1">
+<h2>Experiments<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h2>
+<p>All of the intermediate outputs of the pipeline should be provided along
+with the data so that people are free to skip one or few steps. (TODO
+add instructions here or in the README data section)</p>
+<p>All commands assume that the working directory is the root of the git
+repo (e.g. same level as this file) and that the data is stored in the
+<code class="docutils literal notranslate"><span class="pre">data</span></code> folder, at the root of this repo (except for images for which
+you can specify the <code class="docutils literal notranslate"><span class="pre">VIQUAE_IMAGES_PATH</span></code> environment variable).
+Alternatively, you can change the paths in the config files.</p>
+<p>Relevant configuration files can be found in the <a class="reference external" href="./experiments">experiments
+directory</a>. Expected output can be found in the
+relevant subdirectory of <code class="docutils literal notranslate"><span class="pre">experiments</span></code>.</p>
+<p>We train the models based on HF <code class="docutils literal notranslate"><span class="pre">transformers.Trainer</span></code>, itself based
+on <code class="docutils literal notranslate"><span class="pre">torch</span></code>. Even when not training models, all of our code is based on
+<code class="docutils literal notranslate"><span class="pre">torch</span></code>.</p>
+<p>Instructions specific to the ECIR-submitted Multimodal ICT paper are marked with “(MICT)”,
+while the instructions specific to the SIGIR ViQuAE dataset paper are marqued with “(ViQuAE)”.
+Note that, while face detection (MTCNN) and recognition (ArcFace) are not specific to ViQuAE,
+they did not give promising results with MICT.</p>
+<p>DMR was renamed “ECA” during the writing of the paper. For now, it is still called “DMR”
+in the code and documentation.</p>
+<div class="section" id="preprocessing-passages">
+<h3>Preprocessing passages<a class="headerlink" href="#preprocessing-passages" title="Permalink to this heading">#</a></h3>
+<div class="section" id="splitting-articles-in-passages">
+<h4>Splitting articles in passages<a class="headerlink" href="#splitting-articles-in-passages" title="Permalink to this heading">#</a></h4>
+<p>Articles are stripped of semi-structured data, such as tables and lists.
+Each article is then split into disjoint passages of 100 words for text
+retrieval, while preserving sentence boundaries, and the title of the
+article is appended to the beginning of each passage.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python -m meerqat.data.loading passages data/viquae_wikipedia data/viquae_passages experiments/passages/config.json --disable_caching
+</pre></div>
+</div>
+<p>Then you can extract some columns from the dataset to allow quick (and
+string) indexing:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python -m meerqat.data.loading map data/viquae_wikipedia wikipedia_title title2index.json --inverse --disable_caching
+python -m meerqat.data.loading map data/viquae_wikipedia passage_index article2passage.json --disable_caching
+</pre></div>
+</div>
+</div>
+<div class="section" id="find-relevant-passages-in-the-linked-wikipedia-article">
+<h4>Find relevant passages in the linked wikipedia article<a class="headerlink" href="#find-relevant-passages-in-the-linked-wikipedia-article" title="Permalink to this heading">#</a></h4>
+<p>This allows us to find the relevant passages for the question
+(i.e. those than contain the answer or the alternative answers):</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python -m meerqat.ir.metrics relevant data/viquae_dataset data/viquae_passages data/viquae_wikipedia/title2index.json data/viquae_wikipedia/article2passage.json --disable_caching
+</pre></div>
+</div>
+</div>
+<div class="section" id="find-relevant-passages-in-the-ir-results">
+<h4>Find relevant passages in the IR results<a class="headerlink" href="#find-relevant-passages-in-the-ir-results" title="Permalink to this heading">#</a></h4>
+<p>Our clue that the passage is relevant for the answer is quite weak: it
+contains the answer. That’s it. When scanning for the wikipedia article
+of the entity (in <code class="docutils literal notranslate"><span class="pre">meerqat.ir.metrics</span> <span class="pre">relevant</span></code>) you might find some
+passages that contain the answer but have nothing to do with the
+question. In order to tackle this, we use relevant passages that come
+from the IR step in priority. Moreover, in this step (and it has no
+impact on the evaluation) we only check for the <em>original answer</em> not
+all alternative answers (which come from wikipedia aliases). Since this
+step does not really fit in any of the modules and I cannot think of a
+way of making it robust, I’ll just let you run it yourself from this
+code snippet:</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasets</span> <span class="kn">import</span> <span class="n">load_from_disk</span><span class="p">,</span> <span class="n">set_caching_enabled</span>
+<span class="kn">from</span> <span class="nn">meerqat.ir.metrics</span> <span class="kn">import</span> <span class="n">find_relevant</span>
+
+<span class="n">set_caching_enabled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">kb</span> <span class="o">=</span> <span class="n">load_from_disk</span><span class="p">(</span><span class="s1">&#39;data/viquae_passages/&#39;</span><span class="p">)</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">load_from_disk</span><span class="p">(</span><span class="s1">&#39;data/viquae_dataset/&#39;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">keep_relevant_search_wrt_original_in_priority</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">kb</span><span class="p">):</span>
+    <span class="c1"># this contains the latest result of the fusion</span>
+    <span class="c1"># to reproduce the results of the paper:</span>
+    <span class="c1"># - use DPR+Image as IR to train the reader or fine-tune DMR/ECA/ILF</span>
+    <span class="c1"># - use BM25 as IR to train DPR (then save in &#39;BM25_provenance_indices&#39;/&#39;BM25_irrelevant_indices&#39;)</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;search_indices&#39;</span><span class="p">]</span>
+    <span class="n">relevant_indices</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">find_relevant</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">][</span><span class="s1">&#39;original_answer&#39;</span><span class="p">],</span> <span class="p">[],</span> <span class="n">kb</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">relevant_indices</span><span class="p">:</span>
+        <span class="n">item</span><span class="p">[</span><span class="s1">&#39;search_provenance_indices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">relevant_indices</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">item</span><span class="p">[</span><span class="s1">&#39;search_provenance_indices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;original_answer_provenance_indices&#39;</span><span class="p">]</span>
+    <span class="n">item</span><span class="p">[</span><span class="s1">&#39;search_irrelevant_indices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">relevant_indices</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">item</span>
+
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">keep_relevant_search_wrt_original_in_priority</span><span class="p">,</span> <span class="n">fn_kwargs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">kb</span><span class="o">=</span><span class="n">kb</span><span class="p">))</span>
+<span class="n">dataset</span><span class="o">.</span><span class="n">save_to_disk</span><span class="p">(</span><span class="s1">&#39;data/viquae_dataset/&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="image">
+<h3>Image<a class="headerlink" href="#image" title="Permalink to this heading">#</a></h3>
+<p>This will be applied on both the QA dataset and the KB.</p>
+<p>TODO add instructions for WIT.</p>
+<div class="section" id="global-image-embedding">
+<h4>Global image embedding<a class="headerlink" href="#global-image-embedding" title="Permalink to this heading">#</a></h4>
+<dl class="simple">
+<dt>Obtained using ResNet-50:</dt><dd><ul class="simple">
+<li><p>one pre-trained on ImageNet, pooled with
+max-pooling. You can tweak the pooling layer and the backbone in the
+config file, as long as it is a <code class="docutils literal notranslate"><span class="pre">nn.Module</span></code> and
+<code class="docutils literal notranslate"><span class="pre">torchvision.models</span></code>, respectively.</p></li>
+<li><p>the other trained using
+<a class="reference external" href="https://github.com/openai/CLIP">CLIP</a> (install it from their repo)</p></li>
+</ul>
+</dd>
+</dl>
+<p>Obviously you can also tweak the batch size.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># embed dataset images with ImageNet-ResNet50</span>
+python -m meerqat.image.embedding data/viquae_dataset experiments/image_embedding/imagenet/config.json --disable_caching
+<span class="c1"># embed KB images with ImageNet-ResNet50</span>
+python -m meerqat.image.embedding data/viquae_wikipedia experiments/image_embedding/imagenet/config.json --disable_caching
+<span class="c1"># embed dataset images with CLIP-ResNet50</span>
+python -m meerqat.image.embedding data/viquae_dataset experiments/image_embedding/clip/config.json --disable_caching
+<span class="c1"># embed KB images with CLIP-ResNet50</span>
+python -m meerqat.image.embedding data/viquae_wikipedia experiments/image_embedding/clip/config.json --disable_caching
+</pre></div>
+</div>
+<p>To get a better sense of the representations the these model provide,
+you can have a look at an interactive UMAP visualization, on 1% of the
+KB images and the whole dataset images, w.r.t. the entity type,
+<a class="reference external" href="http://meerqat.fr/imagenet-viquae.html">here</a> for ImageNet-ResNet50,
+and <a class="reference external" href="http://meerqat.fr/clip-viquae.html">there</a> for CLIP (takes a
+while to load).</p>
+</div>
+<div class="section" id="face-detection">
+<h4>Face detection<a class="headerlink" href="#face-detection" title="Permalink to this heading">#</a></h4>
+<p>Things get a little more complicated here, first, you will want to split
+your KB in humans and non-humans, since we assume that faces are not
+relevant for non-human entities. I guess there’s no need to provide code
+for that since it’s quite trivial and we will provide KB already split
+in humans and non-humans.</p>
+<p>Face detection uses MTCNN (Zhang et al., 2016) via the
+<code class="docutils literal notranslate"><span class="pre">facenet_pytorch</span></code> library. Feel free to tweak the hyperparameters (we
+haven’t), you can also set whether to order faces by size or probability
+(we do the latter)</p>
+<p>Probabilities, bounding boxes and landmarks are saved directly in the
+dataset, face croping happens as a pre-processing of Face recognition
+(next section).</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python -m meerqat.image.face_detection data/viquae_dataset --disable_caching --batch_size<span class="o">=</span><span class="m">256</span>
+python -m meerqat.image.face_detection data/viquae_wikipedia/humans --disable_caching --batch_size<span class="o">=</span><span class="m">256</span>
+</pre></div>
+</div>
+<p>After this you will also want to split the humans KB into humans with
+detected faces and without.</p>
+</div>
+<div class="section" id="face-recognition">
+<h4>Face recognition<a class="headerlink" href="#face-recognition" title="Permalink to this heading">#</a></h4>
+<div class="line-block">
+<div class="line">Face recognition uses ArcFace (Deng et al., 2019) pre-trained on
+MS-Celeb (Guo et al., 2016) via the insightface <code class="docutils literal notranslate"><span class="pre">arcface_torch</span></code>
+library. To be able to use <code class="docutils literal notranslate"><span class="pre">arcface_torch</span></code> as a library you will
+need to add an <code class="docutils literal notranslate"><span class="pre">__init__</span></code> and <code class="docutils literal notranslate"><span class="pre">setup</span></code> file in
+<code class="docutils literal notranslate"><span class="pre">recognition/arcface_torch</span></code> and <code class="docutils literal notranslate"><span class="pre">recognition</span></code> directories,
+respectively, like I did here:
+<a class="reference external" href="https://github.com/PaulLerner/insightface/commit/f159d90ce1dc620730c99e8a81991a7c5981dc3e">https://github.com/PaulLerner/insightface/commit/f159d90ce1dc620730c99e8a81991a7c5981dc3e</a></div>
+<div class="line">Alternatively install it from my fork (or let me know how we are
+supposed to this cleanly :)</div>
+</div>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/PaulLerner/insightface.git
+<span class="nb">cd</span> insightface
+git checkout chore/arcface_torch
+<span class="nb">cd</span> recognition
+pip install -e .
+</pre></div>
+</div>
+<p>The pretrained ResNet-50 can be downloaded <a class="reference external" href="https://onedrive.live.com/?authkey=%21AFZjr283nwZHqbA&amp;id=4A83B6B633B029CC%215583&amp;cid=4A83B6B633B029CC">from
+here</a>
+and the path to the backbone should be
+<code class="docutils literal notranslate"><span class="pre">data/arcface/ms1mv3_arcface_r50_fp16/backbone.pth</span></code></p>
+<p>The 5 face landmarks (two eyes, nose and two mouth corners) are adopted
+to perform similarity transformation so that they are always at the same
+position in the image, regardless of the original pose of the person.
+This is done with the <code class="docutils literal notranslate"><span class="pre">similarity_transform</span></code> function using
+<code class="docutils literal notranslate"><span class="pre">skimage</span></code> and <code class="docutils literal notranslate"><span class="pre">cv2</span></code>.</p>
+<p>You can tweak the backbone and the batch size, we only tried with
+ResNet-50 (note there’s an extra layer compared to the ImageNet one
+which pools the embedding dimension down to 512).</p>
+<p>Finally we can run it!</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python -m meerqat.image.face_recognition data/viquae_dataset experiments/face_recognition/config.json --disable_caching
+python -m meerqat.image.face_recognition data/viquae_wikipedia/humans_with_faces experiments/face_recognition/config.json --disable_caching
+</pre></div>
+</div>
+<p>Again, you can have a look at an <a class="reference external" href="http://meerqat.fr/arcface-viquae.html">interactive UMAP
+visualization</a> (takes a while
+to load), trained on the whole KB faces (but displaying only 10K to get
+a reasonable HTML size).</p>
+</div>
+<div class="section" id="bounding-box-engineering-mict">
+<h4>Bounding box engineering (MICT)<a class="headerlink" href="#bounding-box-engineering-mict" title="Permalink to this heading">#</a></h4>
+<p>Again, this is provided for the sake of archival but does not provide better results
+than MICT models based on CLIP only (no faces).</p>
+<p>We follow UNITER (Chen et al.) and represent bounding box features like:
+<span class="math notranslate nohighlight">\((x_1, y_1, x_2, y_2, w, h, a)\)</span>, where <span class="math notranslate nohighlight">\((x_1, y_1)\)</span> and <span class="math notranslate nohighlight">\((x_2, y_2)\)</span>
+are the top-left and bottom-right coordinates, respectively, both scaled between [0, 1],
+<span class="math notranslate nohighlight">\(w = x_2-x_1\)</span> is the width,  <span class="math notranslate nohighlight">\(h = y_2-y_1\)</span> is the height, and <span class="math notranslate nohighlight">\(a = w \times h\)</span> is the area.</p>
+<p>To achieve this, simply run: <code class="docutils literal notranslate"><span class="pre">meerqat.image.face_box</span> <span class="pre">&lt;dataset&gt;</span></code>.
+Be sure to run it <strong>after</strong> <code class="docutils literal notranslate"><span class="pre">meerqat.image.face_recognition</span></code> since it scales bounding boxes and landmarks to [0, 1].</p>
+</div>
+</div>
+<div class="section" id="training-dual-encoders-e-g-dpr">
+<h3>Training dual encoders (e.g. DPR)<a class="headerlink" href="#training-dual-encoders-e-g-dpr" title="Permalink to this heading">#</a></h3>
+<div class="section" id="dpr">
+<h4>DPR<a class="headerlink" href="#dpr" title="Permalink to this heading">#</a></h4>
+<p>We use the same hyperparameters as <a class="reference external" href="https://github.com/facebookresearch/DPR">Karpukinh et
+al.</a>. We train DPR using 4
+V100 GPUs of 32GB, allowing a total batch size of 256 (32 questions * 2
+passages each * 4 GPUs). This is crucial because each question uses all
+passages paired with other questions in the batch as negative examples.
+Each question is paired with 1 relevant passage and 1 irrelevant passage
+mined with BM25.</p>
+<p>Both the question and passage encoder are initialized from
+<code class="docutils literal notranslate"><span class="pre">&quot;bert-base-uncased&quot;</span></code>.</p>
+<p>To launch the script with multiple GPUs you should you use
+<code class="docutils literal notranslate"><span class="pre">torch.distributed.launch</span> <span class="pre">--nproc_per_node=&lt;number</span> <span class="pre">of</span> <span class="pre">GPUs&gt;</span></code>. This is
+omitted in the following commands.</p>
+<div class="section" id="pre-training-on-triviaqa">
+<h5>Pre-training on TriviaQA<a class="headerlink" href="#pre-training-on-triviaqa" title="Permalink to this heading">#</a></h5>
+<dl class="simple">
+<dt>You can skip this step and use our pre-trained models:</dt><dd><ul class="simple">
+<li><p>question model: <a class="reference external" href="https://huggingface.co/PaulLerner/dpr_question_encoder_triviaqa_without_viquae">https://huggingface.co/PaulLerner/dpr_question_encoder_triviaqa_without_viquae</a></p></li>
+<li><p>context/passage model: <a class="reference external" href="https://huggingface.co/PaulLerner/dpr_context_encoder_triviaqa_without_viquae">https://huggingface.co/PaulLerner/dpr_context_encoder_triviaqa_without_viquae</a></p></li>
+</ul>
+</dd>
+</dl>
+<p>To be used with <code class="docutils literal notranslate"><span class="pre">transformers</span></code>’s <code class="docutils literal notranslate"><span class="pre">DPRQuestionEncoder</span></code> and
+<code class="docutils literal notranslate"><span class="pre">DPRContextEncoder</span></code>, respectively.</p>
+<dl class="simple">
+<dt>Given the small size of ViQuAE, DPR is pre-trained on TriviaQA:</dt><dd><ul class="simple">
+<li><p>filtered out of all questions used for ViQuAE for training</p></li>
+<li><p>on questions used to generate ViQuAE’s validation set for validation</p></li>
+</ul>
+</dd>
+</dl>
+<p>Get TriviaQA with these splits from:
+<a class="reference external" href="https://huggingface.co/datasets/PaulLerner/triviaqa_for_viquae">https://huggingface.co/datasets/PaulLerner/triviaqa_for_viquae</a> (or
+<code class="docutils literal notranslate"><span class="pre">load_dataset(&quot;triviaqa_for_viquae&quot;)</span></code>)</p>
+<p>In this step we use the complete <code class="docutils literal notranslate"><span class="pre">kilt_wikipedia</span></code> instead of
+<code class="docutils literal notranslate"><span class="pre">viquae_wikipedia</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">meerqat.train.trainer</span> <span class="pre">experiments/dpr/triviaqa/config.json</span></code></p>
+<p>The best checkpoint should be <code class="docutils literal notranslate"><span class="pre">checkpoint-13984</span></code>.</p>
+</div>
+<div class="section" id="fine-tuning-on-viquae">
+<h5>Fine-tuning on ViQuAE<a class="headerlink" href="#fine-tuning-on-viquae" title="Permalink to this heading">#</a></h5>
+<p>We use exactly the same hyperparameters as for pre-training.</p>
+<p>Once you’ve decided on a TriviaQA checkpoint, (step 13984 in our case)
+you need to split it in two with <code class="docutils literal notranslate"><span class="pre">meerqat.train.split_biencoder</span></code>,
+then set the path as in the provided config file.
+<strong>Do not</strong> simply set “resume_from_checkpoint=/path/to/triviaqa/pretraing” else
+the trainer will also load the optimizer and other training stuffs.</p>
+<p>Alternatively, if you want to start training from our pre-trained model,
+set “PaulLerner/dpr_question_encoder_triviaqa_without_viquae” and “PaulLerner/dpr_context_encoder_triviaqa_without_viquae”
+in the config file.</p>
+<p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">meerqat.train.trainer</span> <span class="pre">experiments/dpr/viquae/config.json</span></code></p>
+<p>The best checkpoint should be <code class="docutils literal notranslate"><span class="pre">checkpoint-40</span></code>. Run
+<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">meerqat.train.split_biencoder</span> <span class="pre">experiments/dpr/viquae/checkpoint-40</span></code>
+to split DPR in a DPRQuestionEncoder and DPRContextEncoder. We’ll use
+both to embed questions and passages below.</p>
+</div>
+</div>
+<div class="section" id="multimodal-inverse-cloze-task-mict">
+<h4>Multimodal Inverse Cloze Task (MICT)<a class="headerlink" href="#multimodal-inverse-cloze-task-mict" title="Permalink to this heading">#</a></h4>
+<p>Starting from DPR training on TriviaQA, we will train ECA/DMR and ILF for MICT on WIT.</p>
+<p>You should change DPR’s config file so it is like the config files provided in
+<code class="docutils literal notranslate"><span class="pre">ict/*/question_model_config.json</span></code> and <code class="docutils literal notranslate"><span class="pre">ict/*/context_model_config.json</span></code>,
+i.e. with the “image_kwargs” and “n_faces” parameters.</p>
+<p>Unlike the above DPR pre-training, here we use a single NVIDIA V100 GPU with 32 GB of RAM,
+but using gradient checkpointing.</p>
+<p>TODO provide pre-trained models.</p>
+<div class="section" id="ilf">
+<h5>ILF<a class="headerlink" href="#ilf" title="Permalink to this heading">#</a></h5>
+<p>Notice how ILF fully freezes BERT during this stage with the regex <code class="docutils literal notranslate"><span class="pre">&quot;.*dpr_encoder.*&quot;</span></code>
+<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">meerqat.train.trainer</span> <span class="pre">experiments/ict/ilf/config.json</span></code></p>
+</div>
+<div class="section" id="dmr-eca">
+<h5>DMR/ECA<a class="headerlink" href="#dmr-eca" title="Permalink to this heading">#</a></h5>
+<p>DMR uses internally <code class="docutils literal notranslate"><span class="pre">BertModel</span></code> instead of <code class="docutils literal notranslate"><span class="pre">DPR*Encoder</span></code> so you need to run
+<code class="docutils literal notranslate"><span class="pre">meerqat.train.split_biencoder</span></code> again, this time with the <code class="docutils literal notranslate"><span class="pre">--bert</span></code> option.</p>
+<p>Again, notice how the last six layers of BERT are frozen thanks to the regex.</p>
+<p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">meerqat.train.trainer</span> <span class="pre">experiments/ict/dmr/config.json</span></code></p>
+</div>
+</div>
+<div class="section" id="fine-tuning-multimodal-models-on-viquae">
+<h4>Fine-tuning multimodal models on ViQuAE<a class="headerlink" href="#fine-tuning-multimodal-models-on-viquae" title="Permalink to this heading">#</a></h4>
+<p>Almost the same as for DPR although some hyperparameters change, notably the model used
+to mine negative passage is here set as the late fusion of arcface, imagenet, clip, and dpr.
+We have tried to fine-tune DPR with the same hyperparameters and found no significant difference.
+Notice also that now we need a second KB that holds the pre-computed image features (viquae_wikipedia)</p>
+<p>Notice that all layers of the model are trainable during this stage.</p>
+<p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">meerqat.train.trainer</span> <span class="pre">experiments/mm/ilf/config.json</span></code>
+<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">meerqat.train.trainer</span> <span class="pre">experiments/mm/dmr/config.json</span></code></p>
+</div>
+</div>
+<div class="section" id="ir">
+<h3>IR<a class="headerlink" href="#ir" title="Permalink to this heading">#</a></h3>
+<p>Now that we have a bunch of dense representations, let’s see how to
+retrieve information! Dense IR is done with <code class="docutils literal notranslate"><span class="pre">faiss</span></code> and sparse IR is
+done with <code class="docutils literal notranslate"><span class="pre">elasticsearch</span></code>, both via HF <code class="docutils literal notranslate"><span class="pre">datasets</span></code>. We’ll use IR on
+both TriviaQA along with the complete Wikipedia (BM25 only) and ViQuAE
+along with the multimodal Wikipedia.</p>
+<p>Hyperparameter tuning is done using grid search via <code class="docutils literal notranslate"><span class="pre">optuna</span></code> on the
+dev set to maximize MRR.</p>
+<div class="section" id="bm25-viquae">
+<h4>BM25 (ViQuAE)<a class="headerlink" href="#bm25-viquae" title="Permalink to this heading">#</a></h4>
+<p>Before running any of the commands below you should <a class="reference external" href="https://www.elastic.co/guide/en/elastic-stack-get-started/current/get-started-elastic-stack.html#install-elasticsearch">launch the Elastic
+Search
+server</a>.</p>
+<p>First you might want to optimize BM25 hyperparameters, <code class="docutils literal notranslate"><span class="pre">b</span></code> and
+<code class="docutils literal notranslate"><span class="pre">k_1</span></code>. We did this with a grid-search using <code class="docutils literal notranslate"><span class="pre">optuna</span></code>: the <code class="docutils literal notranslate"><span class="pre">--k</span></code>
+option asks for the top-K search results.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python -m meerqat.ir.hp bm25 data/viquae_dataset/validation experiments/ir/viquae/hp/bm25/config.json --k<span class="o">=</span><span class="m">100</span> --disable_caching --test<span class="o">=</span>data/viquae_dataset/test --metrics<span class="o">=</span>experiments/ir/viquae/hp/bm25/metrics
+</pre></div>
+</div>
+<p>Alternatively, you can use the parameters we optimized: <code class="docutils literal notranslate"><span class="pre">b=0.3</span></code> and
+<code class="docutils literal notranslate"><span class="pre">k_1=0.5</span></code>:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/bm25/config.json --k<span class="o">=</span><span class="m">100</span> --metrics<span class="o">=</span>experiments/ir/viquae/bm25/metrics --disable_caching
+</pre></div>
+</div>
+<p>Note that, in this case, we set <code class="docutils literal notranslate"><span class="pre">index_kwargs.BM25.load=True</span></code> to
+re-use the index computed in the previous step.</p>
+</div>
+<div class="section" id="id2">
+<h4>DPR<a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h4>
+<div class="section" id="embedding-questions-and-passages">
+<h5>Embedding questions and passages<a class="headerlink" href="#embedding-questions-and-passages" title="Permalink to this heading">#</a></h5>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python -m meerqat.ir.embedding data/viquae_dataset experiments/ir/viquae/dpr/questions/config.json --disable_caching
+python -m meerqat.ir.embedding data/viquae_passages experiments/ir/viquae/dpr/passages/config.json --disable_caching
+</pre></div>
+</div>
+</div>
+<div class="section" id="searching">
+<h5>Searching<a class="headerlink" href="#searching" title="Permalink to this heading">#</a></h5>
+<p>Like with BM25:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/dpr/search/config.json --k<span class="o">=</span><span class="m">100</span> --metrics<span class="o">=</span>experiments/ir/viquae/dpr/search/metrics --disable_caching
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="imagenet-resnet-and-clip-vs-arcface-ms-celeb-viquae">
+<h4>ImageNet-ResNet and CLIP vs ArcFace-MS-Celeb (ViQuAE)<a class="headerlink" href="#imagenet-resnet-and-clip-vs-arcface-ms-celeb-viquae" title="Permalink to this heading">#</a></h4>
+<p><em>Do not do this for MICT, we want all representations for all images,
+or use the ``face_and_image_are_exclusive`` option in the config file of the model</em></p>
+<dl class="simple">
+<dt>We trust the face detector, if it detects a face then:</dt><dd><ul class="simple">
+<li><p>the search is done on the human faces KB (<code class="docutils literal notranslate"><span class="pre">data/viquae_wikipedia/humans_with_faces</span></code>)</p></li>
+</ul>
+</dd>
+<dt>else:</dt><dd><ul class="simple">
+<li><p>the search is done on the non-human global images KB (<code class="docutils literal notranslate"><span class="pre">data/viquae_wikipedia/non_humans</span></code>)</p></li>
+</ul>
+</dd>
+</dl>
+<p>To implement that we simply set the global image embedding to None when
+a face was detected:</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datasets</span> <span class="kn">import</span> <span class="n">load_from_disk</span><span class="p">,</span> <span class="n">set_caching_enabled</span>
+<span class="n">set_caching_enabled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">load_from_disk</span><span class="p">(</span><span class="s1">&#39;data/viquae_dataset/&#39;</span><span class="p">)</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">rename_column</span><span class="p">(</span><span class="s1">&#39;imagenet-RN50&#39;</span><span class="p">,</span> <span class="s1">&#39;keep_imagenet-RN50&#39;</span><span class="p">)</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">rename_column</span><span class="p">(</span><span class="s1">&#39;clip-RN50&#39;</span><span class="p">,</span> <span class="s1">&#39;keep_clip-RN50&#39;</span><span class="p">)</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;imagenet-RN50&#39;</span><span class="p">:</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;keep_imagenet-RN50&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;face_embedding&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">})</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;clip-RN50&#39;</span><span class="p">:</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;keep_clip-RN50&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;face_embedding&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">})</span>
+<span class="n">dataset</span><span class="o">.</span><span class="n">save_to_disk</span><span class="p">(</span><span class="s1">&#39;data/viquae_dataset/&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Search is done using cosine distance, hence the <code class="docutils literal notranslate"><span class="pre">&quot;L2norm,Flat&quot;</span></code> for
+<code class="docutils literal notranslate"><span class="pre">string_factory</span></code> and <code class="docutils literal notranslate"><span class="pre">metric_type=0</span></code> (this does first
+L2-normalization then dot product).</p>
+<p>The results, corresponding to a KB entity/article are then mapped to the
+corresponding passages to allow fusion with BM25/DPR (next §)</p>
+</div>
+<div class="section" id="late-fusion">
+<h4>Late fusion<a class="headerlink" href="#late-fusion" title="Permalink to this heading">#</a></h4>
+<p>Now in order to combine the text results of text and the image results
+we do two things: 1. normalize the scores so that they have zero-mean
+and unit variance, <strong>the mean and the variance is computed over the
+whole subset</strong> so you might want to do a dry run first <strong>or use ours</strong>
+(this corresponds to the mysterious “normalization” parameter in the
+config files) 2. sum the text and image score for each passage before
+re-ordering, note that if only the text finds a given passage then its
+image score is set to the minimum of the image results (and vice-versa)</p>
+<p>The results are then re-ordered before evaluation. Each model has an
+interpolation hyperparameter. You can either tune-it on the dev set or
+use ours (more details below).</p>
+<div class="section" id="bm25-arcface-clip-imagenet-viquae">
+<h5>BM25 + ArcFace + CLIP + ImageNet (ViQuAE)<a class="headerlink" href="#bm25-arcface-clip-imagenet-viquae" title="Permalink to this heading">#</a></h5>
+<div class="section" id="tune-hyperparameters">
+<h6>Tune hyperparameters<a class="headerlink" href="#tune-hyperparameters" title="Permalink to this heading">#</a></h6>
+<p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">meerqat.ir.hp</span> <span class="pre">fusion</span> <span class="pre">data/viquae_dataset/validation</span> <span class="pre">experiments/ir/viquae/hp/bm25+arcface+clip+imagenet/config.json</span> <span class="pre">--k=100</span> <span class="pre">--disable_caching</span> <span class="pre">--test=data/viquae_dataset/test</span> <span class="pre">--metrics=experiments/ir/viquae/hp/bm25+arcface+clip+imagenet/metrics</span></code></p>
+</div>
+<div class="section" id="run-with-the-best-hyperparameters">
+<h6>Run with the best hyperparameters<a class="headerlink" href="#run-with-the-best-hyperparameters" title="Permalink to this heading">#</a></h6>
+<p>If you don’t use the <code class="docutils literal notranslate"><span class="pre">--test</span></code> option above.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/bm25+arcface+clip+imagenet/config.json --k<span class="o">=</span><span class="m">100</span> --metrics<span class="o">=</span>experiments/ir/viquae/bm25+arcface+clip+imagenet/metrics
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="dpr-arcface-clip-imagenet-viquae">
+<h5>DPR + ArcFace + CLIP + ImageNet (ViQuAE)<a class="headerlink" href="#dpr-arcface-clip-imagenet-viquae" title="Permalink to this heading">#</a></h5>
+<p>Same script, different config.</p>
+<div class="section" id="tune-hyperparameters-1">
+<span id="id3"></span><h6>Tune hyperparameters<a class="headerlink" href="#tune-hyperparameters-1" title="Permalink to this heading">#</a></h6>
+<p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">meerqat.ir.hp</span> <span class="pre">fusion</span> <span class="pre">data/viquae_dataset/validation</span> <span class="pre">experiments/ir/viquae/hp/dpr+arcface+clip+imagenet/config.json</span> <span class="pre">--k=100</span> <span class="pre">--disable_caching</span> <span class="pre">--test=data/viquae_dataset/test</span> <span class="pre">--metrics=experiments/ir/viquae/hp/dpr+arcface+clip+imagenet/metrics</span></code></p>
+</div>
+<div class="section" id="run-with-the-best-hyperparameters-1">
+<span id="id4"></span><h6>Run with the best hyperparameters<a class="headerlink" href="#run-with-the-best-hyperparameters-1" title="Permalink to this heading">#</a></h6>
+<p>If you don’t use the <code class="docutils literal notranslate"><span class="pre">--test</span></code> option above.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/dpr+arcface+clip+imagenet/config.json --k<span class="o">=</span><span class="m">100</span> --metrics<span class="o">=</span>experiments/ir/viquae/dpr+arcface+clip+imagenet/metrics
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="dpr-clip-mict">
+<h5>DPR + CLIP (MICT)<a class="headerlink" href="#dpr-clip-mict" title="Permalink to this heading">#</a></h5>
+<p>For the late fusion baseline based only on DPR and CLIP, be sure to use CLIP on all images
+and do <strong>not</strong> run what’s above that sets CLIP=None when a face is detected.</p>
+<dl class="simple">
+<dt>Then, you can do the same as above using:</dt><dd><ul class="simple">
+<li><p>experiments/ir/viquae/hp/dpr+clip/config.json</p></li>
+<li><p>experiments/ir/viquae/dpr+clip/config.json</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="early-fusion-mict">
+<h4>Early Fusion (MICT)<a class="headerlink" href="#early-fusion-mict" title="Permalink to this heading">#</a></h4>
+<div class="section" id="embedding-visual-questions-and-visual-passages">
+<h5>Embedding visual questions and visual passages<a class="headerlink" href="#embedding-visual-questions-and-visual-passages" title="Permalink to this heading">#</a></h5>
+<p>Much like for DPR, you first need to split the BiEncoder in two once you picked a checkpoint using
+<code class="docutils literal notranslate"><span class="pre">meerqat.train.split_biencoder</span></code>. Then, set its path like in the provided config file.</p>
+<p>The important difference with DPR here, is again that you need to pass viquae_wikipedia
+which holds pre-computed image features of the visual passages.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python -m meerqat.ir.embedding data/viquae_dataset experiments/ir/viquae/ilf/embedding/dataset_config.json
+python -m meerqat.ir.embedding data/viquae_passages experiments/ir/viquae/ilf/embedding/kb_config.json --kb<span class="o">=</span>data/viquae_wikipedia
+python -m meerqat.ir.embedding data/viquae_dataset experiments/ir/viquae/dmr/embedding/dataset_config.json
+python -m meerqat.ir.embedding data/viquae_passages experiments/ir/viquae/dmr/embedding/kb_config.json --kb<span class="o">=</span>data/viquae_wikipedia
+</pre></div>
+</div>
+</div>
+<div class="section" id="id5">
+<h5>Searching<a class="headerlink" href="#id5" title="Permalink to this heading">#</a></h5>
+<p>This is exactly the same as for DPR, simply change “key” and “column” to “ILF_few_shot” or “DMR_few_shot”.</p>
+<p>TODO provide ranx runs (.trec files). See also note in README on the different passages versions.</p>
+</div>
+</div>
+<div class="section" id="metrics">
+<h4>Metrics<a class="headerlink" href="#metrics" title="Permalink to this heading">#</a></h4>
+<p>We use <a class="reference external" href="https://github.com/AmenRa/ranx">ranx</a> to compute the metrics.
+I advise against using any kind of metric that uses recall (mAP,
+R-Precision, …) since we estimate relevant document on the go so the
+number of relevant documents will <em>depend on the systemS</em> you use.</p>
+<p>The above <code class="docutils literal notranslate"><span class="pre">meerqat.ir.search</span></code> saves results and qrels in format
+compatible with <code class="docutils literal notranslate"><span class="pre">trec_eval</span></code> if you prefer to use it.</p>
+<dl class="simple">
+<dt>To compare different models (e.g. BM25+Image and DPR+Image), you should:</dt><dd><ul class="simple">
+<li><p>fuse the qrels (since relevant passages are estimated based on the
+model’s output):
+<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">meerqat.ir.metrics</span> <span class="pre">qrels</span> <span class="pre">&lt;qrels&gt;...</span> <span class="pre">--output=experiments/ir/all_qrels.trec</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">meerqat.ir.metrics</span> <span class="pre">ranx</span> <span class="pre">&lt;run&gt;...</span> <span class="pre">--qrels=experiments/ir/all_qrels.trec</span> <span class="pre">--output=experiments/ir/comparison</span></code></p></li>
+</ul>
+</dd>
+</dl>
+<p>Beware that the ImageNet-ResNet and ArcFace results cannot be compared,
+neither between them nor with BM25/DPR because:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>they are exclusive, roughly <strong>half</strong> the questions have a face -&gt; ArcFace, other don’t -&gt;
+ResNet, while BM25/DPR is applied to <strong>all</strong> questions</p></li>
+<li><p>the mapping from image/document to passage is arbitrary, so the ordering of image
+results is not so meaningful until it is re-ordered with BM25/DPR</p></li>
+</ul>
+</div></blockquote>
+<p>If you’re interested in comparing only image representations, leaving
+downstream performance aside (e.g. comparing ImageNet-Resnet with
+another representation for the full image), you should:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">filter</span></code> the dataset so that you don’t evaluate on irrelevant questions (e.g. those
+were the search is done with ArcFace because a face was detected)</p></li>
+<li><p>evaluate at the <em>document-level</em> instead of passage-level. To do so,
+maybe <code class="docutils literal notranslate"><span class="pre">checkout</span></code> the <code class="docutils literal notranslate"><span class="pre">document</span></code> branch (TODO merge in <code class="docutils literal notranslate"><span class="pre">main</span></code>).</p></li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="reading-comprehension">
+<h3>Reading Comprehension<a class="headerlink" href="#reading-comprehension" title="Permalink to this heading">#</a></h3>
+<p>Now we have retrieved candidate passages, it’s time to train a Reading
+Comprehension system (reader). We first pre-train the reader on TriviaQA
+before fine-tuning it on ViQuAE. Our model is based on Multi-Passage
+BERT (Wang et al., 2019), it simply extends the BERT fine-tuning for QA
+(Devlin et al., 2019) with the global normalization by Clark et. al
+(2018), i.e. all passages are processed independently but share the same
+softmax normalization so that scores can be compared across passages.
+The model is implemented in <code class="docutils literal notranslate"><span class="pre">meerqat.train.trainee</span></code> it inherits from
+HF <code class="docutils literal notranslate"><span class="pre">transformers.BertForQuestionAnswering</span></code> and the implementation is
+based on DPR (Karpukhin et al., 2020)</p>
+<p>We also implemented the DPR Reader model from Karpukhin et al. (2020),
+which doesn’t use this global normalization trick but does re-ranking.
+However we did not test it (our intuition is that re-ranking with text
+only will only deteriorate the retriever results)</p>
+<p>We convert the model start and end answer position probabilities to
+answer spans in <code class="docutils literal notranslate"><span class="pre">meerqat.models.qa.get_best_spans</span></code>. The answer span
+probabilities can be weighed with the retrieval score, which is ensured
+to be &gt; 1. We also enforce that the start starts before the end and that
+the first token (<code class="docutils literal notranslate"><span class="pre">[CLS]</span></code>) cannot be the answer since it’s the
+objective for irrelevant passages (this is the default behavior but can
+be changed with the <code class="docutils literal notranslate"><span class="pre">cannot_be_first_token</span></code> flag).</p>
+<div class="section" id="pre-training-on-triviaqa-viquae">
+<span id="pre-training-on-triviaqa-1"></span><h4>Pre-training on TriviaQA (ViQuAE)<a class="headerlink" href="#pre-training-on-triviaqa-viquae" title="Permalink to this heading">#</a></h4>
+<p>If you want to skip this step you can get our pretrained model at
+<a class="reference external" href="https://huggingface.co/PaulLerner/multi_passage_bert_triviaqa_without_viquae">https://huggingface.co/PaulLerner/multi_passage_bert_triviaqa_without_viquae</a></p>
+<p>Our training set consists of questions that were not used to generate
+any ViQuAE questions, even those that were discarded or remain to be
+annotated. Our validation set consists of the questions that were used
+to generate ViQuAE validation set. Get TriviaQA with these splits from:
+<a class="reference external" href="https://huggingface.co/datasets/PaulLerner/triviaqa_for_viquae">https://huggingface.co/datasets/PaulLerner/triviaqa_for_viquae</a> (or
+<code class="docutils literal notranslate"><span class="pre">load_dataset(&quot;triviaqa_for_viquae&quot;)</span></code>)</p>
+<p>We used the same hyperparameters as Karpukhin et al. except for the
+ratio of relevant passages: We use 8 relevant and 16 irrelevant passages
+(so 24 in total) per question (the intuition was to get a realistic
+<a class="reference external" href="mailto:precision&#37;&#52;&#48;24">precision<span>&#64;</span>24</a> score w.r.t. the search results, we haven’t tried any other
+setting). The model is trained to predict the first token (<code class="docutils literal notranslate"><span class="pre">[CLS]</span></code>) as
+answer for irrelevant passages.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">max_n_answers</span></code>: the model is trained to predict all off the
+positions of the answer in the passage up to this threshold</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">train_original_answer_only</span></code>: use in conjunction with the above
+preprocessing, defaults to True</p></li>
+</ul>
+<p>As with DPR, IR is then carried out with BM25 on the full 5.9M articles
+of KILT’s Wikipedia instead of our multimodal KB.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python -m meerqat.train.trainer experiments/rc/triviaqa/train/config.json
+</pre></div>
+</div>
+<p>The best checkpoint should be <code class="docutils literal notranslate"><span class="pre">checkpoint-46000</span></code>.</p>
+</div>
+<div class="section" id="fine-tuning-on-viquae-viquae">
+<span id="fine-tuning-on-viquae-1"></span><h4>Fine-tuning on ViQuAE (ViQuAE)<a class="headerlink" href="#fine-tuning-on-viquae-viquae" title="Permalink to this heading">#</a></h4>
+<p>Simply set <code class="docutils literal notranslate"><span class="pre">experiments/rc/triviaqa/train/checkpoint-46000</span></code>
+as pre-trained model instead of <code class="docutils literal notranslate"><span class="pre">bert-base-uncased</span></code>
+(<code class="docutils literal notranslate"><span class="pre">PaulLerner/multi_passage_bert_triviaqa_without_viquae</span></code> to use ours).</p>
+<p>Then you can fine-tune the model:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python -m meerqat.train.trainer experiments/rc/viquae/train/config.json
+</pre></div>
+</div>
+<p>The best checkpoint should be <code class="docutils literal notranslate"><span class="pre">checkpoint-3600</span></code>. This run uses the
+default seed in <code class="docutils literal notranslate"><span class="pre">transformers</span></code>: 42. To have multiple runs, like in the
+paper, add <code class="docutils literal notranslate"><span class="pre">seed=&lt;int&gt;</span></code> in the config <code class="docutils literal notranslate"><span class="pre">training_kwargs</span></code>. We used
+seeds <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">42]</span></code>. The expected output provided is with
+<code class="docutils literal notranslate"><span class="pre">seed=1</span></code>.</p>
+<p>Note that the validation is done using the same ratio of relevant and
+irrelevant passages (8:16) as training while test is done using the
+top-24 IR results. That is why you should expect a performance gap
+between validation and test.</p>
+<p>The test is configured to save the prediction (without IR weighing)
+along with the metrics, if you don’t want this, set <code class="docutils literal notranslate"><span class="pre">do_eval=True</span></code> and
+<code class="docutils literal notranslate"><span class="pre">do_predict=False</span></code>.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python -m meerqat.train.trainer experiments/rc/viquae/test/config.json
+</pre></div>
+</div>
+<p>To reproduce the oracle results: - for “full-oracle”, simply add the
+<code class="docutils literal notranslate"><span class="pre">oracle=True</span></code> flag in the config file and set
+<code class="docutils literal notranslate"><span class="pre">n_relevant_passages=24</span></code> - for “semi-oracle”, in addition you should
+filter <code class="docutils literal notranslate"><span class="pre">search_provenance_indices</span></code> like above but setting
+<code class="docutils literal notranslate"><span class="pre">item['search_provenance_indices']</span> <span class="pre">=</span> <span class="pre">[]</span></code> when no relevant passages
+where retrieved by the IR system.</p>
+</div>
+<div class="section" id="switching-ir-inputs-at-inference-mict">
+<h4>Switching IR inputs at inference (MICT)<a class="headerlink" href="#switching-ir-inputs-at-inference-mict" title="Permalink to this heading">#</a></h4>
+<p>Simply set <code class="docutils literal notranslate"><span class="pre">&quot;run_path&quot;:&quot;/path/to/run.trec&quot;</span></code> in experiments/rc/viquae/test/config.json
+and run <code class="docutils literal notranslate"><span class="pre">meerqat.train.trainer</span></code> again.</p>
+</div>
+</div>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this heading">#</a></h2>
+<p>Chen, Y.C., Li, L., Yu, L., El Kholy, A., Ahmed, F., Gan, Z., Cheng, Y., Liu, J.:
+Uniter: Universal image-text representation learning. In: European Conference on
+Computer Vision. pp. 104–120. <a class="reference external" href="https://openreview.net/forum?id=S1eL4kBYwr">https://openreview.net/forum?id=S1eL4kBYwr</a>. Springer (2020)</p>
+<p>Christopher Clark and Matt Gardner. 2018. Simple and Effective
+Multi-Paragraph Reading Comprehension. In Proceedings of the 56th Annual
+Meeting of the Association for Computational Linguistics (Volume 1: Long
+Papers), pages 845–855, Melbourne, Australia. Association for
+Computational Linguistics.</p>
+<p>Jiankang Deng, Jia Guo, Niannan Xue, and Stefanos Zafeiriou. 2019.
+ArcFace: Additive Angular Margin Loss for Deep Face Recognition. pages
+4690–4699.</p>
+<p>Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina
+Toutanova. 2019. BERT: Pre-training of Deep Bidirectional Transformers
+for Language Understanding. arXiv:1810.04805 [cs]. ArXiv: 1810.04805.</p>
+<p>Yandong Guo, Lei Zhang, Yuxiao Hu, Xiaodong He, and Jianfeng Gao. 2016.
+MS-Celeb-1M: A Dataset and Benchmark for Large-Scale Face Recognition.
+In Computer Vision – ECCV 2016, Lecture Notes in Computer Science, pages
+87–102, Cham. Springer International Publishing.</p>
+<p>Vladimir Karpukhin, Barlas Oguz, Sewon Min, Patrick Lewis, Ledell Wu,
+Sergey Edunov, Danqi Chen, and Wen-tau Yih. 2020. Dense Passage
+Retrieval for Open-Domain Question Answering. In Proceedings of the 2020
+Conference on Empirical Methods in Natural Language Processing (EMNLP),
+pages 6769-6781. <a class="reference external" href="Https://github.com/facebookresearch/DPR">Https://github.com/facebookresearch/DPR</a>.</p>
+<p>Zhiguo Wang, Patrick Ng, Xiaofei Ma, Ramesh Nallap- ati, and Bing Xiang.
+2019. Multi-passage BERT: A Globally Normalized BERT Model for Open-
+domain Question Answering. In Proceedings of the 2019 Conference on
+Empirical Methods in Natural Language Processing and the 9th
+International Joint Conference on Natural Language Processing
+(EMNLP-IJCNLP), pages 5878–5882, Hong Kong, China. Association for
+Computational Linguistics.</p>
+<p>Kaipeng Zhang, Zhanpeng Zhang, Zhifeng Li, and Yu Qiao. 2016. Joint Face
+Detection and Alignment Using Multitask Cascaded Convolutional Networks.
+IEEE Signal Processing Letters, 23(10):1499–1503. Conference Name: IEEE
+Signal Processing Letters.</p>
+</div>
+</div>
+
+
+            </article>
+            
+            
+            
+            <footer class="bd-footer-article">
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+            </footer>
+            
+          </div>
+          
+          
+          
+            <div class="bd-sidebar-secondary bd-toc">
+              
+<div class="toc-item">
+  
+<div class="tocsection onthispage">
+    <i class="fas fa-list"></i> On this page
+</div>
+<nav id="bd-toc-nav" class="page-toc">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#indices-and-tables">
+   Indices and tables
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#meerqat">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     meerqat
+    </span>
+   </code>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#getting-the-viquae-dataset-and-kb">
+   Getting the ViQuAE dataset and KB
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#the-images">
+     The images
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#the-viquae-dataset">
+     The ViQuAE dataset
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#the-viquae-knowledge-base-kb">
+     The ViQuAE Knowledge Base (KB)
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#formatting-wit-for-multimodal-ict">
+   Formatting WIT for multimodal ICT
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#annotation-of-the-viquae-data">
+   Annotation of the ViQuAE data
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#experiments">
+   Experiments
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#reference">
+   Reference
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#installation">
+   Installation
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#docs">
+   Docs
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#id1">
+   Experiments
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#preprocessing-passages">
+     Preprocessing passages
+    </a>
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#splitting-articles-in-passages">
+       Splitting articles in passages
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#find-relevant-passages-in-the-linked-wikipedia-article">
+       Find relevant passages in the linked wikipedia article
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#find-relevant-passages-in-the-ir-results">
+       Find relevant passages in the IR results
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#image">
+     Image
+    </a>
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#global-image-embedding">
+       Global image embedding
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#face-detection">
+       Face detection
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#face-recognition">
+       Face recognition
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#bounding-box-engineering-mict">
+       Bounding box engineering (MICT)
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#training-dual-encoders-e-g-dpr">
+     Training dual encoders (e.g. DPR)
+    </a>
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#dpr">
+       DPR
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#pre-training-on-triviaqa">
+         Pre-training on TriviaQA
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#fine-tuning-on-viquae">
+         Fine-tuning on ViQuAE
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#multimodal-inverse-cloze-task-mict">
+       Multimodal Inverse Cloze Task (MICT)
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#ilf">
+         ILF
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#dmr-eca">
+         DMR/ECA
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#fine-tuning-multimodal-models-on-viquae">
+       Fine-tuning multimodal models on ViQuAE
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#ir">
+     IR
+    </a>
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#bm25-viquae">
+       BM25 (ViQuAE)
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#id2">
+       DPR
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#embedding-questions-and-passages">
+         Embedding questions and passages
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#searching">
+         Searching
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#imagenet-resnet-and-clip-vs-arcface-ms-celeb-viquae">
+       ImageNet-ResNet and CLIP vs ArcFace-MS-Celeb (ViQuAE)
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#late-fusion">
+       Late fusion
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#bm25-arcface-clip-imagenet-viquae">
+         BM25 + ArcFace + CLIP + ImageNet (ViQuAE)
+        </a>
+        <ul class="nav section-nav flex-column">
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#tune-hyperparameters">
+           Tune hyperparameters
+          </a>
+         </li>
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#run-with-the-best-hyperparameters">
+           Run with the best hyperparameters
+          </a>
+         </li>
+        </ul>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#dpr-arcface-clip-imagenet-viquae">
+         DPR + ArcFace + CLIP + ImageNet (ViQuAE)
+        </a>
+        <ul class="nav section-nav flex-column">
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#tune-hyperparameters-1">
+           Tune hyperparameters
+          </a>
+         </li>
+         <li class="toc-h6 nav-item toc-entry">
+          <a class="reference internal nav-link" href="#run-with-the-best-hyperparameters-1">
+           Run with the best hyperparameters
+          </a>
+         </li>
+        </ul>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#dpr-clip-mict">
+         DPR + CLIP (MICT)
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#early-fusion-mict">
+       Early Fusion (MICT)
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#embedding-visual-questions-and-visual-passages">
+         Embedding visual questions and visual passages
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#id5">
+         Searching
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#metrics">
+       Metrics
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#reading-comprehension">
+     Reading Comprehension
+    </a>
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#pre-training-on-triviaqa-viquae">
+       Pre-training on TriviaQA (ViQuAE)
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#fine-tuning-on-viquae-viquae">
+       Fine-tuning on ViQuAE (ViQuAE)
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#switching-ir-inputs-at-inference-mict">
+       Switching IR inputs at inference (MICT)
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#references">
+   References
+  </a>
+ </li>
+</ul>
+
+</nav>
+</div>
+
+<div class="toc-item">
+  
+</div>
+
+<div class="toc-item">
+  
+<div class="tocsection sourcelink">
+    <a href="_sources/index.rst.txt">
+        <i class="fas fa-file-alt"></i> Show Source
+    </a>
+</div>
+
+</div>
+
+            </div>
+          
+          
+        </div>
+        <footer class="bd-footer-content">
+          <div class="bd-footer-content__inner">
+            
+          </div>
+        </footer>
+        
+      </main>
+    </div>
+  </div>
+
+  
+    
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b"></script>
+
+  <footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    
+<p class="copyright">
+
+    &copy; Copyright 2022, CNRS.<br>
+
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+<p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.1.1.<br>
+</p>
+
+  </div>
+  
+</div>
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,529 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>meerqat.ir.embedding &#8212; meerqat v3.0.0-alpha documentation</title>
+  <script>
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+
+  
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/6.1.2/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b">
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/meerqat/ir/embedding';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="docsearch:language" content="en">
+  </head>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__primary" id="__primary">
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__secondary" id="__secondary">
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+      
+<form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+    </div>
+  </div>
+
+  
+  <nav class="bd-header navbar navbar-expand-lg bd-navbar" id="navbar-main"><div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+      <span class="fas fa-bars"></span>
+  </label>
+  <div id="navbar-start">
+    
+    
+  
+
+
+<a class="navbar-brand logo" href="../../../index.html">
+
+  
+  
+  
+  
+  
+  
+  
+
+  
+  
+    <p class="title logo__title">meerqat v3.0.0-alpha documentation</p>
+  
+</a>
+    
+  </div>
+
+  
+  <div class="col-lg-9 navbar-header-items">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+    </ul>
+</nav>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      <div class="navbar-end-item navbar-end__search-button-container">
+        
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+
+
+  
+  <div class="search-button-container--mobile">
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+  </div>
+
+  
+  <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fas fa-outdent"></span>
+  </label>
+  
+
+</div>
+  </nav>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+    </ul>
+</nav>
+      </div>
+      
+      </div>
+    
+
+    
+    
+    <div class="sidebar-header-items__end">
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+    
+  </div>
+
+  
+
+  
+  <div class="sidebar-end-items sidebar-primary__section">
+    <div class="sidebar-end-items__item">
+    </div>
+  </div>
+
+      </div>
+      <main class="bd-main">
+        
+        
+        <div class="bd-content">
+          <div class="bd-article-container">
+            
+            <div class="bd-header-article">
+                
+            </div>
+            
+            
+            <article class="bd-article" role="main">
+              
+  <h1>Source code for meerqat.ir.embedding</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Script to embed dataset and Knowledge Base prior to search.</span>
+
+<span class="sd">Usage: embedding.py &lt;dataset&gt; &lt;config&gt; [--disable_caching --kb=&lt;path&gt; --output=&lt;path&gt;]</span>
+
+<span class="sd">Positional arguments:</span>
+<span class="sd">    1. &lt;dataset&gt;   Path to the dataset  </span>
+<span class="sd">    2. &lt;config&gt;    Path to the JSON configuration file (passed as kwargs)</span>
+<span class="sd">    </span>
+<span class="sd">Options:</span>
+<span class="sd">    --disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()</span>
+<span class="sd">    --kb=&lt;path&gt;             Path to the KB that can be mapped from the passages</span>
+<span class="sd">    --output=&lt;path&gt;         Optionally save the resulting dataset there instead of overwriting the input dataset.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">docopt</span> <span class="kn">import</span> <span class="n">docopt</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+
+<span class="kn">from</span> <span class="nn">datasets</span> <span class="kn">import</span> <span class="n">load_from_disk</span><span class="p">,</span> <span class="n">set_caching_enabled</span>
+
+<span class="kn">from</span> <span class="nn">..models.utils</span> <span class="kn">import</span> <span class="n">device</span><span class="p">,</span> <span class="n">prepare_inputs</span>
+<span class="kn">from</span> <span class="nn">..models</span> <span class="kn">import</span> <span class="n">mm</span>
+<span class="kn">from</span> <span class="nn">..data.loading</span> <span class="kn">import</span> <span class="n">load_pretrained_in_kwargs</span>
+
+
+<div class="viewcode-block" id="get_face_inputs"><a class="viewcode-back" href="../../../meerqat.ir.embedding.html#meerqat.ir.embedding.get_face_inputs">[docs]</a><span class="k">def</span> <span class="nf">get_face_inputs</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">n_faces</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">face_dim</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">bbox_dim</span><span class="o">=</span><span class="mi">7</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Formats pre-computed face features in nice square tensors similarly to MMTrainer.get_face_inputs</span>
+<span class="sd">        </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    batch: dict</span>
+<span class="sd">    n_faces: int, optional</span>
+<span class="sd">    face_dim: int, optional</span>
+<span class="sd">    bbox_dim: int, optional</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    face_inputs: dict[str, Tensor]</span>
+<span class="sd">        {</span>
+<span class="sd">           * face: Tensor(batch_size, n_faces, face_dim)</span>
+<span class="sd">           * bbox: Tensor(batch_size, n_faces, bbox_dim)</span>
+<span class="sd">           * attention_mask: Tensor(batch_size, n_faces)</span>
+<span class="sd">        }</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">face_list</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;face_embedding&quot;</span><span class="p">]</span>
+    <span class="n">batch_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">face_list</span><span class="p">)</span>
+    <span class="c1"># trim or pad, and convert to tensor</span>
+    <span class="n">face_embeddings</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">n_faces</span><span class="p">,</span> <span class="n">face_dim</span><span class="p">))</span>
+    <span class="n">face_boxes</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">n_faces</span><span class="p">,</span> <span class="n">bbox_dim</span><span class="p">))</span>
+    <span class="c1"># 0=masked, 1=not masked</span>
+    <span class="n">attention_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">n_faces</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n_faces</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;face&quot;</span><span class="p">:</span> <span class="n">face_embeddings</span><span class="p">,</span>
+                <span class="s2">&quot;bbox&quot;</span><span class="p">:</span> <span class="n">face_boxes</span><span class="p">,</span>
+                <span class="s2">&quot;attention_mask&quot;</span><span class="p">:</span> <span class="n">attention_mask</span>
+            <span class="p">}</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">face_embedding</span><span class="p">,</span> <span class="n">bbox</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">face_list</span><span class="p">,</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;face_box&quot;</span><span class="p">])):</span>
+        <span class="c1"># no face detected</span>
+        <span class="k">if</span> <span class="n">face_embedding</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># keep zero-padding/mask</span>
+            <span class="k">continue</span>
+        <span class="n">min_n</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">n_faces</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">face_embedding</span><span class="p">))</span>
+        <span class="n">face_embeddings</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:</span> <span class="n">min_n</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">face_embedding</span><span class="p">[:</span> <span class="n">min_n</span><span class="p">])</span>
+        <span class="n">face_boxes</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:</span> <span class="n">min_n</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">bbox</span><span class="p">[:</span> <span class="n">min_n</span><span class="p">])</span>
+        <span class="n">attention_mask</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:</span> <span class="n">min_n</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="n">face_inputs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;face&quot;</span><span class="p">:</span> <span class="n">face_embeddings</span><span class="p">,</span>
+        <span class="s2">&quot;bbox&quot;</span><span class="p">:</span> <span class="n">face_boxes</span><span class="p">,</span>
+        <span class="s2">&quot;attention_mask&quot;</span><span class="p">:</span> <span class="n">attention_mask</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">face_inputs</span></div>
+
+
+<div class="viewcode-block" id="get_image_inputs"><a class="viewcode-back" href="../../../meerqat.ir.embedding.html#meerqat.ir.embedding.get_image_inputs">[docs]</a><span class="k">def</span> <span class="nf">get_image_inputs</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">image_kwargs</span><span class="p">):</span>    
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Formats pre-computed full-image features in nice square tensors similarly to MMTrainer.get_image_inputs</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    batch: dict</span>
+<span class="sd">    image_kwargs: dict</span>
+<span class="sd">        keys are used to index batch to get precomputed features.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    image_inputs: dict[str, dict[str,Tensor]]</span>
+<span class="sd">        one key per image feature (the same as image_kwargs)</span>
+<span class="sd">        {</span>
+<span class="sd">           * input: Tensor(batch_size, ?)</span>
+<span class="sd">           * attention_mask: Tensor(batch_size, )</span>
+<span class="sd">             None of the images are masked</span>
+<span class="sd">        }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+    <span class="n">image_inputs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">image_kwarg</span> <span class="ow">in</span> <span class="n">image_kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+        <span class="c1"># 0=masked, 1=not masked</span>
+        <span class="n">attention_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">features</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
+        <span class="n">image_inputs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">features</span><span class="p">,</span> <span class="n">attention_mask</span><span class="o">=</span><span class="n">attention_mask</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">image_inputs</span>  </div>
+
+
+<div class="viewcode-block" id="map_passage_to_kb"><a class="viewcode-back" href="../../../meerqat.ir.embedding.html#meerqat.ir.embedding.map_passage_to_kb">[docs]</a><span class="k">def</span> <span class="nf">map_passage_to_kb</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">kb</span><span class="p">,</span> <span class="n">features</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    batch: dict</span>
+<span class="sd">        Should be a batch from the passages KB</span>
+<span class="sd">        Should be able to map to the KB using the &#39;index&#39; key</span>
+<span class="sd">    kb: Dataset</span>
+<span class="sd">        Should be a dataset with pre-computed features</span>
+<span class="sd">    features: List[str]</span>
+<span class="sd">        each feature in features is used to index kb and is then added to the batch</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">subset</span> <span class="o">=</span> <span class="n">kb</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">features</span><span class="p">:</span>
+        <span class="n">batch</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">feature</span><span class="p">,</span> <span class="n">subset</span><span class="p">[</span><span class="n">feature</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">batch</span></div>
+
+    
+<div class="viewcode-block" id="get_inputs"><a class="viewcode-back" href="../../../meerqat.ir.embedding.html#meerqat.ir.embedding.get_inputs">[docs]</a><span class="k">def</span> <span class="nf">get_inputs</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">tokenizer</span><span class="p">,</span> <span class="n">tokenization_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;passage&#39;</span><span class="p">,</span> <span class="n">kb</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Tokenizes input text and optionally gathers image features from the kb depending on model.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    batch: dict</span>
+<span class="sd">    model: nn.Module</span>
+<span class="sd">        If it’s a DMREncoder or IntermediateLinearFusion instance, </span>
+<span class="sd">        will gather image features to take as input (from the kb if kb is not None)</span>
+<span class="sd">    tokenizer: PreTrainedTokenizer</span>
+<span class="sd">    tokenization_kwargs: dict, optional</span>
+<span class="sd">        To be passed to tokenizer</span>
+<span class="sd">    key: str, optional</span>
+<span class="sd">        Used to index the batch to get the text</span>
+<span class="sd">    kb: Dataset, optional</span>
+<span class="sd">        Should hold image features and be mappable from batch[&#39;index&#39;]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">text_inputs</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="o">**</span><span class="n">tokenization_kwargs</span><span class="p">)</span>
+    <span class="c1"># FIXME this is not robust</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="p">(</span><span class="n">mm</span><span class="o">.</span><span class="n">DMREncoder</span><span class="p">,</span> <span class="n">mm</span><span class="o">.</span><span class="n">IntermediateLinearFusion</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">kb</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">features</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;face_embedding&quot;</span><span class="p">,</span> <span class="s2">&quot;face_box&quot;</span><span class="p">}</span> <span class="o">|</span> <span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">image_kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="c1"># /!\ do not modify batch, copy before (else all the features of the KB will be saved). </span>
+            <span class="c1"># no need to deepcopy (only modifying batch keys)</span>
+            <span class="n">new_batch</span> <span class="o">=</span> <span class="n">map_passage_to_kb</span><span class="p">(</span><span class="n">batch</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">kb</span><span class="p">,</span> <span class="n">features</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_batch</span> <span class="o">=</span> <span class="n">batch</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">text_inputs</span><span class="o">=</span><span class="n">text_inputs</span><span class="p">,</span> 
+            <span class="n">face_inputs</span><span class="o">=</span><span class="n">get_face_inputs</span><span class="p">(</span><span class="n">new_batch</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">n_faces</span><span class="p">,</span> <span class="o">**</span><span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">face_kwargs</span><span class="p">),</span> 
+            <span class="n">image_inputs</span><span class="o">=</span><span class="n">get_image_inputs</span><span class="p">(</span><span class="n">new_batch</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">image_kwargs</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">text_inputs</span>
+    <span class="k">return</span> <span class="n">inputs</span></div>
+
+
+<div class="viewcode-block" id="embed"><a class="viewcode-back" href="../../../meerqat.ir.embedding.html#meerqat.ir.embedding.embed">[docs]</a><span class="k">def</span> <span class="nf">embed</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">tokenizer</span><span class="p">,</span> <span class="n">tokenization_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;passage&#39;</span><span class="p">,</span> 
+          <span class="n">save_as</span><span class="o">=</span><span class="s1">&#39;text_embedding&#39;</span><span class="p">,</span> <span class="n">output_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">forward_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kb</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    batch, model, tokenizer, tokenization_kwargs, key, kb: </span>
+<span class="sd">        see ``get_inputs``</span>
+<span class="sd">    save_as: str, optional</span>
+<span class="sd">        key to save the resulting embedding in batch</span>
+<span class="sd">    output_key: str or int, optional</span>
+<span class="sd">        if model outputs a dict, list, or tuple, used to get THE output Tensor you want</span>
+<span class="sd">    forward_kwargs: dict, optional</span>
+<span class="sd">        passed to model.forward</span>
+<span class="sd">    layers: list[int], optional</span>
+<span class="sd">        if not None, expects that the output is a List[Tensor] </span>
+<span class="sd">        with each Tensor being shaped like (batch_size, sequence_length, hidden_size)</span>
+<span class="sd">        In this case, it will save in {save_as}_layer_{layer} the representation of the first token (DMR-like), for each layer</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="n">get_inputs</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">tokenizer</span><span class="p">,</span> <span class="n">tokenization_kwargs</span><span class="o">=</span><span class="n">tokenization_kwargs</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">kb</span><span class="o">=</span><span class="n">kb</span><span class="p">)</span>
+    <span class="c1"># move to device</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="n">prepare_inputs</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="o">**</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">forward_kwargs</span><span class="p">)</span>
+    <span class="c1"># single output</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">outputs</span>
+    <span class="c1"># multiple outputs</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">output_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;You should set output_key to choose from the model&#39;s outputs (got </span><span class="si">{</span><span class="n">output_key</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="n">output_key</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid type &#39;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39; for model&#39;s outputs:</span><span class="se">\n</span><span class="si">{</span><span class="n">outputs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">layers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">batch</span><span class="p">[</span><span class="n">save_as</span><span class="p">]</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+    <span class="c1"># extract representation for each layer in layers</span>
+    <span class="c1"># in this case, output_key should be &#39;hidden_states&#39; or equivalent</span>
+    <span class="c1"># i.e. output holds the representation of each token for each layer</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
+            <span class="c1"># FIXME: ad-hoc for DPR: keep only the representation of the [CLS] token</span>
+            <span class="n">batch</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">save_as</span><span class="si">}</span><span class="s2">_layer_</span><span class="si">{</span><span class="n">layer</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="n">layer</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">batch</span></div>
+
+
+<div class="viewcode-block" id="dataset_embed"><a class="viewcode-back" href="../../../meerqat.ir.embedding.html#meerqat.ir.embedding.dataset_embed">[docs]</a><span class="k">def</span> <span class="nf">dataset_embed</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">,</span> <span class="n">map_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">output_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">fn_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Loads dataset from path, maps it through embed, and saves it to output_path&quot;&quot;&quot;</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">load_from_disk</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">)</span>
+    <span class="c1"># defaults to overwrite the dataset</span>
+    <span class="k">if</span> <span class="n">output_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">output_path</span> <span class="o">=</span> <span class="n">dataset_path</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">embed</span><span class="p">,</span> <span class="n">batched</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fn_kwargs</span><span class="o">=</span><span class="n">fn_kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">map_kwargs</span><span class="p">)</span>
+    <span class="n">dataset</span><span class="o">.</span><span class="n">save_to_disk</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">docopt</span><span class="p">(</span><span class="vm">__doc__</span><span class="p">)</span>
+    <span class="n">set_caching_enabled</span><span class="p">(</span><span class="ow">not</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;--disable_caching&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;--kb&#39;</span><span class="p">]:</span>
+        <span class="n">kb</span> <span class="o">=</span> <span class="n">load_from_disk</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;--kb&#39;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">kb</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">config_path</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;&lt;config&gt;&#39;</span><span class="p">]</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="s1">&#39;rt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">load_pretrained_in_kwargs</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">))</span>
+
+    <span class="n">default_tokenization_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">return_tensors</span><span class="o">=</span><span class="s1">&#39;pt&#39;</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;max_length&#39;</span><span class="p">,</span> <span class="n">truncation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">default_tokenization_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;tokenization_kwargs&#39;</span><span class="p">])</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">&#39;tokenization_kwargs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">default_tokenization_kwargs</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;model&#39;</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">device_count</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">DataParallel</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">dataset_embed</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;&lt;dataset&gt;&#39;</span><span class="p">],</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">kb</span><span class="o">=</span><span class="n">kb</span><span class="p">,</span> <span class="n">output_path</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;--output&#39;</span><span class="p">],</span> <span class="o">**</span><span class="n">config</span><span class="p">)</span>
+</pre></div>
+
+            </article>
+            
+            
+            
+            <footer class="bd-footer-article">
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+            </footer>
+            
+          </div>
+          
+          
+          
+            <div class="bd-sidebar-secondary bd-toc">
+              
+<div class="toc-item">
+  
+</div>
+
+<div class="toc-item">
+  
+</div>
+
+            </div>
+          
+          
+        </div>
+        <footer class="bd-footer-content">
+          <div class="bd-footer-content__inner">
+            
+          </div>
+        </footer>
+        
+      </main>
+    </div>
+  </div>
+
+  
+    
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b"></script>
+
+  <footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    
+<p class="copyright">
+
+    &copy; Copyright 2022, CNRS.<br>
+
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+<p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.1.1.<br>
+</p>
+
+  </div>
+  
+</div>
+  </footer>
+  </body>
+</html>
