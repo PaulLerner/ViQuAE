@@ -39,7 +39,9 @@ HTML_TEMPLATE = """<html>
 <table>
     {headers}
     {rows}
-<tr>"""
+</table>
+</html>
+"""
 
 
 def get_top_1(item, run):
