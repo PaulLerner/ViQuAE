@@ -959,6 +959,7 @@ class ReaderDataModule(QuestionAnsweringDataModule):
         questions, passages = [], []
         answers, answer_strings = [], []
         passage_scores = []
+        with_scores = self.trainer.lightning_module.model.fuse_ir_score
         N = len(items)
         answer_mask = torch.zeros((N*self.M, self.max_n_answers), dtype=torch.long)
         for i, item in enumerate(items):
@@ -972,12 +973,14 @@ class ReaderDataModule(QuestionAnsweringDataModule):
                     score.extend([0]*(self.M-len(score)))
                 passage_scores.append(score)
             else:
-                relevant_passage, irrelevant_passage, relevant_scores, irrelevant_scores = self.get_training_passages(item, with_scores=True)
+                relevant_passage, irrelevant_passage, *scores = self.get_training_passages(item, with_scores=with_scores)
                 passage = relevant_passage + irrelevant_passage
-                passage_scores.append(relevant_scores)
-                passage_scores.append(irrelevant_scores)
-                if (len(relevant_scores) + len(irrelevant_scores)) < self.M:
-                    passage_scores.append(np.zeros(self.M-(len(relevant_scores) + len(irrelevant_scores)), dtype=np.float32))
+                if with_scores:
+                    relevant_scores, irrelevant_scores = scores
+                    passage_scores.append(relevant_scores)
+                    passage_scores.append(irrelevant_scores)
+                    if (len(relevant_scores) + len(irrelevant_scores)) < self.M:
+                        passage_scores.append(np.zeros(self.M-(len(relevant_scores) + len(irrelevant_scores)), dtype=np.float32))
 
             passages.extend(passage)
             # all passages have at least 1 non-masked answer (set to 0 for irrelevant passages)
@@ -1016,7 +1019,8 @@ class ReaderDataModule(QuestionAnsweringDataModule):
         batch = self.image_formatter.format_batch(batch, questions, passages)
         batch.update(answer_position)
         batch['answer_strings'] = answer_strings
-        batch['passage_scores'] = torch.tensor(np.concatenate(passage_scores, dtype=np.float32))
+        if passage_scores:
+            batch['passage_scores'] = torch.tensor(np.concatenate(passage_scores, dtype=np.float32))
 
         return batch
     
