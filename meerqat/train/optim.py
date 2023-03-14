@@ -35,11 +35,11 @@ def _calc_mml(loss_tensor):
     # Mean reduction: this is different from https://github.com/facebookresearch/DPR/blob/a31212dc0a54dfa85d8bfa01e1669f149ac832b7/dpr/models/reader.py#L180
     # who use sum reduction
     # by averaging, the loss does not depend on the batch size N (number of questions)
-    # it might still depend on M, the number of passages, because there’s a max-pooling in MultiPassageBERT
+    # it might still depend on M, the number of passages, if `max_pooling=True` in `multi_passage_rc_loss` (not recommanded)
     return -torch.mean(torch.log(marginal_likelihood + torch.ones(loss_tensor.size(0), device=marginal_likelihood.device) * (marginal_likelihood == 0).float()))
 
 
-def multi_passage_rc_loss(input_ids, start_positions, end_positions, start_logits, end_logits, answer_mask):
+def multi_passage_rc_loss(input_ids, start_positions, end_positions, start_logits, end_logits, answer_mask, max_pooling=False):
     n_times_m, L = input_ids.shape
     M = start_positions.shape[1]
     assert n_times_m % M == 0
@@ -65,6 +65,7 @@ def multi_passage_rc_loss(input_ids, start_positions, end_positions, start_logit
     answer_mask = answer_mask.to(device=input_ids.device, dtype=torch.float32).view(N*M, -1)
 
     # compute span loss for each answer position in passage (in range `max_n_answers`)
+    # note that start_log_probs is constant through the loop
     start_losses = [(loss_fct(start_log_probs, _start_positions) * _span_mask)
                     for (_start_positions, _span_mask)
                     in zip(torch.unbind(start_positions, dim=1), torch.unbind(answer_mask, dim=1))]
@@ -74,9 +75,13 @@ def multi_passage_rc_loss(input_ids, start_positions, end_positions, start_logit
                   in zip(torch.unbind(end_positions, dim=1), torch.unbind(answer_mask, dim=1))]
     loss_tensor = torch.cat([t.unsqueeze(1) for t in start_losses], dim=1) + \
                   torch.cat([t.unsqueeze(1) for t in end_losses], dim=1)
-
-    # keep the maximum per passage for each question
-    loss_tensor = loss_tensor.view(N, M, -1).max(dim=1)[0]
+    
+    # LEGACY: keep the maximum per passage for each question
+    # this might be used to reproduce the experiments of the ViQuAE paper (Lerner et al. 2022)
+    # but hurts performance. see https://github.com/facebookresearch/DPR/issues/244
+    if max_pooling:
+        loss_tensor = loss_tensor.view(N, M, -1).max(dim=1)[0]
+    
     total_loss = _calc_mml(loss_tensor)
     
     return total_loss, start_positions, end_positions, start_logits, end_logits, start_log_probs, end_log_probs
