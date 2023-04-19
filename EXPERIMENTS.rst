@@ -668,6 +668,9 @@ The test is configured to save the prediction (without IR weighing)
 along with the metrics, if you don’t want this, set ``do_eval=True`` and
 ``do_predict=False``.
 
+TODO: with lightning we can use the same config file for training and testing, 
+we can add `--ckpt_path=<path>` on the CLI
+
 .. code:: sh
 
    python -m meerqat.train.trainer experiments/rc/viquae/test/config.json

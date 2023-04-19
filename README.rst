@@ -1,5 +1,6 @@
 ``meerqat``
 ===========
+TODO add MEERQAT logo
 
 Source code and data used in the papers:
     - `ViQuAE, a Dataset for Knowledge-based Visual Question Answering about Named Entities <https://hal.science/hal-03650618>`__ 
