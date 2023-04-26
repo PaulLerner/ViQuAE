@@ -291,8 +291,8 @@ class PreComputedImageFeatures:
         Name of a subclass of MMConfig
     config_path: str
     """
-    def __init__(self, config_class, config_path):
-        config = get_pretrained(config_class, pretrained_model_name_or_path=config_path)
+    def __init__(self, config_class, config_path, **kwargs):
+        config = get_pretrained(config_class, pretrained_model_name_or_path=config_path, **kwargs)
         self.n_faces = config.n_faces        
         self.image_embeddings_keys = config.image_kwargs.keys()
         self.image_dims = {}
