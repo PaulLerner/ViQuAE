@@ -18,7 +18,7 @@ print(sys.path)
 # -- Project information -----------------------------------------------------
 
 project = 'meerqat'
-copyright = '2022, CNRS'
+copyright = '2020-2023, CNRS'
 author = 'Paul Lerner'
 
 # The full version, including alpha/beta/rc tags
