@@ -228,9 +228,11 @@ class Fusion:
             method=self.method,        
             params=best_params
         )
-        combined_run.save(self.output/"test_run.json")
+        if self.output is not None:
+            combined_run.save(self.output/"test_run.json")
         if metrics is not None:
             print(to_latex(evaluate(self.qrels, combined_run, metrics)))
+        return combined_run
 
     
 if __name__ == '__main__':
