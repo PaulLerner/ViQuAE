@@ -1,6 +1,7 @@
+.. image:: ../source_docs/meerqat_logo_by_hlb.png
+
 ``meerqat``
 ===========
-TODO add MEERQAT logo
 
 Source code and data used in the papers:
     - `ViQuAE, a Dataset for Knowledge-based Visual Question Answering about Named Entities <https://hal.science/hal-03650618>`__ 
@@ -119,6 +120,8 @@ The ViQuAE Knowledge Base (KB)
 Again, the format of the KB is very similar to `KILT’s
 Wikipedia <https://huggingface.co/datasets/kilt_wikipedia>`__ so I will
 not describe all fields exhaustively.
+
+TODO share the entities JSON file
 
 .. code:: py
 
@@ -251,3 +254,5 @@ Docs
 ====
 
 `Read the docs! <https://paullerner.github.io/ViQuAE/meerqat.ir.search.html>`__
+
+To build the docs locally, run `sphinx-build -b html source_docs/ docs/`
