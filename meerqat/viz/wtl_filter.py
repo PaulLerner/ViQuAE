@@ -1,32 +1,30 @@
 # coding: utf-8
 """
 usage: wtl_filter.py [-h] --runA RUNA [--runB RUNB]
-                     [--filter {win,loose,intersection,union,nunion,nintersection}]
-                     [--kA KA] [--kB KB]
+                     [--filter {win,loose,intersection,union,nunion,nintersection}] [--kA KA]
+                     [--kB KB]
                      <dataset> <output> <qrels>
 
-Filter a dataset for questions according to runs A and B and filter option.
-For example, find questions where A wins over B. By default (kA=kB=1), winning
-means that A has relevant result in top-1, while B top-1 is irrelevant.
-However, you can change the definition, e.g. kA=1, kB=100, means that A wins
-if it has a relevant result in top-1 and B has only irrelevant in its top-100.
+Filter a dataset for questions according to runs A and B and filter option. For example, find
+questions where A wins over B. By default (kA=kB=1), winning means that A has relevant result in
+top-1, while B top-1 is irrelevant. However, you can change the definition, e.g. kA=1, kB=100,
+means that A wins if it has a relevant result in top-1 and B has only irrelevant in its top-100.
 
 positional arguments:
   <dataset>             Path of the dataset to filter.
   <output>              Path to save the filtered dataset.
   <qrels>               Path to the qrels.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
-  --runA RUNA           Path to run A.
-  --runB RUNB           Path to run B. Defaults: run A always win when its
-                        right.
+  --runA RUNA           Path to run A. (default: None)
+  --runB RUNB           Path to run B. Defaults: run A always win when its right. (default: None)
   --filter {win,loose,intersection,union,nunion,nintersection}
-                        Save when A wins over B (default), looses over B, both
-                        wins (intersection), either win (union), both loose
-                        (nunion), or one looses (nintersection)
-  --kA KA               Judge A on its top-K.
-  --kB KB               Judge B on its top-K.
+                        Save when A wins over B (default), looses over B, both wins (intersection),
+                        either win (union), both loose (nunion), or one looses (nintersection)
+                        (default: win)
+  --kA KA               Judge A on its top-K. (default: 1)
+  --kB KB               Judge B on its top-K. (default: 1)
 """
 
 import argparse
@@ -82,7 +80,10 @@ if __name__ =='__main__':
     However, you can change the definition, e.g. kA=1, kB=100, 
     means that A wins if it has a relevant result in top-1 and B has only irrelevant in its top-100.
     """
-    parser = argparse.ArgumentParser(description=description)
+    parser = argparse.ArgumentParser(
+        description=description, 
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument('dataset', metavar='<dataset>', type=str, help='Path of the dataset to filter.')
     parser.add_argument('output', metavar='<output>', type=str, help='Path to save the filtered dataset.')
     parser.add_argument('qrels', metavar='<qrels>', type=str, help='Path to the qrels.')
