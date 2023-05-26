@@ -36,6 +36,8 @@ Each article is then split into disjoint passages of 100 words for text
 retrieval, while preserving sentence boundaries, and the title of the
 article is appended to the beginning of each passage.
 
+TODO share the article2passage mapping
+
 .. code:: sh
 
    python -m meerqat.data.loading passages data/viquae_wikipedia data/viquae_passages experiments/passages/config.json --disable_caching
@@ -72,6 +74,8 @@ all alternative answers (which come from wikipedia aliases). Since this
 step does not really fit in any of the modules and I cannot think of a
 way of making it robust, I’ll just let you run it yourself from this
 code snippet:
+
+TODO share several versions of the qrels, maybe via https://amenra.github.io/ranxhub/share/ ?
 
 .. code:: py
 
@@ -137,6 +141,20 @@ while to load).
 
 For WIT, you should change "save_as" and "image_key" in the config file by prepreding "context_"
 so that it matches the data format and works with the trainer.
+
+
+Text embedding (for cross-modal search)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+TODO CLIP cross-modal (CORIA)
+
+See below for an interactive visualization of (a subset of) the Wikipedia articles’ titles’ space
+represented through CLIP (ViT-base, zero-shot) and reduced to 2D via UMAP.
+
+.. raw:: html
+   :file: ./source_docs/umap/title_clip-vit-base-patch32.html
+
+The image is shown only for visualization purposes but the representation is text-only!
 
 Face detection
 ~~~~~~~~~~~~~~
@@ -375,6 +393,8 @@ along with the multimodal Wikipedia.
 
 Hyperparameter tuning is done using grid search via ``optuna`` on the
 dev set to maximize MRR.
+
+TODO share several versions of the runs
 
 BM25 (ViQuAE)
 ~~~~~~~~~~~~~
@@ -690,6 +710,8 @@ and run ``meerqat.train.trainer`` again.
 
 References
 ==========
+TODO use links between main text and references
+
 Chen, Y.C., Li, L., Yu, L., El Kholy, A., Ahmed, F., Gan, Z., Cheng, Y., Liu, J.:
 Uniter: Universal image-text representation learning. In: European Conference on
 Computer Vision. pp. 104–120. https://openreview.net/forum?id=S1eL4kBYwr. Springer (2020)
