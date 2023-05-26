@@ -460,13 +460,13 @@
 <span id="meerqat-ir-metrics-module"></span><h1>meerqat.ir.metrics module<a class="headerlink" href="#module-meerqat.ir.metrics" title="Permalink to this heading">#</a></h1>
 <p>Script and functions related to metrics and ranx.</p>
 <p>(for docopt) Usage:
-metrics.py relevant &lt;dataset&gt; &lt;passages&gt; &lt;title2index&gt; &lt;article2passage&gt; [–disable_caching]
+metrics.py relevant &lt;dataset&gt; &lt;passages&gt; &lt;title2index&gt; [&lt;article2passage&gt; –reference=&lt;reference&gt; –save=&lt;save&gt; –disable_caching]
 metrics.py qrels &lt;qrels&gt;… –output=&lt;path&gt;
 metrics.py ranx –qrels=&lt;path&gt; [&lt;run&gt;… –output=&lt;path&gt; –filter=&lt;path&gt; –kwargs=&lt;path&gt; –cats=&lt;path&gt;]
 metrics.py (win|tie|loss) &lt;metrics&gt; [–metric=&lt;metric&gt;]</p>
 <dl>
 <dt>Usages:</dt><dd><ol class="arabic simple">
-<li><p>metrics.py relevant &lt;dataset&gt; &lt;passages&gt; &lt;title2index&gt; &lt;article2passage&gt; [–disable_caching]</p></li>
+<li><p>metrics.py relevant &lt;dataset&gt; &lt;passages&gt; &lt;title2index&gt; [&lt;article2passage&gt; –reference=&lt;reference&gt; –save=&lt;save&gt; –disable_caching]</p></li>
 <li><p>metrics.py qrels &lt;qrels&gt;… –output=&lt;path&gt;</p></li>
 <li><p>metrics.py ranx –qrels=&lt;path&gt; [&lt;run&gt;… –output=&lt;path&gt; –filter=&lt;path&gt; –kwargs=&lt;path&gt; –cats=&lt;path&gt;]</p></li>
 <li><p>metrics.py (win|tie|loss) &lt;metrics&gt; [–metric=&lt;metric&gt;]</p></li>
@@ -477,21 +477,25 @@ metrics.py (win|tie|loss) &lt;metrics&gt; [–metric=&lt;metric&gt;]</p>
 <li><p>&lt;dataset&gt;            Path to the dataset</p></li>
 <li><p>&lt;passages&gt;           Path to the passages (also a Dataset)</p></li>
 <li><p>&lt;title2index&gt;        Path to the JSON file mapping article’s title to it’s index in the KB</p></li>
-<li><p>&lt;article2passage&gt;    Path to the JSON file mapping article’s index to its corresponging passage indices</p></li>
+<li><dl class="simple">
+<dt>[&lt;article2passage&gt;]  Path to the JSON file mapping article’s index to its corresponging passage indices.</dt><dd><p>Optional, if not provided, we assume that &lt;passages&gt; is a collection of articles.</p>
+</dd>
+</dl>
+</li>
 <li><p>&lt;qrels&gt;…           Paths to the Qrels to merge</p></li>
 <li><p>&lt;metrics&gt;            Path to the JSON metrics file (output of ranx)</p></li>
 </ul>
 </dd>
-<dt>Options:</dt><dd><dl class="option-list">
-<dt><kbd><span class="option">--disable_caching</span></kbd></dt>
-<dd><p>Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()</p>
-</dd>
-<dt><kbd><span class="option">--output=<var>&lt;path&gt;</var></span></kbd></dt>
-<dd><ol class="arabic simple">
-<li><p>qrels: output path to the TREC file</p></li>
+<dt>Options:</dt><dd><p>–reference=&lt;reference&gt; Name of the column that holds the text that should hold the answer. Defaults to ‘passage’.
+–save=&lt;save&gt;           Name of the column under which to save the relevant indices. Defaults to ‘provenance_indices’.
+–disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
+–output=&lt;path&gt;         1. qrels: output path to the JSON file</p>
+<blockquote>
+<div><ol class="arabic simple" start="2">
 <li><p>ranx: output path to the directory where to save metrics</p></li>
 </ol>
-</dd>
+</div></blockquote>
+<dl class="option-list">
 <dt><kbd><span class="option">--filter=<var>&lt;path&gt;</var></span></kbd></dt>
 <dd><p>Path towards the JSON file that contains a list of question ids to filter <em>out</em></p>
 </dd>
@@ -531,28 +535,8 @@ Defaults to ‘passage’</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="meerqat.ir.metrics.find_relevant_batch">
-<span class="sig-prename descclassname"><span class="pre">meerqat.ir.metrics.</span></span><span class="sig-name descname"><span class="pre">find_relevant_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">retrieved_batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ground_truth_output_batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relevant_batch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'passage'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">original_answer_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/ir/metrics.html#find_relevant_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.ir.metrics.find_relevant_batch" title="Permalink to this definition">#</a></dt>
-<dd><p>Applies <code class="docutils literal notranslate"><span class="pre">find_relevant</span></code> on a batch (output of ir.search)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>retrieved_batch</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>int</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>ground_truth_output_batch</strong> (<em>List</em><em>[</em><em>dict</em><em>]</em>) – </p></li>
-<li><p><strong>kb</strong> (<em>Dataset</em>) – </p></li>
-<li><p><strong>relevant_batch</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>int</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Each item in relevant_batch will be extended with the other relevant indices we find with <code class="docutils literal notranslate"><span class="pre">find_relevant</span></code>
-Defaults to a batch of empty lists.</p></li>
-<li><p><strong>reference_key</strong> (<em>str</em><em>, </em><em>optional</em>) – Used to get the reference field in kb
-Defaults to ‘passage’</p></li>
-<li><p><strong>original_answer_only</strong> (<em>bool</em><em>, </em><em>optional</em>) – Consider that only the original answer is relevant, not alternative ones.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="meerqat.ir.metrics.find_relevant_item">
-<span class="sig-prename descclassname"><span class="pre">meerqat.ir.metrics.</span></span><span class="sig-name descname"><span class="pre">find_relevant_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">passages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title2index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">article2passage</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/ir/metrics.html#find_relevant_item"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.ir.metrics.find_relevant_item" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">meerqat.ir.metrics.</span></span><span class="sig-name descname"><span class="pre">find_relevant_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">passages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title2index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">article2passage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'passage'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_as</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'provenance_indices'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/ir/metrics.html#find_relevant_item"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.ir.metrics.find_relevant_item" title="Permalink to this definition">#</a></dt>
 <dd><p>Applies <code class="docutils literal notranslate"><span class="pre">find_relevant</span></code> with passages of articles linked to the question.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -560,7 +544,13 @@ Defaults to ‘passage’</p></li>
 <li><p><strong>item</strong> (<em>dict</em>) – </p></li>
 <li><p><strong>passages</strong> (<em>Dataset</em>) – </p></li>
 <li><p><strong>title2index</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em>) – Mapping article’s title to it’s index in the KB</p></li>
-<li><p><strong>article2passage</strong> (<em>dict</em><em>[</em><em>int</em><em>, </em><em>List</em><em>[</em><em>int</em><em>]</em><em>]</em>) – Mapping article’s index to its corresponging passage indices</p></li>
+<li><p><strong>article2passage</strong> (<em>dict</em><em>[</em><em>int</em><em>, </em><em>List</em><em>[</em><em>int</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Mapping article’s index to its corresponging passage indices
+If None, we assume that passages is a collection of articles</p></li>
+<li><p><strong>reference_key</strong> (<em>str</em><em>, </em><em>optional</em>) – Used to get the reference field in kb
+Defaults to ‘passage’</p></li>
+<li><p><strong>save_as</strong> (<em>str</em><em>, </em><em>optional</em>) – Results will be saved under this name in the dataset,
+with an ‘<a href="#id1"><span class="problematic" id="id2">original_answer_</span></a>’ prefix for passages that contain the original answer
+Defaults to ‘provenance_indices’</p></li>
 </ul>
 </dd>
 </dl>
@@ -715,7 +705,7 @@ according to wtl_key in a pandas.DataFrame</p>
     
 <p class="copyright">
 
-    &copy; Copyright 2022, CNRS.<br>
+    &copy; Copyright 2020-2023, CNRS.<br>
 
 </p>
 

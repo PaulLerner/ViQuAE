@@ -464,11 +464,10 @@
 <dt>Generates the WIT subset for Multimodal Inverse Cloze Task as described in the ECIR-2023 paper:</dt><dd><ul class="simple">
 <li><p>english-only subset</p></li>
 <li><p>images paired with the sections</p></li>
-<li><p>filtering out images with irrelevant formats (e.g. .svg)</p></li>
+<li><p>filtering out images with irrelevant formats (e.g. .svg) or not downloaded (e.g. you got a 404)</p></li>
 <li><p>splitting in train/validation/test without overlap between the articles</p></li>
 <li><p>splitting sections in sentences (<code class="docutils literal notranslate"><span class="pre">meerqat.data.loading</span> <span class="pre">sentences</span></code>)</p></li>
 <li><p>removing sections with a single sentence (DIY after)</p></li>
-<li><p>map the image url to its path (DIY after)</p></li>
 <li><p>images should be resized to have a maximum height or width of 512 pixels using <code class="docutils literal notranslate"><span class="pre">meerqat.image.resize</span></code> (DIY after)</p></li>
 </ul>
 </dd>
@@ -536,7 +535,19 @@ WIT/
 <div class="section" id="docopt">
 <h2>Docopt<a class="headerlink" href="#docopt" title="Permalink to this heading">#</a></h2>
 <p>Usage:
-wit.py &lt;root_path&gt; &lt;output_path&gt;</p>
+wit.py ict &lt;root_path&gt; &lt;output_path&gt; [–split]
+wit.py caption &lt;root_path&gt; &lt;output_path&gt; [–split –dedup]</p>
+<dl>
+<dt>Options:</dt><dd><dl class="option-list">
+<dt><kbd><span class="option">--split</span></kbd></dt>
+<dd><p>Whether to split in train/dev/test sets</p>
+</dd>
+<dt><kbd><span class="option">--dedup</span></kbd></dt>
+<dd><p>Whether to de-duplicate identical caption-image pairs</p>
+</dd>
+</dl>
+</dd>
+</dl>
 <dl class="py function">
 <dt class="sig sig-object py" id="meerqat.data.wit.check_encoding">
 <span class="sig-prename descclassname"><span class="pre">meerqat.data.wit.</span></span><span class="sig-name descname"><span class="pre">check_encoding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/data/wit.html#check_encoding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.data.wit.check_encoding" title="Permalink to this definition">#</a></dt>
@@ -544,12 +555,32 @@ wit.py &lt;root_path&gt; &lt;output_path&gt;</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="meerqat.data.wit.fill_wit_for_mict">
-<span class="sig-prename descclassname"><span class="pre">meerqat.data.wit.</span></span><span class="sig-name descname"><span class="pre">fill_wit_for_mict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wit_for_mict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/data/wit.html#fill_wit_for_mict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.data.wit.fill_wit_for_mict" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">meerqat.data.wit.</span></span><span class="sig-name descname"><span class="pre">fill_wit_for_mict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wit_for_mict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downloaded_images</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/data/wit.html#fill_wit_for_mict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.data.wit.fill_wit_for_mict" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="meerqat.data.wit.dict_to_dataset">
 <span class="sig-prename descclassname"><span class="pre">meerqat.data.wit.</span></span><span class="sig-name descname"><span class="pre">dict_to_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/data/wit.html#dict_to_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.data.wit.dict_to_dataset" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="meerqat.data.wit.common_filter">
+<span class="sig-prename descclassname"><span class="pre">meerqat.data.wit.</span></span><span class="sig-name descname"><span class="pre">common_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downloaded_images</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/data/wit.html#common_filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.data.wit.common_filter" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="meerqat.data.wit.mict">
+<span class="sig-prename descclassname"><span class="pre">meerqat.data.wit.</span></span><span class="sig-name descname"><span class="pre">mict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downloaded_images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/data/wit.html#mict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.data.wit.mict" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="meerqat.data.wit.is_unique">
+<span class="sig-prename descclassname"><span class="pre">meerqat.data.wit.</span></span><span class="sig-name descname"><span class="pre">is_unique</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique_pairs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/data/wit.html#is_unique"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.data.wit.is_unique" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="meerqat.data.wit.caption">
+<span class="sig-prename descclassname"><span class="pre">meerqat.data.wit.</span></span><span class="sig-name descname"><span class="pre">caption</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downloaded_images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dedup</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/data/wit.html#caption"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.data.wit.caption" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </div>
@@ -645,7 +676,7 @@ wit.py &lt;root_path&gt; &lt;output_path&gt;</p>
     
 <p class="copyright">
 
-    &copy; Copyright 2022, CNRS.<br>
+    &copy; Copyright 2020-2023, CNRS.<br>
 
 </p>
 

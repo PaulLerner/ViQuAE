@@ -456,48 +456,8 @@
             
             <article class="bd-article" role="main">
               
-  <div class="section" id="module-meerqat.train.split_biencoder">
-<span id="meerqat-train-split-biencoder-module"></span><h1>meerqat.train.split_biencoder module<a class="headerlink" href="#module-meerqat.train.split_biencoder" title="Permalink to this heading">#</a></h1>
-<p>Splits a BiEncoder in two (e.g. DPRBiEncoder in DPRQuestionEncoder and DPRContextEncoder).
-The config file should be the same as for <code class="docutils literal notranslate"><span class="pre">train.trainer</span></code> in evaluation mode:
-i.e. the path to the wanted checkpoint should be given in config[‘checkpoint’][‘resume_from_checkpoint’].</p>
-<p>You might get a warning like “weights were not used”, this comes from load_pretrained_in_kwargs, don’t worry:
-If the checkpoint does not match the model an exception will be raised.</p>
-<p>Usage: split_biencoder.py &lt;config&gt; [–bert]</p>
-<dl>
-<dt>Positional arguments:</dt><dd><p>&lt;config&gt;    Path to the JSON configuration file (passed as kwargs)</p>
-</dd>
-<dt>Options:</dt><dd><dl class="option-list">
-<dt><kbd><span class="option">--bert</span></kbd></dt>
-<dd><p>Save BertModel instead of question_model and context_model</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<dl class="py function">
-<dt class="sig sig-object py" id="meerqat.train.split_biencoder.split_biencoder">
-<span class="sig-prename descclassname"><span class="pre">meerqat.train.split_biencoder.</span></span><span class="sig-name descname"><span class="pre">split_biencoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trainee</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bert</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/split_biencoder.html#split_biencoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.split_biencoder.split_biencoder" title="Permalink to this definition">#</a></dt>
-<dd><p>Utility function to split a BiEncoder in two
-(e.g. DPRBiEncoder in DPRQuestionEncoder and DPRContextEncoder)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>trainee</strong> (<a class="reference internal" href="meerqat.train.trainee.html#meerqat.train.trainee.BiEncoder" title="meerqat.train.trainee.BiEncoder"><em>BiEncoder</em></a>) – <dl class="simple">
-<dt>must have attributes:</dt><dd><ul>
-<li><p>question_model: PreTrainedModel</p></li>
-<li><p>context_model: PreTrainedModel</p></li>
-</ul>
-</dd>
-</dl>
-</p></li>
-<li><p><strong>checkpoint</strong> (<em>str</em>) – Path to the directory where the pytorch checkpoint is stored under WEIGHTS_NAME (“pytorch_model.bin”)</p></li>
-<li><p><strong>bert</strong> (<em>bool</em><em>, </em><em>optional</em>) – Save BertModel instead of question_model and context_model (which then must have bert_model attribute).
-Defaults to False.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
+  <div class="section" id="meerqat-train-split-biencoder-module">
+<h1>meerqat.train.split_biencoder module<a class="headerlink" href="#meerqat-train-split-biencoder-module" title="Permalink to this heading">#</a></h1>
 </div>
 
 
@@ -556,7 +516,7 @@ Defaults to False.</p></li>
     
 <p class="copyright">
 
-    &copy; Copyright 2022, CNRS.<br>
+    &copy; Copyright 2020-2023, CNRS.<br>
 
 </p>
 

@@ -459,6 +459,39 @@
   <div class="section" id="module-meerqat.models.utils">
 <span id="meerqat-models-utils-module"></span><h1>meerqat.models.utils module<a class="headerlink" href="#module-meerqat.models.utils" title="Permalink to this heading">#</a></h1>
 <p>Misc. utility functions.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="meerqat.models.utils.TanhGate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.models.utils.</span></span><span class="sig-name descname"><span class="pre">TanhGate</span></span><a class="reference internal" href="_modules/meerqat/models/utils.html#TanhGate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.models.utils.TanhGate" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>Flamingo-style tanh gating (init at 0) <a class="footnote-reference brackets" href="#id2" id="id1">1</a></p>
+<p class="rubric">References</p>
+<dl class="footnote brackets">
+<dt class="label" id="id2"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>Jean-Baptiste Alayrac et al. (2022).
+Flamingo: a Visual Language Model for Few-Shot Learning. ArXiv:2204.14198.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.models.utils.TanhGate.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/models/utils.html#TanhGate.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.models.utils.TanhGate.forward" title="Permalink to this definition">#</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="meerqat.models.utils.TanhGate.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.models.utils.TanhGate.training" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="meerqat.models.utils.map_if_not_None">
 <span class="sig-prename descclassname"><span class="pre">meerqat.models.utils.</span></span><span class="sig-name descname"><span class="pre">map_if_not_None</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/models/utils.html#map_if_not_None"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.models.utils.map_if_not_None" title="Permalink to this definition">#</a></dt>
@@ -554,7 +587,7 @@ Adapted from transformers.Trainer</p>
     
 <p class="copyright">
 
-    &copy; Copyright 2022, CNRS.<br>
+    &copy; Copyright 2020-2023, CNRS.<br>
 
 </p>
 

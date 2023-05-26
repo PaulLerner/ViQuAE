@@ -461,22 +461,57 @@
 <p>Metrics to be used in trainer.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="meerqat.train.metrics.retrieval">
-<span class="sig-prename descclassname"><span class="pre">meerqat.train.metrics.</span></span><span class="sig-name descname"><span class="pre">retrieval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eval_prediction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/metrics.html#retrieval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.metrics.retrieval" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">meerqat.train.metrics.</span></span><span class="sig-name descname"><span class="pre">retrieval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eval_outputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'log_probs'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/metrics.html#retrieval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.metrics.retrieval" title="Permalink to this definition">#</a></dt>
 <dd><p>Computes metric for retrieval training (at the batch-level)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>eval_prediction</strong> (<em>EvalPrediction</em><em> (</em><em>dict-like</em><em>)</em>) – <dl class="simple">
-<dt>predictions: np.ndarray</dt><dd><p>shape (dataset_size, N*M)
-This corresponds to the log-probability of the relevant passages per batch (N*M == batch size)</p>
-</dd>
-<dt>label_ids: np.ndarray</dt><dd><p>shape (dataset_size, )
-Label at the batch-level (each value should be included in [0, N-1] inclusive)</p>
-</dd>
-</dl>
-</p></li>
+<li><p><strong>eval_outputs</strong> (<em>List</em><em>[</em><em>dict</em><em>[</em><em>str</em><em>, </em><em>Tensor</em><em>]</em><em>]</em>) – Contains log_probs and labels for all batches in the evaluation step (either validation or test)</p></li>
 <li><p><strong>ignore_index</strong> (<em>int</em><em>, </em><em>optional</em>) – Labels with this value are not taken into account when computing metrics.
 Defaults to -100</p></li>
+<li><p><strong>output_key</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the model output in eval_outputs</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="meerqat.train.metrics.get_run">
+<span class="sig-prename descclassname"><span class="pre">meerqat.train.metrics.</span></span><span class="sig-name descname"><span class="pre">get_run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eval_outputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ir_run</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/metrics.html#get_run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.metrics.get_run" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>eval_outputs</strong> (<em>List</em><em>[</em><em>dict</em><em>[</em><em>str</em><em>, </em><em>Tensor</em><em>]</em><em>]</em>) – Contains logits for all batches in the evaluation step (either validation or test)</p></li>
+<li><p><strong>ir_run</strong> (<em>ranx.Run</em>) – Original IR run being re-ranked.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="meerqat.train.metrics.f1_score">
+<span class="sig-prename descclassname"><span class="pre">meerqat.train.metrics.</span></span><span class="sig-name descname"><span class="pre">f1_score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prediction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ground_truth</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/metrics.html#f1_score"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.metrics.f1_score" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="meerqat.train.metrics.exact_match_score">
+<span class="sig-prename descclassname"><span class="pre">meerqat.train.metrics.</span></span><span class="sig-name descname"><span class="pre">exact_match_score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prediction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ground_truth</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/metrics.html#exact_match_score"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.metrics.exact_match_score" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="meerqat.train.metrics.metric_max_over_ground_truths">
+<span class="sig-prename descclassname"><span class="pre">meerqat.train.metrics.</span></span><span class="sig-name descname"><span class="pre">metric_max_over_ground_truths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prediction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ground_truths</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/metrics.html#metric_max_over_ground_truths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.metrics.metric_max_over_ground_truths" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="meerqat.train.metrics.squad">
+<span class="sig-prename descclassname"><span class="pre">meerqat.train.metrics.</span></span><span class="sig-name descname"><span class="pre">squad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predictions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">references</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/metrics.html#squad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.metrics.squad" title="Permalink to this definition">#</a></dt>
+<dd><p>Adapted from datasets.load_metric(‘squad’)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>predictions</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>references</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – </p></li>
 </ul>
 </dd>
 </dl>
@@ -540,7 +575,7 @@ Defaults to -100</p></li>
     
 <p class="copyright">
 
-    &copy; Copyright 2022, CNRS.<br>
+    &copy; Copyright 2020-2023, CNRS.<br>
 
 </p>
 

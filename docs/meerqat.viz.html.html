@@ -458,19 +458,74 @@
               
   <div class="section" id="module-meerqat.viz.html">
 <span id="meerqat-viz-html-module"></span><h1>meerqat.viz.html module<a class="headerlink" href="#module-meerqat.viz.html" title="Permalink to this heading">#</a></h1>
-<p>Usage: html.py &lt;dataset&gt; &lt;output&gt; [–n=&lt;n&gt; –width=&lt;width&gt; –config=&lt;path&gt;]</p>
-<p>Options:
-–n=&lt;n&gt;                 Number of examples to output after shuffling. Defaults to all without shuffling.
-–width=&lt;width&gt;         Width of the image in HTML [default: 400].</p>
+<dl>
+<dt>usage: html.py [-h] [–config CONFIG] [–print_config [={comments,skip_null,skip_default}+]] [–n N] [–width WIDTH] [–passages_path PASSAGES_PATH] [–wiki_path WIKI_PATH] [–search_run SEARCH_RUN]</dt><dd><p>[–other_search_run OTHER_SEARCH_RUN]
+dataset_path output</p>
+</dd>
+<dt>options:</dt><dd><dl class="option-list">
+<dt><kbd><span class="option">-h</span>, <span class="option">--help</span></kbd></dt>
+<dd><p>Show this help message and exit.</p>
+</dd>
+<dt><kbd><span class="option">--config <var>CONFIG</var></span></kbd></dt>
+<dd><p>Path to a configuration file.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>–print_config [={comments,skip_null,skip_default}+]</dt><dd><p>Print the configuration after applying all other arguments and exit.</p>
+</dd>
+</dl>
+</dd>
+<dt>Visualize dataset in HTML:</dt><dd><p>dataset_path          (required, type: str)
+output                (required, type: str)
+–n N                 Number of examples to output after shuffling. Defaults to all without shuffling. (type: Optional[int], default: null)
+–width WIDTH         Width of the image in HTML [default: 400]. (type: int, default: 400)
+–passages_path PASSAGES_PATH</p>
+<blockquote>
+<div><p>(type: Optional[str], default: null)</p>
+</div></blockquote>
+<dl class="option-list">
+<dt><kbd><span class="option">--wiki_path <var>WIKI_PATH</var></span></kbd></dt>
+<dd><p>(type: Optional[str], default: null)</p>
+</dd>
+<dt><kbd><span class="option">--search_run <var>SEARCH_RUN</var></span></kbd></dt>
+<dd><p>(type: Optional[str], default: null)</p>
+</dd>
+<dt><kbd><span class="option">--other_search_run <var>OTHER_SEARCH_RUN</var></span></kbd></dt>
+<dd><p>(type: Optional[str], default: null)</p>
+</dd>
+</dl>
+</dd>
+</dl>
 <dl class="py function">
 <dt class="sig sig-object py" id="meerqat.viz.html.get_top_1">
 <span class="sig-prename descclassname"><span class="pre">meerqat.viz.html.</span></span><span class="sig-name descname"><span class="pre">get_top_1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/viz/html.html#get_top_1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.viz.html.get_top_1" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="meerqat.viz.html.format_html">
-<span class="sig-prename descclassname"><span class="pre">meerqat.viz.html.</span></span><span class="sig-name descname"><span class="pre">format_html</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">400</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">passages_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wiki_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">other_search_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/viz/html.html#format_html"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.viz.html.format_html" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="meerqat.viz.html.get_url_and_text">
+<span class="sig-prename descclassname"><span class="pre">meerqat.viz.html.</span></span><span class="sig-name descname"><span class="pre">get_url_and_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wiki</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">passages</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/viz/html.html#get_url_and_text"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.viz.html.get_url_and_text" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="meerqat.viz.html.format_html">
+<span class="sig-prename descclassname"><span class="pre">meerqat.viz.html.</span></span><span class="sig-name descname"><span class="pre">format_html</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">400</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">passages_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wiki_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search_run</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">other_search_run</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/viz/html.html#format_html"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.viz.html.format_html" title="Permalink to this definition">#</a></dt>
+<dd><p>Visualize dataset in HTML</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset_path</strong> (<em>str</em>) – </p></li>
+<li><p><strong>output</strong> (<em>str</em>) – </p></li>
+<li><p><strong>n</strong> (<em>int</em>) – Number of examples to output after shuffling.
+Defaults to all without shuffling.</p></li>
+<li><p><strong>width</strong> (<em>int</em>) – Width of the image in HTML [default: 400].</p></li>
+<li><p><strong>passages_path</strong> (<em>str</em>) – </p></li>
+<li><p><strong>wiki_path</strong> (<em>str</em>) – </p></li>
+<li><p><strong>search_run</strong> (<em>str</em>) – </p></li>
+<li><p><strong>other_search_run</strong> (<em>str</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 </div>
 
@@ -530,7 +585,7 @@
     
 <p class="copyright">
 
-    &copy; Copyright 2022, CNRS.<br>
+    &copy; Copyright 2020-2023, CNRS.<br>
 
 </p>
 

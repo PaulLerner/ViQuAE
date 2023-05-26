@@ -458,23 +458,122 @@
               
   <div class="section" id="module-meerqat.train.trainee">
 <span id="meerqat-train-trainee-module"></span><h1>meerqat.train.trainee module<a class="headerlink" href="#module-meerqat.train.trainee" title="Permalink to this heading">#</a></h1>
-<dl class="simple">
-<dt>Trainee is a nn.Module that computes the loss and returns it either as:</dt><dd><ul class="simple">
-<li><p>first element of a tuple</p></li>
-<li><p>in the loss key of a dict or ModelOutput</p></li>
+<p>Trainee is a pl.LightningModule that computes the loss so it is compatible with Trainer.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="meerqat.train.trainee.batched_cpu">
+<span class="sig-prename descclassname"><span class="pre">meerqat.train.trainee.</span></span><span class="sig-name descname"><span class="pre">batched_cpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#batched_cpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.batched_cpu" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Trainee">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.trainee.</span></span><span class="sig-name descname"><span class="pre">Trainee</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freeze_regex</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_checkpointing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">betas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.9,</span> <span class="pre">0.999)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_decay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Trainee"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Trainee" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">LightningModule</span></code></p>
+<p>Base class for all Trainee models (to be trained by a Trainer)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> (<em>additionnal arguments are passed to pl.LightningModule</em>) – </p></li>
+<li><p><strong>**kwargs</strong> (<em>additionnal arguments are passed to pl.LightningModule</em>) – </p></li>
+<li><p><strong>freeze_regex</strong> (<em>str</em><em>, </em><em>optional</em>) – represents a regex used to match the model parameters to freeze
+(i.e. set <code class="docutils literal notranslate"><span class="pre">requires_grad</span> <span class="pre">=</span> <span class="pre">False</span></code>).
+Defaults to None (keep model fully-trainable)</p></li>
+<li><p><strong>gradient_checkpointing</strong> (<em>bool</em><em>, </em><em>optional</em>) – </p></li>
+<li><p><strong>lr</strong> (<em>float</em><em>, </em><em>optional</em>) – </p></li>
+<li><p><strong>eps</strong> (<em>float</em><em>, </em><em>optional</em>) – </p></li>
+<li><p><strong>weight_decay</strong> (<em>float</em><em>, </em><em>optional</em>) – </p></li>
+<li><p><strong>betas</strong> (<em>Tuple</em><em>[</em><em>float</em><em>]</em><em>, </em><em>optional</em>) – </p></li>
+<li><p><strong>warmup_steps</strong> (<em>int</em><em>, </em><em>optional</em>) – Defaults to no warm-up</p></li>
 </ul>
 </dd>
 </dl>
-<p>so it is compatible with Trainer.
-Exception is made for BiEncoder that simply wraps both encoders outputs
-so it is compatible with DPRBiEncoderTrainer (and subclasses).</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="meerqat.train.trainee.Trainee">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.trainee.</span></span><span class="sig-name descname"><span class="pre">Trainee</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Trainee"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Trainee" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
-<p>Base class for all Trainee models (to be trained by a Trainer)
-Should implement a forward function that returns loss between output and target (as a tuple, dict or ModelOutput)
-The actual forward pass should be done using the model attribute</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Trainee.post_init">
+<span class="sig-name descname"><span class="pre">post_init</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Trainee.post_init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Trainee.post_init" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Trainee.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Trainee.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Trainee.step" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Trainee.log">
+<span class="sig-name descname"><span class="pre">log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Trainee.log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Trainee.log" title="Permalink to this definition">#</a></dt>
+<dd><p>Ignores None values.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Trainee.training_step">
+<span class="sig-name descname"><span class="pre">training_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Trainee.training_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Trainee.training_step" title="Permalink to this definition">#</a></dt>
+<dd><p>Step and log training metrics</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Trainee.validation_step">
+<span class="sig-name descname"><span class="pre">validation_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Trainee.validation_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Trainee.validation_step" title="Permalink to this definition">#</a></dt>
+<dd><p>Step and log validation metrics</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Trainee.test_step">
+<span class="sig-name descname"><span class="pre">test_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Trainee.test_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Trainee.test_step" title="Permalink to this definition">#</a></dt>
+<dd><p>Step and log test metrics</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Trainee.eval_epoch_end">
+<span class="sig-name descname"><span class="pre">eval_epoch_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eval_outputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Trainee.eval_epoch_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Trainee.eval_epoch_end" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Trainee.validation_epoch_end">
+<span class="sig-name descname"><span class="pre">validation_epoch_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Trainee.validation_epoch_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Trainee.validation_epoch_end" title="Permalink to this definition">#</a></dt>
+<dd><p>eval_epoch_end and log</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Trainee.test_epoch_end">
+<span class="sig-name descname"><span class="pre">test_epoch_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Trainee.test_epoch_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Trainee.test_epoch_end" title="Permalink to this definition">#</a></dt>
+<dd><p>eval_epoch_end and log</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Trainee.freeze">
+<span class="sig-name descname"><span class="pre">freeze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">regex</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Trainee.freeze"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Trainee.freeze" title="Permalink to this definition">#</a></dt>
+<dd><p>Overrides freeze to freeze only parameters that match the regex.
+Caveat: does not call .eval() so does not disable Dropout</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Trainee.configure_optimizers">
+<span class="sig-name descname"><span class="pre">configure_optimizers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Trainee.configure_optimizers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Trainee.configure_optimizers" title="Permalink to this definition">#</a></dt>
+<dd><p>Prepare optimizer and schedule (linear warmup and decay)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Trainee.gradient_checkpointing_enable">
+<span class="sig-name descname"><span class="pre">gradient_checkpointing_enable</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Trainee.gradient_checkpointing_enable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Trainee.gradient_checkpointing_enable" title="Permalink to this definition">#</a></dt>
+<dd><p>Activates gradient checkpointing for the current model.
+Note that in other frameworks this feature can be referred to as “activation checkpointing” or “checkpoint
+activations”.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Trainee.gradient_checkpointing_disable">
+<span class="sig-name descname"><span class="pre">gradient_checkpointing_disable</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Trainee.gradient_checkpointing_disable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Trainee.gradient_checkpointing_disable" title="Permalink to this definition">#</a></dt>
+<dd><p>Deactivates gradient checkpointing for the current model.
+Note that in other frameworks this feature can be referred to as “activation checkpointing” or “checkpoint
+activations”.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Trainee.is_gradient_checkpointing">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_gradient_checkpointing</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.Trainee.is_gradient_checkpointing" title="Permalink to this definition">#</a></dt>
+<dd><p>Whether gradient checkpointing is activated for this model or not.
+Note that in other frameworks this feature can be referred to as “activation checkpointing” or “checkpoint
+activations”.</p>
+</dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="meerqat.train.trainee.Trainee.training">
 <span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.Trainee.training" title="Permalink to this definition">#</a></dt>
@@ -483,134 +582,153 @@ The actual forward pass should be done using the model attribute</p>
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.trainee.</span></span><span class="sig-name descname"><span class="pre">DPRReaderForQuestionAnsweringOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relevance_logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_states</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attentions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#DPRReaderForQuestionAnsweringOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">DPRReaderOutput</span></code></p>
-<p>Same as DPRReaderOutput with an extra loss attribute (or as QuestionAnsweringModelOutput with relevance_logits)</p>
-<p class="rubric">Notes</p>
-<p>Unfortunately we have to redefine everything so that loss is the first attribute</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput.loss">
-<span class="sig-name descname"><span class="pre">loss</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput.loss" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="meerqat.train.trainee.CrossModal">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.trainee.</span></span><span class="sig-name descname"><span class="pre">CrossModal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#CrossModal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.CrossModal" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#meerqat.train.trainee.Trainee" title="meerqat.train.trainee.Trainee"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trainee</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.CrossModal.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#CrossModal.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.CrossModal.forward" title="Permalink to this definition">#</a></dt>
+<dd><p>Same as <code class="xref py py-meth docutils literal notranslate"><span class="pre">torch.nn.Module.forward()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> – Whatever you decide to pass into the forward method.</p></li>
+<li><p><strong>**kwargs</strong> – Keyword arguments are also possible.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Your model’s output</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.CrossModal.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#CrossModal.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.CrossModal.step" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.CrossModal.eval_epoch_end">
+<span class="sig-name descname"><span class="pre">eval_epoch_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eval_outputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#CrossModal.eval_epoch_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.CrossModal.eval_epoch_end" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.CrossModal.save_pretrained">
+<span class="sig-name descname"><span class="pre">save_pretrained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ckpt_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bert</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#CrossModal.save_pretrained"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.CrossModal.save_pretrained" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput.start_logits">
-<span class="sig-name descname"><span class="pre">start_logits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">FloatTensor</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput.start_logits" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="meerqat.train.trainee.CrossModal.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.CrossModal.training" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput.end_logits">
-<span class="sig-name descname"><span class="pre">end_logits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">FloatTensor</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput.end_logits" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="meerqat.train.trainee.CrossModal.precision">
+<span class="sig-name descname"><span class="pre">precision</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#meerqat.train.trainee.CrossModal.precision" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput.relevance_logits">
-<span class="sig-name descname"><span class="pre">relevance_logits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">FloatTensor</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput.relevance_logits" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="meerqat.train.trainee.CrossModal.prepare_data_per_node">
+<span class="sig-name descname"><span class="pre">prepare_data_per_node</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.CrossModal.prepare_data_per_node" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput.hidden_states">
-<span class="sig-name descname"><span class="pre">hidden_states</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput.hidden_states" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput.attentions">
-<span class="sig-name descname"><span class="pre">attentions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#meerqat.train.trainee.DPRReaderForQuestionAnsweringOutput.attentions" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="meerqat.train.trainee.CrossModal.allow_zero_length_dataloader_with_multiple_devices">
+<span class="sig-name descname"><span class="pre">allow_zero_length_dataloader_with_multiple_devices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.CrossModal.allow_zero_length_dataloader_with_multiple_devices" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="meerqat.train.trainee.MultiPassageBERTOutput">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.trainee.</span></span><span class="sig-name descname"><span class="pre">MultiPassageBERTOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_states</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attentions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_log_probs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_log_probs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#MultiPassageBERTOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.MultiPassageBERTOutput" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QuestionAnsweringModelOutput</span></code></p>
-<p>Same as QuestionAnsweringModelOutput but with start and end log-probabilities</p>
-<p>(equivalent to softmax(start_logits) when there is only one passage per question)</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.MultiPassageBERTOutput.start_log_probs">
-<span class="sig-name descname"><span class="pre">start_log_probs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">FloatTensor</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#meerqat.train.trainee.MultiPassageBERTOutput.start_log_probs" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.MultiPassageBERTOutput.end_log_probs">
-<span class="sig-name descname"><span class="pre">end_log_probs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">FloatTensor</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#meerqat.train.trainee.MultiPassageBERTOutput.end_log_probs" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
+<dt class="sig sig-object py" id="meerqat.train.trainee.JointMonoAndCrossModal">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.trainee.</span></span><span class="sig-name descname"><span class="pre">JointMonoAndCrossModal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cm_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learn_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mm_weights_lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#JointMonoAndCrossModal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.JointMonoAndCrossModal" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#meerqat.train.trainee.Trainee" title="meerqat.train.trainee.Trainee"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trainee</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.JointMonoAndCrossModal.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">LongTensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paired_pixel_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attention_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">LongTensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#JointMonoAndCrossModal.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.JointMonoAndCrossModal.forward" title="Permalink to this definition">#</a></dt>
+<dd><p>Same as <code class="xref py py-meth docutils literal notranslate"><span class="pre">torch.nn.Module.forward()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> – Whatever you decide to pass into the forward method.</p></li>
+<li><p><strong>**kwargs</strong> – Keyword arguments are also possible.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Your model’s output</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="py class">
-<dt class="sig sig-object py" id="meerqat.train.trainee.BiEncoderOutput">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.trainee.</span></span><span class="sig-name descname"><span class="pre">BiEncoderOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">question_pooler_output</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_pooler_output</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#BiEncoderOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.BiEncoderOutput" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ModelOutput</span></code></p>
-<p>Simply wraps both encoders output in one.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.BiEncoderOutput.question_pooler_output">
-<span class="sig-name descname"><span class="pre">question_pooler_output</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#meerqat.train.trainee.BiEncoderOutput.question_pooler_output" title="Permalink to this definition">#</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.JointMonoAndCrossModal.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#JointMonoAndCrossModal.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.JointMonoAndCrossModal.step" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.JointMonoAndCrossModal.eval_epoch_end">
+<span class="sig-name descname"><span class="pre">eval_epoch_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eval_outputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#JointMonoAndCrossModal.eval_epoch_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.JointMonoAndCrossModal.eval_epoch_end" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.JointMonoAndCrossModal.save_pretrained">
+<span class="sig-name descname"><span class="pre">save_pretrained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ckpt_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bert</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#JointMonoAndCrossModal.save_pretrained"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.JointMonoAndCrossModal.save_pretrained" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.BiEncoderOutput.context_pooler_output">
-<span class="sig-name descname"><span class="pre">context_pooler_output</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#meerqat.train.trainee.BiEncoderOutput.context_pooler_output" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="meerqat.train.trainee.DPRBiEncoderOutput">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.trainee.</span></span><span class="sig-name descname"><span class="pre">DPRBiEncoderOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">question_pooler_output</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_pooler_output</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">question_hidden_states</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">question_attentions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_hidden_states</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_attentions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#DPRBiEncoderOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.DPRBiEncoderOutput" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#meerqat.train.trainee.BiEncoderOutput" title="meerqat.train.trainee.BiEncoderOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">BiEncoderOutput</span></code></a></p>
-<p>Outputs from the question and context encoders
-(same as DPRQuestionEncoderOutput, DPRContextEncoderOutput with prefixes)</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.DPRBiEncoderOutput.question_pooler_output">
-<span class="sig-name descname"><span class="pre">question_pooler_output</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#meerqat.train.trainee.DPRBiEncoderOutput.question_pooler_output" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="meerqat.train.trainee.JointMonoAndCrossModal.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.JointMonoAndCrossModal.training" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.DPRBiEncoderOutput.question_hidden_states">
-<span class="sig-name descname"><span class="pre">question_hidden_states</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#meerqat.train.trainee.DPRBiEncoderOutput.question_hidden_states" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="meerqat.train.trainee.JointMonoAndCrossModal.precision">
+<span class="sig-name descname"><span class="pre">precision</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#meerqat.train.trainee.JointMonoAndCrossModal.precision" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.DPRBiEncoderOutput.question_attentions">
-<span class="sig-name descname"><span class="pre">question_attentions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#meerqat.train.trainee.DPRBiEncoderOutput.question_attentions" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="meerqat.train.trainee.JointMonoAndCrossModal.prepare_data_per_node">
+<span class="sig-name descname"><span class="pre">prepare_data_per_node</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.JointMonoAndCrossModal.prepare_data_per_node" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.DPRBiEncoderOutput.context_pooler_output">
-<span class="sig-name descname"><span class="pre">context_pooler_output</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#meerqat.train.trainee.DPRBiEncoderOutput.context_pooler_output" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.DPRBiEncoderOutput.context_hidden_states">
-<span class="sig-name descname"><span class="pre">context_hidden_states</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#meerqat.train.trainee.DPRBiEncoderOutput.context_hidden_states" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.DPRBiEncoderOutput.context_attentions">
-<span class="sig-name descname"><span class="pre">context_attentions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#meerqat.train.trainee.DPRBiEncoderOutput.context_attentions" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="meerqat.train.trainee.JointMonoAndCrossModal.allow_zero_length_dataloader_with_multiple_devices">
+<span class="sig-name descname"><span class="pre">allow_zero_length_dataloader_with_multiple_devices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.JointMonoAndCrossModal.allow_zero_length_dataloader_with_multiple_devices" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="meerqat.train.trainee.BiEncoder">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.trainee.</span></span><span class="sig-name descname"><span class="pre">BiEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">question_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#BiEncoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.BiEncoder" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.trainee.</span></span><span class="sig-name descname"><span class="pre">BiEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">question_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">question_model_name_or_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_model_name_or_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">question_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">superclass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#BiEncoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.BiEncoder" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#meerqat.train.trainee.Trainee" title="meerqat.train.trainee.Trainee"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trainee</span></code></a></p>
+<p>The training objective is to minimize the negative log-likelihood of the similarities (dot product)
+between the questions and the passages embeddings, as described in <a class="footnote-reference brackets" href="#id2" id="id1">3</a>.</p>
+<p class="rubric">References</p>
+<dl class="footnote brackets">
+<dt class="label" id="id2"><span class="brackets"><a class="fn-backref" href="#id1">3</a></span></dt>
+<dd><p>Vladimir Karpukhin, Barlas Oguz, Sewon Min, Patrick Lewis, Ledell Wu, Sergey Edunov, Danqi Chen, Wen-tau Yih.
+Dense Passage Retrieval for Open-Domain Question Answering.
+Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 6769–6781, 2020.</p>
+</dd>
+</dl>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>question_model</strong> (<em>nn.Module</em>) – </p></li>
-<li><p><strong>context_model</strong> (<em>nn.Module</em>) – </p></li>
+<li><p><strong>*args</strong> (<em>additionnal arguments are passed to Trainee</em>) – </p></li>
+<li><p><strong>**kwargs</strong> (<em>additionnal arguments are passed to Trainee</em>) – </p></li>
+<li><p><strong>question_class</strong> (<em>str</em>) – Name of the class used for question_model. See get_class_from_name.</p></li>
+<li><p><strong>question_model_name_or_path</strong> (<em>str</em>) – Passed to from_pretrained. See transformers.PreTrainedModel.from_pretrained</p></li>
+<li><p><strong>context_class</strong> (<em>str</em><em>, </em><em>optional</em>) – Analog to question_class for context_model. Defaults to question_class.
+If ‘shared’, then use the same model to encode questions and passages.
+Will set shared_encoders=True</p></li>
+<li><p><strong>context_model_name_or_path</strong> (<em>str</em>) – Analog to question_model_name_or_path for context_model. Defaults to question_model_name_or_path.</p></li>
+<li><p><strong>question_kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – </p></li>
+<li><p><strong>context_kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – </p></li>
+<li><p><strong>superclass</strong> (<em>bool</em><em>, </em><em>optional</em>) – Means that BiEncoder is instantiated from a subclass. Disables post_init.
+Defaults to False.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.BiEncoder.supports_gradient_checkpointing">
-<span class="sig-name descname"><span class="pre">supports_gradient_checkpointing</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#meerqat.train.trainee.BiEncoder.supports_gradient_checkpointing" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="meerqat.train.trainee.BiEncoder.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">question_inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#BiEncoder.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.BiEncoder.forward" title="Permalink to this definition">#</a></dt>
@@ -625,171 +743,262 @@ The actual forward pass should be done using the model attribute</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="meerqat.train.trainee.BiEncoder.gradient_checkpointing_enable">
-<span class="sig-name descname"><span class="pre">gradient_checkpointing_enable</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#BiEncoder.gradient_checkpointing_enable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.BiEncoder.gradient_checkpointing_enable" title="Permalink to this definition">#</a></dt>
-<dd><p>Activates gradient checkpointing for the current model.
-Note that in other frameworks this feature can be referred to as “activation checkpointing” or “checkpoint
-activations”.</p>
+<dt class="sig sig-object py" id="meerqat.train.trainee.BiEncoder.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#BiEncoder.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.BiEncoder.step" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculates In-batch negatives schema loss and supports to run it in DDP mode
+by exchanging the representations across all the nodes.</p>
+<p>Adapted from <a class="reference external" href="https://github.com/facebookresearch/DPR/blob/main/train_dense_encoder.py">https://github.com/facebookresearch/DPR/blob/main/train_dense_encoder.py</a>
+and <a class="reference external" href="https://github.com/Lightning-AI/lightning/discussions/14390">https://github.com/Lightning-AI/lightning/discussions/14390</a></p>
+<p class="rubric">Notes</p>
+<p>This means that the whole representations of questions and contexts, and their similarity matrix, must fit on a single GPU.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="meerqat.train.trainee.BiEncoder.gradient_checkpointing_disable">
-<span class="sig-name descname"><span class="pre">gradient_checkpointing_disable</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#BiEncoder.gradient_checkpointing_disable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.BiEncoder.gradient_checkpointing_disable" title="Permalink to this definition">#</a></dt>
-<dd><p>Deactivates gradient checkpointing for the current model.
-Note that in other frameworks this feature can be referred to as “activation checkpointing” or “checkpoint
-activations”.</p>
-</dd></dl>
+<dt class="sig sig-object py" id="meerqat.train.trainee.BiEncoder.eval_epoch_end">
+<span class="sig-name descname"><span class="pre">eval_epoch_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eval_outputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#BiEncoder.eval_epoch_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.BiEncoder.eval_epoch_end" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="meerqat.train.trainee.BiEncoder.is_gradient_checkpointing">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_gradient_checkpointing</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.BiEncoder.is_gradient_checkpointing" title="Permalink to this definition">#</a></dt>
-<dd><p>Whether gradient checkpointing is activated for this model or not.
-Note that in other frameworks this feature can be referred to as “activation checkpointing” or “checkpoint
-activations”.</p>
-</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.BiEncoder.save_pretrained">
+<span class="sig-name descname"><span class="pre">save_pretrained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ckpt_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bert</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#BiEncoder.save_pretrained"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.BiEncoder.save_pretrained" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="meerqat.train.trainee.BiEncoder.training">
 <span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.BiEncoder.training" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="meerqat.train.trainee.BiEncoder.precision">
+<span class="sig-name descname"><span class="pre">precision</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#meerqat.train.trainee.BiEncoder.precision" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="meerqat.train.trainee.BiEncoder.prepare_data_per_node">
+<span class="sig-name descname"><span class="pre">prepare_data_per_node</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.BiEncoder.prepare_data_per_node" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="meerqat.train.trainee.BiEncoder.allow_zero_length_dataloader_with_multiple_devices">
+<span class="sig-name descname"><span class="pre">allow_zero_length_dataloader_with_multiple_devices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.BiEncoder.allow_zero_length_dataloader_with_multiple_devices" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="meerqat.train.trainee.DPRBiEncoder">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.trainee.</span></span><span class="sig-name descname"><span class="pre">DPRBiEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">question_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#DPRBiEncoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.DPRBiEncoder" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="meerqat.train.trainee.JointBiEncoderAndClip">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.trainee.</span></span><span class="sig-name descname"><span class="pre">JointBiEncoderAndClip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">question_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3333333333333333</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3333333333333333</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cm_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3333333333333333</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learn_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip_lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mm_weights_lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#JointBiEncoderAndClip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.JointBiEncoderAndClip" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#meerqat.train.trainee.BiEncoder" title="meerqat.train.trainee.BiEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">BiEncoder</span></code></a></p>
-<p>Adapted from <a class="reference external" href="https://github.com/facebookresearch/DPR/blob/main/dpr/models/biencoder.py">https://github.com/facebookresearch/DPR/blob/main/dpr/models/biencoder.py</a></p>
-<dl class="field-list simple">
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.JointBiEncoderAndClip.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">question_inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#JointBiEncoderAndClip.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.JointBiEncoderAndClip.forward" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>question_model</strong> (<em>transformers.DPRQuestionEncoder</em>) – Encoder based on BERT used to encode the question/query</p></li>
-<li><p><strong>context_model</strong> (<em>transformers.DPRContextEncoder</em>) – Encoder based on BERT used to encode the context/evidence/passage
-(‘context’ is confusing IMO but I keep it for consistency with DPR and transformers)</p></li>
+<li><p><strong>question_inputs</strong> (<em>dict</em>) – passed to the respective encoder</p></li>
+<li><p><strong>context_inputs</strong> (<em>dict</em>) – passed to the respective encoder</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
 <dl class="py method">
-<dt class="sig sig-object py" id="meerqat.train.trainee.DPRBiEncoder.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">question_inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#DPRBiEncoder.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.DPRBiEncoder.forward" title="Permalink to this definition">#</a></dt>
-<dd><p>Embeds questions and contexts with their respective model and returns the embeddings.</p>
-<ul class="simple">
-<li><p>N - number of questions in a batch</p></li>
-<li><p>M - number of passages per questions</p></li>
-<li><p>L - sequence length</p></li>
-<li><p>d - dimension of the model/embeddings</p></li>
-</ul>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>question_inputs</strong> (<em>dict</em><em>[</em><em>torch.LongTensor</em><em>]</em>) – <dl class="simple">
-<dt>input_ids: torch.LongTensor</dt><dd><p>shape (N, L)</p>
-</dd>
-</dl>
-<p>usual BERT inputs, see transformers.DPRQuestionEncoder</p>
-</p></li>
-<li><p><strong>context_inputs</strong> (<em>dict</em><em>[</em><em>torch.LongTensor</em><em>]</em>) – <dl class="simple">
-<dt>input_ids: torch.LongTensor</dt><dd><p>shape (N*M, L)</p>
-</dd>
-</dl>
-<p>usual BERT inputs, see transformers.DPRContextEncoder</p>
-</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.DPRBiEncoder.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.DPRBiEncoder.training" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="meerqat.train.trainee.DPRReaderForQuestionAnswering">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.trainee.</span></span><span class="sig-name descname"><span class="pre">DPRReaderForQuestionAnswering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#DPRReaderForQuestionAnswering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.DPRReaderForQuestionAnswering" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#meerqat.train.trainee.Trainee" title="meerqat.train.trainee.Trainee"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trainee</span></code></a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="meerqat.train.trainee.DPRReaderForQuestionAnswering.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attention_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_positions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_positions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">answer_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#DPRReaderForQuestionAnswering.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.DPRReaderForQuestionAnswering.forward" title="Permalink to this definition">#</a></dt>
-<dd><p>Based on transformers.BertForQuestionAnswering and dpr.models.Reader</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.DPRReaderForQuestionAnswering.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.DPRReaderForQuestionAnswering.training" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="meerqat.train.trainee.MultiPassageBERT">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.trainee.</span></span><span class="sig-name descname"><span class="pre">MultiPassageBERT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#MultiPassageBERT"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.MultiPassageBERT" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BertForQuestionAnswering</span></code></p>
-<p>PyTorch/Transformers implementation of Multi-passage BERT <a class="footnote-reference brackets" href="#id3" id="id1">1</a> (based on the global normalization <a class="footnote-reference brackets" href="#id4" id="id2">2</a>)
-i.e. groups passages per question before computing the softmax (and the NLL loss)
-so that spans scores are comparable across passages</p>
-<p>Code based on transformers.BertForQuestionAnswering, dpr.models.Reader
-and <a class="reference external" href="https://github.com/allenai/document-qa/blob/master/docqa/nn/span_prediction.py">https://github.com/allenai/document-qa/blob/master/docqa/nn/span_prediction.py</a></p>
+<dt class="sig sig-object py" id="meerqat.train.trainee.JointBiEncoderAndClip.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#JointBiEncoderAndClip.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.JointBiEncoderAndClip.step" title="Permalink to this definition">#</a></dt>
+<dd><p>Calculates In-batch negatives schema loss and supports to run it in DDP mode
+by exchanging the representations across all the nodes.</p>
+<p>Adapted from <a class="reference external" href="https://github.com/facebookresearch/DPR/blob/main/train_dense_encoder.py">https://github.com/facebookresearch/DPR/blob/main/train_dense_encoder.py</a>
+and <a class="reference external" href="https://github.com/Lightning-AI/lightning/discussions/14390">https://github.com/Lightning-AI/lightning/discussions/14390</a></p>
 <p class="rubric">Notes</p>
-<dl class="simple">
-<dt>Differences with DPRReaderForQuestionAnswering:</dt><dd><ul class="simple">
-<li><p>no projection layer between BERT and QA-extraction</p></li>
-<li><p>no re-ranking (TODO implement MultiPassageDPRReader?)</p></li>
-<li><p>global normalization</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id3"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
-<dd><p>Zhiguo Wang, Patrick Ng, Xiaofei Ma, Ramesh Nallapati, and Bing Xiang.
-2019. Multi-passage BERT: A Globally Normalized BERT Model for Open-domain Question Answering.
-In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing
-and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP),
-pages 5878–5882, Hong Kong, China. Association for Computational Linguistics.</p>
-</dd>
-<dt class="label" id="id4"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
-<dd><p>Christopher Clark and Matt Gardner. 2018. Simple and Effective Multi-Paragraph Reading Comprehension.
-In Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers),
-pages 845–855, Melbourne, Australia. Association for Computational Linguistics.</p>
-</dd>
-</dl>
+<p>This means that the whole representations of questions and contexts, and their similarity matrix, must fit on a single GPU.</p>
+</dd></dl>
+
 <dl class="py method">
-<dt class="sig sig-object py" id="meerqat.train.trainee.MultiPassageBERT.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_positions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_positions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">answer_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#MultiPassageBERT.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.MultiPassageBERT.forward" title="Permalink to this definition">#</a></dt>
-<dd><dl class="simple">
-<dt>notations:</dt><dd><ul class="simple">
-<li><p>N - number of distinct questions</p></li>
-<li><p>M - number of passages per question in a batch</p></li>
-<li><p>L - sequence length</p></li>
-</ul>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="meerqat.train.trainee.JointBiEncoderAndClip.eval_epoch_end">
+<span class="sig-name descname"><span class="pre">eval_epoch_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eval_outputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#JointBiEncoderAndClip.eval_epoch_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.JointBiEncoderAndClip.eval_epoch_end" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.JointBiEncoderAndClip.save_pretrained">
+<span class="sig-name descname"><span class="pre">save_pretrained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ckpt_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bert</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#JointBiEncoderAndClip.save_pretrained"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.JointBiEncoderAndClip.save_pretrained" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="meerqat.train.trainee.JointBiEncoderAndClip.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.JointBiEncoderAndClip.training" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="meerqat.train.trainee.JointBiEncoderAndClip.precision">
+<span class="sig-name descname"><span class="pre">precision</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#meerqat.train.trainee.JointBiEncoderAndClip.precision" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="meerqat.train.trainee.JointBiEncoderAndClip.prepare_data_per_node">
+<span class="sig-name descname"><span class="pre">prepare_data_per_node</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.JointBiEncoderAndClip.prepare_data_per_node" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="meerqat.train.trainee.JointBiEncoderAndClip.allow_zero_length_dataloader_with_multiple_devices">
+<span class="sig-name descname"><span class="pre">allow_zero_length_dataloader_with_multiple_devices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.JointBiEncoderAndClip.allow_zero_length_dataloader_with_multiple_devices" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="meerqat.train.trainee.ReRanker">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.trainee.</span></span><span class="sig-name descname"><span class="pre">ReRanker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_kwargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#ReRanker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.ReRanker" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#meerqat.train.trainee.Trainee" title="meerqat.train.trainee.Trainee"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trainee</span></code></a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>input_ids</strong> (<em>Tensor</em><em>[</em><em>int</em><em>]</em>) – shape (N * M, L)
-There should always be a constant number of passages (relevant or not) per question</p></li>
-<li><p><strong>start_positions</strong> (<em>Tensor</em><em>[</em><em>int</em><em>]</em><em>, </em><em>optional</em>) – shape (N, M, max_n_answers)
-The answer might be found several time in the same passage, maximum <code class="docutils literal notranslate"><span class="pre">max_n_answers</span></code> times
-Defaults to None (i.e. don’t compute the loss)</p></li>
-<li><p><strong>end_positions</strong> (<em>Tensor</em><em>[</em><em>int</em><em>]</em><em>, </em><em>optional</em>) – shape (N, M, max_n_answers)
-The answer might be found several time in the same passage, maximum <code class="docutils literal notranslate"><span class="pre">max_n_answers</span></code> times
-Defaults to None (i.e. don’t compute the loss)</p></li>
-<li><p><strong>answer_mask</strong> (<em>Tensor</em><em>[</em><em>int</em><em>]</em><em>, </em><em>optional</em>) – shape (N, M, max_n_answers)
-Used to mask the loss for answers that are not <code class="docutils literal notranslate"><span class="pre">max_n_answers</span></code> times in the passage
-Required if start_positions and end_positions are specified</p></li>
-<li><p><strong>**kwargs</strong> (<em>additional arguments are passed to BERT after being reshape like</em>) – </p></li>
+<li><p><strong>model_kwargs</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em>) – Passed to get_pretrained</p></li>
+<li><p><strong>metric_kwargs</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Passed to ranx.evaluate to compute metrics during evaluation</p></li>
 </ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.ReRanker.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#ReRanker.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.ReRanker.forward" title="Permalink to this definition">#</a></dt>
+<dd><p>Same as <code class="xref py py-meth docutils literal notranslate"><span class="pre">torch.nn.Module.forward()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> – Whatever you decide to pass into the forward method.</p></li>
+<li><p><strong>**kwargs</strong> – Keyword arguments are also possible.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Your model’s output</p>
 </dd>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.ReRanker.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#ReRanker.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.ReRanker.step" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.ReRanker.eval_epoch_end">
+<span class="sig-name descname"><span class="pre">eval_epoch_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eval_outputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#ReRanker.eval_epoch_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.ReRanker.eval_epoch_end" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.ReRanker.test_epoch_end">
+<span class="sig-name descname"><span class="pre">test_epoch_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#ReRanker.test_epoch_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.ReRanker.test_epoch_end" title="Permalink to this definition">#</a></dt>
+<dd><p>eval_epoch_end, log and save run</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.ReRanker.save_pretrained">
+<span class="sig-name descname"><span class="pre">save_pretrained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ckpt_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bert</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#ReRanker.save_pretrained"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.ReRanker.save_pretrained" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
 <dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.MultiPassageBERT.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.MultiPassageBERT.training" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="meerqat.train.trainee.ReRanker.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.ReRanker.training" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="meerqat.train.trainee.ReRanker.precision">
+<span class="sig-name descname"><span class="pre">precision</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#meerqat.train.trainee.ReRanker.precision" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="meerqat.train.trainee.ReRanker.prepare_data_per_node">
+<span class="sig-name descname"><span class="pre">prepare_data_per_node</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.ReRanker.prepare_data_per_node" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="meerqat.train.trainee.ReRanker.allow_zero_length_dataloader_with_multiple_devices">
+<span class="sig-name descname"><span class="pre">allow_zero_length_dataloader_with_multiple_devices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.ReRanker.allow_zero_length_dataloader_with_multiple_devices" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="meerqat.train.trainee.power_range">
+<span class="sig-prename descclassname"><span class="pre">meerqat.train.trainee.</span></span><span class="sig-name descname"><span class="pre">power_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">maximum</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#power_range"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.power_range" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Reader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.trainee.</span></span><span class="sig-name descname"><span class="pre">Reader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_kwargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tune_M</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Reader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Reader" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#meerqat.train.trainee.Trainee" title="meerqat.train.trainee.Trainee"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trainee</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_kwargs</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em>) – Passed to get_pretrained</p></li>
+<li><p><strong>tune_M</strong> (<em>bool</em><em>, </em><em>optional</em>) – Instead of extracting answers from the top-M input passages,
+try every value in {2^i, s.t. 2^i &lt;= M}
+Defaults to False (use only self.trainer.datamodule.M)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Reader.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Reader.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Reader.forward" title="Permalink to this definition">#</a></dt>
+<dd><p>Same as <code class="xref py py-meth docutils literal notranslate"><span class="pre">torch.nn.Module.forward()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> – Whatever you decide to pass into the forward method.</p></li>
+<li><p><strong>**kwargs</strong> – Keyword arguments are also possible.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Your model’s output</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Reader.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Reader.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Reader.step" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Reader.log_probs_to_answers">
+<span class="sig-name descname"><span class="pre">log_probs_to_answers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_log_probs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_log_probs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_ids</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Reader.log_probs_to_answers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Reader.log_probs_to_answers" title="Permalink to this definition">#</a></dt>
+<dd><p>“”
+1. get span start and end positions from log-probabilities
+2. extract actual tokens (answer) from input_ids</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Reader.eval_epoch_end">
+<span class="sig-name descname"><span class="pre">eval_epoch_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eval_outputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Reader.eval_epoch_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Reader.eval_epoch_end" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Reader.M_tuning">
+<span class="sig-name descname"><span class="pre">M_tuning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_start_log_probs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_end_log_probs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_input_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_answer_strings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_passage_scores</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Reader.M_tuning"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Reader.M_tuning" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Reader.training">
+<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.Reader.training" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Reader.precision">
+<span class="sig-name descname"><span class="pre">precision</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#meerqat.train.trainee.Reader.precision" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Reader.prepare_data_per_node">
+<span class="sig-name descname"><span class="pre">prepare_data_per_node</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.Reader.prepare_data_per_node" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Reader.allow_zero_length_dataloader_with_multiple_devices">
+<span class="sig-name descname"><span class="pre">allow_zero_length_dataloader_with_multiple_devices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.Reader.allow_zero_length_dataloader_with_multiple_devices" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Reader.save_pretrained">
+<span class="sig-name descname"><span class="pre">save_pretrained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ckpt_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bert</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Reader.save_pretrained"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Reader.save_pretrained" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -852,7 +1061,7 @@ Required if start_positions and end_positions are specified</p></li>
     
 <p class="copyright">
 
-    &copy; Copyright 2022, CNRS.<br>
+    &copy; Copyright 2020-2023, CNRS.<br>
 
 </p>
 

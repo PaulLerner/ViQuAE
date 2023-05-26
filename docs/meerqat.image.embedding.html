@@ -456,86 +456,8 @@
             
             <article class="bd-article" role="main">
               
-  <div class="section" id="module-meerqat.image.embedding">
-<span id="meerqat-image-embedding-module"></span><h1>meerqat.image.embedding module<a class="headerlink" href="#module-meerqat.image.embedding" title="Permalink to this heading">#</a></h1>
-<p>Usage: embedding.py &lt;dataset&gt; [&lt;config&gt; –disable_caching]</p>
-<p>Options:
-–disable_caching                       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="meerqat.image.embedding.ImageEncoder">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.image.embedding.</span></span><span class="sig-name descname"><span class="pre">ImageEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/image/embedding.html#ImageEncoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.image.embedding.ImageEncoder" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
-<p>Simply encode and pool the features</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="meerqat.image.embedding.ImageEncoder.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/image/embedding.html#ImageEncoder.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.image.embedding.ImageEncoder.forward" title="Permalink to this definition">#</a></dt>
-<dd><p>Defines the computation performed at every call.</p>
-<p>Should be overridden by all subclasses.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Although the recipe for forward pass needs to be defined within
-this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
-instead of this since the former takes care of running the
-registered hooks while the latter silently ignores them.</p>
-</div>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.image.embedding.ImageEncoder.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.image.embedding.ImageEncoder.training" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="meerqat.image.embedding.get_nn_module">
-<span class="sig-prename descclassname"><span class="pre">meerqat.image.embedding.</span></span><span class="sig-name descname"><span class="pre">get_nn_module</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Class_name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/image/embedding.html#get_nn_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.image.embedding.get_nn_module" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="meerqat.image.embedding.from_pretrained">
-<span class="sig-prename descclassname"><span class="pre">meerqat.image.embedding.</span></span><span class="sig-name descname"><span class="pre">from_pretrained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'resnet50'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imagenet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained_model_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/image/embedding.html#from_pretrained"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.image.embedding.from_pretrained" title="Permalink to this definition">#</a></dt>
-<dd><p class="rubric">Notes</p>
-<p>For models trained on other dataset than imagenet, don’t forget to pass the right num_classes in kwargs</p>
-<p class="rubric">Examples</p>
-<p>To load from a Places365 checkpoint, first process the state_dict as this:
-&gt;&gt;&gt; checkpoint = torch.load(“resnet50_places365.pth.tar”, map_location=”cpu”)
-&gt;&gt;&gt; state_dict = {str.replace(k,’module.’,’’): v for k,v in checkpoint[‘state_dict’].items()}
-&gt;&gt;&gt; torch.save(state_dict, “resnet50_places365_state_dict.pth”)</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="meerqat.image.embedding.get_encoder">
-<span class="sig-prename descclassname"><span class="pre">meerqat.image.embedding.</span></span><span class="sig-name descname"><span class="pre">get_encoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">torchvision_model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/image/embedding.html#get_encoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.image.embedding.get_encoder" title="Permalink to this definition">#</a></dt>
-<dd><p>Keep only convolutional layers (i.e. remove final pooling and classification layers)</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="meerqat.image.embedding.get_torchvision_model">
-<span class="sig-prename descclassname"><span class="pre">meerqat.image.embedding.</span></span><span class="sig-name descname"><span class="pre">get_torchvision_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pretrained_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/image/embedding.html#get_torchvision_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.image.embedding.get_torchvision_model" title="Permalink to this definition">#</a></dt>
-<dd><p>Get model pre-trained on ImageNet or Places365</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="meerqat.image.embedding.get_transform">
-<span class="sig-prename descclassname"><span class="pre">meerqat.image.embedding.</span></span><span class="sig-name descname"><span class="pre">get_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resize_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'size':</span> <span class="pre">224}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">224</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.485,</span> <span class="pre">0.456,</span> <span class="pre">0.406]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.229,</span> <span class="pre">0.224,</span> <span class="pre">0.225]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/image/embedding.html#get_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.image.embedding.get_transform" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="meerqat.image.embedding.get_model_and_transform">
-<span class="sig-prename descclassname"><span class="pre">meerqat.image.embedding.</span></span><span class="sig-name descname"><span class="pre">get_model_and_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/image/embedding.html#get_model_and_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.image.embedding.get_model_and_transform" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="meerqat.image.embedding.embed">
-<span class="sig-prename descclassname"><span class="pre">meerqat.image.embedding.</span></span><span class="sig-name descname"><span class="pre">embed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_as</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'image_embedding'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'image'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/image/embedding.html#embed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.image.embedding.embed" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="meerqat.image.embedding.dataset_embed">
-<span class="sig-prename descclassname"><span class="pre">meerqat.image.embedding.</span></span><span class="sig-name descname"><span class="pre">dataset_embed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">fn_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/image/embedding.html#dataset_embed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.image.embedding.dataset_embed" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
+  <div class="section" id="meerqat-image-embedding-module">
+<h1>meerqat.image.embedding module<a class="headerlink" href="#meerqat-image-embedding-module" title="Permalink to this heading">#</a></h1>
 </div>
 
 
@@ -594,7 +516,7 @@ registered hooks while the latter silently ignores them.</p>
     
 <p class="copyright">
 
-    &copy; Copyright 2022, CNRS.<br>
+    &copy; Copyright 2020-2023, CNRS.<br>
 
 </p>
 
