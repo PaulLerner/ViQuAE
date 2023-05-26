@@ -50,6 +50,16 @@ def get_top_1(item, run):
     return int(top1)
 
 
+def get_url_and_text(i, wiki, passages):
+    if passages is not None:
+        passage = passages[i]
+        article = wiki[passage['index']]
+        return article['url'], passage['passage']
+    else:
+        article = wiki[i]
+        return article['url'], article['wikipedia_title']
+    
+    
 def format_html(
         dataset_path: str, 
         output: str, 
@@ -115,6 +125,8 @@ def format_html(
         dataset = dataset.shuffle().select(range(n))
     if passages_path is not None:
         passages = load_from_disk(passages_path)
+    else:
+        passages = None
     if wiki_path is not None:
         wiki = load_from_disk(wiki_path)
     
@@ -129,16 +141,10 @@ def format_html(
         )
         if search_run is not None:
             i = get_top_1(item, search_run)
-            passage = passages[i]
-            article = wiki[passage['index']]
-            row['passage_url'] = article['url']
-            row['passage_text'] = passage['passage']
+            row['passage_url'], row['passage_text'] = get_url_and_text(i, wiki, passages)
         if other_search_run is not None:
             i = get_top_1(item, other_search_run)
-            passage = passages[i]
-            article = wiki[passage['index']]
-            row['other_passage_url'] = article['url']
-            row['other_passage_text'] = passage['passage']
+            row['other_passage_url'], row['other_passage_text'] = get_url_and_text(i, wiki, passages)
         rows.append(row_template.format(**row))
     html_str = HTML_TEMPLATE.format(headers=headers, rows='\n'.join(rows))
     with open(output, 'wt') as file:
