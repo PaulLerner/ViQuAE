@@ -19,11 +19,7 @@ Arrow) and plain-text JSONL files (one JSON object per line). Both
 formats can be used in the same way as ``datasets`` parses objects into
 python ``dict`` (see below), however our code only supports (and is
 heavily based upon) ``datasets``. Images are distributed separately, in
-standard formats (e.g. jpg). Both dataset formats are distributed in two
-versions, with (TODO) and without pre-computed features. The
-pre-computed feature version allows you to skip one or several step
-described in `EXPERIMENTS.rst <./EXPERIMENTS.rst>`__ (e.g. face
-detection).
+standard formats (e.g. jpg).  
 
 The images
 ----------
@@ -161,15 +157,18 @@ TODO share the entities JSON file
    "Alain Connes (; born 1 April 1947) is a French mathematician, \
    currently Professor at the Collège de France, IHÉS, Ohio State University and Vanderbilt University. \
    He was an Invited Professor at the Conservatoire national des arts et métiers (2000).\n"
+   # you might want to concatenate these three datasets to get a single dataset (e.g. to split the articles in passages)
+   >>> from datasets import concatenate_datasets
+   >>> kb['humans_with_faces'] = kb['humans_with_faces'].map(lambda item: {'is_human': True})
+   >>> kb['humans_without_faces'] = kb['humans_without_faces'].map(lambda item: {'is_human': True})
+   >>> kb['non_humans'] = kb['non_humans'].map(lambda item: {'is_human': False})
+   >>> kb_recat = concatenate_datasets([kb['non_humans'], kb['humans_with_faces'], kb['humans_without_faces']])
+   >>> kb_recat.save_to_disk('data/viquae_wikipedia_recat')
 
 To format the articles into text passages, follow instructions at
 `EXPERIMENTS.rst <./EXPERIMENTS.rst>`__ (Preprocessing passages section).
-Alternatively, get them from
-https://huggingface.co/datasets/PaulLerner/viquae_passages
-(``load_dataset('PaulLerner/viquae_passages')``). 
-FIXME: passages of 'PaulLerner/viquae_passages' contain one extra article (less than 10 passages)
-compared to 'PaulLerner/viquae_wikipedia'. Experiments in MICT fixed this but indices of the provided
-ViQuAE runs correspond to 'PaulLerner/viquae_passages' so they won’t match the new version.
+Alternatively, get them from https://huggingface.co/datasets/PaulLerner/viquae_v4-alpha_passages
+(``load_dataset('PaulLerner/viquae_v4-alpha_passages')``).
 
 Formatting WIT for multimodal ICT
 =================================

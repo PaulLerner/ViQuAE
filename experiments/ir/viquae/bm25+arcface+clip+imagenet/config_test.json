@@ -1,0 +1,92 @@
+{
+    "kb_kwargs": {
+        "data/meerqat_passages": {
+            "load_dataset": true,
+            "index_kwargs": {
+                "BM25": {
+                    "column": "passage",
+                    "es": true,
+                    "kind_str": "TEXT",
+                    "key": "input",
+                    "load": true,
+                    "es_index_name": "viquae_bm25",
+                    "es_index_config": {
+                        "settings": {
+                            "similarity": {
+                                "viquae_bm25": {
+                                    "b": 0.3,
+                                    "k1": 0.5
+                                }
+                            }
+                        },
+                        "mappings": {
+                            "properties": {
+                                "text": {
+                                    "type": "text",
+                                    "analyzer": "standard",
+                                    "similarity": "viquae_bm25"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "data/viquae_wikipedia/non_humans": {
+            "index_mapping_path": "data/viquae_wikipedia/non_humans/article2passage.json",
+            "load_dataset": true,
+            "index_kwargs": {
+                "resnet": {
+                    "column": "imagenet-RN50",
+                    "es": false,
+                    "kind_str": "IMAGE",
+                    "key": "imagenet-RN50",
+                    "string_factory": "L2norm,Flat",
+                    "load": false,
+                    "device": null,
+                    "metric_type": 0
+                },
+                "clip-RN50": {
+                    "column": "clip-RN50",
+                    "es": false,
+                    "kind_str": "IMAGE",
+                    "key": "clip-RN50",
+                    "string_factory": "L2norm,Flat",
+                    "load": false,
+                    "device": null,
+                    "metric_type": 0
+                }
+            }
+        },
+        "data/viquae_wikipedia/humans_with_faces": {
+            "index_mapping_path": "data/viquae_wikipedia/humans_with_faces/article2passage.json",
+            "load_dataset": true,
+            "index_kwargs": {
+                "arcface": {
+                    "column": "first_face_embedding",
+                    "es": false,
+                    "kind_str": "FACE",
+                    "key": "first_face_embedding",
+                    "string_factory": "L2norm,Flat",
+                    "load": false,
+                    "device": null,
+                    "metric_type": 0
+                }
+            }
+        }
+    },
+    "reference_kb_path": "data/meerqat_passages",
+    "map_kwargs": {
+        "batch_size": 256,
+        "desc": "searching"
+    },
+    "fusion_kwargs": {
+        "subcommand": "test",
+        "norm": "gzmuv",
+        "defmin": true,
+        "subcommand_kwargs": {
+            "best_params": {"weights": [0.3, 0.1, 0.3, 0.3]}
+        }
+    },
+    "format": {}
+}

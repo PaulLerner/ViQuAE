@@ -1,0 +1,19 @@
+{
+  "map_kwargs":
+  {
+    "batch_size": 3072
+  },
+  "model_kwargs":
+  {
+    "type": "transformers",
+    "class_name": "CLIPModel",
+    "pretrained_model_name_or_path": "/gpfsdswork/dataset/HuggingFace_Models/openai/clip-vit-base-patch32/"
+  },
+  "transform_kwargs":
+  {    
+      "class_name": "CLIPFeatureExtractor",
+      "pretrained_model_name_or_path": "../models/clip-vit-base-patch32_len256/"
+  },
+  "save_as": "clip-vit-base-patch32",
+  "call": "get_image_features"
+}

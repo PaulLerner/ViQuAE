@@ -1,0 +1,94 @@
+# pytorch_lightning==1.7.7
+seed_everything: 42
+trainer:
+  logger: true
+  enable_checkpointing: true
+  callbacks:
+  - pytorch_lightning.callbacks.LearningRateMonitor
+  - class_path: pytorch_lightning.callbacks.ModelCheckpoint
+    init_args:
+      save_top_k: -1
+      filename: "{step}"
+      monitor: "eval/MRR@N*M"
+      mode: "max"
+  - class_path: pytorch_lightning.callbacks.EarlyStopping                                                                                                                                        
+    init_args:
+      monitor: "eval/MRR@N*M"
+      patience: 10
+      mode: "max"
+  default_root_dir: experiments/jcm
+  gradient_clip_val: 2.0
+  gradient_clip_algorithm: "norm"
+  num_nodes: 1
+  devices: null
+  enable_progress_bar: true
+  overfit_batches: 0.0
+  track_grad_norm: -1
+  check_val_every_n_epoch: 1
+  fast_dev_run: false
+  max_epochs: 50
+  min_epochs: null
+  min_steps: null
+  max_time: null
+  limit_train_batches: null
+  log_every_n_steps: 1
+  limit_val_batches: null
+  limit_test_batches: null
+  limit_predict_batches: null
+  accelerator: "gpu"
+  strategy: null
+  sync_batchnorm: false
+  precision: 32
+  enable_model_summary: true
+  num_sanity_val_steps: 0
+  profiler: null
+  benchmark: null
+  deterministic: null
+  reload_dataloaders_every_n_epochs: 0
+  auto_lr_find: false
+  replace_sampler_ddp: true
+  detect_anomaly: false
+  auto_scale_batch_size: false
+  plugins: null
+  amp_backend: native
+  amp_level: null
+  move_metrics_to_cpu: true
+  multiple_trainloader_mode: max_size_cycle
+model:
+  class_path: meerqat.train.trainee.JointMonoAndCrossModal
+  init_args:
+    model_kwargs:
+      class_name: CLIPModel
+      pretrained_model_name_or_path: clip-vit-base-patch32
+    warmup_steps: 4
+    gradient_checkpointing: true
+    weight_decay: 0.1
+    lr: 2e-6
+    # to reproduce monomodal training set learn_weights: false and image_weight: 1 and cm_weight: 0
+    # and vice-versa for cross-modal training 
+    image_weight: 0.5
+    cm_weight: 0.5
+    learn_weights: true
+    mm_weights_lr: 0.02
+data:
+  class_path: meerqat.train.data.CrossModalDataModule
+  init_args:
+    tokenizer_class: CLIPTokenizer
+    tokenizer_name_or_path: clip-vit-base-patch32
+    image_kwargs:
+      precomputed: false
+      class_name: CLIPFeatureExtractor
+      pretrained_model_name_or_path: clip-vit-base-patch32
+    tokenization_kwargs:
+      max_length: 77                                                                                                                  
+      padding: longest
+    dataset_path: viquae_dataset
+    input_key: wikipedia_title
+    paired_image: wikipedia_image
+    M: 1
+    deduplicate: true
+    train_batch_size: 2000
+    eval_batch_size: 2000
+    loader_kwargs:
+      num_workers: 5
+      prefetch_factor: 1

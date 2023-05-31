@@ -1,0 +1,77 @@
+# pytorch_lightning==1.7.7
+seed_everything: 42
+trainer:
+  logger: true
+  enable_checkpointing: true
+  callbacks:
+  - class_path: pytorch_lightning.callbacks.ModelCheckpoint
+    init_args:
+      save_top_k: -1
+  - pytorch_lightning.callbacks.LearningRateMonitor
+  default_root_dir: experiments/dpr/triviaqa/
+  gradient_clip_val: 2.0
+  gradient_clip_algorithm: "norm"
+  num_nodes: 1
+  num_processes: null
+  devices: 4
+  auto_select_gpus: false
+  tpu_cores: null
+  ipus: null
+  enable_progress_bar: true
+  overfit_batches: 0.0
+  track_grad_norm: -1
+  check_val_every_n_epoch: 1
+  fast_dev_run: false
+  max_epochs: 40
+  min_epochs: null
+  min_steps: null
+  max_time: null
+  limit_train_batches: null
+  limit_val_batches: null
+  limit_test_batches: null
+  limit_predict_batches: null
+  val_check_interval: null
+  accelerator: "gpu"
+  strategy: ddp
+  sync_batchnorm: false
+  precision: 32
+  enable_model_summary: true
+  num_sanity_val_steps: 0
+  profiler: null
+  benchmark: null
+  deterministic: null
+  reload_dataloaders_every_n_epochs: 0
+  auto_lr_find: false
+  replace_sampler_ddp: true
+  detect_anomaly: false
+  auto_scale_batch_size: false
+  plugins: null
+  amp_backend: native
+  amp_level: null
+  move_metrics_to_cpu: true
+  multiple_trainloader_mode: max_size_cycle
+ckpt_path: null
+model:
+  class_path: meerqat.train.trainee.BiEncoder
+  init_args:
+    question_class: DPRQuestionEncoder
+    question_model_name_or_path: ../models/DPRQuestionEncoder_from_bert-base-uncased/
+    context_class: DPRContextEncoder
+    context_model_name_or_path: ../models/DPRContextEncoder_from_bert-base-uncased/
+    warmup_steps: 1237
+data:
+  class_path: meerqat.train.data.BiEncoderDataModule
+  init_args:
+    tokenizer_class: BertTokenizer
+    tokenizer_name_or_path: "bert-base-uncased"
+    kb: data/kilt_passages
+    M: 2
+    n_relevant_passages: 1
+    search_key: BM25
+    tokenization_kwargs:
+        max_length: 256                                                                                                                          
+        padding: max_length
+    train_path: "data/triviaqa/without_meerqat"
+    validation_path: "data/triviaqa/with_meerqat_validation"
+    train_batch_size: 32
+    eval_batch_size: 128

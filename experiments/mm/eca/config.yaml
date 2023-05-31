@@ -1,0 +1,96 @@
+# pytorch_lightning==1.7.7
+seed_everything: 42
+trainer:
+  logger: true
+  enable_checkpointing: true
+  callbacks:
+  - class_path: pytorch_lightning.callbacks.ModelCheckpoint
+    init_args:
+      save_top_k: -1
+      filename: "{step}"
+      monitor: "eval/MRR@N*M"
+      mode: "max"
+  - pytorch_lightning.callbacks.LearningRateMonitor
+  - class_path: pytorch_lightning.callbacks.EarlyStopping                                                                                                                                               
+    init_args:
+      monitor: "eval/MRR@N*M"
+      patience: 10
+      mode: "max"
+  default_root_dir: mm/eca
+  gradient_clip_val: 2.0
+  gradient_clip_algorithm: "norm"
+  num_nodes: 1
+  num_processes: null
+  devices: null
+  auto_select_gpus: false
+  tpu_cores: null
+  ipus: null
+  enable_progress_bar: true
+  overfit_batches: 0.0
+  track_grad_norm: -1
+  check_val_every_n_epoch: 1
+  fast_dev_run: false
+  max_epochs: 20
+  min_epochs: null
+  min_steps: null
+  max_time: null
+  limit_train_batches: null
+  limit_val_batches: null
+  limit_test_batches: null
+  limit_predict_batches: null
+  val_check_interval: null
+  accelerator: "gpu"
+  strategy: null
+  sync_batchnorm: false
+  precision: 32
+  enable_model_summary: true
+  num_sanity_val_steps: 0
+  log_every_n_steps: 1
+  profiler: null
+  benchmark: null
+  deterministic: null
+  reload_dataloaders_every_n_epochs: 0
+  auto_lr_find: false
+  replace_sampler_ddp: true
+  detect_anomaly: false
+  auto_scale_batch_size: false
+  plugins: null
+  amp_backend: native
+  amp_level: null
+  move_metrics_to_cpu: false
+  multiple_trainloader_mode: max_size_cycle
+ckpt_path: null
+model:
+  class_path: meerqat.train.trainee.BiEncoder
+  init_args:
+    question_class: ECAEncoder
+    question_model_name_or_path: experiments/ict/eca/lightning_logs/version_0/step=8200/question_model
+    context_model_name_or_path: experiments/ict/eca/lightning_logs/version_0/step=8200/context_model
+    warmup_steps: 4
+    gradient_checkpointing: true
+data:
+  class_path: meerqat.train.data.BiEncoderDataModule
+  init_args:
+    tokenizer_class: BertTokenizer
+    tokenizer_name_or_path: "bert-base-uncased"
+    kb: data/viquae_passages
+    image_kb: data/viquae_wikipedia_recat
+    image_kwargs:
+        precomputed: true
+        config_class: MMConfig
+        config_path: bert-base-uncased
+        # to use ArcFace as in our experiments, set n_faces: 4
+        n_faces: 0
+        # to use also ImageNet, keep the default values (remove image_kwargs)
+        image_kwargs:
+          clip-RN50: 
+            input_dim: 1024
+    M: 2
+    n_relevant_passages: 1
+    search_key: search
+    tokenization_kwargs:
+        max_length: 256                                                                                                                          
+        padding: longest
+    dataset_path: data/viquae_dataset
+    train_batch_size: 298
+    eval_batch_size: 625

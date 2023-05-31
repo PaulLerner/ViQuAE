@@ -1,0 +1,54 @@
+{
+    "kb_kwargs": {
+        "data/meerqat_passages": {
+            "index_kwargs": {
+                "DPR_few_shot_dp": {
+                    "column": "DPR_few_shot",
+                    "es": false,
+                    "key": "DPR_few_shot",
+                    "string_factory": "Flat",
+                    "load": false,
+                    "device": null,
+                    "metric_type": 0
+                }
+            }
+        },
+        "data/viquae_wikipedia_recat": {
+            "index_mapping_path": "data/viquae_wikipedia_recat/article2passage.json",
+            "index_kwargs": {
+                "clip_few_shot": {
+                    "column": "clip_few_shot",
+                    "es": false,
+                    "key": "clip_few_shot",
+                    "string_factory": "L2norm,Flat",
+                    "load": false,
+                    "device": null,
+                    "metric_type": 0
+                },
+                "title_clip_few_shot": {
+                    "column": "title_clip_few_shot",
+                    "es": false,
+                    "key": "clip_few_shot",
+                    "string_factory": "L2norm,Flat",
+                    "load": false,
+                    "device": null,
+                    "metric_type": 0
+                }
+            }
+        }  
+    },
+    "reference_kb_path": "data/viquae_passages",
+    "map_kwargs": {
+        "batch_size": 256,
+        "desc": "searching"
+    },
+    "fusion_kwargs": {
+        "subcommand": "test",
+        "norm": "gzmuv",
+        "defmin": true,
+        "subcommand_kwargs": {
+           "best_params": {"weights": [0.6, 0.2, 0.2]}
+        }
+    },
+    "format": {}
+}

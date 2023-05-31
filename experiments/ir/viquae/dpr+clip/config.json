@@ -7,16 +7,10 @@
                     "es": false,
                     "kind_str": "TEXT",
                     "key": "DPR_few_shot",
-                    "normalization": {
-                      "method": "normalize",
-                      "mean": 71.3295,
-                      "std": 2.16671
-                    },
                     "string_factory": "Flat",
                     "load": false,
                     "device": null,
-                    "metric_type": 0,
-                    "interpolation_weight": 0.5
+                    "metric_type": 0
                 }
             }
         },
@@ -31,13 +25,7 @@
                     "string_factory": "L2norm,Flat",
                     "load": false,
                     "device": null,
-                    "metric_type": 0,
-                    "interpolation_weight": 0.5,
-                    "normalization": {
-                        "method": "normalize",
-                        "mean": 0.827869,
-                        "std": 0.0668424
-                    }
+                    "metric_type": 0
                 }
             }
         }
@@ -48,8 +36,12 @@
         "desc": "searching"
     },
     "fusion_kwargs": {
-        "method": "interpolation",
-        "default_minimum": true
+        "subcommand": "test",
+        "norm": "gzmuv",
+        "defmin": true,
+        "subcommand_kwargs": {
+            "best_params": {"weights": [0.5, 0.5]}
+        }
     },
     "format": {}
 }

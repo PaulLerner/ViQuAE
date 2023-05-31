@@ -1,10 +1,6 @@
 Experiments
 ===========
 
-All of the intermediate outputs of the pipeline should be provided along
-with the data so that people are free to skip one or few steps. (TODO
-add instructions here or in the README data section)
-
 All commands assume that the working directory is the root of the git
 repo (e.g. same level as this file) and that the data is stored in the
 ``data`` folder, at the root of this repo (except for images for which
@@ -15,12 +11,13 @@ Relevant configuration files can be found in the `experiments
 directory <./experiments>`__. Expected output can be found in the
 relevant subdirectory of ``experiments``.
 
-We train the models based on HF ``transformers.Trainer``, itself based
+We train the models based on lightning, itself based
 on ``torch``. Even when not training models, all of our code is based on
 ``torch``.
 
 Instructions specific to the ECIR-2023 Multimodal ICT paper are marked with "(MICT)",
-while the instructions specific to the SIGIR ViQuAE dataset paper are marqued with "(ViQuAE)".
+while the instructions specific to the SIGIR ViQuAE dataset paper are marqued with "(ViQuAE)"
+and those for the CORIA-2023 CLIP cross-modal paper are marked with "(Cross-modal)".
 Note that, while face detection (MTCNN) and recognition (ArcFace) are not specific to ViQuAE,
 they did not give promising results with MICT.
 
@@ -36,19 +33,22 @@ Each article is then split into disjoint passages of 100 words for text
 retrieval, while preserving sentence boundaries, and the title of the
 article is appended to the beginning of each passage.
 
-TODO share the article2passage mapping
-
 .. code:: sh
 
-   python -m meerqat.data.loading passages data/viquae_wikipedia data/viquae_passages experiments/passages/config.json --disable_caching
+   python -m meerqat.data.loading passages data/viquae_wikipedia_recat data/viquae_passages experiments/passages/config.json --disable_caching
+
+
+Note that this will not match the ordering of https://huggingface.co/datasets/PaulLerner/viquae_v4-alpha_passages
+which have been processed from a wikipedia version before splitting w.r.t. entity type
+(such as ``kilt_wikipedia``).
 
 Then you can extract some columns from the dataset to allow quick (and
 string) indexing:
 
 .. code:: sh
 
-   python -m meerqat.data.loading map data/viquae_wikipedia wikipedia_title title2index.json --inverse --disable_caching
-   python -m meerqat.data.loading map data/viquae_wikipedia passage_index article2passage.json --disable_caching
+   python -m meerqat.data.loading map data/viquae_wikipedia_recat wikipedia_title title2index.json --inverse --disable_caching
+   python -m meerqat.data.loading map data/viquae_wikipedia_recat passage_index article2passage.json --disable_caching
 
 Find relevant passages in the linked wikipedia article
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -58,7 +58,7 @@ This allows us to find the relevant passages for the question
 
 .. code:: sh
 
-   python -m meerqat.ir.metrics relevant data/viquae_dataset data/viquae_passages data/viquae_wikipedia/title2index.json data/viquae_wikipedia/article2passage.json --disable_caching
+   python -m meerqat.ir.metrics relevant data/viquae_dataset data/viquae_passages data/viquae_wikipedia_recat/title2index.json data/viquae_wikipedia_recat/article2passage.json --disable_caching
 
 Find relevant passages in the IR results
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -75,23 +75,22 @@ step does not really fit in any of the modules and I cannot think of a
 way of making it robust, I’ll just let you run it yourself from this
 code snippet:
 
-TODO share several versions of the qrels, maybe via https://amenra.github.io/ranxhub/share/ ?
-
 .. code:: py
 
    from datasets import load_from_disk, set_caching_enabled
    from meerqat.ir.metrics import find_relevant
-
+   from ranx import Run
+   
    set_caching_enabled(False)
    kb = load_from_disk('data/viquae_passages/')
    dataset = load_from_disk('data/viquae_dataset/')
+   # to reproduce the results of the papers:
+   # - use DPR+Image as IR to train the reader or fine-tune ECA/ILF
+   # - use BM25 as IR to train DPR (then save in 'BM25_provenance_indices'/'BM25_irrelevant_indices')
+   run = Run.from_file('/path/to/bm25/or/multimodal_ir.trec')
 
    def keep_relevant_search_wrt_original_in_priority(item, kb):
-       # this contains the latest result of the fusion
-       # to reproduce the results of the paper:
-       # - use DPR+Image as IR to train the reader or fine-tune ECA/ILF
-       # - use BM25 as IR to train DPR (then save in 'BM25_provenance_indices'/'BM25_irrelevant_indices')
-       indices = item['search_indices']
+       indices = list(map(int, run[item['id']]))
        relevant_indices, _ = find_relevant(indices, item['output']['original_answer'], [], kb)
        if relevant_indices:
            item['search_provenance_indices'] = relevant_indices
@@ -119,6 +118,8 @@ Obtained using ResNet-50:
  - the other trained using
    `CLIP <https://github.com/openai/CLIP>`__ (install it from their repo)
 
+The ViT version of CLIP is implemented with transformers.
+
 Obviously you can also tweak the batch size.
 
 .. code:: sh
@@ -131,22 +132,34 @@ Obviously you can also tweak the batch size.
    python -m meerqat.image.embedding data/viquae_dataset experiments/image_embedding/clip/config.json --disable_caching
    # embed KB images with CLIP-ResNet50
    python -m meerqat.image.embedding data/viquae_wikipedia experiments/image_embedding/clip/config.json --disable_caching
+   # embed dataset images with CLIP-ViT   
+   python -m meerqat.image.embedding data/viquae_dataset experiments/image_embedding/clip/vit_config.json --disable_caching
+   # embed KB images with CLIP-ViT
+   python -m meerqat.image.embedding data/viquae_wikipedia experiments/image_embedding/clip/vit_config.json --disable_caching
+
 
 To get a better sense of the representations the these model provide,
 you can have a look at an interactive UMAP visualization, on 1% of the
 KB images and the whole dataset images, w.r.t. the entity type,
 `here <http://meerqat.fr/imagenet-viquae.html>`__ for ImageNet-ResNet50,
-and `there <http://meerqat.fr/clip-viquae.html>`__ for CLIP (takes a
+and `there <http://meerqat.fr/clip-viquae.html>`__ for CLIP-RN50 (takes a
 while to load).
 
 For WIT, you should change "save_as" and "image_key" in the config file by prepreding "context_"
 so that it matches the data format and works with the trainer.
 
 
-Text embedding (for cross-modal search)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Text embedding (Cross-modal)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TODO CLIP cross-modal (CORIA)
+Instead of embedding the images of the knowledge base with CLIP, you can also embed its text,
+e.g. the title of each article, to be able to then perform cross-modal retrieval, to reproduce
+the results of the CORIA paper.
+
+.. code:: sh
+
+  python -m meerqat.ir.embedding data/viquae_wikipedia experiments/ir/viquae/clip/config.json
+
 
 See below for an interactive visualization of (a subset of) the Wikipedia articles’ titles’ space
 represented through CLIP (ViT-base, zero-shot) and reduced to 2D via UMAP.
@@ -268,9 +281,6 @@ mined with BM25.
 Both the question and passage encoder are initialized from
 ``"bert-base-uncased"``.
 
-To launch the script with multiple GPUs you should you use
-``torch.distributed.launch --nproc_per_node=<number of GPUs>``. This is
-omitted in the following commands.
 
 Pre-training on TriviaQA
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -293,9 +303,9 @@ https://huggingface.co/datasets/PaulLerner/triviaqa_for_viquae (or
 In this step we use the complete ``kilt_wikipedia`` instead of
 ``viquae_wikipedia``.
 
-``python -m meerqat.train.trainer experiments/dpr/triviaqa/config.json``
+``python -m meerqat.train.trainer fit --config=experiments/dpr/triviaqa/config.yaml``
 
-The best checkpoint should be ``checkpoint-13984``.
+The best checkpoint should be at step 13984.
 
 Fine-tuning on ViQuAE
 ^^^^^^^^^^^^^^^^^^^^^
@@ -303,19 +313,19 @@ Fine-tuning on ViQuAE
 We use exactly the same hyperparameters as for pre-training.
 
 Once you’ve decided on a TriviaQA checkpoint, (step 13984 in our case) 
-you need to split it in two with ``meerqat.train.split_biencoder``, 
+you need to split it in two with ``python -m meerqat.train.save_ptm experiments/dpr/triviaqa/config.yaml --ckpt_path=experiments/dpr/triviaqa/lightning_logs/version_0/step=13984.ckpt``, 
 then set the path as in the provided config file.
-**Do not** simply set "resume_from_checkpoint=/path/to/triviaqa/pretraing" else
+**Do not** simply set "--ckpt_path=/path/to/triviaqa/pretraing" else
 the trainer will also load the optimizer and other training stuffs.
 
 Alternatively, if you want to start training from our pre-trained model,
 set "PaulLerner/dpr_question_encoder_triviaqa_without_viquae" and "PaulLerner/dpr_context_encoder_triviaqa_without_viquae"
 in the config file.
 
-``python -m meerqat.train.trainer experiments/dpr/viquae/config.json``
+``python -m meerqat.train.trainer fit --config=experiments/dpr/viquae/config.yaml``
 
-The best checkpoint should be ``checkpoint-40``. Run
-``python -m meerqat.train.split_biencoder experiments/dpr/viquae/checkpoint-40``
+The best checkpoint should be at step 40. Run
+``python -m meerqat.train.save_ptm experiments/dpr/viquae/config.yaml experiments/dpr/viquae/lightning_logs/version_0/step=40.ckpt``
 to split DPR in a DPRQuestionEncoder and DPRContextEncoder. We’ll use
 both to embed questions and passages below.
 
@@ -323,10 +333,6 @@ both to embed questions and passages below.
 Multimodal Inverse Cloze Task (MICT)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Starting from DPR training on TriviaQA, we will train ECA and ILF for MICT on WIT.
-
-You should change DPR’s config file so it is like the config files provided in 
-``ict/*/question_model_config.json`` and ``ict/*/context_model_config.json``,
-i.e. with the "image_kwargs" and "n_faces" parameters.
 
 Unlike the above DPR pre-training, here we use a single NVIDIA V100 GPU with 32 GB of RAM,
 but using gradient checkpointing.
@@ -336,7 +342,7 @@ Alternatively, use the provided pre-trained models following instructions below.
 ILF
 ^^^
 Notice how ILF fully freezes BERT during this stage with the regex ``".*dpr_encoder.*"``
-``python -m meerqat.train.trainer experiments/ict/ilf/config.json``
+``python -m meerqat.train.trainer fit --config=experiments/ict/ilf/config.yaml``
 
 Pre-trained models available:
  - https://huggingface.co/PaulLerner/question_ilf_l12_wit_mict
@@ -344,13 +350,13 @@ Pre-trained models available:
 
 
 ECA
-^^^^^^^
+^^^
 ECA uses internally ``BertModel`` instead of ``DPR*Encoder`` so you need to run
-``meerqat.train.split_biencoder`` again, this time with the ``--bert`` option.
+``meerqat.train.save_ptm`` again, this time with the ``--bert`` option.
 
 Again, notice how the last six layers of BERT are frozen thanks to the regex.
 
-``python -m meerqat.train.trainer experiments/ict/eca/config.json``
+``python -m meerqat.train.trainer fit --config=experiments/ict/eca/config.yaml``
 
 Pre-trained models available:
  - https://huggingface.co/PaulLerner/question_eca_l6_wit_mict
@@ -359,8 +365,8 @@ Pre-trained models available:
 
 As a sanity check, you can check the performance of the models on WIT’s test set.
 
-``python -m meerqat.train.trainer experiments/ict/eca/test/config.json``
-``python -m meerqat.train.trainer experiments/ict/ilf/test/config.json``
+``python -m meerqat.train.trainer test --config=experiments/ict/ilf/config.yaml``
+``python -m meerqat.train.trainer test --config=experiments/ict/eca/config.yaml``
 
 
 Fine-tuning multimodal models on ViQuAE
@@ -368,19 +374,30 @@ Fine-tuning multimodal models on ViQuAE
 Almost the same as for DPR although some hyperparameters change, notably the model used
 to mine negative passage is here set as the late fusion of arcface, imagenet, clip, and dpr.
 We have tried to fine-tune DPR with the same hyperparameters and found no significant difference.
-Notice also that now we need a second KB that holds the pre-computed image features (viquae_wikipedia)
+Notice also that now we need a second KB that holds the pre-computed image features (viquae_wikipedia_recat)
 
 You can use the provided test config to split the BiEncoder:
-``python -m meerqat.train.split_biencoder experiments/ict/eca/test/config.json``
-``python -m meerqat.train.split_biencoder experiments/ict/ilf/test/config.json``
+``python -m meerqat.train.save_ptm experiments/ict/ilf/config.yaml --ckpt_path=experiments/ict/ilf/lightning_logs/version_0/step=15600.ckpt``
+``python -m meerqat.train.save_ptm experiments/ict/eca/config.yaml --ckpt_path=experiments/ict/eca/lightning_logs/version_0/step=8200.ckpt``
 
 If you want to start from the pre-trained models we provide, use ``"PaulLerner/<model>"`` in the config files,
-e.g. ``"dpr_question_model_name_or_path": "PaulLerner/question_eca_l6_wit_mict"``
+e.g. ``"question_model_name_or_path": "PaulLerner/question_eca_l6_wit_mict"``
 
 Notice that all layers of the model are trainable during this stage.
 
-``python -m meerqat.train.trainer experiments/mm/ilf/config.json``
-``python -m meerqat.train.trainer experiments/mm/eca/config.json``
+``python -m meerqat.train.trainer fit --config=experiments/mm/ilf/config.yaml``
+``python -m meerqat.train.trainer fit --config=experiments/mm/eca/config.yaml``
+
+Once fine-tuning is done, save the PreTrainedModel using the same command as above.
+
+
+Fine-tuning CLIP for image retrieval (Cross-modal)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To reproduce the results of the CORIA paper, fine-tune CLIP so that images of ViQuAE
+are closer to the name of the depicted entity! 
+
+``python -m meerqat.train.trainer fit --config=experiments/jcm/config.yaml``
 
 IR
 --
@@ -391,10 +408,11 @@ done with ``elasticsearch``, both via HF ``datasets``. We’ll use IR on
 both TriviaQA along with the complete Wikipedia (BM25 only) and ViQuAE
 along with the multimodal Wikipedia.
 
-Hyperparameter tuning is done using grid search via ``optuna`` on the
+Hyperparameter tuning is done using grid search via ``ranx`` on the
 dev set to maximize MRR.
 
-TODO share several versions of the runs
+Note that the indices/identifiers of the provided runs and qrels match https://huggingface.co/datasets/PaulLerner/viquae_v4-alpha_passages
+
 
 BM25 (ViQuAE)
 ~~~~~~~~~~~~~
@@ -477,17 +495,13 @@ Late fusion
 ~~~~~~~~~~~
 
 Now in order to combine the text results of text and the image results
-we do two things: 1. normalize the scores so that they have zero-mean
-and unit variance, **the mean and the variance is computed over the
-whole subset** so you might want to do a dry run first **or use ours**
-(this corresponds to the mysterious “normalization” parameter in the
-config files) 2. sum the text and image score for each passage before
+we do two things: 
+1. normalize the scores so that they have zero-mean and unit variance 
+2. combine text and image score through a weighted sum for each passage before
 re-ordering, note that if only the text finds a given passage then its
 image score is set to the minimum of the image results (and vice-versa)
 
-The results are then re-ordered before evaluation. Each model has an
-interpolation hyperparameter. You can either tune-it on the dev set or
-use ours (more details below).
+The results are then re-ordered before evaluation. Interpolation hyperparameters are tuned using ranx.
 
 BM25 + ArcFace + CLIP + ImageNet (ViQuAE)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -495,16 +509,15 @@ BM25 + ArcFace + CLIP + ImageNet (ViQuAE)
 Tune hyperparameters
 ''''''''''''''''''''
 
-``python -m meerqat.ir.hp fusion data/viquae_dataset/validation experiments/ir/viquae/hp/bm25+arcface+clip+imagenet/config.json --k=100 --disable_caching --test=data/viquae_dataset/test --metrics=experiments/ir/viquae/hp/bm25+arcface+clip+imagenet/metrics``
+``python -m meerqat.ir.search data/viquae_dataset/validation experiments/ir/viquae/bm25+arcface+clip+imagenet/config_fit.json --k=100 --disable_caching``
 
 Run with the best hyperparameters
 '''''''''''''''''''''''''''''''''
 
-If you don’t use the ``--test`` option above.
 
 .. code:: sh
 
-   python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/bm25+arcface+clip+imagenet/config.json --k=100 --metrics=experiments/ir/viquae/bm25+arcface+clip+imagenet/metrics
+   python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/bm25+arcface+clip+imagenet/config_test.json --k=100 --metrics=experiments/ir/viquae/bm25+arcface+clip+imagenet/metrics
 
 DPR + ArcFace + CLIP + ImageNet (ViQuAE)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -516,27 +529,28 @@ Same script, different config.
 Tune hyperparameters
 ''''''''''''''''''''
 
-``python -m meerqat.ir.hp fusion data/viquae_dataset/validation experiments/ir/viquae/hp/dpr+arcface+clip+imagenet/config.json --k=100 --disable_caching --test=data/viquae_dataset/test --metrics=experiments/ir/viquae/hp/dpr+arcface+clip+imagenet/metrics``
+``python -m meerqat.ir.search data/viquae_dataset/validation experiments/ir/viquae/dpr+arcface+clip+imagenet/config_fit.json --k=100 --disable_caching``
 
 .. _run-with-the-best-hyperparameters-1:
 
 Run with the best hyperparameters
 '''''''''''''''''''''''''''''''''
 
-If you don’t use the ``--test`` option above.
-
 .. code:: sh
 
-   python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/dpr+arcface+clip+imagenet/config.json --k=100 --metrics=experiments/ir/viquae/dpr+arcface+clip+imagenet/metrics
+   python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/dpr+arcface+clip+imagenet/config_test.json --k=100 --metrics=experiments/ir/viquae/dpr+arcface+clip+imagenet/metrics
+
+
+Once search is done and results are saved in a Ranx Run, you can experiment more fusion techniques
+(on the validation set first!) using ``meerqat.ir.fuse``
+
 
 DPR + CLIP (MICT)
 ^^^^^^^^^^^^^^^^^
 For the late fusion baseline based only on DPR and CLIP, be sure to use CLIP on all images
 and do **not** run what’s above that sets CLIP=None when a face is detected.
 
-Then, you can do the same as above using:
- - experiments/ir/viquae/hp/dpr+clip/config.json
- - experiments/ir/viquae/dpr+clip/config.json
+Then, you can do the same as above using ``experiments/ir/viquae/dpr+clip/config.json``
 
 Early Fusion (MICT)
 ~~~~~~~~~~~~~~~~~~~
@@ -544,7 +558,7 @@ Embedding visual questions and visual passages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Much like for DPR, you first need to split the BiEncoder in two once you picked a checkpoint using
-``meerqat.train.split_biencoder``. Then, set its path like in the provided config file.
+``meerqat.train.save_ptm``. Then, set its path like in the provided config file.
 
 The important difference with DPR here, is again that you need to pass viquae_wikipedia
 which holds pre-computed image features of the visual passages.
@@ -553,15 +567,24 @@ which holds pre-computed image features of the visual passages.
 .. code:: sh
 
    python -m meerqat.ir.embedding data/viquae_dataset experiments/ir/viquae/ilf/embedding/dataset_config.json
-   python -m meerqat.ir.embedding data/viquae_passages experiments/ir/viquae/ilf/embedding/kb_config.json --kb=data/viquae_wikipedia
+   python -m meerqat.ir.embedding data/viquae_passages experiments/ir/viquae/ilf/embedding/kb_config.json --kb=data/viquae_wikipedia_recat
    python -m meerqat.ir.embedding data/viquae_dataset experiments/ir/viquae/eca/embedding/dataset_config.json
-   python -m meerqat.ir.embedding data/viquae_passages experiments/ir/viquae/eca/embedding/kb_config.json --kb=data/viquae_wikipedia
+   python -m meerqat.ir.embedding data/viquae_passages experiments/ir/viquae/eca/embedding/kb_config.json --kb=data/viquae_wikipedia_recat
 
 Searching
 ^^^^^^^^^
 This is exactly the same as for DPR, simply change "key" and "column" to "ILF_few_shot" or "ECA_few_shot".
 
-TODO provide ranx runs (.trec files). See also note in README on the different passages versions.
+
+Cross-modal CLIP
+~~~~~~~~~~~~~~~~
+Again using ``meerqat.ir.search`` but this time, using also the cross-modal search of CLIP,
+and not only the monomodal search! CLIP can be optionally fine-tuned as explained above.
+
+.. code:: sh
+
+   python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/dpr+clip-cross-modal/config_test.json --k=100 --metrics=experiments/ir/viquae/dpr+clip-cross-modal/
+
 
 Metrics
 ~~~~~~~
@@ -571,15 +594,14 @@ I advise against using any kind of metric that uses recall (mAP,
 R-Precision, …) since we estimate relevant document on the go so the
 number of relevant documents will *depend on the systemS* you use.
 
-The above ``meerqat.ir.search`` saves results and qrels in format
-compatible with ``trec_eval`` if you prefer to use it.
-
 To compare different models (e.g. BM25+Image and DPR+Image), you should:
     - fuse the qrels (since relevant passages are estimated based on the
       model’s output):
-      ``python -m meerqat.ir.metrics qrels <qrels>... --output=experiments/ir/all_qrels.trec``
-    - ``python -m meerqat.ir.metrics ranx <run>... --qrels=experiments/ir/all_qrels.trec --output=experiments/ir/comparison``
+      ``python -m meerqat.ir.metrics qrels <qrels>... --output=experiments/ir/all_qrels.json``
+    - ``python -m meerqat.ir.metrics ranx <run>... --qrels=experiments/ir/all_qrels.json --output=experiments/ir/comparison``
 
+ViQuAE results
+^^^^^^^^^^^^^^
 Beware that the ImageNet-ResNet and ArcFace results cannot be compared,
 neither between them nor with BM25/DPR because:
  - they are exclusive, roughly **half** the questions have a face -> ArcFace, other don’t ->
@@ -592,11 +614,29 @@ downstream performance aside (e.g. comparing ImageNet-Resnet with
 another representation for the full image), you should:
  - ``filter`` the dataset so that you don’t evaluate on irrelevant questions (e.g. those
    were the search is done with ArcFace because a face was detected)
- - evaluate at the *document-level* instead of passage-level. To do so,
-   maybe ``checkout`` the ``document`` branch (TODO merge in ``main``).
+ - evaluate at the *document-level* instead of passage-level as in the CORIA paper
+ 
+See the following instructions.
+
+Cross-modal results 
+^^^^^^^^^^^^^^^^^^^
+To reproduce the article-level results of the CORIA paper, you can use a config very similar to
+``experiments/ir/viquae/dpr+clip-cross-modal/config_test.json`` although the results 
+will **not** be mapped to corresponding passage indices, and the relevance of the article
+will be evaluated directly through the "document" ``reference_key``:
+
+.. code:: sh
+
+   python -m meerqat.ir.search data/viquae_dataset/test experiments/ir/viquae/clip/article_config.json --k=100 --metrics=experiments/ir/viquae/clip/
+
+
+You can use the same method to evaluate other article-level representations, 
+e.g. ArcFace, ImageNet-ResNet, BM25…
+
 
 Reading Comprehension
 ---------------------
+
 
 Now we have retrieved candidate passages, it’s time to train a Reading
 Comprehension system (reader). We first pre-train the reader on TriviaQA

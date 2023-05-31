@@ -1,0 +1,71 @@
+{
+    "kb_kwargs": {
+        "data/viquae_passages": {
+            "index_kwargs": {
+                "DPR_few_shot_dp": {
+                    "column": "DPR_few_shot",
+                    "es": false,
+                    "kind_str": "TEXT",
+                    "key": "DPR_few_shot",
+                    "string_factory": "Flat",
+                    "load": false,
+                    "device": null,
+                    "metric_type": 0
+                }
+            }
+        },
+        "data/viquae_wikipedia/non_humans": {
+            "index_mapping_path": "data/viquae_wikipedia/non_humans/article2passage.json",
+            "index_kwargs": {
+                "resnet": {
+                    "column": "imagenet-RN50",
+                    "es": false,
+                    "kind_str": "IMAGE",
+                    "key": "imagenet-RN50",
+                    "string_factory": "L2norm,Flat",
+                    "load": false,
+                    "device": null,
+                    "metric_type": 0
+                },
+                "clip-RN50": {
+                    "column": "clip-RN50",
+                    "es": false,
+                    "kind_str": "IMAGE",
+                    "key": "clip-RN50",
+                    "string_factory": "L2norm,Flat",
+                    "load": false,
+                    "device": null,
+                    "metric_type": 0
+                }
+            }
+        },
+        "data/viquae_wikipedia/humans_with_faces": {
+            "index_mapping_path": "data/viquae_wikipedia/humans_with_faces/article2passage.json",
+            "index_kwargs": {
+                "arcface": {
+                    "column": "first_face_embedding",
+                    "es": false,
+                    "kind_str": "FACE",
+                    "key": "first_face_embedding",
+                    "string_factory": "L2norm,Flat",
+                    "load": false,
+                    "device": null,
+                    "metric_type": 0
+                }
+            }
+        }
+    },
+    "reference_kb_path": "data/viquae_passages",
+    "map_kwargs": {
+        "batch_size": 256,
+        "desc": "searching"
+    },
+    "fusion_kwargs": {
+        "subcommand": "fit",
+        "norm": "gzmuv",
+        "defmin": true,
+        "subcommand_kwargs": {
+        }
+    },
+    "format": {}
+}

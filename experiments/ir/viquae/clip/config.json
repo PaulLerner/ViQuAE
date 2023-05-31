@@ -1,0 +1,21 @@
+{
+  "model": {
+    "class_name": "CLIPModel",
+    "pretrained_model_name_or_path": "clip-vit-base-patch32"
+ },
+  "tokenizer": {
+    "class_name": "CLIPTokenizer",
+    "pretrained_model_name_or_path": "clip-vit-base-patch32"
+  },
+  "tokenization_kwargs": {
+    "max_length": 77,
+    "padding": "longest"
+  },
+    "key": "wikipedia_title",
+    "call": "get_text_features",
+    "save_as": "title_clip-vit-base-patch32",
+    "map_kwargs":
+    {
+        "batch_size": 2048
+    }
+}
