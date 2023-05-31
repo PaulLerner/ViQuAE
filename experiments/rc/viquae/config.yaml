@@ -1,0 +1,82 @@
+# pytorch_lightning==1.7.7
+seed_everything: 42
+trainer:
+  logger: true
+  enable_checkpointing: true
+  callbacks:
+  - pytorch_lightning.callbacks.LearningRateMonitor
+  - class_path: pytorch_lightning.callbacks.ModelCheckpoint
+    init_args:
+      save_top_k: -1
+      filename: "{step}"
+      monitor: "eval/f1"
+      mode: "max"
+  - class_path: pytorch_lightning.callbacks.EarlyStopping
+    init_args:
+      monitor: "eval/f1"
+      patience: 10
+      mode: "max"
+  default_root_dir: experiments/rc/viquae
+  gradient_clip_val: 1.0
+  gradient_clip_algorithm: "norm"
+  num_nodes: 1
+  devices: 1
+  enable_progress_bar: true
+  overfit_batches: 0.0
+  track_grad_norm: -1
+  check_val_every_n_epoch: 1
+  max_epochs: 100
+  limit_train_batches: null
+  limit_val_batches: null
+  limit_test_batches: null
+  limit_predict_batches: null
+  log_every_n_steps: 10
+  accelerator: "gpu"
+  sync_batchnorm: false
+  precision: 32
+  enable_model_summary: true
+  num_sanity_val_steps: 0
+  reload_dataloaders_every_n_epochs: 0
+  auto_lr_find: false
+  replace_sampler_ddp: true
+  detect_anomaly: false
+  auto_scale_batch_size: false
+  plugins: null
+  amp_backend: native
+  amp_level: null
+  move_metrics_to_cpu: false
+  multiple_trainloader_mode: max_size_cycle
+model:
+  class_path: meerqat.train.trainee.Reader
+  init_args:
+    model_kwargs:
+      class_name: MultiPassageBERT
+      pretrained_model_name_or_path: experiments/rc/triviaqa/lightning_logs/version_0/checkpoints/step=46000
+      fuse_ir_score: false
+    warmup_steps: 1000
+    lr: 1e-05
+lr_scheduler:
+  torch.optim.lr_scheduler.ConstantLR
+data:
+  class_path: meerqat.train.data.ReaderDataModule
+  init_args:
+    tokenizer_class: BertTokenizerFast
+    tokenizer_name_or_path: "bert-base-uncased"
+    kb: data/viquae_passages
+    M: 24
+    max_n_answers: 10
+    n_relevant_passages: 8
+    search_key: "search"
+    # override search_key by setting run_path to the desired IR output
+    run_path: null
+    # defaults to no oracle (use search_key or run_path to get input passages)
+    oracle: false
+    tokenization_kwargs:
+        max_length: 256                                                                                                           
+        padding: longest
+    dataset_path: "data/viquae_dataset"
+    train_batch_size: 4
+    eval_batch_size: 8
+    loader_kwargs:
+      num_workers: 5
+      prefetch_factor: 2

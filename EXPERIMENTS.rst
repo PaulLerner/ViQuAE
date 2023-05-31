@@ -645,14 +645,9 @@ BERT (Wang et al., 2019), it simply extends the BERT fine-tuning for QA
 (Devlin et al., 2019) with the global normalization by Clark et. al
 (2018), i.e. all passages are processed independently but share the same
 softmax normalization so that scores can be compared across passages.
-The model is implemented in ``meerqat.train.trainee`` it inherits from
+The model is implemented in ``meerqat.train.qa`` it inherits from
 HF ``transformers.BertForQuestionAnswering`` and the implementation is
 based on DPR (Karpukhin et al., 2020)
-
-We also implemented the DPR Reader model from Karpukhin et al. (2020),
-which doesn’t use this global normalization trick but does re-ranking.
-However we did not test it (our intuition is that re-ranking with text
-only will only deteriorate the retriever results)
 
 We convert the model start and end answer position probabilities to
 answer spans in ``meerqat.models.qa.get_best_spans``. The answer span
@@ -694,16 +689,16 @@ of KILT’s Wikipedia instead of our multimodal KB.
 
 .. code:: sh
 
-   python -m meerqat.train.trainer experiments/rc/triviaqa/train/config.json
+   python -m meerqat.train.trainer fit --config=experiments/rc/triviaqa/config.json
 
-The best checkpoint should be ``checkpoint-46000``.
+The best checkpoint should be at step 46000.
 
 .. _fine-tuning-on-viquae-1:
 
 Fine-tuning on ViQuAE (ViQuAE)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Simply set ``experiments/rc/triviaqa/train/checkpoint-46000`` 
+Again, use ``meerqat.train.save_ptm`` on the best checkpoint and set it
 as pre-trained model instead of ``bert-base-uncased``
 (``PaulLerner/multi_passage_bert_triviaqa_without_viquae`` to use ours).
 
@@ -711,11 +706,11 @@ Then you can fine-tune the model:
 
 .. code:: sh
 
-   python -m meerqat.train.trainer experiments/rc/viquae/train/config.json
+   python -m meerqat.train.trainer fit --config=experiments/rc/viquae/config.yaml
 
-The best checkpoint should be ``checkpoint-3600``. This run uses the
+The best checkpoint should be at step 3600. This run uses the
 default seed in ``transformers``: 42. To have multiple runs, like in the
-paper, add ``seed=<int>`` in the config ``training_kwargs``. We used
+paper, set ``seed_everything: <int>`` in the config. We used
 seeds ``[0, 1, 2, 3, 42]``. The expected output provided is with
 ``seed=1``.
 
@@ -724,28 +719,29 @@ irrelevant passages (8:16) as training while test is done using the
 top-24 IR results. That is why you should expect a performance gap
 between validation and test.
 
-The test is configured to save the prediction (without IR weighing)
-along with the metrics, if you don’t want this, set ``do_eval=True`` and
-``do_predict=False``.
-
-TODO: with lightning we can use the same config file for training and testing, 
-we can add `--ckpt_path=<path>` on the CLI
 
 .. code:: sh
+    
+   # to save the predictions along with the metrics
+   python -m meerqat.train.trainer predict --config=experiments/rc/viquae/config.yaml
+   # to only compute metrics
+   python -m meerqat.train.trainer test --config=experiments/rc/viquae/config.yaml
 
-   python -m meerqat.train.trainer experiments/rc/viquae/test/config.json
 
-To reproduce the oracle results: - for “full-oracle”, simply add the
-``oracle=True`` flag in the config file and set
-``n_relevant_passages=24`` - for “semi-oracle”, in addition you should
-filter ``search_provenance_indices`` like above but setting
-``item['search_provenance_indices'] = []`` when no relevant passages
-where retrieved by the IR system.
+To reproduce the oracle results: 
+
+- for “full-oracle”, simply add the ``oracle: true`` flag in the config file and set
+  ``n_relevant_passages: 24`` 
+
+- for “semi-oracle”, in addition you should
+  filter ``search_provenance_indices`` like above but setting
+  ``item['search_provenance_indices'] = []`` when no relevant passages
+  where retrieved by the IR system.
 
 Switching IR inputs at inference (MICT)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Simply set ``"run_path":"/path/to/run.trec"`` in experiments/rc/viquae/test/config.json
-and run ``meerqat.train.trainer`` again.
+Simply set ``run_path:"/path/to/run.trec"`` in experiments/rc/viquae/config.yaml
+and run ``meerqat.train.trainer test`` again.
 
 
 References
