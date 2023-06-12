@@ -19,6 +19,8 @@ import torch
 
 from datasets import load_from_disk, set_caching_enabled
 
+from ranx import Run
+
 from ..models.utils import device, prepare_inputs
 from ..models.mm import MMConfig
 from ..data.loading import load_pretrained_in_kwargs
@@ -123,7 +125,19 @@ def map_passage_to_kb(batch, kb, features):
     return batch
 
     
-def get_inputs(batch, model, tokenizer, tokenization_kwargs={}, key='passage', kb=None):
+def expand_query(batch, key='passage', kb=None, run=None, tokenizer=None):
+    if run is None:
+        return batch[key]
+    text_inputs = []
+    for text_input, q_id in zip(batch[key], batch['id']):
+        # get top-1
+        doc_id = next(iter(run.run[q_id]))
+        doc_name = kb[int(doc_id)]['wikipedia_title']
+        text_inputs.append(f"{text_input} {tokenizer.sep_token} {doc_name}")
+    return text_inputs
+        
+    
+def get_inputs(batch, model, tokenizer, tokenization_kwargs={}, key='passage', kb=None, run=None):
     """
     Tokenizes input text and optionally gathers image features from the kb depending on model.
     
@@ -141,13 +155,17 @@ def get_inputs(batch, model, tokenizer, tokenization_kwargs={}, key='passage', k
     kb: Dataset, optional
         Should hold image features and be mappable from batch['index']
     """
-    text_inputs = tokenizer(batch[key], **tokenization_kwargs)
+    text_inputs = expand_query(batch, key=key, kb=kb, run=run, tokenizer=tokenizer)
+    text_inputs = tokenizer(text_inputs, **tokenization_kwargs)
     model_config = getattr(model, "config", None)
     # FIXME this does not hold for ViLT and CLIP
     # TODO refactor to use the datamodule of train.data
     # maybe implement in trainer.test ?
     if model_config is not None and isinstance(model_config, MMConfig):
         if kb is not None:
+            # FIXME: should the KB be used to expand query or get image features?
+            if run is not None:
+                raise NotImplementedError("The use of kb is ambiguous when run is provided AND model is multimodal")
             features = {"face_embedding", "face_box"} | model.config.image_kwargs.keys()
             # /!\ do not modify batch, copy before (else all the features of the KB will be saved). 
             # no need to deepcopy (only modifying batch keys)
@@ -166,7 +184,7 @@ def get_inputs(batch, model, tokenizer, tokenization_kwargs={}, key='passage', k
 
 def embed(batch, model, tokenizer, tokenization_kwargs={}, key='passage', 
           save_as='text_embedding', output_key=None, forward_kwargs={}, 
-          layers=None, kb=None, call=None):
+          layers=None, kb=None, call=None, run=None):
     """
     Parameters
     ----------
@@ -184,8 +202,10 @@ def embed(batch, model, tokenizer, tokenization_kwargs={}, key='passage',
         In this case, it will save in {save_as}_layer_{layer} the representation of the first token (DPR-like), for each layer
     call: str, optional
         Name of the method to call on model. By default, the model should be callable and is called.
+    run: Run, optional
+        used to expand query with results of visual search
     """
-    inputs = get_inputs(batch, model, tokenizer, tokenization_kwargs=tokenization_kwargs, key=key, kb=kb)
+    inputs = get_inputs(batch, model, tokenizer, tokenization_kwargs=tokenization_kwargs, key=key, kb=kb, run=run)
     # move to device
     inputs = prepare_inputs(inputs)
     method = model if call is None else getattr(model, call)
@@ -213,7 +233,7 @@ def embed(batch, model, tokenizer, tokenization_kwargs={}, key='passage',
     return batch
 
 
-def dataset_embed(dataset_path, map_kwargs={}, output_path=None, keep_columns=None, **fn_kwargs):
+def dataset_embed(dataset_path, map_kwargs={}, output_path=None, keep_columns=None, run=None, **fn_kwargs):
     """Loads dataset from path, maps it through embed, and saves it to output_path"""
     dataset = load_from_disk(dataset_path)
     # defaults to overwrite the dataset
@@ -223,6 +243,9 @@ def dataset_embed(dataset_path, map_kwargs={}, output_path=None, keep_columns=No
     elif keep_columns is not None:
         keep_columns = set(keep_columns)
         dataset = dataset.remove_columns([c for c in dataset.column_names if c not in keep_columns])
+    if run is not None:
+        run = Run.from_file(run)
+    fn_kwargs['run'] = run
     dataset = dataset.map(embed, batched=True, fn_kwargs=fn_kwargs, **map_kwargs)
     dataset.save_to_disk(output_path)
 
