@@ -385,6 +385,8 @@ class Searcher:
                                     )
                         else:                 
                             self.runs[index_name][q_id][str(i)] = score
+                        if len(self.runs[index_name][q_id]) >= self.k:
+                            break
                     # are the retrieved documents relevant ?
                     if self.reference_kb is not None:
                         # extend relevant documents with the retrieved
