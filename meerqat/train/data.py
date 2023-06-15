@@ -871,13 +871,18 @@ class ReaderDataModule(QuestionAnsweringDataModule):
         Path to the ranx run stored in the TREC format that holds the IR results.
         To be used instead of search_key at inference.
         Defaults to None.
+    extract_name: bool, optional
+        Train the model to extract the name of the entity instead of the answer.
+        Defaults to False.
     """
     def __init__(self, *args, max_n_answers=10, run_path=None, 
-                 train_original_answer_only=True, oracle=False, **kwargs):
+                 train_original_answer_only=True, oracle=False, extract_name=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.max_n_answers = max_n_answers
         self.train_original_answer_only = train_original_answer_only
         self.oracle = oracle
+        self.extract_name = extract_name
+        
         if self.oracle and self.n_relevant_passages != self.M:
             warnings.warn(f"Oracle mode. Setting n_relevant_passages={self.M}")
             self.n_relevant_passages = self.M
@@ -988,9 +993,14 @@ class ReaderDataModule(QuestionAnsweringDataModule):
             # except for padding passages
             if len(passage) < self.M:
                 passages.extend(self.padding_passage*(self.M-len(passage)))
-
-            original_answer = item['output']['original_answer']
-            answer = item['output']['answer']
+            
+            if self.extract_name:
+                original_answer = item['wikidata_label']
+                # FIXME: maybe train on aliases of the entity?
+                answer = []
+            else:
+                original_answer = item['output']['original_answer']
+                answer = item['output']['answer']
             answer_strings.extend([answer]*self.M)
             # beware this create a discrepancy between answer_strings and answers (tokens)
             # evaluation should always be done using answer_strings
