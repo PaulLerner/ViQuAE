@@ -17,7 +17,7 @@ import json
 
 import torch
 
-from datasets import load_from_disk, set_caching_enabled
+from datasets import load_from_disk, set_caching_enabled, DatasetDict
 
 from ranx import Run
 
@@ -125,19 +125,27 @@ def map_passage_to_kb(batch, kb, features):
     return batch
 
     
-def expand_query(batch, key='passage', kb=None, run=None, tokenizer=None):
-    if run is None:
-        return batch[key]
-    text_inputs = []
-    for text_input, q_id in zip(batch[key], batch['id']):
-        # get top-1
-        doc_id = next(iter(run.run[q_id]))
-        doc_name = kb[int(doc_id)]['wikipedia_title']
-        text_inputs.append(f"{text_input} {tokenizer.sep_token} {doc_name}")
+def expand_query(batch, key='passage', kb=None, run=None, tokenizer=None, 
+                 qe_predictions_key=None, doc_name_key='wikidata_label'):
+    assert run is None or qe_predictions_key is None
+    
+    text_inputs = []    
+    if run is not None:
+        for text_input, q_id in zip(batch[key], batch['id']):
+            # get top-1
+            doc_id = next(iter(run.run[q_id]))
+            doc_name = kb[int(doc_id)][doc_name_key]
+            text_inputs.append(f"{text_input} {tokenizer.sep_token} {doc_name}")
+    elif qe_predictions_key is not None:
+        for text_input, doc_name in zip(batch[key], batch[qe_predictions_key]):
+            text_inputs.append(f"{text_input} {tokenizer.sep_token} {doc_name}")
+    else:
+        text_inputs = batch[key]
     return text_inputs
         
     
-def get_inputs(batch, model, tokenizer, tokenization_kwargs={}, key='passage', kb=None, run=None):
+def get_inputs(batch, model, tokenizer, tokenization_kwargs={}, key='passage', kb=None, 
+               run=None, qe_predictions_key=None):
     """
     Tokenizes input text and optionally gathers image features from the kb depending on model.
     
@@ -155,7 +163,7 @@ def get_inputs(batch, model, tokenizer, tokenization_kwargs={}, key='passage', k
     kb: Dataset, optional
         Should hold image features and be mappable from batch['index']
     """
-    text_inputs = expand_query(batch, key=key, kb=kb, run=run, tokenizer=tokenizer)
+    text_inputs = expand_query(batch, key=key, kb=kb, run=run, tokenizer=tokenizer, qe_predictions_key=qe_predictions_key)
     text_inputs = tokenizer(text_inputs, **tokenization_kwargs)
     model_config = getattr(model, "config", None)
     # FIXME this does not hold for ViLT and CLIP
@@ -184,7 +192,7 @@ def get_inputs(batch, model, tokenizer, tokenization_kwargs={}, key='passage', k
 
 def embed(batch, model, tokenizer, tokenization_kwargs={}, key='passage', 
           save_as='text_embedding', output_key=None, forward_kwargs={}, 
-          layers=None, kb=None, call=None, run=None):
+          layers=None, kb=None, call=None, run=None, qe_predictions_key=None):
     """
     Parameters
     ----------
@@ -205,7 +213,8 @@ def embed(batch, model, tokenizer, tokenization_kwargs={}, key='passage',
     run: Run, optional
         used to expand query with results of visual search
     """
-    inputs = get_inputs(batch, model, tokenizer, tokenization_kwargs=tokenization_kwargs, key=key, kb=kb, run=run)
+    inputs = get_inputs(batch, model, tokenizer, tokenization_kwargs=tokenization_kwargs, 
+                        key=key, kb=kb, run=run, qe_predictions_key=qe_predictions_key)
     # move to device
     inputs = prepare_inputs(inputs)
     method = model if call is None else getattr(model, call)
@@ -233,7 +242,8 @@ def embed(batch, model, tokenizer, tokenization_kwargs={}, key='passage',
     return batch
 
 
-def dataset_embed(dataset_path, map_kwargs={}, output_path=None, keep_columns=None, run=None, **fn_kwargs):
+def dataset_embed(dataset_path, map_kwargs={}, output_path=None, keep_columns=None, 
+                  run=None, qe_predictions=None, qe_predictions_key=None, **fn_kwargs):
     """Loads dataset from path, maps it through embed, and saves it to output_path"""
     dataset = load_from_disk(dataset_path)
     # defaults to overwrite the dataset
@@ -245,7 +255,15 @@ def dataset_embed(dataset_path, map_kwargs={}, output_path=None, keep_columns=No
         dataset = dataset.remove_columns([c for c in dataset.column_names if c not in keep_columns])
     if run is not None:
         run = Run.from_file(run)
+    if qe_predictions is not None:
+        assert qe_predictions_key is not None
+        with open(qe_predictions, 'rt') as file:
+            qe_predictions = json.load(file)
+        if isinstance(dataset, DatasetDict):
+            raise NotImplementedError("The format of predictions saved in trainee are not compatible with a DatasetDict")
+        dataset = dataset.add_column(qe_predictions_key, qe_predictions)
     fn_kwargs['run'] = run
+    fn_kwargs['qe_predictions_key'] = qe_predictions_key
     dataset = dataset.map(embed, batched=True, fn_kwargs=fn_kwargs, **map_kwargs)
     dataset.save_to_disk(output_path)
 
