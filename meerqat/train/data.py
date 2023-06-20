@@ -997,7 +997,7 @@ class ReaderDataModule(QuestionAnsweringDataModule):
             if self.extract_name:
                 original_answer = item['wikidata_label']
                 # FIXME: maybe train on aliases of the entity?
-                answer = []
+                answer = [original_answer]
             else:
                 original_answer = item['output']['original_answer']
                 answer = item['output']['answer']
