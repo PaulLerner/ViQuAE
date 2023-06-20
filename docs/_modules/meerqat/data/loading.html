@@ -279,13 +279,11 @@
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">string</span>
 
-<span class="kn">import</span> <span class="nn">spacy</span>
 <span class="kn">from</span> <span class="nn">spacy.lang.en</span> <span class="kn">import</span> <span class="n">English</span>
 <span class="kn">from</span> <span class="nn">datasets</span> <span class="kn">import</span> <span class="n">load_dataset</span><span class="p">,</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">load_from_disk</span><span class="p">,</span> <span class="n">set_caching_enabled</span>
 <span class="kn">import</span> <span class="nn">transformers</span>
 
-<span class="kn">from</span> <span class="nn">..train</span> <span class="kn">import</span> <span class="n">trainee</span>
-<span class="kn">from</span> <span class="nn">..models</span> <span class="kn">import</span> <span class="n">mm</span>
+<span class="kn">from</span> <span class="nn">..models</span> <span class="kn">import</span> <span class="n">mm</span><span class="p">,</span> <span class="n">qa</span><span class="p">,</span> <span class="n">rr</span>
 <span class="kn">from</span> <span class="nn">meerqat</span> <span class="kn">import</span> <span class="vm">__file__</span> <span class="k">as</span> <span class="n">ROOT_PATH</span>
 
 
@@ -305,18 +303,48 @@
 <span class="n">MSCOCO_PATH</span> <span class="o">=</span> <span class="n">DATA_ROOT_PATH</span><span class="o">/</span><span class="s2">&quot;MS-COCO&quot;</span>
 
 
+<div class="viewcode-block" id="verbose_load_from_disk"><a class="viewcode-back" href="../../../meerqat.data.loading.html#meerqat.data.loading.verbose_load_from_disk">[docs]</a><span class="k">def</span> <span class="nf">verbose_load_from_disk</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading &#39;</span><span class="si">{</span><span class="n">dataset_path</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">load_from_disk</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dataset</span></div>
+    
+
+<div class="viewcode-block" id="save_image"><a class="viewcode-back" href="../../../meerqat.data.loading.html#meerqat.data.loading.save_image">[docs]</a><span class="k">def</span> <span class="nf">save_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">output_path</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">image</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">te</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Caught TypeError &#39;</span><span class="si">{</span><span class="n">te</span><span class="si">}</span><span class="s2">&#39; while saving image to &#39;</span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&#39;. Setting transparency to None.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="s1">&#39;encoderinfo&#39;</span><span class="p">):</span>
+            <span class="n">image</span><span class="o">.</span><span class="n">encoderinfo</span><span class="p">[</span><span class="s2">&quot;transparency&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="s1">&#39;info&#39;</span><span class="p">):</span>
+            <span class="n">image</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;transparency&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># try one more time</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">image</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Caught exception &#39;</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&#39; while saving image to &#39;</span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&#39;. (loaded as </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">image</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Caught exception &#39;</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&#39; while saving image to &#39;</span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&#39;. (loaded as </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">image</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="load_image"><a class="viewcode-back" href="../../../meerqat.data.loading.html#meerqat.data.loading.load_image">[docs]</a><span class="k">def</span> <span class="nf">load_image</span><span class="p">(</span><span class="n">file_name</span><span class="p">):</span>
     <span class="n">path</span> <span class="o">=</span> <span class="n">IMAGE_PATH</span> <span class="o">/</span> <span class="n">file_name</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s1">&#39;RGB&#39;</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2"> with image </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Caught exception &#39;</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&#39; with image &#39;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>    
+    <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">width</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">image</span><span class="o">.</span><span class="n">height</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Empty image &#39;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
     <span class="k">return</span> <span class="n">image</span></div>
 
 
-<div class="viewcode-block" id="load_image_batch"><a class="viewcode-back" href="../../../meerqat.data.loading.html#meerqat.data.loading.load_image_batch">[docs]</a><span class="k">def</span> <span class="nf">load_image_batch</span><span class="p">(</span><span class="n">file_names</span><span class="p">):</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">load_image</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">file_names</span><span class="p">]</span></div>
+<div class="viewcode-block" id="load_image_batch"><a class="viewcode-back" href="../../../meerqat.data.loading.html#meerqat.data.loading.load_image_batch">[docs]</a><span class="k">def</span> <span class="nf">load_image_batch</span><span class="p">(</span><span class="n">file_names</span><span class="p">,</span> <span class="n">pool</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">pool</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">load_image</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">file_names</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">load_image</span><span class="p">,</span> <span class="n">file_names</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="load_faces"><a class="viewcode-back" href="../../../meerqat.data.loading.html#meerqat.data.loading.load_faces">[docs]</a><span class="k">def</span> <span class="nf">load_faces</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">root_face_path</span><span class="p">,</span> <span class="n">max_n_faces</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -360,45 +388,21 @@
 
 
 <div class="viewcode-block" id="get_class_from_name"><a class="viewcode-back" href="../../../meerqat.data.loading.html#meerqat.data.loading.get_class_from_name">[docs]</a><span class="k">def</span> <span class="nf">get_class_from_name</span><span class="p">(</span><span class="n">class_name</span><span class="p">):</span>
-    <span class="n">modules</span> <span class="o">=</span> <span class="p">[</span><span class="n">mm</span><span class="p">,</span> <span class="n">trainee</span><span class="p">,</span> <span class="n">transformers</span><span class="p">]</span>
+    <span class="n">modules</span> <span class="o">=</span> <span class="p">[</span><span class="n">mm</span><span class="p">,</span> <span class="n">qa</span><span class="p">,</span> <span class="n">rr</span><span class="p">,</span> <span class="n">transformers</span><span class="p">]</span>
     <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">modules</span><span class="p">:</span>
         <span class="n">Class</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">class_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">Class</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Class</span>
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not find </span><span class="si">{</span><span class="n">class_name</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">modules</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
     
-    
-<div class="viewcode-block" id="get_biencoder"><a class="viewcode-back" href="../../../meerqat.data.loading.html#meerqat.data.loading.get_biencoder">[docs]</a><span class="k">def</span> <span class="nf">get_biencoder</span><span class="p">(</span>
-        <span class="n">Class</span><span class="p">,</span> <span class="n">question_class</span><span class="p">,</span> <span class="n">dpr_question_model_name_or_path</span><span class="p">,</span> 
-        <span class="n">context_class</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dpr_context_model_name_or_path</span><span class="o">=</span><span class="kc">None</span>
-    <span class="p">):</span>
-    <span class="c1"># default to symmetric encoders</span>
-    <span class="n">context_class</span> <span class="o">=</span> <span class="n">question_class</span> <span class="k">if</span> <span class="n">context_class</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">context_class</span>
-    <span class="n">dpr_context_model_name_or_path</span> <span class="o">=</span> <span class="n">dpr_question_model_name_or_path</span> <span class="k">if</span> <span class="n">dpr_context_model_name_or_path</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">dpr_context_model_name_or_path</span>
 
-    <span class="c1"># init encoders</span>
-    <span class="n">QuestionClass</span> <span class="o">=</span> <span class="n">get_class_from_name</span><span class="p">(</span><span class="n">question_class</span><span class="p">)</span>
-    <span class="n">question_model</span> <span class="o">=</span> <span class="n">QuestionClass</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">dpr_question_model_name_or_path</span><span class="p">)</span>
-    <span class="n">ContextClass</span> <span class="o">=</span> <span class="n">get_class_from_name</span><span class="p">(</span><span class="n">context_class</span><span class="p">)</span>
-    <span class="n">context_model</span> <span class="o">=</span> <span class="n">ContextClass</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">dpr_context_model_name_or_path</span><span class="p">)</span>
-
-    <span class="c1"># finally wrap both encoders</span>
-    <span class="n">biencoder</span> <span class="o">=</span> <span class="n">Class</span><span class="p">(</span><span class="n">question_model</span><span class="p">,</span> <span class="n">context_model</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">biencoder</span></div>
-
-
-<div class="viewcode-block" id="get_pretrained"><a class="viewcode-back" href="../../../meerqat.data.loading.html#meerqat.data.loading.get_pretrained">[docs]</a><span class="k">def</span> <span class="nf">get_pretrained</span><span class="p">(</span><span class="n">class_name</span><span class="p">,</span> <span class="n">trainee_class</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">trainee_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="get_pretrained"><a class="viewcode-back" href="../../../meerqat.data.loading.html#meerqat.data.loading.get_pretrained">[docs]</a><span class="k">def</span> <span class="nf">get_pretrained</span><span class="p">(</span><span class="n">class_name</span><span class="p">,</span> <span class="n">pretrained_model_name_or_path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="n">Class</span> <span class="o">=</span> <span class="n">get_class_from_name</span><span class="p">(</span><span class="n">class_name</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">Class</span><span class="p">,</span> <span class="n">trainee</span><span class="o">.</span><span class="n">BiEncoder</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">get_biencoder</span><span class="p">(</span><span class="n">Class</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">Class</span><span class="p">,</span> <span class="n">trainee</span><span class="o">.</span><span class="n">Trainee</span><span class="p">):</span>
-        <span class="c1"># first get the wrapped pre-trained model in Trainee</span>
-        <span class="n">trainee_model</span> <span class="o">=</span> <span class="n">get_pretrained</span><span class="p">(</span><span class="n">trainee_class</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="c1"># then init the Trainee</span>
-        <span class="n">model</span> <span class="o">=</span> <span class="n">Class</span><span class="p">(</span><span class="n">trainee_model</span><span class="p">,</span> <span class="o">**</span><span class="n">trainee_kwargs</span><span class="p">)</span>
-    <span class="c1"># simply use PreTrainedModel.from_pretrained method</span>
+    <span class="k">if</span> <span class="n">pretrained_model_name_or_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">Class</span><span class="p">(</span><span class="n">Class</span><span class="o">.</span><span class="n">config_class</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Randomly initialized model:</span><span class="se">\n</span><span class="si">{</span><span class="n">model</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">model</span> <span class="o">=</span> <span class="n">Class</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>        
+        <span class="n">model</span> <span class="o">=</span> <span class="n">Class</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">pretrained_model_name_or_path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>        
     <span class="k">return</span> <span class="n">model</span></div>
 
 
@@ -445,6 +449,7 @@
 <div class="viewcode-block" id="make_mapping_dataset"><a class="viewcode-back" href="../../../meerqat.data.loading.html#meerqat.data.loading.make_mapping_dataset">[docs]</a><span class="k">def</span> <span class="nf">make_mapping_dataset</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">save_name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="n">dataset</span> <span class="o">=</span> <span class="n">load_from_disk</span><span class="p">(</span><span class="n">dataset_path</span><span class="p">)</span>
     <span class="n">mapping</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">remove_columns</span><span class="p">([</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">column_names</span> <span class="k">if</span> <span class="n">c</span> <span class="o">!=</span> <span class="n">key</span><span class="p">])</span>
     <span class="n">dataset</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">make_mapping</span><span class="p">,</span> <span class="n">input_columns</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">with_indices</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fn_kwargs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">mapping</span><span class="o">=</span><span class="n">mapping</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">dataset_path</span><span class="o">/</span><span class="n">save_name</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
         <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">mapping</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span></div>
@@ -742,7 +747,7 @@
     
 <p class="copyright">
 
-    &copy; Copyright 2022, CNRS.<br>
+    &copy; Copyright 2020-2023, CNRS.<br>
 
 </p>
 
