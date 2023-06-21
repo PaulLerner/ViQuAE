@@ -899,7 +899,7 @@ class ReaderDataModule(QuestionAnsweringDataModule):
         else:
             ir_results = self.run.run[item['id']]
             if not ir_results:
-                return []
+                return [], []
             # document ids in ranx are str so we map them back to indices (int)
             indices = list(map(int, ir_results.keys()))[: self.M]
             scores = list(ir_results.values())[: self.M]
