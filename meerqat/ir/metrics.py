@@ -43,7 +43,7 @@ from tqdm import tqdm
 from pathlib import Path
 
 import pandas as pd
-from datasets import load_from_disk
+from datasets import load_from_disk, DatasetDict
 import ranx
 
 from ..data.loading import answer_preprocess
@@ -90,7 +90,7 @@ def find_relevant(retrieved, original_answer, alternative_answers, kb, reference
 
     
 def find_relevant_item(item, passages, title2index, article2passage=None, 
-                       reference_key='passage', save_as='provenance_indices'):
+                       reference_key='passage', save_as='provenance_indices', qrels={}):
     """
     Applies ``find_relevant`` with passages of articles linked to the question.
     
@@ -110,6 +110,8 @@ def find_relevant_item(item, passages, title2index, article2passage=None,
         Results will be saved under this name in the dataset, 
         with an 'original_answer_' prefix for passages that contain the original answer
         Defaults to 'provenance_indices'
+    qrels: dict
+        Stores relevant indices. Compatible with ranx.Qrels
     """
     # ignore from which paragraph the answer comes from
     # (might have been quicker to do this mapping in make_passage)
@@ -123,6 +125,7 @@ def find_relevant_item(item, passages, title2index, article2passage=None,
             passage_indices = [article_index]
         else:
             passage_indices = article2passage.get(article_index, [])
+        warnings.warn("searching for label instead of answer")
         o, r = find_relevant(
             passage_indices, 
             item['output']['original_answer'], 
@@ -132,18 +135,27 @@ def find_relevant_item(item, passages, title2index, article2passage=None,
         )
         original_relevant.extend(o)
         relevant.extend(r)
-    # TODO also save in Qrels files
     item[f'original_answer_{save_as}'] = original_relevant
     item[save_as] = relevant
+    qrels[item['id']] = {str(i): 1 for i in relevant}
     return item
 
 
-def find_relevant_dataset(dataset_path, **kwargs):
+def find_relevant_dataset(dataset_path, save_as='provenance_indices', **kwargs):
     """Loads dataset, maps it through find_relevant_item and saves it back."""
     dataset = load_from_disk(dataset_path)
-    # TODO save qrels in ranx format in dataset_path/qrels.json
+    kwargs['save_as'] = save_as
+    kwargs['qrels'] = {}
     dataset = dataset.map(find_relevant_item, fn_kwargs=kwargs)
-    dataset.save_to_disk(dataset_path)
+    dataset.save_to_disk(dataset_path)   
+    qrels = kwargs['qrels']
+    if isinstance(dataset, DatasetDict):
+        for split, subset in dataset.items():
+            qrel = ranx.Qrels({q_id: qrels[q_id] for q_id in subset['id']})
+            qrel.save(dataset_path/split/f"{save_as}.json")
+    else:
+        qrels = ranx.Qrels(qrels)
+        qrels.save(dataset_path/f"{save_as}.json")
 
 
 def fuse_qrels(qrels_paths):
@@ -346,7 +358,7 @@ if __name__ == '__main__':
         save_as = args['--save'] if args['--save'] is not None else 'provenance_indices'
         passages = passages.remove_columns([c for c in passages.column_names if c != reference_key])
         find_relevant_dataset(
-            args['<dataset>'], 
+            Path(args['<dataset>']), 
             passages=passages, 
             title2index=title2index, 
             article2passage=article2passage,
