@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-usage: html.py [-h] [--config CONFIG] [--print_config [={comments,skip_null,skip_default}+]] [--n N] [--width WIDTH] [--passages_path PASSAGES_PATH] [--wiki_path WIKI_PATH] [--search_run SEARCH_RUN]
-               [--other_search_run OTHER_SEARCH_RUN]
-               dataset_path output
+usage: html.py [-h] [--config CONFIG] [--print_config [={comments,skip_null,skip_default}+]] 
+[--n N] [--width WIDTH] [--passages_path PASSAGES_PATH] [--wiki_path WIKI_PATH] 
+[--search_run SEARCH_RUN] [--other_search_run OTHER_SEARCH_RUN] dataset_path output 
 
 options:
   -h, --help            Show this help message and exit.
@@ -13,7 +13,8 @@ options:
 Visualize dataset in HTML:
   dataset_path          (required, type: str)
   output                (required, type: str)
-  --n N                 Number of examples to output after shuffling. Defaults to all without shuffling. (type: Optional[int], default: null)
+  --n N                 Number of examples to output after shuffling. Defaults to all without
+                        shuffling. (type: Optional[int], default: null)
   --width WIDTH         Width of the image in HTML [default: 400]. (type: int, default: 400)
   --passages_path PASSAGES_PATH
                         (type: Optional[str], default: null)
@@ -22,7 +23,7 @@ Visualize dataset in HTML:
   --search_run SEARCH_RUN
                         (type: Optional[str], default: null)
   --other_search_run OTHER_SEARCH_RUN
-                        (type: Optional[str], default: null)        
+                        (type: Optional[str], default: null)
 """
 import json
 from tqdm import tqdm
