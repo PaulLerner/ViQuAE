@@ -107,6 +107,10 @@ def squad(predictions, references):
     ----------
     predictions: List[str]
     references: List[List[str]]
+    
+    Returns
+    -------
+    metrics: dict[str, float]
     """
 
     assert len(predictions) == len(references)
@@ -117,6 +121,31 @@ def squad(predictions, references):
 
     exact_match = exact_match / len(references)
     f1 = f1 / len(references)
+
+    return {"exact_match": exact_match, "f1": f1}
+
+
+def squad_per_question(predictions, references):
+    """
+    Returns the score of the metrics for each question instead of averaging like squad.
+    Keep different implementation because squad should in principle be loaded from datasets.
+    This should allow for stastitical significant testing downstream.
+    
+    Parameters
+    ----------
+    predictions: List[str]
+    references: List[List[str]]
+    
+    Returns
+    -------
+    metrics: dict[str, List[float]]
+    """
+
+    assert len(predictions) == len(references)
+    f1, exact_match = [], []
+    for prediction, ground_truths in zip(predictions, references):
+        exact_match.append(metric_max_over_ground_truths(exact_match_score, prediction, ground_truths))
+        f1.append(metric_max_over_ground_truths(f1_score, prediction, ground_truths))
 
     return {"exact_match": exact_match, "f1": f1}
 
