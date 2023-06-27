@@ -463,10 +463,12 @@ class QuestionAnsweringDataModule(DataModule):
     kb_format, image_kb_format: dict, optional
         see Dataset.set_format
         Overrides keep_kb_columns.
+    kb_input_key: str, optional
+        Defaults to 'passage'
     """
     def __init__(self, *args, kb, image_kb=None, search_key='search', 
                  filter_train_rels=False, keep_kb_columns=None, 
-                 kb_format=None, image_kb_format=None, **kwargs):
+                 kb_format=None, image_kb_format=None, kb_input_key='passage', **kwargs):
         super().__init__(*args, **kwargs)
         #TODO wiki.set_format('torch', ['clip-RN50'])
         self.kb = verbose_load_from_disk(kb)
@@ -477,7 +479,7 @@ class QuestionAnsweringDataModule(DataModule):
             self.kb = keep_columns(self.kb, keep_kb_columns)
         if image_kb is not None:
             self.image_kb = verbose_load_from_disk(image_kb)            
-            self.padding_passage = [{'passage': ''}]
+            self.padding_passage = [{self.kb_input_key: ''}]
             if image_kb_format is not None:
                 self.image_kb.set_format(**image_kb_format)
             elif keep_kb_columns is not None:
@@ -491,6 +493,7 @@ class QuestionAnsweringDataModule(DataModule):
         else:
             self.add_image = self.add_image_path
         self.filter_train_rels = filter_train_rels
+        self.kb_input_key = kb_input_key
         
     def setup(self, stage=None):
         super().setup(stage=stage)
@@ -562,9 +565,9 @@ class QuestionAnsweringDataModule(DataModule):
         # multimodal vs. text-only mode
         if self.image_kb is None:
             if relevant_passages:
-                relevant_passages = relevant_passages['passage']
+                relevant_passages = relevant_passages[self.kb_input_key]
             if irrelevant_passages:
-                irrelevant_passages = irrelevant_passages['passage']
+                irrelevant_passages = irrelevant_passages[self.kb_input_key]
         else:
             relevant_passages = self.add_image(list(relevant_passages))
             irrelevant_passages = self.add_image(list(irrelevant_passages))     
@@ -584,10 +587,10 @@ class QuestionAnsweringDataModule(DataModule):
         if len(passages) < 1:
             return passages
         features = ({"face_box", "face_embedding"} | self.image_formatter.image_features.image_embeddings_keys)
-        batch = {'index': [], 'passage': []}
+        batch = {'index': [], self.kb_input_key: []}
         for passage in passages:
             batch['index'].append(passage['index'])
-            batch['passage'].append(passage['passage'])
+            batch[self.kb_input_key].append(passage[self.kb_input_key])
         subset = self.image_kb.select(batch['index'])
         for feature in features:
             batch.setdefault(feature, subset[feature])
@@ -678,7 +681,7 @@ class BiEncoderDataModule(QuestionAnsweringDataModule):
         if self.image_kb is None:
             all_passages_text = all_passages
         else:
-            all_passages_text = [p['passage'] for p in all_passages]
+            all_passages_text = [p[self.kb_input_key] for p in all_passages]
         context_inputs_text = self.tokenizer(all_passages_text, **self.tokenization_kwargs)
         if self.passage_type_ids:
             context_inputs_text['token_type_ids'][context_inputs_text['attention_mask'].bool()] = 1
@@ -709,7 +712,7 @@ class JointBiEncoderAndClipDataModule(BiEncoderDataModule):
         for i, item in enumerate(items):
             relevant_passage, irrelevant_passage = self.get_training_passages(item)
             for p in relevant_passage:
-                relevant_titles.append(p['passage'][:p['passage'].find('[SEP]')-1])
+                relevant_titles.append(p[self.kb_input_key][:p[self.kb_input_key].find('[SEP]')-1])
             if len(relevant_passage) < 1:
                 relevant_passage = self.padding_passage
                 labels.append(self.trainer.lightning_module.loss_fct.ignore_index)
@@ -717,7 +720,7 @@ class JointBiEncoderAndClipDataModule(BiEncoderDataModule):
             else:
                 labels.append(i)
             for p in irrelevant_passage:
-                irrelevant_titles.append(p['passage'][:p['passage'].find('[SEP]')-1])
+                irrelevant_titles.append(p[self.kb_input_key][:p[self.kb_input_key].find('[SEP]')-1])
             if len(irrelevant_passage) < n_irrelevant_passages:
                 irrelevant_passage.extend(self.padding_passage*(n_irrelevant_passages-len(irrelevant_passage)))
                 irrelevant_titles.extend(['']*(n_irrelevant_passages-len(irrelevant_passage)))
@@ -734,7 +737,7 @@ class JointBiEncoderAndClipDataModule(BiEncoderDataModule):
         if self.image_kb is None:
             all_passages_text = all_passages
         else:
-            all_passages_text = [p['passage'] for p in all_passages]
+            all_passages_text = [p[self.kb_input_key] for p in all_passages]
         context_inputs_text = self.tokenizer(all_passages_text, **self.tokenization_kwargs)
         if self.passage_type_ids:
             context_inputs_text['token_type_ids'][context_inputs_text['attention_mask'].bool()] = 1
@@ -787,7 +790,7 @@ class ReRankerDataModule(QuestionAnsweringDataModule):
         
         # multimodal vs. text-only mode
         if self.image_kb is None:
-            passages = passages['passage']
+            passages = passages[self.kb_input_key]
         else:
             passages = self.add_image(list(passages))
         return passages
@@ -832,7 +835,7 @@ class ReRankerDataModule(QuestionAnsweringDataModule):
         if self.image_kb is None:
             passages_text = passages
         else:
-            passages_text = [p['passage'] for p in passages]
+            passages_text = [p[self.kb_input_key] for p in passages]
         questions_text = [q[self.input_key] for q in questions]
         batch = self.tokenizer(*(questions_text, passages_text), **self.tokenization_kwargs)
         batch = self.image_formatter.format_batch(batch, questions, passages)
@@ -908,7 +911,7 @@ class ReaderDataModule(QuestionAnsweringDataModule):
         
         # multimodal vs. text-only mode
         if self.image_kb is None:
-            passages = passages['passage']
+            passages = passages[self.kb_input_key]
         else:
             passages = self.add_image(list(passages))
         return passages, scores
@@ -1022,7 +1025,7 @@ class ReaderDataModule(QuestionAnsweringDataModule):
         if self.image_kb is None:
             passages_text = passages
         else:
-            passages_text = [p['passage'] for p in passages]
+            passages_text = [p[self.kb_input_key] for p in passages]
         questions_text = [q[self.input_key] for q in questions]
         batch = self.tokenizer(*(questions_text, passages_text), **self.tokenization_kwargs)
         answer_position = self.get_answer_position(batch, answers, answer_mask)            
