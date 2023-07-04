@@ -2,7 +2,7 @@
 Script and functions related to metrics and ranx.
 
 (for docopt) Usage:
-metrics.py relevant <dataset> <passages> <title2index> [<article2passage> --reference=<reference> --save=<save> --disable_caching]
+metrics.py relevant <dataset> <passages> <title2index> [<article2passage> --reference=<reference> --save=<save> --disable_caching --qid]
 metrics.py qrels <qrels>... --output=<path>
 metrics.py ranx --qrels=<path> [<run>... --output=<path> --filter=<path> --kwargs=<path> --cats=<path>]
 metrics.py (win|tie|loss) <metrics> [--metric=<metric>]
@@ -26,6 +26,8 @@ Positional arguments:
 Options:
     --reference=<reference> Name of the column that holds the text that should hold the answer. Defaults to 'passage'.    
     --save=<save>           Name of the column under which to save the relevant indices. Defaults to 'provenance_indices'.
+    --qid                   Search for relevant passages from wikidata_id field instead of the default wikipedia title (in provenance)
+                            title2index should then actually be qid2index
     --disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
     --output=<path>         1. qrels: output path to the JSON file
                             2. ranx: output path to the directory where to save metrics
@@ -47,10 +49,20 @@ from datasets import load_from_disk, DatasetDict
 import ranx
 
 from ..data.loading import answer_preprocess
+from ..data.infoseek import find_numbers, metric_numerical_range
 from ..data.utils import json_integer_keys
 
 
-def find_relevant(retrieved, original_answer, alternative_answers, kb, reference_key='passage'):
+def numerical_relevant(answer, passage):
+    answer_range = [float(a) for a in answer]
+    numerical_numbers = find_numbers(passage)
+    for number in numerical_numbers:
+        if metric_numerical_range(number, answer_range) == 1:
+            return True
+    return False
+
+
+def find_relevant(retrieved, original_answer, alternative_answers, kb, reference_key='passage', question_type='String'):
     """
     Parameters
     ----------
@@ -62,7 +74,9 @@ def find_relevant(retrieved, original_answer, alternative_answers, kb, reference
     reference_key: str, optional
         Used to get the reference field in kb
         Defaults to 'passage'
-
+    question_type: str, optional
+        Relevant for InfoSeek. One of {'String' (default), 'Numerical', 'Time'}.
+        
     Returns
     -------
     original_relevant, relevant: List[int]
@@ -71,6 +85,13 @@ def find_relevant(retrieved, original_answer, alternative_answers, kb, reference
     original_relevant, relevant = [], []
     for i in retrieved:
         i = int(i)
+        
+        if question_type == 'Numerical':
+            if numerical_relevant(alternative_answers, kb[i][reference_key]):
+                original_relevant.append(i)
+                relevant.append(i)
+                continue
+        
         # N. B. loading kb[reference_key] in-memory and passing a List[str]
         # might not be so efficient because it requires to load the whole KB instead of a small retrieved subset
         passage = answer_preprocess(kb[i][reference_key])
@@ -90,7 +111,7 @@ def find_relevant(retrieved, original_answer, alternative_answers, kb, reference
 
     
 def find_relevant_item(item, passages, title2index, article2passage=None, 
-                       reference_key='passage', save_as='provenance_indices', qrels={}):
+                       reference_key='passage', save_as='provenance_indices', qid=False, qrels={}):
     """
     Applies ``find_relevant`` with passages of articles linked to the question.
     
@@ -113,9 +134,10 @@ def find_relevant_item(item, passages, title2index, article2passage=None,
     qrels: dict
         Stores relevant indices. Compatible with ranx.Qrels
     """
-    # ignore from which paragraph the answer comes from
-    # (might have been quicker to do this mapping in make_passage)
-    titles = set(provenance['title'][0] for provenance in item['output']['provenance'])
+    if qid:
+        titles = {item['wikidata_id']}
+    else:
+        titles = set(provenance['title'][0] for provenance in item['output']['provenance'])
     original_relevant, relevant = [], []
     for title in titles:
         if title not in title2index:
@@ -125,13 +147,13 @@ def find_relevant_item(item, passages, title2index, article2passage=None,
             passage_indices = [article_index]
         else:
             passage_indices = article2passage.get(article_index, [])
-        warnings.warn("searching for label instead of answer")
         o, r = find_relevant(
             passage_indices, 
             item['output']['original_answer'], 
             item['output']['answer'], 
             passages, 
-            reference_key=reference_key
+            reference_key=reference_key,
+            question_type=item.get('question_type', 'String')
         )
         original_relevant.extend(o)
         relevant.extend(r)
@@ -357,13 +379,15 @@ if __name__ == '__main__':
         reference_key = args['--reference'] if args['--reference'] is not None else 'passage'
         save_as = args['--save'] if args['--save'] is not None else 'provenance_indices'
         passages = passages.remove_columns([c for c in passages.column_names if c != reference_key])
+        qid = args['--qid']
         find_relevant_dataset(
             Path(args['<dataset>']), 
             passages=passages, 
             title2index=title2index, 
             article2passage=article2passage,
             reference_key=reference_key,
-            save_as=save_as
+            save_as=save_as,
+            qid=qid,
         )
     
     elif args['qrels']:
