@@ -36,6 +36,7 @@ import optuna
 from .metrics import find_relevant_batch
 from .search import Searcher, format_qrels_indices
 
+# TODO https://github.com/castorini/pyserini/blob/master/docs/usage-interactive-search.md#how-do-i-configure-search
 
 class Objective:
     """

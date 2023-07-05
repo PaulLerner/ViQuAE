@@ -19,11 +19,13 @@ from docopt import docopt
 import json
 import re
 from pathlib import Path
+import enum
 
 import numpy as np
 from elasticsearch import Elasticsearch
 from datasets import load_from_disk, set_caching_enabled
 from datasets.search import ElasticSearchIndex, FaissIndex
+from pyserini.search.lucene import LuceneSearcher
 import ranx
 
 from .metrics import find_relevant
@@ -37,6 +39,12 @@ def L2norm(queries):
     return queries/norms
 
 
+class IndexKind(enum.Enum):
+    FAISS = 0
+    ES = 1
+    PYSERINI = 2
+    
+    
 class Index:
     """
     Dataclass to hold information about an index (either FaissIndex or ESIndex)
@@ -45,8 +53,7 @@ class Index:
     ----------
     key: str
         Associated key in the dataset where the queries are stored
-    es: bool, optional
-        Linked to an ESIndex or FaissIndex
+    kind: IndexKind, optional
     do_L2norm: bool, optional
         Whether to apply ``L2norm`` to the queries
         
@@ -55,14 +62,13 @@ class Index:
     Difficult to create a hierarchy like FaissIndex and ESIndex since public methods, 
     such as search_batch, are defined in Dataset and take as input the index name.
     """
-    def __init__(self, key, es=False, do_L2norm=False):
+    def __init__(self, key, kind=IndexKind.FAISS, do_L2norm=False):
         self.key = key
-        self.es = es
+        self.kind = kind
         self.do_L2norm = do_L2norm
         # TODO replace do_L2norm by
      #   In [43]:         projected = kb._indexes['sscd_disc_mixup'].faiss_index.sa_encode.sa_encode(foo)
     #...:         projected = np.frombuffer(projected, dtype=np.float32).reshape(1,512)
-
 
 
 class KnowledgeBase:
@@ -107,12 +113,28 @@ class KnowledgeBase:
         self.many2one = many2one
         for index_name, index_kwarg in index_kwargs.items():
             self.add_or_load_index(index_name=index_name, **index_kwarg)
-
+    
+    def pyserini_search_batch(self, index_name, queries, k=100):
+        scores_batch, indices_batch = [], []
+        searcher = self.indexes[index_name].searcher
+        for query in queries:
+            scores, indices = [], []
+            results = searcher.search(query)
+            for result in results[:k]:
+                scores.append(result.score)
+                indices.append(result.docid)
+            scores_batch.append(scores)
+            indices_batch.append(indices)
+        return scores_batch, indices_batch            
+            
     def search_batch(self, index_name, queries, k=100):
         """Pre-process queries according to index before computing self.dataset.search_batch"""
         index = self.indexes[index_name]
-        # N. B. should be equivalent to isinstance(self.dataset._indexes[index_name], FaissIndex)
-        if not index.es:
+        # search through pyserini or datasets
+        if index.kind == IndexKind.PYSERINI:
+            return self.pyserini_search_batch(index_name, queries, k=k)
+        # N. B. should be equivalent to isinstance(self.dataset._indexes[index_name], FaissIndex)        
+        elif index.kind == IndexKind.FAISS:
             queries = np.array(queries, dtype=np.float32)
             if index.do_L2norm:
                 queries = L2norm(queries)
@@ -143,7 +165,7 @@ class KnowledgeBase:
             indices_batch[i] = not_None_indices_batch[j]
         return scores_batch, indices_batch
 
-    def add_or_load_index(self, column, index_name=None, es=False, key=None, **index_kwarg):
+    def add_or_load_index(self, column=None, index_name=None, kind=None, key=None, **index_kwarg):
         """
         Calls either ``add_or_load_elasticsearch_index`` or ``add_or_load_faiss_index``according to es.
         Unless column is None, then it does not actually add the index. 
@@ -155,19 +177,27 @@ class KnowledgeBase:
             Name/key of the column that holds the pre-computed embeddings.
         index_name: str, optional
             Index identifier. Defaults to ``column``
-        es: bool, optional
+        kind: IndexKind, optional
         **index_kwarg:
             Passed to ``add_or_load_elasticsearch_index`` or ``add_or_load_faiss_index``
         """
+        if kind is None:
+            kind = IndexKind.FAISS
+        else:
+            kind = IndexKind[kind]
         if index_name is None:
             index_name = column
-        if es:
-            self.add_or_load_elasticsearch_index(column, index_name=index_name, **index_kwarg)
+        if kind==IndexKind.ES:
             do_L2norm = False
+            self.indexes[index_name] = Index(key=key, kind=kind, do_L2norm=do_L2norm)
+            self.add_or_load_elasticsearch_index(column, index_name=index_name, **index_kwarg)
+        elif kind==IndexKind.PYSERINI:
+            do_L2norm = False            
+            self.indexes[index_name] = Index(key=key, kind=kind, do_L2norm=do_L2norm)
+            self.add_or_load_pyserini_index(column, index_name=index_name, **index_kwarg)
         else:                
             do_L2norm = self.add_or_load_faiss_index(column, index_name=index_name, **index_kwarg)
-        index = Index(key=key, es=es, do_L2norm=do_L2norm)
-        self.indexes[index_name] = index
+            self.indexes[index_name] = Index(key=key, kind=kind, do_L2norm=do_L2norm)
 
     def add_or_load_faiss_index(self, column, index_name=None, load=False, save_path=None, string_factory=None, device=None, **kwargs):
         """
@@ -212,7 +242,14 @@ class KnowledgeBase:
             if save_path is not None:
                 self.dataset.save_faiss_index(index_name, save_path)
         return do_L2norm
-
+    
+    def add_or_load_pyserini_index(self, column=None, index_name=None, **kwargs):
+        if column is not None:
+            warnings.warn(f"Unused parameter column={column}")
+        if kwargs:
+            warnings.warn(f"Unused parameters {kwargs}")
+        self.indexes[index_name].searcher = LuceneSearcher(index_name)
+        
     def add_or_load_elasticsearch_index(self, column, index_name=None, load=False, **kwargs):
         """
         When loading, it will also check the settings and eventually update them (using put_settings)
