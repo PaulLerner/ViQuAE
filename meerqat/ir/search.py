@@ -356,6 +356,7 @@ class Searcher:
 
     def __call__(self, batch):
         """Search using all indexes of all KBs registered in self.kbs"""
+        question_types = batch.get('question_type', ['String']*len(batch['id']))
         for kb in self.kbs.values():
             for index_name, index in kb.indexes.items():
                 queries = batch[index.key]
@@ -365,7 +366,11 @@ class Searcher:
                     scores_batch, indices_batch = kb.search_batch_if_not_None(index_name, queries, k=self.k)
                 else:
                     scores_batch, indices_batch = kb.search_batch(index_name, queries, k=self.k)
-                for q_id, scores, indices, gt in zip(batch['id'], scores_batch, indices_batch, batch['output']):
+                for q_id, scores, indices, gt, question_type in zip(batch['id'], 
+                                                                    scores_batch, 
+                                                                    indices_batch, 
+                                                                    batch['output'], 
+                                                                    question_types):
                     self.runs[index_name].setdefault(q_id, {})
                     for score, i in zip(scores, indices):
                         if kb.index_mapping is not None:
@@ -399,7 +404,8 @@ class Searcher:
                             gt['original_answer'], 
                             gt['answer'], 
                             self.reference_kb, 
-                            reference_key=self.reference_key
+                            reference_key=self.reference_key,
+                            question_type=question_type
                         )
                         self.qrels[q_id].update({str(i): 1 for i in relevant})   
                         self.qnonrels[q_id].update({i: 0 for i in retrieved-self.qrels[q_id].keys()})
