@@ -345,7 +345,7 @@ class Searcher:
         self.runs = {}
         # FIXME maybe check if ES is needed before instantiating client?
         # this does not require ES to run anyway
-        es_client = Elasticsearch(timeout=request_timeout, **es_client_kwargs)
+        es_client = Elasticsearch("https://localhost:9200", timeout=request_timeout, **es_client_kwargs)
         # load KBs used to search and index them
         resolved_kb_paths = {}
         for kb_path, kb_kwarg in kb_kwargs.items():
