@@ -170,7 +170,7 @@ class Fusion:
         output: Optional[str] = None,
         defmin: Optional[bool] = False
     ):
-        if isinstance(qrels, Qrels):
+        if isinstance(qrels, Qrels) or qrels is None:
             self.qrels = qrels
         elif isinstance(qrels, (str, Path)):
             self.qrels = Qrels.from_file(qrels)
