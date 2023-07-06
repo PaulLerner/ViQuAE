@@ -489,6 +489,10 @@ def dataset_search(dataset, k=100, metric_save_path=None, map_kwargs={}, **kwarg
     if metric_save_path is not None:
         metric_save_path.mkdir(exist_ok=True)
         searcher.qrels.save(metric_save_path/"qrels.json")
+        if searcher.qnonrels is not None:
+            with open(metric_save_path/"qnonrels.json", 'wt') as file:
+                json.dump(searcher.qnonrels, file)
+
         report.save(metric_save_path/"metrics.json")
         with open(metric_save_path/"metrics.tex", 'wt') as file:
             file.write(report.to_latex())
