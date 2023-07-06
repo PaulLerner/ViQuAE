@@ -114,17 +114,15 @@ class KnowledgeBase:
         for index_name, index_kwarg in index_kwargs.items():
             self.add_or_load_index(index_name=index_name, **index_kwarg)
     
-    def pyserini_search_batch(self, index_name, queries, k=100):
-        scores_batch, indices_batch = [], []
-        searcher = self.indexes[index_name].searcher
-        for query in queries:
-            scores, indices = [], []
-            results = searcher.search(query)
-            for result in results[:k]:
-                scores.append(result.score)
-                indices.append(result.docid)
-            scores_batch.append(scores)
-            indices_batch.append(indices)
+    def pyserini_search_batch(self, index_name, queries, k=100, threads=10):
+        qids = [str(i) for i in range(len(queries))]
+        results_batch = self.indexes[index_name].searcher.batch_search(queries, qids, k=k, threads=threads)
+        scores_batch, indices_batch = [[] for _ in range(len(queries))], [[] for _ in range(len(queries))]
+        for i, results in results_batch.items():
+            i = int(i)
+            for result in results:
+                scores_batch[i].append(result.score)
+                indices_batch[i].append(result.docid)
         return scores_batch, indices_batch            
             
     def search_batch(self, index_name, queries, k=100):
@@ -243,12 +241,22 @@ class KnowledgeBase:
                 self.dataset.save_faiss_index(index_name, save_path)
         return do_L2norm
     
-    def add_or_load_pyserini_index(self, column=None, index_name=None, **kwargs):
+    def add_or_load_pyserini_index(self, column=None, index_name=None, save_path=None, k1=0.9, b=0.4):
+        """
+        Parameters
+        ----------
+        column: placeholder
+        index_name: str
+        save_path: str
+        k1 : float
+            BM25 k1 parameter. (Default from pyserini)
+        b : float
+            BM25 b parameter. (Default from pyserini)
+        """
         if column is not None:
             warnings.warn(f"Unused parameter column={column}")
-        if kwargs:
-            warnings.warn(f"Unused parameters {kwargs}")
-        self.indexes[index_name].searcher = LuceneSearcher(index_name)
+        self.indexes[index_name].searcher = LuceneSearcher(save_path)
+        self.indexes[index_name].searcher.set_bm25(k1=k1, b=b)
         
     def add_or_load_elasticsearch_index(self, column, index_name=None, load=False, **kwargs):
         """
