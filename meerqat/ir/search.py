@@ -532,5 +532,5 @@ if __name__ == '__main__':
     dataset.set_format(**format_kwargs)
 
     k = int(args['--k'])
-
-    dataset_search(dataset, k, metric_save_path=Path(args['--metrics']), **config)
+    metric_save_path = Path(args['--metrics']) if args['--metrics'] is not None else None
+    dataset_search(dataset, k, metric_save_path=metric_save_path, **config)
