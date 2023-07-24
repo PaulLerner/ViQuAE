@@ -319,7 +319,7 @@ Fine-tuning on ViQuAE
 We use exactly the same hyperparameters as for pre-training.
 
 Once you’ve decided on a TriviaQA checkpoint, (step 13984 in our case) 
-you need to split it in two with ``python -m meerqat.train.save_ptm experiments/dpr/triviaqa/config.yaml --ckpt_path=experiments/dpr/triviaqa/lightning_logs/version_0/step=13984.ckpt``, 
+you need to split it in two with ``python -m meerqat.train.save_ptm experiments/dpr/triviaqa/config.yaml experiments/dpr/triviaqa/lightning_logs/version_0/step=13984.ckpt``, 
 then set the path as in the provided config file.
 **Do not** simply set "--ckpt_path=/path/to/triviaqa/pretraing" else
 the trainer will also load the optimizer and other training stuffs.
@@ -383,8 +383,9 @@ We have tried to fine-tune DPR with the same hyperparameters and found no signif
 Notice also that now we need a second KB that holds the pre-computed image features (viquae_wikipedia_recat)
 
 You can use the provided test config to split the BiEncoder:
-``python -m meerqat.train.save_ptm experiments/ict/ilf/config.yaml --ckpt_path=experiments/ict/ilf/lightning_logs/version_0/step=15600.ckpt``
-``python -m meerqat.train.save_ptm experiments/ict/eca/config.yaml --ckpt_path=experiments/ict/eca/lightning_logs/version_0/step=8200.ckpt``
+``python -m meerqat.train.save_ptm experiments/ict/ilf/config.yaml experiments/ict/ilf/lightning_logs/version_0/step=15600.ckpt``
+
+``python -m meerqat.train.save_ptm experiments/ict/eca/config.yaml experiments/ict/eca/lightning_logs/version_0/step=8200.ckpt``
 
 If you want to start from the pre-trained models we provide, use ``"PaulLerner/<model>"`` in the config files,
 e.g. ``"question_model_name_or_path": "PaulLerner/question_eca_l6_wit_mict"``
@@ -720,18 +721,10 @@ paper, set ``seed_everything: <int>`` in the config. We used
 seeds ``[0, 1, 2, 3, 42]``. The expected output provided is with
 ``seed=1``.
 
-Note that the validation is done using the same ratio of relevant and
-irrelevant passages (8:16) as training while test is done using the
-top-24 IR results. That is why you should expect a performance gap
-between validation and test.
-
 
 .. code:: sh
-    
-   # to save the predictions along with the metrics
-   python -m meerqat.train.trainer predict --config=experiments/rc/viquae/config.yaml
-   # to only compute metrics
-   python -m meerqat.train.trainer test --config=experiments/rc/viquae/config.yaml
+
+   python -m meerqat.train.trainer test --config=experiments/rc/viquae/config.yaml --ckpt_path=experiments/rc/viquae/version_1/checkpoints/step=3600.ckpt
 
 
 To reproduce the oracle results: 
