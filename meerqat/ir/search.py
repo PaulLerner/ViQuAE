@@ -319,15 +319,13 @@ class Searcher:
         Passed to ranx.compare. Defaults to "mrr", "precision", "hit_rate" at ranks [1, 5, 10, 20, 100]
     do_fusion: bool, optional
         Whether to fuse results of the indexes. Defaults to True if their are multiple indexes.
-    keep_kb_columns: list, optional
-        Keep only these features in reference_kb (defaults to keep everything)
     qnonrels: str, optional
         Path towards a JSON collection of irrelevant documents. Used as cache to make search faster.
         Defaults to look for all results.
     """
     def __init__(self, kb_kwargs, k=100, reference_kb_path=None, reference_key='passage', 
                  qrels=None, request_timeout=1000, es_client_kwargs={}, fusion_kwargs={}, 
-                 metrics_kwargs={}, do_fusion=None, keep_kb_columns=None, qnonrels=None):
+                 metrics_kwargs={}, do_fusion=None, qnonrels=None):
         self.k = k
         self.kbs = {}
         if qrels is None:
@@ -376,16 +374,10 @@ class Searcher:
                           "-> will not be able to extend the annotation coverage "
                           "so results should be interpreted carefully.\n")
             self.reference_kb = None
-        # reference KB already loaded in KBs used to search
-        elif reference_kb_path in self.kbs and self.kbs[reference_kb_path].dataset is not None:
-            self.reference_kb = self.kbs[reference_kb_path].dataset
-        # reference-only KB (not used to search) so we have to load it
+        # (re)load reference KB so we can remove columns and make find_relevant faster
         else:
             self.reference_kb = load_from_disk(reference_kb_path)
-            # reference-only so we do not need any other features
             self.reference_kb = self.reference_kb.remove_columns([c for c in self.reference_kb.column_names if c != reference_key])
-        if keep_kb_columns is not None:
-            self.reference_kb = self.reference_kb.remove_columns([c for c in self.reference_kb.column_names if c not in keep_kb_columns])
             
         # N. B. the 'reference_kb' term is not so appropriate
         # it is not an instance of KnowledgeBase but Dataset !
