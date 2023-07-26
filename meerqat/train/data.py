@@ -16,6 +16,8 @@ import ranx
 import pytorch_lightning as pl
 
 from ..data.loading import get_pretrained, verbose_load_from_disk, load_image
+from ..ir.metrics import find_valid_numerical_answers
+from ..data.infoseek import QuestionType
 from ..models.utils import debug_shape
 
 
@@ -1004,12 +1006,21 @@ class ReaderDataModule(QuestionAnsweringDataModule):
             else:
                 original_answer = item['output']['original_answer']
                 answer = item['output']['answer']
-            answer_strings.extend([answer]*self.M)
             # beware this create a discrepancy between answer_strings and answers (tokens)
             # evaluation should always be done using answer_strings
-            if self.train_original_answer_only:
-                answer = [original_answer]
-            else:
+            if QuestionType[item.get('question_type', 'String')] == QuestionType.Numerical:
+                if self.image_kb is None:
+                    passages_text = passage
+                else:
+                    passages_text = [p[self.kb_input_key] for p in passage]
+                answer = find_valid_numerical_answers(answer, passages_text)
+                answer = answer if answer else ['']
+                answer_strings.extend([answer]*self.M)
+            elif self.train_original_answer_only:
+                answer_strings.extend([answer]*self.M)
+                answer = [original_answer]            
+            else:                
+                answer_strings.extend([answer]*self.M)
                 # avoid processing the same answer twice
                 if self.tokenizer.do_lower_case:
                     original_answer = original_answer.lower()
@@ -1028,7 +1039,7 @@ class ReaderDataModule(QuestionAnsweringDataModule):
             passages_text = [p[self.kb_input_key] for p in passages]
         questions_text = [q[self.input_key] for q in questions]
         batch = self.tokenizer(*(questions_text, passages_text), **self.tokenization_kwargs)
-        answer_position = self.get_answer_position(batch, answers, answer_mask)            
+        answer_position = self.get_answer_position(batch, answers, answer_mask)   
         batch = self.image_formatter.format_batch(batch, questions, passages)
         batch.update(answer_position)
         batch['answer_strings'] = answer_strings

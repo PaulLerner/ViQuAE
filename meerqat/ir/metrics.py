@@ -62,6 +62,17 @@ def numerical_relevant(answer, passage):
     return False
 
 
+def find_valid_numerical_answers(answer, passages):
+    valid_numerical_answers = []
+    answer_range = [float(a) for a in answer]
+    for passage in passages:
+        numerical_numbers = find_numbers(passage)
+        for number in numerical_numbers:
+            if metric_numerical_range(number, answer_range) == 1:
+                valid_numerical_answers.append(str(number))
+    return valid_numerical_answers
+
+
 def find_relevant(retrieved, original_answer, alternative_answers, kb, reference_key='passage', question_type=QuestionType.String):
     """
     Parameters
