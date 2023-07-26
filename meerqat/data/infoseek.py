@@ -7,6 +7,8 @@ import json
 from typing import Any, Dict, Generator, List, Tuple, Union
 import enum
 
+from jsonargparse import CLI
+
 from ..train.metrics import exact_match_score, metric_max_over_ground_truths
 
 
@@ -389,3 +391,17 @@ def load_jsonl(path: str) -> List[Dict[str, Any]]:
         for line in file:
             data.append(json.loads(line))
     return data
+
+
+def main(prediction_path: str, reference_path: str):
+    result = evaluate(prediction_path, reference_path)
+    final_score = result["final_score"]
+    unseen_question_score = result["unseen_question_score"]["score"]
+    unseen_entity_score = result["unseen_entity_score"]["score"]
+    print(f"final score: {final_score}")
+    print(f"unseen question score: {unseen_question_score}")
+    print(f"unseen entity score: {unseen_entity_score}")
+    
+    
+if __name__ == "__main__":
+    CLI(main)
