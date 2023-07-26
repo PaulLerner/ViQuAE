@@ -49,7 +49,7 @@ from datasets import load_from_disk, DatasetDict
 import ranx
 
 from ..data.loading import answer_preprocess
-from ..data.infoseek import find_numbers, metric_numerical_range
+from ..data.infoseek import find_numbers, metric_numerical_range, QuestionType
 from ..data.utils import json_integer_keys
 
 
@@ -62,7 +62,7 @@ def numerical_relevant(answer, passage):
     return False
 
 
-def find_relevant(retrieved, original_answer, alternative_answers, kb, reference_key='passage', question_type='String'):
+def find_relevant(retrieved, original_answer, alternative_answers, kb, reference_key='passage', question_type=QuestionType.String):
     """
     Parameters
     ----------
@@ -74,8 +74,8 @@ def find_relevant(retrieved, original_answer, alternative_answers, kb, reference
     reference_key: str, optional
         Used to get the reference field in kb
         Defaults to 'passage'
-    question_type: str, optional
-        Relevant for InfoSeek. One of {'String' (default), 'Numerical', 'Time'}.
+    question_type: QuestionType, optional
+        Relevant for InfoSeek. Defaults to String.
         
     Returns
     -------
@@ -86,7 +86,7 @@ def find_relevant(retrieved, original_answer, alternative_answers, kb, reference
     for i in retrieved:
         i = int(i)
         
-        if question_type == 'Numerical':
+        if question_type == QuestionType.Numerical:
             if numerical_relevant(alternative_answers, kb[i][reference_key]):
                 original_relevant.append(i)
                 relevant.append(i)
@@ -153,7 +153,7 @@ def find_relevant_item(item, passages, title2index, article2passage=None,
             item['output']['answer'], 
             passages, 
             reference_key=reference_key,
-            question_type=item.get('question_type', 'String')
+            question_type=item.get('question_type', QuestionType.String)
         )
         original_relevant.extend(o)
         relevant.extend(r)

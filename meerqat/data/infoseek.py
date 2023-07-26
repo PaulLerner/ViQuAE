@@ -1,10 +1,19 @@
 # -*- coding: utf-8 -*-
+# mostly taken from https://github.com/edchengg/infoseek_eval/blob/main/infoseek_eval.py
+# slightly refactored using meerqat.train.metrics and enum
 
 import re
 import json
 from typing import Any, Dict, Generator, List, Tuple, Union
+import enum
 
 from ..train.metrics import exact_match_score, metric_max_over_ground_truths
+
+
+class QuestionType(enum.Enum):
+    String = 0
+    Numerical = 1
+    Time = 2
 
 
 def in_range(number: float, range_list: Tuple[float, float]) -> bool:
@@ -231,11 +240,11 @@ def evaluation(
         example = qid2example[quid]
         pred = p['prediction']
         answer = example['answer_eval']
-        question_type = example['question_type'].lower()
-        if question_type == 'time':
+        question_type = QuestionType[example['question_type']]
+        if question_type == QuestionType.Time:
             time_pred.append(pred)
             time_answer.append(answer)
-        elif question_type == 'numerical':
+        elif question_type == QuestionType.Numerical:
             pred_range = process_numerical_answer(pred)
             answer_range = [float(a) for a in answer]
             quantity_pred.append(pred_range)
@@ -358,8 +367,8 @@ def prepare_qid2example(
     qid2example = dict()
     for r in reference:
         qid = r['data_id']
-        q_type = r['question_type'].lower()
-        if q_type == 'numerical':
+        q_type = QuestionType[r['question_type']]
+        if q_type == QuestionType.Numerical:
         # Process numerical answer:
         # "answer_eval": [{"wikidata": 1.0, "range": [0.9, 1.1]}]
         # --> "answer_eval": [0.9, 1.1]

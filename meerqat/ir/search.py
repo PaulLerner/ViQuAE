@@ -31,6 +31,7 @@ import ranx
 from .metrics import find_relevant
 from .fuse import Fusion
 from ..data.utils import json_integer_keys
+from ..data.infoseek import QuestionType
 
 
 def L2norm(queries):
@@ -393,7 +394,7 @@ class Searcher:
 
     def __call__(self, batch):
         """Search using all indexes of all KBs registered in self.kbs"""
-        question_types = batch.get('question_type', ['String']*len(batch['id']))
+        question_types = batch.get('question_type', [QuestionType.String]*len(batch['id']))
         for kb in self.kbs.values():
             for index_name, index in kb.indexes.items():
                 queries = batch[index.key]
