@@ -394,7 +394,7 @@ class Searcher:
 
     def __call__(self, batch):
         """Search using all indexes of all KBs registered in self.kbs"""
-        question_types = batch.get('question_type', [QuestionType.String]*len(batch['id']))
+        question_types = [QuestionType[question_type] for question_type in batch.get('question_type', ['String']*len(batch['id']))]
         for kb in self.kbs.values():
             for index_name, index in kb.indexes.items():
                 queries = batch[index.key]

@@ -153,7 +153,7 @@ def find_relevant_item(item, passages, title2index, article2passage=None,
             item['output']['answer'], 
             passages, 
             reference_key=reference_key,
-            question_type=item.get('question_type', QuestionType.String)
+            question_type=QuestionType[item.get('question_type', 'String')]
         )
         original_relevant.extend(o)
         relevant.extend(r)
