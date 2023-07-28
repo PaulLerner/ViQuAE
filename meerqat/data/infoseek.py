@@ -6,9 +6,11 @@ import re
 import json
 from typing import Any, Dict, Generator, List, Tuple, Union
 import enum
-
 from jsonargparse import CLI
 
+import pandas as pd
+
+from datasets import load_from_disk
 from ..train.metrics import exact_match_score, metric_max_over_ground_truths
 
 
@@ -319,18 +321,20 @@ def evaluate_infoseek(
 
 
 def evaluate_infoseek_full(
-    predictions: List[List[Dict[str, Any]]],
-    qid2examples: List[Dict[str, Dict[str, Any]]],
+    predictions: Dict[str,List[Dict[str, Any]]],
+    qid2example: Dict[str, Dict[str, Any]],
     ) -> Dict[str, Any]:
-        infoseek_score = []
-        for pred, qid2example in zip(predictions, qid2examples):
+        infoseek_score = {}
+        for split, pred in predictions.items():
             split_score = evaluate_infoseek(pred, qid2example)
-            infoseek_score.append(split_score)
-        split_scores = [score['score'] for score in infoseek_score]
+            split_score['split'] = split
+            infoseek_score[split] = split_score
+        print(pd.DataFrame(infoseek_score.values()).to_latex())
+        split_scores = [score['score'] for score in infoseek_score.values()]
         return {
             'final_score': round(harmonic_mean(*split_scores), 2),
-            'unseen_question_score': infoseek_score[0],
-            'unseen_entity_score': infoseek_score[1],
+            'unseen_question_score': infoseek_score['unseen_question'],
+            'unseen_entity_score': infoseek_score['unseen_entity'],
         }
 
 def evaluate(prediction_path: str, reference_path: str) -> Dict[str, Any]:
@@ -344,22 +348,34 @@ def evaluate(prediction_path: str, reference_path: str) -> Dict[str, Any]:
         Dict[str, Any]: A dictionary containing the final scores for time,
         quantity, entity, and overall predictions.
     """
-    predictions = load_jsonl(prediction_path)
-    reference = load_jsonl(reference_path)
-    qid2example = prepare_qid2example(reference)
+    if reference_path.endswith('jsonl'):
+        reference = load_jsonl(reference_path)
+        qid2example = prepare_qid2example(reference)
+    else:
+        reference = load_from_disk(reference_path)
+        reference = reference.remove_columns([c for c in reference.column_names if c not in {"id", "output", "data_split", "question_type"}])
+        qid2example = {}
+        for item in reference:
+            item['answer_eval'] = item['output']['answer']
+            qid2example[item['id']] = item
+    if prediction_path.endswith('jsonl'):
+        predictions = load_jsonl(prediction_path)
+    else:
+        with open(prediction_path, 'rt') as file:
+            predictions = json.load(file)
+        predictions = [{"data_id": q_id, "prediction": p} for q_id, p in zip(reference['id'], predictions)]
     # split predictions into two splits: unseen_question and unseen_entity
-    unseen_question = []
-    unseen_entity = []
+    splits = dict(unseen_question = [], unseen_entity = [])
     for pred in predictions:
         data_id = pred['data_id']
         if data_id in qid2example:
             if qid2example[data_id]['data_split'].endswith('unseen_question'):
-                unseen_question.append(pred)
+                splits['unseen_question'].append(pred)
             else:
-                unseen_entity.append(pred)
+                splits['unseen_entity'].append(pred)
         else:
             pass
-    return evaluate_infoseek_full([unseen_question, unseen_entity], [qid2example, qid2example])
+    return evaluate_infoseek_full(splits, qid2example)
     
 
 def prepare_qid2example(
