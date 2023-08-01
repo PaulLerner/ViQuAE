@@ -237,8 +237,8 @@ distribution <https://pytorch.org/get-started/locally/>`__ (preferably
 in a virtual environment)
 
 Also install
-`ElasticSearch <https://www.elastic.co/guide/en/elastic-stack-get-started/current/get-started-elastic-stack.html#install-elasticsearch>`__
-(and run it) if you want to do sparse retrieval.
+`ElasticSearch <https://www.elastic.co/fr/downloads/elasticsearch>`__
+(and run it) or `pyserini <https://github.com/castorini/pyserini>`__ if you want to do sparse retrieval.
 
 The rest should be installed using ``pip``:
 
