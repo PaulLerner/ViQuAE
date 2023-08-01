@@ -1003,30 +1003,31 @@ class ReaderDataModule(QuestionAnsweringDataModule):
                 original_answer = item['wikidata_label']
                 # FIXME: maybe train on aliases of the entity?
                 answer = [original_answer]
+                answer_strings.extend([answer]*self.M)
             else:
                 original_answer = item['output']['original_answer']
                 answer = item['output']['answer']
-            # beware this create a discrepancy between answer_strings and answers (tokens)
-            # evaluation should always be done using answer_strings
-            if QuestionType[item.get('question_type', 'String')] == QuestionType.Numerical:
-                if self.image_kb is None:
-                    passages_text = passage
-                else:
-                    passages_text = [p[self.kb_input_key] for p in passage]
-                answer = find_valid_numerical_answers(answer, passages_text)
-                answer = answer if answer else ['']
-                answer_strings.extend([answer]*self.M)
-            elif self.train_original_answer_only:
-                answer_strings.extend([answer]*self.M)
-                answer = [original_answer]            
-            else:                
-                answer_strings.extend([answer]*self.M)
-                # avoid processing the same answer twice
-                if self.tokenizer.do_lower_case:
-                    original_answer = original_answer.lower()
-                    answer = list({a.lower() for a in answer} - {original_answer})
-                # but ensure the original answer is still the first to be processed
-                answer = [original_answer] + answer
+                # beware this create a discrepancy between answer_strings and answers (tokens)
+                # evaluation should always be done using answer_strings
+                if QuestionType[item.get('question_type', 'String')] == QuestionType.Numerical:
+                    if self.image_kb is None:
+                        passages_text = passage
+                    else:
+                        passages_text = [p[self.kb_input_key] for p in passage]
+                    answer = find_valid_numerical_answers(answer, passages_text)
+                    answer = answer if answer else ['']
+                    answer_strings.extend([answer]*self.M)
+                elif self.train_original_answer_only:
+                    answer_strings.extend([answer]*self.M)
+                    answer = [original_answer]            
+                else:                
+                    answer_strings.extend([answer]*self.M)
+                    # avoid processing the same answer twice
+                    if self.tokenizer.do_lower_case:
+                        original_answer = original_answer.lower()
+                        answer = list({a.lower() for a in answer} - {original_answer})
+                    # but ensure the original answer is still the first to be processed
+                    answer = [original_answer] + answer
             answer = self.tokenizer(answer,
                                     add_special_tokens=False,
                                     return_token_type_ids=False,
