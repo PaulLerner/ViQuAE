@@ -83,17 +83,11 @@ code snippet:
    
    set_caching_enabled(False)
    kb = load_from_disk('data/viquae_passages/')
-   dataset = load_from_disk('data/viquae_dataset/')
+   dataset = load_from_disk('data/viquae_dataset/train')
    # to reproduce the results of the papers:
    # - use DPR+Image as IR to train the reader or fine-tune ECA/ILF
    # - use BM25 as IR to train DPR (then save in 'BM25_provenance_indices'/'BM25_irrelevant_indices')
-   # you should union runs from all splits (or run it only for a subset of the dataset)
-   run_train = Run.from_file('/path/to/bm25/or/multimodal_ir_train.trec')
-   run_dev = Run.from_file('/path/to/bm25/or/multimodal_ir_dev.trec')
-   run_test = Run.from_file('/path/to/bm25/or/multimodal_ir_test.trec')
-   run = run_train.run
-   run.update(run_dev.run)
-   run.update(run_test.run)
+   run = Run.from_file('/path/to/bm25/or/multimodal_ir_train.trec')
 
    def keep_relevant_search_wrt_original_in_priority(item, kb):
        indices = list(map(int, run[item['id']]))
