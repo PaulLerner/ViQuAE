@@ -775,14 +775,24 @@ class Reader(Trainee):
                 metrics[k] = sum(v)/len(v)
             else:
                 metrics[k] = None
-        root_log = Path(self.trainer.log_dir)
-        with open(root_log/'predictions.json', 'wt') as file:
-            json.dump(predictions, file)
-        if weighted_predictions:
-            with open(root_log/'weighted_predictions.json', 'wt') as file:
-                json.dump(weighted_predictions, file)
-        return {'metrics': metrics}
-     
+        return {'metrics': metrics, 'predictions': predictions, 'weighted_predictions': weighted_predictions}
+    
+    def test_epoch_end(self, *args, **kwargs):
+        """eval_epoch_end and log"""
+        eval_output = self.eval_epoch_end(*args, **kwargs)
+        metrics = eval_output['metrics']
+        print(to_latex(metrics))
+        log_dir = Path(self.trainer.log_dir)
+        for k, v in metrics.items():
+            self.log(f"test/{k}", v)
+        with open(log_dir/'metrics.json', 'wt') as file:
+            json.dump(metrics, file)
+        with open(log_dir/'predictions.json', 'wt') as file:
+            json.dump(eval_output['predictions'], file)
+        if eval_output['weighted_predictions']:
+            with open(log_dir/'weighted_predictions.json', 'wt') as file:
+                json.dump(eval_output['weighted_predictions'], file)
+            
     def M_tuning(self, all_start_log_probs, all_end_log_probs, all_input_ids, all_answer_strings, all_passage_scores=None):
         N, M, L = all_input_ids.shape
         metrics_wrt_m = []
