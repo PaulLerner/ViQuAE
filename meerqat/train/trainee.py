@@ -22,7 +22,7 @@ from ..data.utils import to_latex
 from ..models.qa import batched_get_best_spans
 from ..models.outputs import BiEncoderOutput, JointBiEncoderAndClipOutput, JointMonoAndCrossModalOutput
 from .optim import LinearLRWithWarmup
-from .metrics import retrieval, squad, get_run
+from .metrics import batch_retrieval, squad, get_run, accumulate_batch_metrics, retrieval
 from .data import ReRankerDataModule, pad_and_cat
 
 
@@ -46,9 +46,11 @@ class Trainee(pl.LightningModule):
     betas: Tuple[float], optional    
     warmup_steps: int, optional
         Defaults to no warm-up
+    output_cpu: bool, optional
     """
     def __init__(self, *args, freeze_regex=None, gradient_checkpointing=False,
-                 warmup_steps=0, lr=2e-5, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.0, **kwargs):
+                 warmup_steps=0, lr=2e-5, betas=(0.9, 0.999), eps=1e-08, 
+                 weight_decay=0.0, output_cpu=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.freeze_regex = freeze_regex
         self.gradient_checkpointing = gradient_checkpointing
@@ -61,6 +63,7 @@ class Trainee(pl.LightningModule):
         self.eps = eps
         self.weight_decay = weight_decay        
         self.param_groups = self.parameters()
+        self.output_cpu = output_cpu
         
     # should be called at the end of each subclass __init__
     def post_init(self):
@@ -91,13 +94,17 @@ class Trainee(pl.LightningModule):
         """Step and log validation metrics"""
         outputs = self.step(batch, batch_idx)
         self.log("eval/loss", outputs['loss'])
-        return batched_cpu(outputs)
+        if self.output_cpu:
+            return batched_cpu(outputs)
+        return outputs
     
     def test_step(self, batch, batch_idx):
         """Step and log test metrics"""
         outputs = self.step(batch, batch_idx)
         self.log("test/loss", outputs['loss'])
-        return batched_cpu(outputs)
+        if self.output_cpu:
+            return batched_cpu(outputs)
+        return outputs
     
     def eval_epoch_end(self, eval_outputs):
         warnings.warn("eval_epoch_end is not implemented.")
@@ -204,12 +211,14 @@ class CrossModal(Trainee):
                 f"labels will have no effect."
             )
         outputs = self(**batch, return_loss=True, return_dict=True)
-        return {k: outputs[k] for k in ['loss', 'logits_per_image', 'logits_per_text']}
+        logits_per_image = outputs['logits_per_image']
+        labels = torch.arange(logits_per_image.shape[1], dtype=torch.long)
+        metrics = batch_retrieval(logits_per_image, labels)
+        return {'loss': outputs['loss'], 'metrics': metrics}
     
     def eval_epoch_end(self, eval_outputs):
-        for batch in eval_outputs:
-            batch['labels'] = torch.arange(batch['logits_per_image'].shape[1], dtype=torch.long)
-        return {'metrics': retrieval(eval_outputs, output_key='logits_per_image')}
+        metrics = accumulate_batch_metrics([output['metrics'] for output in eval_outputs])
+        return {'metrics': metrics}
     
     def save_pretrained(self, ckpt_path, bert=False):
         assert not bert
@@ -276,7 +285,6 @@ class JointMonoAndCrossModal(Trainee):
             context_images=context_images,
             context_titles=context_titles
         )
-
         
     def step(self, inputs, _):       
         # TODO multi-gpu
@@ -291,20 +299,20 @@ class JointMonoAndCrossModal(Trainee):
         log_probs = self.log_softmax(similarities)
         loss = self.loss_fct(log_probs, local_labels)
         
+        # compute metrics
+        metrics = batch_retrieval(log_probs, local_labels, ignore_index=self.loss_fct.ignore_index)
+        image_metrics = batch_retrieval(image_similarities, local_labels, ignore_index=self.loss_fct.ignore_index)
+        cm_metrics = batch_retrieval(cm_similarities, local_labels, ignore_index=self.loss_fct.ignore_index)
         return dict(
-            loss=loss, log_probs=log_probs, labels=local_labels,
-            image_similarities=image_similarities,
-            cm_similarities=cm_similarities
+            loss=loss, metrics=metrics,
+            image_metrics=image_metrics,
+            cm_metrics=cm_metrics
         )   
         
     def eval_epoch_end(self, eval_outputs):
-        metrics = retrieval(eval_outputs, ignore_index=self.loss_fct.ignore_index)
+        metrics = accumulate_batch_metrics([output['metrics'] for output in eval_outputs])
         for model in ['image', 'cm']:
-            model_metrics = retrieval(
-                eval_outputs, 
-                ignore_index=self.loss_fct.ignore_index, 
-                output_key=f"{model}_similarities"
-            )
+            model_metrics = accumulate_batch_metrics([output[f"{model}_metrics"] for output in eval_outputs])
             metrics.update({f"{model}_{k}": v for k, v in model_metrics.items()})
         return {'metrics': metrics}
     
@@ -437,10 +445,12 @@ class BiEncoder(Trainee):
         log_probs = self.log_softmax(similarities)
 
         loss = self.loss_fct(log_probs, global_labels)
-        return dict(loss=loss, log_probs=log_probs, labels=global_labels)   
+        metrics = batch_retrieval(log_probs, global_labels, ignore_index=self.loss_fct.ignore_index)
+        return dict(loss=loss, metrics=metrics)   
     
     def eval_epoch_end(self, eval_outputs):
-        return {'metrics': retrieval(eval_outputs, ignore_index=self.loss_fct.ignore_index)}
+        metrics = accumulate_batch_metrics([output['metrics'] for output in eval_outputs])
+        return {'metrics': metrics}
     
     def save_pretrained(self, ckpt_path, bert=False):
         question_model = self.question_model
@@ -548,20 +558,20 @@ class JointBiEncoderAndClip(BiEncoder):
         log_probs = self.log_softmax(similarities)
         loss = self.loss_fct(log_probs, local_labels)
         
+        metrics = batch_retrieval(log_probs, local_labels, ignore_index=self.loss_fct.ignore_index)
+        question_metrics = batch_retrieval(question_similarities, local_labels, ignore_index=self.loss_fct.ignore_index)
+        image_metrics = batch_retrieval(image_similarities, local_labels, ignore_index=self.loss_fct.ignore_index)
+        cm_metrics = batch_retrieval(cm_similarities, local_labels, ignore_index=self.loss_fct.ignore_index)
+        
         return dict(
-            loss=loss, log_probs=log_probs, labels=local_labels,
-            question_similarities=question_similarities, image_similarities=image_similarities,
-            cm_similarities=cm_similarities
+            loss=loss, metrics=metrics, question_metrics=question_metrics,
+            image_metrics=image_metrics, cm_metrics=cm_metrics
         )   
         
     def eval_epoch_end(self, eval_outputs):
-        metrics = retrieval(eval_outputs, ignore_index=self.loss_fct.ignore_index)
+        metrics = accumulate_batch_metrics([output['metrics'] for output in eval_outputs])
         for model in ['question', 'image', 'cm']:
-            model_metrics = retrieval(
-                eval_outputs, 
-                ignore_index=self.loss_fct.ignore_index, 
-                output_key=f"{model}_similarities"
-            )
+            model_metrics = accumulate_batch_metrics([output[f"{model}_metrics"] for output in eval_outputs])
             metrics.update({f"{model}_{k}": v for k, v in model_metrics.items()})
         return {'metrics': metrics}
     
@@ -605,7 +615,7 @@ class ReRanker(Trainee):
         Passed to ranx.evaluate to compute metrics during evaluation
     """
     def __init__(self, *args, model_kwargs, metric_kwargs={}, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, output_cpu=True, **kwargs)
         self.model = get_pretrained(**model_kwargs)
         self.loss_fct = nn.CrossEntropyLoss(reduction='mean')
         ks = metric_kwargs.pop("ks", [1, 5, 10, 20, 100])
@@ -739,7 +749,7 @@ class Reader(Trainee):
             assert len(answer_strings) == N
             all_answer_strings.extend(answer_strings)
             
-            # TODO keep in torch
+            # TODO keep in torch and on GPU. Compute best spans for each batch
             input_ids = input_ids.numpy().reshape(N, M, L)
             start_log_probs = batch['start_log_probs'].numpy().reshape(N, M, L)
             end_log_probs = batch['end_log_probs'].numpy().reshape(N, M, L)
