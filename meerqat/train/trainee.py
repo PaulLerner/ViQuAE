@@ -737,7 +737,7 @@ class Reader(Trainee):
         
         if passage_scores is not None:
             weighted_predictions = self.log_probs_to_answers(start_log_probs, end_log_probs, input_ids, weights=passage_scores)
-            weighted_metrics = squad_per_question(predictions=predictions, references=answer_strings)
+            weighted_metrics = squad_per_question(predictions=weighted_predictions, references=answer_strings)
         else:
             weighted_predictions = None
             weighted_metrics = None
