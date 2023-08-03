@@ -478,14 +478,6 @@ def dataset_search(dataset, k=100, metric_save_path=None, map_kwargs={}, **kwarg
     for name, run in searcher.runs.items():
         searcher.runs[name] = ranx.Run(run, name=name)
     
-    # compute metrics
-    report = ranx.compare(
-        searcher.qrels,
-        runs=searcher.runs.values(),
-        **searcher.metrics_kwargs
-    )
-
-    print(report)
     # save qrels, metrics (in JSON and LaTeX), statistical tests, and runs.
     if metric_save_path is not None:
         metric_save_path.mkdir(exist_ok=True)
@@ -494,12 +486,23 @@ def dataset_search(dataset, k=100, metric_save_path=None, map_kwargs={}, **kwarg
             with open(metric_save_path/"qnonrels.json", 'wt') as file:
                 json.dump(searcher.qnonrels, file)
 
+        for index_name, run in searcher.runs.items():
+            run.save(metric_save_path/f"{index_name}.json")
+    
+    # compute metrics
+    report = ranx.compare(
+        searcher.qrels,
+        runs=searcher.runs.values(),
+        **searcher.metrics_kwargs
+    )
+    print(report)    
+    
+    # save metrics (in JSON and LaTeX) and statistical tests
+    if metric_save_path is not None:
         report.save(metric_save_path/"metrics.json")
         with open(metric_save_path/"metrics.tex", 'wt') as file:
             file.write(report.to_latex())
-        for index_name, run in searcher.runs.items():
-            run.save(metric_save_path/f"{index_name}.json")
-            
+        
     # fuse the results of the searches
     if searcher.do_fusion:
         subcommand = searcher.fusion_kwargs.pop('subcommand')
