@@ -7,9 +7,8 @@ import re
 from pathlib import Path
 import json
 from tqdm import tqdm
-from typing import Optional, Union
+from typing import Optional
 
-import numpy as np
 import ranx
 
 import torch
@@ -19,11 +18,11 @@ import pytorch_lightning as pl
 
 from ..data.loading import get_pretrained
 from ..data.utils import to_latex
-from ..models.qa import batched_get_best_spans
+from ..models.qa import get_best_spans
 from ..models.outputs import BiEncoderOutput, JointBiEncoderAndClipOutput, JointMonoAndCrossModalOutput
 from .optim import LinearLRWithWarmup
-from .metrics import batch_retrieval, squad, get_run, accumulate_batch_metrics, retrieval
-from .data import ReRankerDataModule, pad_and_cat
+from .metrics import batch_retrieval, squad_per_question, get_run, accumulate_batch_metrics, retrieval
+from .data import ReRankerDataModule
 
 
 def batched_cpu(batch):
@@ -706,26 +705,53 @@ class Reader(Trainee):
         return self.model(*args, **kwargs)
     
     def step(self, inputs, _):           
-        keep_for_eval = {k: inputs.pop(k, None) for k in ['answer_strings']}
+        answer_strings = inputs.pop('answer_strings', None)
         if not self.model.fuse_ir_score:
-            keep_for_eval['passage_scores'] = inputs.pop('passage_scores', None)
+            passage_scores = inputs.pop('passage_scores', None)
+        else:
+            passage_scores = None
+            
+        # forward
         model_outputs = self(**inputs)
         if 'text_inputs' in inputs:
-            keep_for_eval['input_ids'] = inputs['text_inputs']['input_ids']
+            input_ids = inputs['text_inputs']['input_ids']
         else:
-            keep_for_eval['input_ids'] = inputs['input_ids']
-        keep_for_eval.update(model_outputs)
-        return keep_for_eval
+            input_ids = inputs['input_ids']
+                              
+        if self.tune_M:            
+            raise NotImplementedError()
+            
+        # compute metrics      
+        M = self.trainer.datamodule.M
+        n_times_m, L = input_ids.shape
+        assert n_times_m % M == 0
+        N = n_times_m//M
+        answer_strings = [answer_strings[i] for i in range(0, len(answer_strings), M)]
+        assert len(answer_strings) == N
+        input_ids = input_ids.reshape(N, M, L)  
+        start_log_probs = model_outputs['start_log_probs'].reshape(N, M, L)
+        end_log_probs = model_outputs['end_log_probs'].reshape(N, M, L)
+        predictions = self.log_probs_to_answers(start_log_probs, end_log_probs, input_ids)
+        
+        metrics = squad_per_question(predictions=predictions, references=answer_strings)
+        
+        if passage_scores is not None:
+            weighted_predictions = self.log_probs_to_answers(start_log_probs, end_log_probs, input_ids, weights=passage_scores)
+            weighted_metrics = squad_per_question(predictions=predictions, references=answer_strings)
+        else:
+            weighted_predictions = None
+            weighted_metrics = None
+        return {'loss': model_outputs['loss'], 'metrics': metrics, 'predictions': predictions, 
+                'weighted_metrics': weighted_metrics, 'weighted_predictions': weighted_predictions}
     
     def log_probs_to_answers(self, start_log_probs, end_log_probs, input_ids, **kwargs):
         """""
         1. get span start and end positions from log-probabilities
         2. extract actual tokens (answer) from input_ids
         """
-        # TODO pass batch size
-        passage_indices, start_indices, end_indices = batched_get_best_spans(
-            start_probs=np.exp(start_log_probs),
-            end_probs=np.exp(end_log_probs),
+        passage_indices, start_indices, end_indices = get_best_spans(
+            start_probs=start_log_probs.exp(),
+            end_probs=end_log_probs.exp(),
             **kwargs
         )
         answers = []
@@ -733,58 +759,28 @@ class Reader(Trainee):
             answers.append(input_ids[i, passage_index, start: end])
         return self.trainer.datamodule.tokenizer.batch_decode(answers, skip_special_tokens=True)
     
-    def eval_epoch_end(self, eval_outputs):        
-        M = self.trainer.datamodule.M
-        # gather all outputs
-        all_input_ids, all_start_log_probs, all_end_log_probs, all_passage_scores, all_answer_strings = [], [], [], [], []
-        dataset_size = 0
-        for batch in eval_outputs:
-            input_ids = batch['input_ids']
-            n_times_m, L = input_ids.shape
-            assert n_times_m % M == 0
-            N = n_times_m//M
-            dataset_size += N
-            answer_strings = batch['answer_strings']
-            answer_strings = [answer_strings[i] for i in range(0, len(answer_strings), M)]
-            assert len(answer_strings) == N
-            all_answer_strings.extend(answer_strings)
-            
-            # TODO keep in torch and on GPU. Compute best spans for each batch
-            input_ids = input_ids.numpy().reshape(N, M, L)
-            start_log_probs = batch['start_log_probs'].numpy().reshape(N, M, L)
-            end_log_probs = batch['end_log_probs'].numpy().reshape(N, M, L)
-            
-            all_input_ids.append(input_ids)
-            all_start_log_probs.append(start_log_probs)
-            all_end_log_probs.append(end_log_probs)
-            passage_scores = batch.get('passage_scores')
-            if passage_scores is not None:
-                passage_scores = passage_scores.numpy().reshape(N, M)
-                all_passage_scores.append(passage_scores)
-        assert len(all_answer_strings) == dataset_size
-        # concat gathered outputs
-        all_input_ids = pad_and_cat(all_input_ids)
-        all_start_log_probs = pad_and_cat(all_start_log_probs)
-        all_end_log_probs = pad_and_cat(all_end_log_probs)        
-        if all_passage_scores:
-            all_passage_scores = np.concatenate(all_passage_scores, axis=0)
-        else:
-            all_passage_scores = None
-        if self.tune_M:
-            return self.M_tuning(all_start_log_probs, all_end_log_probs, all_input_ids, all_answer_strings, all_passage_scores)   
-        predictions = self.log_probs_to_answers(all_start_log_probs, all_end_log_probs, all_input_ids)
+    def eval_epoch_end(self, eval_outputs):     
+        metrics = {"exact_match": [], "f1": [], "weighted_exact_match": [], "weighted_f1": []}
+        predictions, weighted_predictions = [], []
+        for eval_output in eval_outputs:
+            for k, v in eval_output['metrics'].items():
+                metrics[k].extend(v)
+            predictions.extend(eval_output['predictions'])
+            if eval_output['weighted_metrics'] is not None:
+                for k, v in eval_output['weighted_metrics'].items():
+                    metrics["weighted_"+k].extend(v)
+                weighted_predictions.extend(eval_output['weighted_predictions'])
+        for k, v in metrics.items():
+            if v:
+                metrics[k] = sum(v)/len(v)
+            else:
+                metrics[k] = None
         root_log = Path(self.trainer.log_dir)
         with open(root_log/'predictions.json', 'wt') as file:
             json.dump(predictions, file)
-         # compute metrics        
-        metrics = squad(predictions=predictions, references=all_answer_strings)
-        if all_passage_scores is not None:
-            weighted_predictions = self.log_probs_to_answers(all_start_log_probs, all_end_log_probs, all_input_ids, weights=all_passage_scores)
+        if weighted_predictions:
             with open(root_log/'weighted_predictions.json', 'wt') as file:
                 json.dump(weighted_predictions, file)
-            weighted_metrics = squad(predictions=weighted_predictions, references=all_answer_strings)
-            for k, v in weighted_metrics.items():
-                 metrics['weighted_'+k] = v
         return {'metrics': metrics}
      
     def M_tuning(self, all_start_log_probs, all_end_log_probs, all_input_ids, all_answer_strings, all_passage_scores=None):

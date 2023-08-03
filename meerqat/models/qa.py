@@ -2,8 +2,6 @@
 import warnings
 from typing import Optional, Tuple, Union
 
-import numpy as np
-
 import torch
 from torch import nn
 from transformers import (
@@ -28,9 +26,9 @@ def get_best_spans(start_probs, end_probs, weights=None, cannot_be_first_token=T
 
     Parameters
     ----------
-    start_probs, end_probs: ndarray
+    start_probs, end_probs: Tensor
         shape (N, M, L)
-    weights: ndarray, optional
+    weights: Tensor, optional
         shape (N, M)
         Used to weigh the spans scores, e.g. might be BM25 scores from the retriever
     cannot_be_first_token: bool, optional
@@ -39,18 +37,18 @@ def get_best_spans(start_probs, end_probs, weights=None, cannot_be_first_token=T
 
     Returns
     -------
-    passage_indices: ndarray
+    passage_indices: Tensor
         shape (N, )
-    start_indices, end_indices: ndarray
+    start_indices, end_indices: Tensor
         shape (N, )
         start (inclusive) and end (exclusive) index of each span
     """
     N, M, L = start_probs.shape
-
+    
     # 1. compute pairwise scores -> shape (N, M, L, L)
-    pairwise = np.expand_dims(start_probs, -1) @ np.expand_dims(end_probs, -2)
+    pairwise = start_probs.reshape(N, M, L, 1) @ end_probs.reshape(N, M, 1, L)
     # fix scores where end < start
-    pairwise = np.triu(pairwise)
+    pairwise = torch.triu(pairwise)
     # null out the scores of start in the first token (and thus end because of the upper triangle)
     # (e.g. [CLS], used during training for irrelevant passages)
     if cannot_be_first_token:
@@ -61,46 +59,22 @@ def get_best_spans(start_probs, end_probs, weights=None, cannot_be_first_token=T
         if minimum < 1:
             warnings.warn("weights should be > 1, adding 1-minimum")
             weights += 1-minimum
-        pairwise *= np.expand_dims(weights, (2, 3))
+        pairwise *= weights.reshape(N, M, 1, 1)
 
     # 2. find the passages with the maximum score
     pairwise = pairwise.reshape(N, M, L * L)
-    max_per_passage = pairwise.max(axis=2)
+    max_per_passage = pairwise.max(axis=2).values
     passage_indices = max_per_passage.argmax(axis=1)
-    # TODO isn't there a better way to do this ?
-    pairwise_best_passages = np.concatenate([np.expand_dims(p[i], 0) for i, p in zip(passage_indices, pairwise)], axis=0)
+    pairwise_best_passages = pairwise[torch.arange(N), passage_indices]
 
     # 3. finally find the best spans for each question
     flat_argmaxes = pairwise_best_passages.argmax(axis=-1)
     # convert from flat argmax to line index (start) and column index (end)
-    start_indices = flat_argmaxes // L
+    start_indices = torch.div(flat_argmaxes, L, rounding_mode='floor')
     # add +1 to make end index exclusive so the spans can easily be used with slices
     end_indices = (flat_argmaxes % L) + 1
 
     return passage_indices, start_indices, end_indices
-
-
-def batched_get_best_spans(start_probs, end_probs, weights=None, cannot_be_first_token=True, batch_size=256):
-    """
-    Computes get_best_spans in a mini-batch style instead of full batch.
-    That way, the memory requirements do not depend on the size of the dataset (N).
-    """
-    N, M, L = start_probs.shape
-    all_passage_indices, all_start_indices, all_end_indices = [], [], []
-    for i in range(0, N, batch_size):
-        passage_indices, start_indices, end_indices = get_best_spans(
-            start_probs[i: i+batch_size], 
-            end_probs[i: i+batch_size], 
-            weights[i: i+batch_size] if weights is not None else None, 
-            cannot_be_first_token=cannot_be_first_token
-        )
-        all_passage_indices.append(passage_indices)
-        all_start_indices.append(start_indices)
-        all_end_indices.append(end_indices)
-    all_passage_indices = np.concatenate(all_passage_indices)
-    all_start_indices = np.concatenate(all_start_indices)
-    all_end_indices = np.concatenate(all_end_indices)
-    return all_passage_indices, all_start_indices, all_end_indices
 
 
 class MultiPassageBERT(BertForQuestionAnswering):
