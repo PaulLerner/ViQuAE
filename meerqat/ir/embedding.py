@@ -143,7 +143,15 @@ def expand_query(batch, key='passage', kb=None, run=None, tokenizer=None,
         text_inputs = batch[key]
     return text_inputs
         
-    
+
+def is_multimodal(model):
+    model_config = getattr(model, "config", None)
+    # FIXME this does not hold for ViLT and CLIP
+    # TODO refactor to use the datamodule of train.data
+    # maybe implement in trainer.test ?
+    return model_config is not None and isinstance(model_config, MMConfig)
+
+
 def get_inputs(batch, model, tokenizer, tokenization_kwargs={}, key='passage', kb=None, 
                run=None, qe_predictions_key=None):
     """
@@ -165,11 +173,7 @@ def get_inputs(batch, model, tokenizer, tokenization_kwargs={}, key='passage', k
     """
     text_inputs = expand_query(batch, key=key, kb=kb, run=run, tokenizer=tokenizer, qe_predictions_key=qe_predictions_key)
     text_inputs = tokenizer(text_inputs, **tokenization_kwargs)
-    model_config = getattr(model, "config", None)
-    # FIXME this does not hold for ViLT and CLIP
-    # TODO refactor to use the datamodule of train.data
-    # maybe implement in trainer.test ?
-    if model_config is not None and isinstance(model_config, MMConfig):
+    if is_multimodal(model):
         if kb is not None:
             # FIXME: should the KB be used to expand query or get image features?
             if run is not None:
@@ -271,10 +275,6 @@ def dataset_embed(dataset_path, map_kwargs={}, output_path=None, keep_columns=No
 if __name__ == '__main__':
     args = docopt(__doc__)
     set_caching_enabled(not args['--disable_caching'])
-    if args['--kb']:
-        kb = load_from_disk(args['--kb'])
-    else:
-        kb = None
     config_path = args['<config>']
     with open(config_path, 'rt') as file:
         config = load_pretrained_in_kwargs(json.load(file))
@@ -285,5 +285,14 @@ if __name__ == '__main__':
     model = config.pop('model')
     model = model.to(device).eval()
     if torch.cuda.device_count() > 1:
-        model = torch.nn.DataParallel(model)
+        model = torch.nn.DataParallel(model)    
+    if args['--kb']:
+        kb = load_from_disk(args['--kb'])
+        if is_multimodal(model):
+            keep_columns = {"face_embedding", "face_box"} | model.config.image_kwargs.keys()
+        else:
+            keep_columns = {'wikidata_label'}
+        kb = kb.remove_columns([c for c in kb.column_names if c not in keep_columns])
+    else:
+        kb = None
     dataset_embed(args['<dataset>'], model=model, kb=kb, output_path=args['--output'], **config)
