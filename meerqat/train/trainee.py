@@ -74,6 +74,9 @@ class Trainee(pl.LightningModule):
     def step(self, batch, batch_idx):
         raise NotImplementedError("Subclass and implement step.")
     
+    def eval_step(self, batch, batch_idx):
+        return self.step(batch, batch_idx)
+    
     def log(self, name, value, **kwargs):
         """Ignores None values."""
         if value is None:
@@ -91,7 +94,7 @@ class Trainee(pl.LightningModule):
     
     def validation_step(self, batch, batch_idx):
         """Step and log validation metrics"""
-        outputs = self.step(batch, batch_idx)
+        outputs = self.eval_step(batch, batch_idx)
         self.log("eval/loss", outputs['loss'])
         if self.output_cpu:
             return batched_cpu(outputs)
@@ -99,7 +102,7 @@ class Trainee(pl.LightningModule):
     
     def test_step(self, batch, batch_idx):
         """Step and log test metrics"""
-        outputs = self.step(batch, batch_idx)
+        outputs = self.eval_step(batch, batch_idx)
         self.log("test/loss", outputs['loss'])
         if self.output_cpu:
             return batched_cpu(outputs)
@@ -210,6 +213,10 @@ class CrossModal(Trainee):
                 f"labels will have no effect."
             )
         outputs = self(**batch, return_loss=True, return_dict=True)
+        return {'loss': outputs['loss'], 'logits_per_image': outputs['logits_per_image']}
+    
+    def eval_step(self, inputs, batch_idx):
+        outputs = self.step(inputs, batch_idx)
         logits_per_image = outputs['logits_per_image']
         labels = torch.arange(logits_per_image.shape[1], dtype=torch.long)
         metrics = batch_retrieval(logits_per_image, labels)
@@ -298,14 +305,19 @@ class JointMonoAndCrossModal(Trainee):
         log_probs = self.log_softmax(similarities)
         loss = self.loss_fct(log_probs, local_labels)
         
-        # compute metrics
-        metrics = batch_retrieval(log_probs, local_labels, ignore_index=self.loss_fct.ignore_index)
-        image_metrics = batch_retrieval(image_similarities, local_labels, ignore_index=self.loss_fct.ignore_index)
-        cm_metrics = batch_retrieval(cm_similarities, local_labels, ignore_index=self.loss_fct.ignore_index)
+        return dict(loss=loss, log_probs=log_probs, local_labels=local_labels,
+                    image_similarities=image_similarities,
+                    cm_similarities=cm_similarities)
+        
+    def eval_step(self, inputs, batch_idx):
+        model_outputs = self.step(inputs, batch_idx)
+        local_labels = model_outputs['local_labels']
+        metrics = batch_retrieval(model_outputs['log_probs'], local_labels, ignore_index=self.loss_fct.ignore_index)
+        image_metrics = batch_retrieval(model_outputs['image_similarities'], local_labels, ignore_index=self.loss_fct.ignore_index)
+        cm_metrics = batch_retrieval(model_outputs['cm_similarities'], local_labels, ignore_index=self.loss_fct.ignore_index)
+        
         return dict(
-            loss=loss, metrics=metrics,
-            image_metrics=image_metrics,
-            cm_metrics=cm_metrics
+            loss=model_outputs['loss'], metrics=metrics, image_metrics=image_metrics, cm_metrics=cm_metrics
         )   
         
     def eval_epoch_end(self, eval_outputs):
@@ -444,9 +456,13 @@ class BiEncoder(Trainee):
         log_probs = self.log_softmax(similarities)
 
         loss = self.loss_fct(log_probs, global_labels)
-        metrics = batch_retrieval(log_probs, global_labels, ignore_index=self.loss_fct.ignore_index)
-        return dict(loss=loss, metrics=metrics)   
-    
+        return dict(loss=loss, log_probs=log_probs, global_labels=global_labels)
+                    
+    def eval_step(self, inputs, batch_idx):
+        model_outputs = self.step(inputs, batch_idx)
+        metrics = batch_retrieval(model_outputs['log_probs'], model_outputs['global_labels'], ignore_index=self.loss_fct.ignore_index)
+        return dict(loss=model_outputs['loss'], metrics=metrics)   
+                
     def eval_epoch_end(self, eval_outputs):
         metrics = accumulate_batch_metrics([output['metrics'] for output in eval_outputs])
         return {'metrics': metrics}
@@ -557,13 +573,21 @@ class JointBiEncoderAndClip(BiEncoder):
         log_probs = self.log_softmax(similarities)
         loss = self.loss_fct(log_probs, local_labels)
         
-        metrics = batch_retrieval(log_probs, local_labels, ignore_index=self.loss_fct.ignore_index)
-        question_metrics = batch_retrieval(question_similarities, local_labels, ignore_index=self.loss_fct.ignore_index)
-        image_metrics = batch_retrieval(image_similarities, local_labels, ignore_index=self.loss_fct.ignore_index)
-        cm_metrics = batch_retrieval(cm_similarities, local_labels, ignore_index=self.loss_fct.ignore_index)
+        return dict(loss=loss, log_probs=log_probs, local_labels=local_labels,
+                    question_similarities=question_similarities, 
+                    image_similarities=image_similarities,
+                    cm_similarities=cm_similarities)
+        
+    def eval_step(self, inputs, batch_idx):
+        model_outputs = self.step(inputs, batch_idx)
+        local_labels = model_outputs['local_labels']
+        metrics = batch_retrieval(model_outputs['log_probs'], local_labels, ignore_index=self.loss_fct.ignore_index)
+        question_metrics = batch_retrieval(model_outputs['question_similarities'], local_labels, ignore_index=self.loss_fct.ignore_index)
+        image_metrics = batch_retrieval(model_outputs['image_similarities'], local_labels, ignore_index=self.loss_fct.ignore_index)
+        cm_metrics = batch_retrieval(model_outputs['cm_similarities'], local_labels, ignore_index=self.loss_fct.ignore_index)
         
         return dict(
-            loss=loss, metrics=metrics, question_metrics=question_metrics,
+            loss=model_outputs['loss'], metrics=metrics, question_metrics=question_metrics,
             image_metrics=image_metrics, cm_metrics=cm_metrics
         )   
         
@@ -704,23 +728,29 @@ class Reader(Trainee):
     def forward(self, *args, **kwargs):
         return self.model(*args, **kwargs)
     
-    def step(self, inputs, _):           
+    def step(self, inputs, _):             
         answer_strings = inputs.pop('answer_strings', None)
         if not self.model.fuse_ir_score:
             passage_scores = inputs.pop('passage_scores', None)
         else:
-            passage_scores = None
-            
-        # forward
+            passage_scores = None    
         model_outputs = self(**inputs)
+        model_outputs['answer_strings'] = answer_strings
+        model_outputs['passage_scores'] = passage_scores
+        return model_outputs
+    
+    def eval_step(self, inputs, batch_idx):    
+        model_outputs = self.step(inputs, batch_idx)
+        answer_strings = model_outputs['answer_strings']
+        passage_scores = model_outputs['passage_scores']
         if 'text_inputs' in inputs:
             input_ids = inputs['text_inputs']['input_ids']
         else:
             input_ids = inputs['input_ids']
-                              
+            
         if self.tune_M:            
             raise NotImplementedError()
-            
+        
         # compute metrics      
         M = self.trainer.datamodule.M
         n_times_m, L = input_ids.shape
