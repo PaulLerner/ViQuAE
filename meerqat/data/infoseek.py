@@ -10,7 +10,7 @@ from jsonargparse import CLI
 
 import pandas as pd
 
-from datasets import load_from_disk
+from datasets import load_from_disk, Dataset
 from ..train.metrics import exact_match_score, metric_max_over_ground_truths
 
 
@@ -337,7 +337,10 @@ def evaluate_infoseek_full(
             'unseen_entity_score': infoseek_score['unseen_entity'],
         }
 
-def evaluate(prediction_path: str, reference_path: str) -> Dict[str, Any]:
+def evaluate(
+        prediction_path: Union[str, List[str]], 
+        reference_path: Union[str, Dataset]
+    ) -> Dict[str, Any]:
     """Evaluate predictions against references.
 
     Args:
@@ -348,21 +351,27 @@ def evaluate(prediction_path: str, reference_path: str) -> Dict[str, Any]:
         Dict[str, Any]: A dictionary containing the final scores for time,
         quantity, entity, and overall predictions.
     """
-    if reference_path.endswith('jsonl'):
-        reference = load_jsonl(reference_path)
-        qid2example = prepare_qid2example(reference)
-    else:
-        reference = load_from_disk(reference_path)
+    if isinstance(reference_path, Dataset) or not reference_path.endswith('jsonl'):   
+        if isinstance(reference_path, Dataset):
+            reference = reference_path
+        else:
+            reference = load_from_disk(reference_path)
         reference = reference.remove_columns([c for c in reference.column_names if c not in {"id", "output", "data_split", "question_type"}])
         qid2example = {}
         for item in reference:
             item['answer_eval'] = item['output']['answer']
             qid2example[item['id']] = item
-    if prediction_path.endswith('jsonl'):
+    else:
+        reference = load_jsonl(reference_path)
+        qid2example = prepare_qid2example(reference)
+    if not isinstance(prediction_path, List) and prediction_path.endswith('jsonl'):
         predictions = load_jsonl(prediction_path)
     else:
-        with open(prediction_path, 'rt') as file:
-            predictions = json.load(file)
+        if isinstance(prediction_path, List):
+            predictions = prediction_path
+        else:
+            with open(prediction_path, 'rt') as file:
+                predictions = json.load(file)
         predictions = [{"data_id": q_id, "prediction": p} for q_id, p in zip(reference['id'], predictions)]
     # split predictions into two splits: unseen_question and unseen_entity
     splits = dict(unseen_question = [], unseen_entity = [])
