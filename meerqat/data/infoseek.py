@@ -77,17 +77,15 @@ def find_numbers(string_number: str) -> List[float]:
     numerical_numbers_tmp = re.findall(
         r'[-+]?[.]?[\d]+(?:,\d\d\d)*[\.]?\d*(?:[eE][-+]?\d+)?', string_number
     )
-    numerical_numbers_tmp = [
-        n.replace(',', '').strip('.') for n in numerical_numbers_tmp
-    ]
     numerical_numbers = []
     for n in numerical_numbers_tmp:
+        n = n.replace(',', '').strip('.')
         if n.count('.') > 1:
             n = n.split('.')[0]
             numerical_numbers.append(float(n))
         else:
             numerical_numbers.append(float(n))
-    return numerical_numbers
+    return numerical_numbers, numerical_numbers_tmp
 
 
 def process_numerical_answer(string_number: str) -> Union[float, List[float]]:
@@ -104,7 +102,7 @@ def process_numerical_answer(string_number: str) -> Union[float, List[float]]:
     Returns:
         A single digit or a list with 2 numbers.
     """
-    numerical_numbers = find_numbers(string_number)
+    numerical_numbers, _ = find_numbers(string_number)
 
     # Use the first 2 numbers
     if len(numerical_numbers) > 2:

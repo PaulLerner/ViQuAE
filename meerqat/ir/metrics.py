@@ -55,7 +55,7 @@ from ..data.utils import json_integer_keys
 
 def numerical_relevant(answer, passage):
     answer_range = [float(a) for a in answer]
-    numerical_numbers = find_numbers(passage)
+    numerical_numbers, _ = find_numbers(passage)
     for number in numerical_numbers:
         if metric_numerical_range(number, answer_range) == 1:
             return True
@@ -66,10 +66,10 @@ def find_valid_numerical_answers(answer, passages):
     valid_numerical_answers = []
     answer_range = [float(a) for a in answer]
     for passage in passages:
-        numerical_numbers = find_numbers(passage)
-        for number in numerical_numbers:
-            if metric_numerical_range(number, answer_range) == 1:
-                valid_numerical_answers.append(str(number))
+        float_numbers, str_numbers = find_numbers(passage)
+        for float_num, str_num in zip(float_numbers, str_numbers):
+            if metric_numerical_range(float_num, answer_range) == 1:
+                valid_numerical_answers.append(str_num)
     return valid_numerical_answers
 
 
