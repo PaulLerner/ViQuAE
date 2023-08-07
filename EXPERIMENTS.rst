@@ -100,7 +100,7 @@ code snippet:
        return item
        
    dataset = dataset.map(keep_relevant_search_wrt_original_in_priority, fn_kwargs=dict(kb=kb))
-   dataset.save_to_disk('data/viquae_dataset/')
+   dataset.save_to_disk('data/viquae_dataset/train')
 
 Image
 -----
