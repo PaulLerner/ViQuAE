@@ -335,9 +335,15 @@ def evaluate_infoseek_full(
             'unseen_entity_score': infoseek_score['unseen_entity'],
         }
 
+
+def fix_space(string):
+    return re.sub(r'(\d+[\.,]) (\d+)',r'\1\2',string)
+    
+
 def evaluate(
         prediction_path: Union[str, List[str]], 
-        reference_path: Union[str, Dataset]
+        reference_path: Union[str, Dataset],
+        do_fix_space: bool = False
     ) -> Dict[str, Any]:
     """Evaluate predictions against references.
 
@@ -374,6 +380,8 @@ def evaluate(
     # split predictions into two splits: unseen_question and unseen_entity
     splits = dict(unseen_question = [], unseen_entity = [])
     for pred in predictions:
+        if do_fix_space:            
+            pred['prediction'] = fix_space(fix_space(fix_space(pred['prediction'])))
         data_id = pred['data_id']
         if data_id in qid2example:
             if qid2example[data_id]['data_split'].endswith('unseen_question'):
@@ -416,8 +424,8 @@ def load_jsonl(path: str) -> List[Dict[str, Any]]:
     return data
 
 
-def main(prediction_path: str, reference_path: str):
-    result = evaluate(prediction_path, reference_path)
+def main(prediction_path: str, reference_path: str, do_fix_space: bool = False):
+    result = evaluate(prediction_path, reference_path, do_fix_space=do_fix_space)
     final_score = result["final_score"]
     unseen_question_score = result["unseen_question_score"]["score"]
     unseen_entity_score = result["unseen_entity_score"]["score"]
