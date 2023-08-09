@@ -5,6 +5,7 @@ Also holds example generation methods such as Multimodal Inverse Cloze Task (ICT
 and dynamic examples based on passages retrieved from KB.
 """
 import warnings
+import json
 
 import numpy as np
 import torch
@@ -855,6 +856,19 @@ class ReRankerDataModule(QuestionAnsweringDataModule):
         return batch
     
     
+def map_run(run, mapping, k=100):
+    new_run={}
+    for q_id, results in run.run.items():
+        new_results = {}
+        for doc_id, score in results.items():
+            for i in mapping[doc_id]:
+                new_results[str(i)] = score
+            if len(new_results) >= k:
+                break
+        new_run[q_id] = new_results
+    return ranx.Run(new_run)
+
+
 class ReaderDataModule(QuestionAnsweringDataModule):
     """
     Parameters
@@ -879,9 +893,12 @@ class ReaderDataModule(QuestionAnsweringDataModule):
     extract_name: bool, optional
         Train the model to extract the name of the entity instead of the answer.
         Defaults to False.
+    mapping_run: str, optional
+        Path to the mapping
     """
     def __init__(self, *args, max_n_answers=10, run_path=None, 
-                 train_original_answer_only=True, oracle=False, extract_name=False, **kwargs):
+                 train_original_answer_only=True, oracle=False, extract_name=False, 
+                 mapping_run=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.max_n_answers = max_n_answers
         self.train_original_answer_only = train_original_answer_only
@@ -893,6 +910,10 @@ class ReaderDataModule(QuestionAnsweringDataModule):
             self.n_relevant_passages = self.M
         if run_path is not None:
             self.run = ranx.Run.from_file(run_path)
+            if mapping_run is not None:
+                with open(mapping_run, 'rt') as file:
+                    mapping_run = json.load(file)
+                self.run = map_run(self.run, mapping_run, k=self.M)
         else:            
             self.run = None
             
