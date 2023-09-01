@@ -2,7 +2,7 @@
 Script and functions related to metrics and ranx.
 
 (for docopt) Usage:
-metrics.py relevant <dataset> <passages> <title2index> [<article2passage> --reference=<reference> --save=<save> --disable_caching --qid]
+metrics.py relevant <dataset> <passages> <title2index> [<article2passage> --reference=<reference> --save=<save> --disable_caching --provenance_key=<key>]
 metrics.py qrels <qrels>... --output=<path>
 metrics.py ranx --qrels=<path> [<run>... --output=<path> --filter=<path> --kwargs=<path> --cats=<path>]
 metrics.py (win|tie|loss) <metrics> [--metric=<metric>]
@@ -26,8 +26,11 @@ Positional arguments:
 Options:
     --reference=<reference> Name of the column that holds the text that should hold the answer. Defaults to 'passage'.    
     --save=<save>           Name of the column under which to save the relevant indices. Defaults to 'provenance_indices'.
-    --qid                   Search for relevant passages from wikidata_id field instead of the default wikipedia title (in provenance)
-                            title2index should then actually be qid2index
+    --provenance_key=<key>  Where are the provenance stored in item['output'].
+                            Special values 'wikidata' and 'wikipedia' will use a single provenance article,
+                            the one from the subject-entity (stored in 'wikidata_id' and 'wikipedia_title', respectively).
+                            If 'wikidata', title2index should actually be QID-to-index.
+                            Defaults to 'provenance'.
     --disable_caching       Disables Dataset caching (useless when using save_to_disk), see datasets.set_caching_enabled()
     --output=<path>         1. qrels: output path to the JSON file
                             2. ranx: output path to the directory where to save metrics
@@ -122,7 +125,8 @@ def find_relevant(retrieved, original_answer, alternative_answers, kb, reference
 
     
 def find_relevant_item(item, passages, title2index, article2passage=None, 
-                       reference_key='passage', save_as='provenance_indices', qid=False, qrels={}):
+                       reference_key='passage', save_as='provenance_indices', 
+                       provenance_key='provenance', qrels={}):
     """
     Applies ``find_relevant`` with passages of articles linked to the question.
     
@@ -142,13 +146,21 @@ def find_relevant_item(item, passages, title2index, article2passage=None,
         Results will be saved under this name in the dataset, 
         with an 'original_answer_' prefix for passages that contain the original answer
         Defaults to 'provenance_indices'
+    provenance_key: str, optional
+        Where are the provenance stored in item['output'].
+        Special values 'wikidata' and 'wikipedia' will use a single provenance article,
+        the one from the subject-entity (stored in 'wikidata_id' and 'wikipedia_title', respectively).
+        If 'wikidata', title2index should actually be QID-to-index.
+        Defaults to 'provenance'.
     qrels: dict
         Stores relevant indices. Compatible with ranx.Qrels
     """
-    if qid:
+    if provenance_key == 'wikidata':
         titles = {item['wikidata_id']}
+    elif provenance_key == 'wikipedia':
+        titles = {item['wikipedia_title']}
     else:
-        titles = set(provenance['title'][0] for provenance in item['output']['provenance'])
+        titles = set(provenance['title'][0] for provenance in item['output'][provenance_key])
     original_relevant, relevant = [], []
     for title in titles:
         if title not in title2index:
@@ -388,9 +400,9 @@ if __name__ == '__main__':
         else:
             article2passage = None
         reference_key = args['--reference'] if args['--reference'] is not None else 'passage'
-        save_as = args['--save'] if args['--save'] is not None else 'provenance_indices'
         passages = passages.remove_columns([c for c in passages.column_names if c != reference_key])
-        qid = args['--qid']
+        save_as = args['--save'] if args['--save'] is not None else 'provenance_indices'
+        provenance_key = args['--provenance_key'] if args['--provenance_key'] is not None else 'provenance'
         find_relevant_dataset(
             Path(args['<dataset>']), 
             passages=passages, 
@@ -398,7 +410,7 @@ if __name__ == '__main__':
             article2passage=article2passage,
             reference_key=reference_key,
             save_as=save_as,
-            qid=qid,
+            provenance_key=provenance_key
         )
     
     elif args['qrels']:
