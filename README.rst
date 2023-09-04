@@ -1,4 +1,4 @@
-.. image:: ../source_docs/meerqat_logo_by_hlb.png
+.. image:: ./meerqat_logo_by_hlb.png
 
 ``meerqat``
 ===========

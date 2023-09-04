@@ -400,6 +400,8 @@ are closer to the name of the depicted entity!
 
 ``python -m meerqat.train.trainer fit --config=experiments/jcm/config.yaml``
 
+TODO for mono-modal fine-tuning, you should add the corresponding image of the entity in the KB as "wikipedia_image" in the dataset.
+
 IR
 --
 
