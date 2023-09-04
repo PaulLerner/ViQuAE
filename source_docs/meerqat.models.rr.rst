@@ -1,7 +1,7 @@
-meerqat.data.kvqa module
+meerqat.models.rr module
 ========================
 
-.. automodule:: meerqat.data.kvqa
+.. automodule:: meerqat.models.rr
    :members:
    :undoc-members:
    :show-inheritance:

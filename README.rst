@@ -254,4 +254,4 @@ Docs
 
 `Read the docs! <https://paullerner.github.io/ViQuAE/meerqat.ir.search.html>`__
 
-To build the docs locally, run `sphinx-build -b html source_docs/ docs/`
+To build the docs locally, run ``sphinx-apidoc -o source_docs/ -f -e -M meerqat`` then ``sphinx-build -b html source_docs/ docs/``

@@ -15,3 +15,4 @@ Submodules
    meerqat.viz.html
    meerqat.viz.stats
    meerqat.viz.umap
+   meerqat.viz.wtl_filter
