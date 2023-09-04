@@ -12,8 +12,10 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   meerqat.train.losses
+   meerqat.train.callbacks
+   meerqat.train.data
    meerqat.train.metrics
-   meerqat.train.split_biencoder
+   meerqat.train.optim
+   meerqat.train.save_ptm
    meerqat.train.trainee
    meerqat.train.trainer

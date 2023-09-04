@@ -22,7 +22,7 @@ copyright = '2020-2023, CNRS'
 author = 'Paul Lerner'
 
 # The full version, including alpha/beta/rc tags
-release = 'v3.0.0-alpha'
+release = 'v4.0.0-alpha'
 
 
 # -- General configuration ---------------------------------------------------

@@ -1,0 +1,1241 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>meerqat.train.data module &#8212; meerqat v4.0.0-alpha documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'meerqat.train.data';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  <div class="navbar-header-items__start">
+    
+      <div class="navbar-item">
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">meerqat v4.0.0-alpha documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+        </div>
+      
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+    </div>
+  
+
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
+</div>
+
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item"><nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="meerqat.data.html">meerqat.data package</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.infoseek.html">meerqat.data.infoseek module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.kilt2vqa.html">meerqat.data.kilt2vqa module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.labelstudio.html">meerqat.data.labelstudio module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.loading.html">meerqat.data.loading module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.mscelebs.html">meerqat.data.mscelebs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.utils.html">meerqat.data.utils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.wiki.html">meerqat.data.wiki module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.wikidump.html">meerqat.data.wikidump module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.wit.html">meerqat.data.wit module</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="meerqat.image.html">meerqat.image package</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.image.embedding.html">meerqat.image.embedding module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.image.face_box.html">meerqat.image.face_box module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.image.face_detection.html">meerqat.image.face_detection module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.image.face_recognition.html">meerqat.image.face_recognition module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.image.resize.html">meerqat.image.resize module</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="meerqat.interact.html">meerqat.interact package</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.interact.system.html">meerqat.interact.system module</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="meerqat.ir.html">meerqat.ir package</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.ir.embedding.html">meerqat.ir.embedding module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.ir.fuse.html">meerqat.ir.fuse module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.ir.hp.html">meerqat.ir.hp module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.ir.metrics.html">meerqat.ir.metrics module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.ir.search.html">meerqat.ir.search module</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="meerqat.models.html">meerqat.models package</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.models.bert.html">meerqat.models.bert module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.models.image.html">meerqat.models.image module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.models.mm.html">meerqat.models.mm module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.models.outputs.html">meerqat.models.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.models.qa.html">meerqat.models.qa module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.models.rr.html">meerqat.models.rr module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.models.utils.html">meerqat.models.utils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.models.vilt.html">meerqat.models.vilt module</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="meerqat.train.html">meerqat.train package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="meerqat.train.callbacks.html">meerqat.train.callbacks module</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">meerqat.train.data module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.train.metrics.html">meerqat.train.metrics module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.train.optim.html">meerqat.train.optim module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.train.save_ptm.html">meerqat.train.save_ptm module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.train.trainee.html">meerqat.train.trainee module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.train.trainer.html">meerqat.train.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="meerqat.viz.html">meerqat.viz package</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.viz.html.html">meerqat.viz.html module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.viz.stats.html">meerqat.viz.stats module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.viz.umap.html">meerqat.viz.umap module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.viz.wtl_filter.html">meerqat.viz.wtl_filter module</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumbs">
+  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">meerqat.train.data module</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="module-meerqat.train.data">
+<span id="meerqat-train-data-module"></span><h1>meerqat.train.data module<a class="headerlink" href="#module-meerqat.train.data" title="Permalink to this heading">#</a></h1>
+<p>Classes to format data in proper batches to train models.
+Also holds example generation methods such as Multimodal Inverse Cloze Task (ICT),
+and dynamic examples based on passages retrieved from KB.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="meerqat.train.data.pad_and_cat">
+<span class="sig-prename descclassname"><span class="pre">meerqat.train.data.</span></span><span class="sig-name descname"><span class="pre">pad_and_cat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arrays</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#pad_and_cat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.pad_and_cat" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="meerqat.train.data.keep_columns">
+<span class="sig-prename descclassname"><span class="pre">meerqat.train.data.</span></span><span class="sig-name descname"><span class="pre">keep_columns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#keep_columns"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.keep_columns" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="meerqat.train.data.DataModule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.data.</span></span><span class="sig-name descname"><span class="pre">DataModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokenizer_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer_name_or_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">M</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">24</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_relevant_passages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_dataset_columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenization_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loader_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'input'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#DataModule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.DataModule" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">LightningDataModule</span></code></p>
+<p>Base class for all data modules.
+It has a tokenizer and handles dataset loading with train/validation/test subsets.
+For multimodal models, it can also handle image features or pixels using ImageFormatter</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tokenizer_class</strong> (<em>str</em>) – Name of a transformers.PreTrainedTokenizer subclass</p></li>
+<li><p><strong>tokenizer_name_or_path</strong> (<em>str</em>) – see transformers.PreTrainedTokenizer.from_pretrained</p></li>
+<li><p><strong>dataset_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to a DatasetDict that should have ‘train’, ‘validation’ and ‘test’ subsets.
+Alternatively, you can specify those using the dedicated variables.</p></li>
+<li><p><strong>train_path</strong> (<em>str</em><em>, </em><em>optional</em>) – </p></li>
+<li><p><strong>validation_path</strong> (<em>str</em><em>, </em><em>optional</em>) – </p></li>
+<li><p><strong>test_path</strong> (<em>str</em><em>, </em><em>optional</em>) – </p></li>
+<li><p><strong>batch_size</strong> (<em>int</em><em>, </em><em>optional</em>) – batch_size is needed to be able to tune it automatically using auto_scale_batch_size in Trainer
+It is overriden by train_batch_size, eval_batch_size
+(if you want to use different batch sizes for training and evaluation)</p></li>
+<li><p><strong>train_batch_size</strong> (<em>int</em><em>, </em><em>optional</em>) – batch_size is needed to be able to tune it automatically using auto_scale_batch_size in Trainer
+It is overriden by train_batch_size, eval_batch_size
+(if you want to use different batch sizes for training and evaluation)</p></li>
+<li><p><strong>eval_batch_size</strong> (<em>int</em><em>, </em><em>optional</em>) – batch_size is needed to be able to tune it automatically using auto_scale_batch_size in Trainer
+It is overriden by train_batch_size, eval_batch_size
+(if you want to use different batch sizes for training and evaluation)</p></li>
+<li><p><strong>M</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of passages (relevant or irrelevant) per question in a batch
+Defaults to 24</p></li>
+<li><p><strong>n_relevant_passages</strong> (<em>int</em><em>, </em><em>optional</em>) – Defaults to 1</p></li>
+<li><p><strong>keep_dataset_columns</strong> (<em>list</em><em>, </em><em>optional</em>) – Keep only these features in the dataset (defaults to keep everything)</p></li>
+<li><p><strong>tokenization_kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – To be passed to self.tokenizer</p></li>
+<li><p><strong>image_kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Passed to ImageFormatter. Optional for text-only models.</p></li>
+<li><p><strong>loader_kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Passed to the data loaders (e.g. self.train_dataloader())</p></li>
+<li><p><strong>dataset_format</strong> (<em>dict</em><em>, </em><em>optional</em>) – see Dataset.set_format
+Overrides keep_dataset_columns.</p></li>
+<li><p><strong>input_key</strong> (<em>str</em><em>, </em><em>optional</em>) – Holds input text (e.g. question, caption), defaults to ‘input’</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.DataModule.setup">
+<span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#DataModule.setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.DataModule.setup" title="Permalink to this definition">#</a></dt>
+<dd><p>Called at the beginning of fit (train + validate), validate, test, or predict. This is a good hook when
+you need to build models dynamically or adjust something about them. This hook is called on every process
+when using DDP.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>stage</strong> – either <code class="docutils literal notranslate"><span class="pre">'fit'</span></code>, <code class="docutils literal notranslate"><span class="pre">'validate'</span></code>, <code class="docutils literal notranslate"><span class="pre">'test'</span></code>, or <code class="docutils literal notranslate"><span class="pre">'predict'</span></code></p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">LitModel</span><span class="p">(</span><span class="o">...</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">l1</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">prepare_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">download_data</span><span class="p">()</span>
+        <span class="n">tokenize</span><span class="p">()</span>
+
+        <span class="c1"># don&#39;t do this</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">something</span> <span class="o">=</span> <span class="k">else</span>
+
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stage</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">load_data</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">l1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">28</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">num_classes</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.DataModule.train_dataloader">
+<span class="sig-name descname"><span class="pre">train_dataloader</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#DataModule.train_dataloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.DataModule.train_dataloader" title="Permalink to this definition">#</a></dt>
+<dd><p>Implement one or more PyTorch DataLoaders for training.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A collection of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.DataLoader</span></code> specifying training samples.
+In the case of multiple dataloaders, please see this <span class="xref std std-ref">section</span>.</p>
+</dd>
+</dl>
+<p>The dataloader you return will not be reloaded unless you set
+<a href="#id1"><span class="problematic" id="id2">:paramref:`~pytorch_lightning.trainer.Trainer.reload_dataloaders_every_n_epochs`</span></a> to
+a positive integer.</p>
+<p>For data processing use the following pattern:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>download in <code class="xref py py-meth docutils literal notranslate"><span class="pre">prepare_data()</span></code></p></li>
+<li><p>process and split in <a class="reference internal" href="#meerqat.train.data.DataModule.setup" title="meerqat.train.data.DataModule.setup"><code class="xref py py-meth docutils literal notranslate"><span class="pre">setup()</span></code></a></p></li>
+</ul>
+</div></blockquote>
+<p>However, the above are only necessary for distributed processing.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>do not assign state in prepare_data</p>
+</div>
+<ul class="simple">
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">fit()</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">prepare_data()</span></code></p></li>
+<li><p><a class="reference internal" href="#meerqat.train.data.DataModule.setup" title="meerqat.train.data.DataModule.setup"><code class="xref py py-meth docutils literal notranslate"><span class="pre">setup()</span></code></a></p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Lightning adds the correct sampler for distributed and arbitrary hardware.
+There is no need to set it yourself.</p>
+</div>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># single dataloader</span>
+<span class="k">def</span> <span class="nf">train_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">transform</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span><span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span>
+                                    <span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">((</span><span class="mf">0.5</span><span class="p">,),</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,))])</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">MNIST</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="s1">&#39;/path/to/mnist/&#39;</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+                    <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">loader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
+        <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">loader</span>
+
+<span class="c1"># multiple dataloaders, return as list</span>
+<span class="k">def</span> <span class="nf">train_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">mnist</span> <span class="o">=</span> <span class="n">MNIST</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">cifar</span> <span class="o">=</span> <span class="n">CIFAR</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">mnist_loader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
+        <span class="n">dataset</span><span class="o">=</span><span class="n">mnist</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="n">cifar_loader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
+        <span class="n">dataset</span><span class="o">=</span><span class="n">cifar</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="c1"># each batch will be a list of tensors: [batch_mnist, batch_cifar]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">mnist_loader</span><span class="p">,</span> <span class="n">cifar_loader</span><span class="p">]</span>
+
+<span class="c1"># multiple dataloader, return as dict</span>
+<span class="k">def</span> <span class="nf">train_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">mnist</span> <span class="o">=</span> <span class="n">MNIST</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">cifar</span> <span class="o">=</span> <span class="n">CIFAR</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">mnist_loader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
+        <span class="n">dataset</span><span class="o">=</span><span class="n">mnist</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="n">cifar_loader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
+        <span class="n">dataset</span><span class="o">=</span><span class="n">cifar</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="c1"># each batch will be a dict of tensors: {&#39;mnist&#39;: batch_mnist, &#39;cifar&#39;: batch_cifar}</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;mnist&#39;</span><span class="p">:</span> <span class="n">mnist_loader</span><span class="p">,</span> <span class="s1">&#39;cifar&#39;</span><span class="p">:</span> <span class="n">cifar_loader</span><span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.DataModule.val_dataloader">
+<span class="sig-name descname"><span class="pre">val_dataloader</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#DataModule.val_dataloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.DataModule.val_dataloader" title="Permalink to this definition">#</a></dt>
+<dd><p>Implement one or multiple PyTorch DataLoaders for validation.</p>
+<p>The dataloader you return will not be reloaded unless you set
+<a href="#id3"><span class="problematic" id="id4">:paramref:`~pytorch_lightning.trainer.Trainer.reload_dataloaders_every_n_epochs`</span></a> to
+a positive integer.</p>
+<p>It’s recommended that all data downloads and preparation happen in <code class="xref py py-meth docutils literal notranslate"><span class="pre">prepare_data()</span></code>.</p>
+<ul class="simple">
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">fit()</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">validate()</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">prepare_data()</span></code></p></li>
+<li><p><a class="reference internal" href="#meerqat.train.data.DataModule.setup" title="meerqat.train.data.DataModule.setup"><code class="xref py py-meth docutils literal notranslate"><span class="pre">setup()</span></code></a></p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Lightning adds the correct sampler for distributed and arbitrary hardware
+There is no need to set it yourself.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.DataLoader</span></code> or a sequence of them specifying validation samples.</p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">val_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">transform</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span><span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span>
+                                    <span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">((</span><span class="mf">0.5</span><span class="p">,),</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,))])</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">MNIST</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="s1">&#39;/path/to/mnist/&#39;</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span> <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">loader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
+        <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">loader</span>
+
+<span class="c1"># can also return multiple dataloaders</span>
+<span class="k">def</span> <span class="nf">val_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">loader_a</span><span class="p">,</span> <span class="n">loader_b</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="n">loader_n</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you don’t need a validation dataset and a <code class="xref py py-meth docutils literal notranslate"><span class="pre">validation_step()</span></code>, you don’t need to
+implement this method.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In the case where you return multiple validation dataloaders, the <code class="xref py py-meth docutils literal notranslate"><span class="pre">validation_step()</span></code>
+will have an argument <code class="docutils literal notranslate"><span class="pre">dataloader_idx</span></code> which matches the order here.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.DataModule.test_dataloader">
+<span class="sig-name descname"><span class="pre">test_dataloader</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#DataModule.test_dataloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.DataModule.test_dataloader" title="Permalink to this definition">#</a></dt>
+<dd><p>Implement one or multiple PyTorch DataLoaders for testing.</p>
+<p>For data processing use the following pattern:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>download in <code class="xref py py-meth docutils literal notranslate"><span class="pre">prepare_data()</span></code></p></li>
+<li><p>process and split in <a class="reference internal" href="#meerqat.train.data.DataModule.setup" title="meerqat.train.data.DataModule.setup"><code class="xref py py-meth docutils literal notranslate"><span class="pre">setup()</span></code></a></p></li>
+</ul>
+</div></blockquote>
+<p>However, the above are only necessary for distributed processing.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>do not assign state in prepare_data</p>
+</div>
+<ul class="simple">
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">test()</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">prepare_data()</span></code></p></li>
+<li><p><a class="reference internal" href="#meerqat.train.data.DataModule.setup" title="meerqat.train.data.DataModule.setup"><code class="xref py py-meth docutils literal notranslate"><span class="pre">setup()</span></code></a></p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Lightning adds the correct sampler for distributed and arbitrary hardware.
+There is no need to set it yourself.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.DataLoader</span></code> or a sequence of them specifying testing samples.</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">test_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">transform</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span><span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span>
+                                    <span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">((</span><span class="mf">0.5</span><span class="p">,),</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,))])</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">MNIST</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="s1">&#39;/path/to/mnist/&#39;</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+                    <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">loader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
+        <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">loader</span>
+
+<span class="c1"># can also return multiple dataloaders</span>
+<span class="k">def</span> <span class="nf">test_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">loader_a</span><span class="p">,</span> <span class="n">loader_b</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="n">loader_n</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you don’t need a test dataset and a <code class="xref py py-meth docutils literal notranslate"><span class="pre">test_step()</span></code>, you don’t need to implement
+this method.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In the case where you return multiple test dataloaders, the <code class="xref py py-meth docutils literal notranslate"><span class="pre">test_step()</span></code>
+will have an argument <code class="docutils literal notranslate"><span class="pre">dataloader_idx</span></code> which matches the order here.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="meerqat.train.data.ImageFormatter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.data.</span></span><span class="sig-name descname"><span class="pre">ImageFormatter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precomputed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#ImageFormatter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.ImageFormatter" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Helper to format image features (precomputed or pixels) in nice square Tensors expected by mm models.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.ImageFormatter.format_pixels">
+<span class="sig-name descname"><span class="pre">format_pixels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'image'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#ImageFormatter.format_pixels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.ImageFormatter.format_pixels" title="Permalink to this definition">#</a></dt>
+<dd><p>Load images and convert to tensors while handling padded passages</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.ImageFormatter.format_batch">
+<span class="sig-name descname"><span class="pre">format_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text_inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">items_or_passages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">passages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#ImageFormatter.format_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.ImageFormatter.format_batch" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>text_inputs</strong> (<em>dict</em><em>[</em><em>Tensor</em><em>]</em>) – </p></li>
+<li><p><strong>items_or_passages</strong> (<em>List</em><em>[</em><em>dict</em><em>]</em>) – </p></li>
+<li><p><strong>passages</strong> (<em>List</em><em>[</em><em>dict</em><em>]</em><em>, </em><em>optional</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="meerqat.train.data.PreComputedImageFeatures">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.data.</span></span><span class="sig-name descname"><span class="pre">PreComputedImageFeatures</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#PreComputedImageFeatures"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.PreComputedImageFeatures" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Helper to format image features in nice square Tensors expected by mm models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config_class</strong> (<em>str</em>) – Name of a subclass of MMConfig</p></li>
+<li><p><strong>config_path</strong> (<em>str</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.PreComputedImageFeatures.get_face_inputs">
+<span class="sig-name descname"><span class="pre">get_face_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#PreComputedImageFeatures.get_face_inputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.PreComputedImageFeatures.get_face_inputs" title="Permalink to this definition">#</a></dt>
+<dd><p>Formats pre-computed face features in nice square tensors.</p>
+<p>The extra dimension 1 stands for the number of images
+(images are processed one by one and are concatenated in ImageFormatter)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><p><strong>face_inputs</strong> –</p>
+<dl class="simple">
+<dt>{</dt><dd><ul class="simple">
+<li><p>face: Tensor(batch_size, 1, self.n_faces, self.face_dim)</p></li>
+<li><p>bbox: Tensor(batch_size, 1, self.n_faces, self.bbox_dim)</p></li>
+<li><p>attention_mask: Tensor(batch_size, 1, self.n_faces)</p></li>
+</ul>
+</dd>
+</dl>
+<p>}</p>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, Tensor]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.PreComputedImageFeatures.get_image_inputs">
+<span class="sig-name descname"><span class="pre">get_image_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#PreComputedImageFeatures.get_image_inputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.PreComputedImageFeatures.get_image_inputs" title="Permalink to this definition">#</a></dt>
+<dd><p>Formats pre-computed full-image features in nice square tensors.</p>
+<p>The extra dimension 1 stands for the number of images
+(images are processed one by one and are concatenated in ImageFormatter)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><p><strong>image_inputs</strong> – one key per image feature
+{</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>input: Tensor(batch_size, 1, ?)</p></li>
+<li><p>attention_mask: Tensor(batch_size, 1)</p></li>
+</ul>
+</div></blockquote>
+<p>}</p>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, dict[str,Tensor]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="meerqat.train.data.CrossModalDataModule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.data.</span></span><span class="sig-name descname"><span class="pre">CrossModalDataModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paired_image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deduplicate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#CrossModalDataModule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.CrossModalDataModule" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#meerqat.train.data.DataModule" title="meerqat.train.data.DataModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataModule</span></code></a></p>
+<p>Used for cross-modal retrieval (text-to-image or image-to-text) and optionally
+for joint cross-modal and image-image retrieval.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> (<em>additionnal arguments are passed to DataModule</em>) – </p></li>
+<li><p><strong>**kwargs</strong> (<em>additionnal arguments are passed to DataModule</em>) – </p></li>
+<li><p><strong>paired_image</strong> (<em>str</em><em>, </em><em>optional</em>) – If not None (default), should hold the key for the path to an image paired with ‘image’,
+so that a joint image-image contrastive loss may be applied in CrossModal(Trainee).</p></li>
+<li><p><strong>deduplicate</strong> (<em>bool</em><em>, </em><em>optional</em>) – Will remove text (and paired_image) duplicates.
+Defaults to False (assumes there are no duplicates).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.CrossModalDataModule.collate_fn">
+<span class="sig-name descname"><span class="pre">collate_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#CrossModalDataModule.collate_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.CrossModalDataModule.collate_fn" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="meerqat.train.data.QuestionAnsweringDataModule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.data.</span></span><span class="sig-name descname"><span class="pre">QuestionAnsweringDataModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_kb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'search'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_train_rels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_kb_columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kb_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_kb_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kb_input_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'passage'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#QuestionAnsweringDataModule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.QuestionAnsweringDataModule" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#meerqat.train.data.DataModule" title="meerqat.train.data.DataModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataModule</span></code></a></p>
+<p>Base class for Question Answering. Should work for both IR and RC.</p>
+<p>The core idea is that it relies on a Knowledge Base (KB)
+to retrieve relevant and irrelevant passages for the questions in the dataset.</p>
+<p>We need to create the batch of questions and passages on-the-fly
+The inputs should be shaped like (N * M, L), where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>N - number of distinct questions (equal to the batch size)</p></li>
+<li><p>M - number of passages per question in a batch</p></li>
+<li><p>L - sequence length</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> (<em>additionnal arguments are passed to DataModule</em>) – </p></li>
+<li><p><strong>**kwargs</strong> (<em>additionnal arguments are passed to DataModule</em>) – </p></li>
+<li><p><strong>kb</strong> (<em>str</em>) – path towards the knowledge base (Dataset) used to get the passages</p></li>
+<li><p><strong>image_kb</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the KB that holds pre-computed image features
+Can be mapped from kb using kb[‘index’]</p></li>
+<li><p><strong>search_key</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>This column in the dataset suffixed by ‘_indices’ and ‘_scores’ should hold the result of information retrieval
+used during evaluation (e.g. the output of ir.search)
+Suffixed by “_provenance_indices” and “_irrelevant_indices” it should hold:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>the union of relevant search and provenance_indices</p></li>
+<li><p>irrelevant results from the search</p></li>
+</ol>
+</div></blockquote>
+<p>used during training (according to M and n_relevant_passages)
+Defaults to ‘search’</p>
+</p></li>
+<li><p><strong>filter_train_rels</strong> (<em>bool</em><em>, </em><em>optional</em>) – </p></li>
+<li><p><strong>keep_kb_columns</strong> (<em>list</em><em>, </em><em>optional</em>) – Keep only these features in kb and image_kb (defaults to keep everything)</p></li>
+<li><p><strong>kb_format</strong> (<em>dict</em><em>, </em><em>optional</em>) – see Dataset.set_format
+Overrides keep_kb_columns.</p></li>
+<li><p><strong>image_kb_format</strong> (<em>dict</em><em>, </em><em>optional</em>) – see Dataset.set_format
+Overrides keep_kb_columns.</p></li>
+<li><p><strong>kb_input_key</strong> (<em>str</em><em>, </em><em>optional</em>) – Defaults to ‘passage’</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.QuestionAnsweringDataModule.setup">
+<span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#QuestionAnsweringDataModule.setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.QuestionAnsweringDataModule.setup" title="Permalink to this definition">#</a></dt>
+<dd><p>Called at the beginning of fit (train + validate), validate, test, or predict. This is a good hook when
+you need to build models dynamically or adjust something about them. This hook is called on every process
+when using DDP.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>stage</strong> – either <code class="docutils literal notranslate"><span class="pre">'fit'</span></code>, <code class="docutils literal notranslate"><span class="pre">'validate'</span></code>, <code class="docutils literal notranslate"><span class="pre">'test'</span></code>, or <code class="docutils literal notranslate"><span class="pre">'predict'</span></code></p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">LitModel</span><span class="p">(</span><span class="o">...</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">l1</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">prepare_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">download_data</span><span class="p">()</span>
+        <span class="n">tokenize</span><span class="p">()</span>
+
+        <span class="c1"># don&#39;t do this</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">something</span> <span class="o">=</span> <span class="k">else</span>
+
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stage</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">load_data</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">l1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">28</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">num_classes</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.QuestionAnsweringDataModule.filter_rels">
+<span class="sig-name descname"><span class="pre">filter_rels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'train'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#QuestionAnsweringDataModule.filter_rels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.QuestionAnsweringDataModule.filter_rels" title="Permalink to this definition">#</a></dt>
+<dd><p>Filter out questions of the dataset without any relevant passages.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.QuestionAnsweringDataModule.get_training_passages">
+<span class="sig-name descname"><span class="pre">get_training_passages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_scores</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#QuestionAnsweringDataModule.get_training_passages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.QuestionAnsweringDataModule.get_training_passages" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>item</strong> (<em>dict</em>) – item (e.g. question) from self.train_dataset or self.eval_dataset.</p></li>
+<li><p><strong>with_scores</strong> (<em>bool</em><em>, </em><em>optional</em>) – Also return the scores corresponding to the passages
+Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul>
+<li><p><strong>relevant_passages, irrelevant_passages</strong> (<em>list[dict]</em>) – List of relevant and irrelevant passages selected from self.kb
+according to:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>self.n_relevant_passages</p></li>
+<li><p>self.M</p></li>
+<li><p>self.search_key</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>relevant_scores</strong> (<em>np.ndarray, optional</em>) – Shape (self.n_relevant_passages, )
+Returned only if with_scores</p></li>
+<li><p><strong>irrelevant_scores</strong> (<em>np.ndarray, optional</em>) – Shape (self.M-self.n_relevant_passages, )
+Returned only if with_scores</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.QuestionAnsweringDataModule.add_image_features">
+<span class="sig-name descname"><span class="pre">add_image_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">passages</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#QuestionAnsweringDataModule.add_image_features"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.QuestionAnsweringDataModule.add_image_features" title="Permalink to this definition">#</a></dt>
+<dd><p>Add image features to passages from image_kb</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>passages</strong> (<em>List</em><em>[</em><em>dict</em><em>]</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.QuestionAnsweringDataModule.add_image_path">
+<span class="sig-name descname"><span class="pre">add_image_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">passages</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#QuestionAnsweringDataModule.add_image_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.QuestionAnsweringDataModule.add_image_path" title="Permalink to this definition">#</a></dt>
+<dd><p>Add image path to passages from image_kb</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>passages</strong> (<em>List</em><em>[</em><em>dict</em><em>]</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="meerqat.train.data.BiEncoderDataModule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.data.</span></span><span class="sig-name descname"><span class="pre">BiEncoderDataModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">passage_type_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#BiEncoderDataModule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.BiEncoderDataModule" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#meerqat.train.data.QuestionAnsweringDataModule" title="meerqat.train.data.QuestionAnsweringDataModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuestionAnsweringDataModule</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> (<em>additionnal arguments are passed to QuestionAnsweringDataModule</em>) – </p></li>
+<li><p><strong>**kwargs</strong> (<em>additionnal arguments are passed to QuestionAnsweringDataModule</em>) – </p></li>
+<li><p><strong>passage_type_ids</strong> (<em>bool</em><em>, </em><em>optional</em>) – Pass token_type_ids=1 for passages (see BertTokenizer for details).
+This might be useful if you use a shared encoder to encode questions and passages.
+Defaults to False (by default you use different models to encode questions and passages).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.BiEncoderDataModule.collate_fn">
+<span class="sig-name descname"><span class="pre">collate_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#BiEncoderDataModule.collate_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.BiEncoderDataModule.collate_fn" title="Permalink to this definition">#</a></dt>
+<dd><p>Collate batch so that each question is associate with n_relevant_passages and M-n irrelevant ones.
+Also tokenizes input strings</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>N - number of questions in a batch</p></li>
+<li><p>M - number of passages per questions</p></li>
+<li><p>d - dimension of the model/embeddings</p></li>
+</ul>
+</div></blockquote>
+<dl class="simple">
+<dt>question_inputs: dict[torch.LongTensor]</dt><dd><dl class="simple">
+<dt>input_ids: torch.LongTensor</dt><dd><p>shape (N, L)</p>
+</dd>
+<dt><a href="#id5"><span class="problematic" id="id6">**</span></a>kwargs:</dt><dd><p>more tensors depending on the tokenizer, e.g. attention_mask</p>
+</dd>
+</dl>
+</dd>
+<dt>context_inputs: dict[torch.LongTensor]</dt><dd><dl class="simple">
+<dt>input_ids: torch.LongTensor</dt><dd><p>shape (N*M, L)
+The first N rows correspond to the relevant contexts for the N questions
+The rest N*(M-1) rows are irrelevant contexts for all questions.</p>
+</dd>
+<dt><a href="#id7"><span class="problematic" id="id8">**</span></a>kwargs:</dt><dd><p>idem</p>
+</dd>
+</dl>
+</dd>
+<dt>labels: torch.LongTensor</dt><dd><p>shape (N, )
+Index of the relevant passage in context_inputs.
+Should be arange(N) except for padding passages.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="meerqat.train.data.JointBiEncoderAndClipDataModule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.data.</span></span><span class="sig-name descname"><span class="pre">JointBiEncoderAndClipDataModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cm_tokenizer_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cm_tokenizer_name_or_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cm_tokenization_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#JointBiEncoderAndClipDataModule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.JointBiEncoderAndClipDataModule" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#meerqat.train.data.BiEncoderDataModule" title="meerqat.train.data.BiEncoderDataModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">BiEncoderDataModule</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.JointBiEncoderAndClipDataModule.collate_fn">
+<span class="sig-name descname"><span class="pre">collate_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#JointBiEncoderAndClipDataModule.collate_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.JointBiEncoderAndClipDataModule.collate_fn" title="Permalink to this definition">#</a></dt>
+<dd><p>Collate batch so that each question is associate with n_relevant_passages and M-n irrelevant ones.
+Also tokenizes input strings</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>N - number of questions in a batch</p></li>
+<li><p>M - number of passages per questions</p></li>
+<li><p>d - dimension of the model/embeddings</p></li>
+</ul>
+</div></blockquote>
+<dl class="simple">
+<dt>question_inputs: dict[torch.LongTensor]</dt><dd><dl class="simple">
+<dt>input_ids: torch.LongTensor</dt><dd><p>shape (N, L)</p>
+</dd>
+<dt><a href="#id9"><span class="problematic" id="id10">**</span></a>kwargs:</dt><dd><p>more tensors depending on the tokenizer, e.g. attention_mask</p>
+</dd>
+</dl>
+</dd>
+<dt>context_inputs: dict[torch.LongTensor]</dt><dd><dl class="simple">
+<dt>input_ids: torch.LongTensor</dt><dd><p>shape (N*M, L)
+The first N rows correspond to the relevant contexts for the N questions
+The rest N*(M-1) rows are irrelevant contexts for all questions.</p>
+</dd>
+<dt><a href="#id11"><span class="problematic" id="id12">**</span></a>kwargs:</dt><dd><p>idem</p>
+</dd>
+</dl>
+</dd>
+<dt>labels: torch.LongTensor</dt><dd><p>shape (N, )
+Index of the relevant passage in context_inputs.
+Should be arange(N) except for padding passages.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="meerqat.train.data.ReRankerDataModule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.data.</span></span><span class="sig-name descname"><span class="pre">ReRankerDataModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qrels_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#ReRankerDataModule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.ReRankerDataModule" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#meerqat.train.data.QuestionAnsweringDataModule" title="meerqat.train.data.QuestionAnsweringDataModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuestionAnsweringDataModule</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> – additional arguments are passed to QuestionAnsweringDataModule</p></li>
+<li><p><strong>**kwargs</strong> – additional arguments are passed to QuestionAnsweringDataModule</p></li>
+<li><p><strong>run_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the ranx run stored in the TREC format that holds the IR results.
+Optional if you want to train only.
+Defaults to None.</p></li>
+<li><p><strong>qrels_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the ranx qrels stored in the TREC format. Used during evaluation.
+Optional if you want to train only.
+Defaults to None.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.ReRankerDataModule.get_eval_passages">
+<span class="sig-name descname"><span class="pre">get_eval_passages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#ReRankerDataModule.get_eval_passages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.ReRankerDataModule.get_eval_passages" title="Permalink to this definition">#</a></dt>
+<dd><p>Keep the top-M passages retrieved by the IR</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.ReRankerDataModule.collate_fn">
+<span class="sig-name descname"><span class="pre">collate_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#ReRankerDataModule.collate_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.ReRankerDataModule.collate_fn" title="Permalink to this definition">#</a></dt>
+<dd><p>Collate batch so that each question is associate with 1 and M-1 irrelevant ones.
+Also tokenizes input strings</p>
+<dl class="simple">
+<dt>input_ids: Tensor[int]</dt><dd><p>shape (N * M, L)
+1 relevant passage followed by M-1 irrelevant ones, N times
+/!different from BiEncoderDataModule</p>
+</dd>
+<dt>labels: torch.LongTensor, optional</dt><dd><p>shape (N, )
+Index of the relevant passage in input_ids.
+Should be 0 except for padding passages.
+Returned only when training.</p>
+</dd>
+</dl>
+<p><a href="#id13"><span class="problematic" id="id14">**</span></a>kwargs: more tensors depending on the tokenizer, e.g. attention_mask</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.ReRankerDataModule.transfer_batch_to_device">
+<span class="sig-name descname"><span class="pre">transfer_batch_to_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#ReRankerDataModule.transfer_batch_to_device"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.ReRankerDataModule.transfer_batch_to_device" title="Permalink to this definition">#</a></dt>
+<dd><p>Keep question identifiers in batch. Does not try to cast them as Tensor of any dtype or device.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="meerqat.train.data.map_run">
+<span class="sig-prename descclassname"><span class="pre">meerqat.train.data.</span></span><span class="sig-name descname"><span class="pre">map_run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapping</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#map_run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.map_run" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="meerqat.train.data.ReaderDataModule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.data.</span></span><span class="sig-name descname"><span class="pre">ReaderDataModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_answers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_original_answer_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oracle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extract_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapping_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#ReaderDataModule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.ReaderDataModule" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#meerqat.train.data.QuestionAnsweringDataModule" title="meerqat.train.data.QuestionAnsweringDataModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuestionAnsweringDataModule</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> – additional arguments are passed to QuestionAnsweringDataModule</p></li>
+<li><p><strong>**kwargs</strong> – additional arguments are passed to QuestionAnsweringDataModule</p></li>
+<li><p><strong>max_n_answers</strong> (<em>int</em><em>, </em><em>optional</em>) – The answer might be found several time in the same passage, this is a threshold to enable batching
+Defaults to 10.</p></li>
+<li><p><strong>train_original_answer_only</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether the model should be trained to predict only the original answer (default)
+or all alternative answers (with the only limit of max_n_answers)
+This has no effect on the evaluation (where all alternative answers are always considered)</p></li>
+<li><p><strong>oracle</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to use only relevant passages at inference (stored in {search_key}_provenance_indices)
+Will enforce n_relevant_passages=M
+Defaults to False (use IR passages at inference, stored in {search_key}_indices)</p></li>
+<li><p><strong>run_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the ranx run stored in the TREC format that holds the IR results.
+To be used instead of search_key at inference.
+Defaults to None.</p></li>
+<li><p><strong>extract_name</strong> (<em>bool</em><em>, </em><em>optional</em>) – Train the model to extract the name of the entity instead of the answer.
+Defaults to False.</p></li>
+<li><p><strong>mapping_run</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the mapping</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.ReaderDataModule.get_eval_passages">
+<span class="sig-name descname"><span class="pre">get_eval_passages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#ReaderDataModule.get_eval_passages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.ReaderDataModule.get_eval_passages" title="Permalink to this definition">#</a></dt>
+<dd><p>Keep the top-M passages retrieved by the IR</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.ReaderDataModule.get_answer_position">
+<span class="sig-name descname"><span class="pre">get_answer_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">answers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">answer_mask</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#ReaderDataModule.get_answer_position"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.ReaderDataModule.get_answer_position" title="Permalink to this definition">#</a></dt>
+<dd><p>Adapted from DPR</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.ReaderDataModule.collate_fn">
+<span class="sig-name descname"><span class="pre">collate_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#ReaderDataModule.collate_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.ReaderDataModule.collate_fn" title="Permalink to this definition">#</a></dt>
+<dd><p>Collate batch so that each question is associate with n_relevant_passages and M-n irrelevant ones.
+Also tokenizes input strings</p>
+<dl class="simple">
+<dt>input_ids: Tensor[int]</dt><dd><p>shape (N * M, L)</p>
+</dd>
+<dt>start_positions, end_positions: Tensor[int]</dt><dd><p>shape (N, M, max_n_answers)</p>
+</dd>
+<dt>answer_mask: Tensor[int]</dt><dd><p>shape (N, M, max_n_answers)</p>
+</dd>
+<dt>passage_scores: Tensor[float], optional</dt><dd><p>shape (N * M)
+only in evaluation mode</p>
+</dd>
+</dl>
+<p><a href="#id15"><span class="problematic" id="id16">**</span></a>kwargs: more tensors depending on the tokenizer, e.g. attention_mask</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.ReaderDataModule.transfer_batch_to_device">
+<span class="sig-name descname"><span class="pre">transfer_batch_to_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#ReaderDataModule.transfer_batch_to_device"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.ReaderDataModule.transfer_batch_to_device" title="Permalink to this definition">#</a></dt>
+<dd><p>Keep answer_strings in batch. Does not try to cast them as Tensor of any dtype or device.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="meerqat.train.data.ICT">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.data.</span></span><span class="sig-name descname"><span class="pre">ICT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">biencoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentences_per_target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepend_title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_mask_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_mask_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#ICT"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.ICT" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#meerqat.train.data.DataModule" title="meerqat.train.data.DataModule"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataModule</span></code></a></p>
+<p>Extends the Inverse Cloze Task (ICT, <a class="footnote-reference brackets" href="#id18" id="id17" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>) to multimodal documents.
+Given a wikipedia section, one sentence is considered as a pseudo-question and the nearby sentences as a relevant passage.
+In this multimodal setting, we also consider the image of the section in the query and the infobox/main image of the article in the visual passage.</p>
+<p>The only point in common with QuestionAnsweringDataModule is the use of PreComputedImageFeatures</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> – additional arguments are passed to DataModule</p></li>
+<li><p><strong>**kwargs</strong> – additional arguments are passed to DataModule</p></li>
+<li><p><strong>biencoder</strong> (<em>bool</em><em>, </em><em>optional</em>) – Expected kind of model: bi-encoder or cross-encoder
+i.e. whether to concatenate questions with passages or leave them in separate tensors</p></li>
+<li><p><strong>sentences_per_target</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of sentences in the target passages</p></li>
+<li><p><strong>prepend_title</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to preprend the title of the article to the target passage</p></li>
+<li><p><strong>text_mask_rate</strong> (<em>float</em><em>, </em><em>optional</em>) – Rate at which the pseudo-question is masked in the target passage</p></li>
+<li><p><strong>image_mask_rate</strong> (<em>float</em><em>, </em><em>optional</em>) – Rate at which the infobox image is used as target (keep input image otherwise)</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<aside class="footnote brackets" id="id18" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id17">2</a><span class="fn-bracket">]</span></span>
+<p>Kenton Lee, Ming-Wei Chang, and Kristina Toutanova. 2019. Latent Retrieval for Weakly Supervised Open Domain Question Answering.
+In Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics,
+pages 6086–6096, Florence, Italy. Association for Computational Linguistics.</p>
+</aside>
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.ICT.get_pseudo_question">
+<span class="sig-name descname"><span class="pre">get_pseudo_question</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#ICT.get_pseudo_question"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.ICT.get_pseudo_question" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><strong>query</strong> (<em>dict</em>)</p></li>
+<li><p><strong>target</strong> (<em>dict</em>)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.ICT.biencoder_collate_fn">
+<span class="sig-name descname"><span class="pre">biencoder_collate_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#ICT.biencoder_collate_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.ICT.biencoder_collate_fn" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.data.ICT.reranker_collate_fn">
+<span class="sig-name descname"><span class="pre">reranker_collate_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/data.html#ICT.reranker_collate_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.data.ICT.reranker_collate_fn" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="tocsection sourcelink">
+    <a href="_sources/meerqat.train.data.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  <p class="copyright">
+    
+      © Copyright 2020-2023, CNRS.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

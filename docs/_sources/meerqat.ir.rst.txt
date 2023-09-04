@@ -13,6 +13,7 @@ Submodules
    :maxdepth: 4
 
    meerqat.ir.embedding
+   meerqat.ir.fuse
    meerqat.ir.hp
    meerqat.ir.metrics
    meerqat.ir.search

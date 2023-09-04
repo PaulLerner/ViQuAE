@@ -1,0 +1,532 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>meerqat.ir.fuse &#8212; meerqat v3.0.0-alpha documentation</title>
+  <script>
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+
+  
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/6.1.2/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b">
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/meerqat/ir/fuse';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="docsearch:language" content="en">
+  </head>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__primary" id="__primary">
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__secondary" id="__secondary">
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+      
+<form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+    </div>
+  </div>
+
+  
+  <nav class="bd-header navbar navbar-expand-lg bd-navbar" id="navbar-main"><div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+      <span class="fas fa-bars"></span>
+  </label>
+  <div id="navbar-start">
+    
+    
+  
+
+
+<a class="navbar-brand logo" href="../../../index.html">
+
+  
+  
+  
+  
+  
+  
+  
+
+  
+  
+    <p class="title logo__title">meerqat v3.0.0-alpha documentation</p>
+  
+</a>
+    
+  </div>
+
+  
+  <div class="col-lg-9 navbar-header-items">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+    </ul>
+</nav>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      <div class="navbar-end-item navbar-end__search-button-container">
+        
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+
+
+  
+  <div class="search-button-container--mobile">
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+  </div>
+
+  
+  <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fas fa-outdent"></span>
+  </label>
+  
+
+</div>
+  </nav>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+    </ul>
+</nav>
+      </div>
+      
+      </div>
+    
+
+    
+    
+    <div class="sidebar-header-items__end">
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+    
+  </div>
+
+  
+
+  
+  <div class="sidebar-end-items sidebar-primary__section">
+    <div class="sidebar-end-items__item">
+    </div>
+  </div>
+
+      </div>
+      <main class="bd-main">
+        
+        
+        <div class="bd-content">
+          <div class="bd-article-container">
+            
+            <div class="bd-header-article">
+                
+            </div>
+            
+            
+            <article class="bd-article" role="main">
+              
+  <h1>Source code for meerqat.ir.fuse</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">usage: fuse.py [-h] [--config CONFIG] [--print_config [={comments,skip_null,skip_default}+]] [--qrels QRELS] [--runs RUNS] [--norm NORM] [--method METHOD] [--output OUTPUT] [--defmin DEFMIN]</span>
+<span class="sd">               {fit,test} ...</span>
+
+<span class="sd">options:</span>
+<span class="sd">  -h, --help            Show this help message and exit.</span>
+<span class="sd">  --config CONFIG       Path to a configuration file.</span>
+<span class="sd">  --print_config [={comments,skip_null,skip_default}+]</span>
+<span class="sd">                        Print the configuration after applying all other arguments and exit.</span>
+
+<span class="sd">Optimize fusion using ranx:</span>
+<span class="sd">  --qrels QRELS, --qrels+ QRELS</span>
+<span class="sd">                        (type: Union[str, List[str], null], default: null)</span>
+<span class="sd">  --runs RUNS, --runs+ RUNS</span>
+<span class="sd">                        (type: Optional[List[str]], default: null)</span>
+<span class="sd">  --norm NORM, --norm+ NORM</span>
+<span class="sd">                        (type: Union[str, null, List[Optional[str]]], default: zmuv)</span>
+<span class="sd">  --method METHOD, --method+ METHOD</span>
+<span class="sd">                        (type: Union[str, null, List[Optional[str]]], default: wsum)</span>
+<span class="sd">  --output OUTPUT       (type: Optional[str], default: null)</span>
+<span class="sd">  --defmin DEFMIN, --defmin+ DEFMIN</span>
+<span class="sd">                        (type: Union[bool, null, List[Optional[bool]]], default: False)</span>
+
+<span class="sd">subcommands:</span>
+<span class="sd">  For more details of each subcommand add it as argument followed by --help.</span>
+
+<span class="sd">  {fit,test}</span>
+<span class="sd">    fit                 Finds best parameters</span>
+<span class="sd">    test                Applies best parameters</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">jsonargparse</span> <span class="kn">import</span> <span class="n">CLI</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">njit</span><span class="p">,</span> <span class="n">prange</span><span class="p">,</span> <span class="n">types</span>
+<span class="kn">from</span> <span class="nn">numba.typed</span> <span class="kn">import</span> <span class="n">List</span> <span class="k">as</span> <span class="n">TypedList</span><span class="p">,</span> <span class="n">Dict</span> <span class="k">as</span> <span class="n">TypedDict</span>
+<span class="kn">from</span> <span class="nn">ranx</span> <span class="kn">import</span> <span class="n">fuse</span><span class="p">,</span> <span class="n">optimize_fusion</span><span class="p">,</span> <span class="n">Run</span><span class="p">,</span> <span class="n">Qrels</span><span class="p">,</span> <span class="n">evaluate</span>
+
+<span class="kn">from</span> <span class="nn">..data.utils</span> <span class="kn">import</span> <span class="n">to_latex</span>
+<span class="kn">from</span> <span class="nn">.metrics</span> <span class="kn">import</span> <span class="n">fuse_qrels</span>
+
+
+<span class="c1">####################################</span>
+<span class="c1"># copied from ranx because private #</span>
+<span class="c1">####################################</span>
+
+<div class="viewcode-block" id="create_empty_results_dict"><a class="viewcode-back" href="../../../meerqat.ir.fuse.html#meerqat.ir.fuse.create_empty_results_dict">[docs]</a><span class="nd">@njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">create_empty_results_dict</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">TypedDict</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span>
+        <span class="n">key_type</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">unicode_type</span><span class="p">,</span>
+        <span class="n">value_type</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+<div class="viewcode-block" id="create_empty_results_dict_list"><a class="viewcode-back" href="../../../meerqat.ir.fuse.html#meerqat.ir.fuse.create_empty_results_dict_list">[docs]</a><span class="nd">@njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">create_empty_results_dict_list</span><span class="p">(</span><span class="n">length</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">TypedList</span><span class="p">([</span><span class="n">create_empty_results_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">length</span><span class="p">)])</span></div>
+
+<div class="viewcode-block" id="convert_results_dict_list_to_run"><a class="viewcode-back" href="../../../meerqat.ir.fuse.html#meerqat.ir.fuse.convert_results_dict_list_to_run">[docs]</a><span class="nd">@njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">convert_results_dict_list_to_run</span><span class="p">(</span><span class="n">q_ids</span><span class="p">,</span> <span class="n">results_dict_list</span><span class="p">):</span>
+    <span class="n">combined_run</span> <span class="o">=</span> <span class="n">TypedDict</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">q_id</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">q_ids</span><span class="p">):</span>
+        <span class="n">combined_run</span><span class="p">[</span><span class="n">q_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">results_dict_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">combined_run</span></div>
+
+
+<div class="viewcode-block" id="extract_scores"><a class="viewcode-back" href="../../../meerqat.ir.fuse.html#meerqat.ir.fuse.extract_scores">[docs]</a><span class="nd">@njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">extract_scores</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extract the scores from a given results dictionary.&quot;&quot;&quot;</span>
+    <span class="n">scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)))</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+        <span class="n">scores</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+    <span class="k">return</span> <span class="n">scores</span></div>
+
+
+<span class="c1">################</span>
+<span class="c1"># custom norms #</span>
+<span class="c1">################</span>
+    
+<span class="nd">@njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_gzmuv_norm</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">mean_score</span><span class="p">,</span> <span class="n">stdev_score</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Apply `gzmuv norm` to a given results dictionary.&quot;&quot;&quot;</span>
+    <span class="n">denominator</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">stdev_score</span><span class="p">,</span> <span class="mf">1e-9</span><span class="p">)</span>
+
+    <span class="n">normalized_results</span> <span class="o">=</span> <span class="n">create_empty_results_dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">doc_id</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">normalized_results</span><span class="p">[</span><span class="n">doc_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="n">doc_id</span><span class="p">]</span> <span class="o">-</span> <span class="n">mean_score</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span>
+            <span class="n">denominator</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">normalized_results</span>
+
+
+<span class="nd">@njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_gzmuv_norm_parallel</span><span class="p">(</span><span class="n">run</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Apply `zmuv norm` to a each results dictionary of a run in parallel.&quot;&quot;&quot;</span>
+    <span class="n">q_ids</span> <span class="o">=</span> <span class="n">TypedList</span><span class="p">(</span><span class="n">run</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="n">normalized_run</span> <span class="o">=</span> <span class="n">create_empty_results_dict_list</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">q_ids</span><span class="p">))</span>
+    <span class="c1"># FIXME getting error np.concatenate(): expecting a non-empty tuple of arrays, got ListType[array(float64, 1d, C)]</span>
+    <span class="c1">#    results_lengths = [len(results) for results in run.values()]</span>
+    <span class="c1">#    all_scores = TypedList([np.empty(l) for l in results_lengths])</span>
+    <span class="c1">#    for i in prange(len(q_ids)):</span>
+    <span class="c1">#        all_scores[i] = extract_scores(run[q_ids[i]])</span>
+    <span class="c1">#    all_scores = np.concatenate(list(all_scores))</span>
+    
+    <span class="c1"># not very numba-esque hack</span>
+    <span class="n">all_scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">results</span> <span class="ow">in</span> <span class="n">run</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+    <span class="n">mean_score</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">all_scores</span><span class="p">)</span>
+    <span class="n">stdev_score</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">all_scores</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">prange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">q_ids</span><span class="p">)):</span>
+        <span class="n">normalized_run</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">_gzmuv_norm</span><span class="p">(</span><span class="n">run</span><span class="p">[</span><span class="n">q_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]],</span> <span class="n">mean_score</span><span class="p">,</span> <span class="n">stdev_score</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">convert_results_dict_list_to_run</span><span class="p">(</span><span class="n">q_ids</span><span class="p">,</span> <span class="n">normalized_run</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="gzmuv_norm"><a class="viewcode-back" href="../../../meerqat.ir.fuse.html#meerqat.ir.fuse.gzmuv_norm">[docs]</a><span class="k">def</span> <span class="nf">gzmuv_norm</span><span class="p">(</span><span class="n">run</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Apply `gzmuv norm` to a run.&quot;&quot;&quot;</span>
+    <span class="n">normalized_run</span> <span class="o">=</span> <span class="n">Run</span><span class="p">()</span>
+    <span class="n">normalized_run</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">run</span><span class="o">.</span><span class="n">name</span>
+    <span class="n">normalized_run</span><span class="o">.</span><span class="n">run</span> <span class="o">=</span> <span class="n">_gzmuv_norm_parallel</span><span class="p">(</span><span class="n">run</span><span class="o">.</span><span class="n">run</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">normalized_run</span></div>
+
+
+<div class="viewcode-block" id="default_minimum"><a class="viewcode-back" href="../../../meerqat.ir.fuse.html#meerqat.ir.fuse.default_minimum">[docs]</a><span class="k">def</span> <span class="nf">default_minimum</span><span class="p">(</span><span class="n">runs</span><span class="p">):</span>
+    <span class="c1"># union results</span>
+    <span class="n">all_documents</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="n">runs</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">q_id</span><span class="p">,</span> <span class="n">results</span> <span class="ow">in</span> <span class="n">run</span><span class="o">.</span><span class="n">run</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">all_documents</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">q_id</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span>
+            <span class="n">all_documents</span><span class="p">[</span><span class="n">q_id</span><span class="p">]</span> <span class="o">|=</span> <span class="n">results</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            
+    <span class="c1"># set default-minimum in runs</span>
+    <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="n">runs</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">q_id</span><span class="p">,</span> <span class="n">results</span> <span class="ow">in</span> <span class="n">run</span><span class="o">.</span><span class="n">run</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">minimum</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="k">for</span> <span class="n">d_id</span> <span class="ow">in</span> <span class="n">all_documents</span><span class="p">[</span><span class="n">q_id</span><span class="p">]:</span>
+                <span class="n">results</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">d_id</span><span class="p">,</span> <span class="n">minimum</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">runs</span></div>
+    
+                
+<span class="n">NORMS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;gzmuv&quot;</span><span class="p">:</span> <span class="n">gzmuv_norm</span>
+<span class="p">}</span>
+
+
+<span class="c1">##################</span>
+<span class="c1"># Main class/CLI #</span>
+<span class="c1">##################</span>
+
+
+<div class="viewcode-block" id="Fusion"><a class="viewcode-back" href="../../../meerqat.ir.fuse.html#meerqat.ir.fuse.Fusion">[docs]</a><span class="k">class</span> <span class="nc">Fusion</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Optimize fusion using ranx&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">qrels</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">,</span> <span class="n">Qrels</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">runs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Run</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>        
+        <span class="n">norm</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="s2">&quot;zmuv&quot;</span><span class="p">,</span>
+        <span class="n">method</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="s2">&quot;wsum&quot;</span><span class="p">,</span>
+        <span class="n">output</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">defmin</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">qrels</span><span class="p">,</span> <span class="n">Qrels</span><span class="p">)</span> <span class="ow">or</span> <span class="n">qrels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">qrels</span> <span class="o">=</span> <span class="n">qrels</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">qrels</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">qrels</span> <span class="o">=</span> <span class="n">Qrels</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">qrels</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">qrels</span> <span class="o">=</span> <span class="n">fuse_qrels</span><span class="p">(</span><span class="n">qrels</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">runs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Run</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">runs</span> <span class="o">=</span> <span class="n">runs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">runs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Run</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">run</span><span class="p">)</span> <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="n">runs</span><span class="p">]</span>   
+        <span class="k">if</span> <span class="n">defmin</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">runs</span> <span class="o">=</span> <span class="n">default_minimum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="p">)</span>         
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="n">norm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">method</span>
+        <span class="k">if</span> <span class="n">output</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># FIXME: use jsonargparse Path instead of pathlib? https://github.com/omni-us/jsonargparse/issues/94</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="n">output</span>
+    
+<div class="viewcode-block" id="Fusion.fit"><a class="viewcode-back" href="../../../meerqat.ir.fuse.html#meerqat.ir.fuse.Fusion.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mrr@100&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Finds best parameters&quot;&quot;&quot;</span>
+        <span class="n">norms</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> 
+        <span class="n">methods</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span> 
+        <span class="k">for</span> <span class="n">norm</span> <span class="ow">in</span> <span class="n">norms</span><span class="p">:</span>
+            <span class="c1"># custom norm: do it as a pre-processing and disable ranx norm</span>
+            <span class="k">if</span> <span class="n">norm</span> <span class="ow">in</span> <span class="n">NORMS</span><span class="p">:</span>
+                <span class="n">runs</span> <span class="o">=</span> <span class="p">[</span><span class="n">NORMS</span><span class="p">[</span><span class="n">norm</span><span class="p">](</span><span class="n">run</span><span class="p">)</span> <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="p">]</span>
+                <span class="n">norm_for_ranx</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">runs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">runs</span>
+                <span class="n">norm_for_ranx</span> <span class="o">=</span> <span class="n">norm</span>
+            <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">methods</span><span class="p">:</span>
+                <span class="n">best_params</span><span class="p">,</span> <span class="n">report</span> <span class="o">=</span> <span class="n">optimize_fusion</span><span class="p">(</span>
+                    <span class="n">qrels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">qrels</span><span class="p">,</span>
+                    <span class="n">runs</span><span class="o">=</span><span class="n">runs</span><span class="p">,</span>
+                    <span class="n">norm</span><span class="o">=</span><span class="n">norm_for_ranx</span><span class="p">,</span>
+                    <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
+                    <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
+                    <span class="n">return_optimization_report</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Norm: </span><span class="si">{</span><span class="n">norm</span><span class="si">}</span><span class="s2">, Method: </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">. Best parameters: </span><span class="si">{</span><span class="n">best_params</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="si">{</span><span class="n">report</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="o">/</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">norm</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">_best_params.yaml&quot;</span><span class="p">,</span> <span class="s1">&#39;wt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                        <span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">best_params</span><span class="p">)),</span> <span class="n">file</span><span class="p">)</span></div>
+    
+<div class="viewcode-block" id="Fusion.test"><a class="viewcode-back" href="../../../meerqat.ir.fuse.html#meerqat.ir.fuse.Fusion.test">[docs]</a>    <span class="k">def</span> <span class="nf">test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">best_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Applies best parameters&quot;&quot;&quot;</span>
+        <span class="c1"># custom norm: do it as a pre-processing and disable ranx norm</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="ow">in</span> <span class="n">NORMS</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">runs</span> <span class="o">=</span> <span class="p">[</span><span class="n">NORMS</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">](</span><span class="n">run</span><span class="p">)</span> <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">combined_run</span> <span class="o">=</span> <span class="n">fuse</span><span class="p">(</span>
+            <span class="n">runs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="p">,</span>
+            <span class="n">norm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">,</span>       
+            <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span>        
+            <span class="n">params</span><span class="o">=</span><span class="n">best_params</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">combined_run</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="o">/</span><span class="s2">&quot;test_run.json&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">metrics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">to_latex</span><span class="p">(</span><span class="n">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qrels</span><span class="p">,</span> <span class="n">combined_run</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">combined_run</span></div></div>
+
+    
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">CLI</span><span class="p">(</span><span class="n">Fusion</span><span class="p">)</span>
+</pre></div>
+
+            </article>
+            
+            
+            
+            <footer class="bd-footer-article">
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+            </footer>
+            
+          </div>
+          
+          
+          
+            <div class="bd-sidebar-secondary bd-toc">
+              
+<div class="toc-item">
+  
+</div>
+
+<div class="toc-item">
+  
+</div>
+
+            </div>
+          
+          
+        </div>
+        <footer class="bd-footer-content">
+          <div class="bd-footer-content__inner">
+            
+          </div>
+        </footer>
+        
+      </main>
+    </div>
+  </div>
+
+  
+    
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b"></script>
+
+  <footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    
+<p class="copyright">
+
+    &copy; Copyright 2020-2023, CNRS.<br>
+
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+<p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.2.3.<br>
+</p>
+
+  </div>
+  
+</div>
+  </footer>
+  </body>
+</html>

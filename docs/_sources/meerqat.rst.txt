@@ -14,6 +14,7 @@ Subpackages
 
    meerqat.data
    meerqat.image
+   meerqat.interact
    meerqat.ir
    meerqat.models
    meerqat.train

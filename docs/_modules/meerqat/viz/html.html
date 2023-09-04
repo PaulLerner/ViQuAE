@@ -33,6 +33,7 @@
     <script src="../../../_static/underscore.js"></script>
     <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/meerqat/viz/html';</script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -223,9 +224,9 @@
   <h1>Source code for meerqat.viz.html</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">usage: html.py [-h] [--config CONFIG] [--print_config [={comments,skip_null,skip_default}+]] [--n N] [--width WIDTH] [--passages_path PASSAGES_PATH] [--wiki_path WIKI_PATH] [--search_run SEARCH_RUN]</span>
-<span class="sd">               [--other_search_run OTHER_SEARCH_RUN]</span>
-<span class="sd">               dataset_path output</span>
+<span class="sd">usage: html.py [-h] [--config CONFIG] [--print_config [={comments,skip_null,skip_default}+]] </span>
+<span class="sd">[--n N] [--width WIDTH] [--passages_path PASSAGES_PATH] [--wiki_path WIKI_PATH] </span>
+<span class="sd">[--search_run SEARCH_RUN] [--other_search_run OTHER_SEARCH_RUN] dataset_path output </span>
 
 <span class="sd">options:</span>
 <span class="sd">  -h, --help            Show this help message and exit.</span>
@@ -236,7 +237,8 @@
 <span class="sd">Visualize dataset in HTML:</span>
 <span class="sd">  dataset_path          (required, type: str)</span>
 <span class="sd">  output                (required, type: str)</span>
-<span class="sd">  --n N                 Number of examples to output after shuffling. Defaults to all without shuffling. (type: Optional[int], default: null)</span>
+<span class="sd">  --n N                 Number of examples to output after shuffling. Defaults to all without</span>
+<span class="sd">                        shuffling. (type: Optional[int], default: null)</span>
 <span class="sd">  --width WIDTH         Width of the image in HTML [default: 400]. (type: int, default: 400)</span>
 <span class="sd">  --passages_path PASSAGES_PATH</span>
 <span class="sd">                        (type: Optional[str], default: null)</span>
@@ -245,7 +247,7 @@
 <span class="sd">  --search_run SEARCH_RUN</span>
 <span class="sd">                        (type: Optional[str], default: null)</span>
 <span class="sd">  --other_search_run OTHER_SEARCH_RUN</span>
-<span class="sd">                        (type: Optional[str], default: null)        </span>
+<span class="sd">                        (type: Optional[str], default: null)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
@@ -436,7 +438,7 @@
   <div class="footer-item">
     
 <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.1.1.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.2.3.<br>
 </p>
 
   </div>

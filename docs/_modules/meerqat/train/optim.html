@@ -1,0 +1,380 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>meerqat.train.optim &#8212; meerqat v3.0.0-alpha documentation</title>
+  <script>
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+
+  
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/6.1.2/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b">
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/meerqat/train/optim';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="docsearch:language" content="en">
+  </head>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__primary" id="__primary">
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__secondary" id="__secondary">
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+      
+<form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+    </div>
+  </div>
+
+  
+  <nav class="bd-header navbar navbar-expand-lg bd-navbar" id="navbar-main"><div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+      <span class="fas fa-bars"></span>
+  </label>
+  <div id="navbar-start">
+    
+    
+  
+
+
+<a class="navbar-brand logo" href="../../../index.html">
+
+  
+  
+  
+  
+  
+  
+  
+
+  
+  
+    <p class="title logo__title">meerqat v3.0.0-alpha documentation</p>
+  
+</a>
+    
+  </div>
+
+  
+  <div class="col-lg-9 navbar-header-items">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+    </ul>
+</nav>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      <div class="navbar-end-item navbar-end__search-button-container">
+        
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+
+
+  
+  <div class="search-button-container--mobile">
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+  </div>
+
+  
+  <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fas fa-outdent"></span>
+  </label>
+  
+
+</div>
+  </nav>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+    </ul>
+</nav>
+      </div>
+      
+      </div>
+    
+
+    
+    
+    <div class="sidebar-header-items__end">
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+    
+  </div>
+
+  
+
+  
+  <div class="sidebar-end-items sidebar-primary__section">
+    <div class="sidebar-end-items__item">
+    </div>
+  </div>
+
+      </div>
+      <main class="bd-main">
+        
+        
+        <div class="bd-content">
+          <div class="bd-article-container">
+            
+            <div class="bd-header-article">
+                
+            </div>
+            
+            
+            <article class="bd-article" role="main">
+              
+  <h1>Source code for meerqat.train.optim</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Loss functions, optimizers, and schedulers.&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">from</span> <span class="nn">torch.optim.lr_scheduler</span> <span class="kn">import</span> <span class="n">LambdaLR</span>
+
+
+<div class="viewcode-block" id="LinearLRWithWarmup"><a class="viewcode-back" href="../../../meerqat.train.optim.html#meerqat.train.optim.LinearLRWithWarmup">[docs]</a><span class="k">class</span> <span class="nc">LinearLRWithWarmup</span><span class="p">(</span><span class="n">LambdaLR</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Linear learning rate scheduler with linear warmup.</span>
+<span class="sd">    Adapted from https://github.com/huggingface/transformers/blob/v4.23.0/src/transformers/optimization.py#L75</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    *args, **kwargs: additionnal arguments are passed to LambdaLR</span>
+<span class="sd">    warmup_steps: int</span>
+<span class="sd">    total_steps: int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">warmup_steps</span><span class="p">,</span> <span class="n">total_steps</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">warmup_steps</span> <span class="o">=</span> <span class="n">warmup_steps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">total_steps</span> <span class="o">=</span> <span class="n">total_steps</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">lr_lambda</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lr_lambda</span><span class="p">)</span>
+            
+<div class="viewcode-block" id="LinearLRWithWarmup.lr_lambda"><a class="viewcode-back" href="../../../meerqat.train.optim.html#meerqat.train.optim.LinearLRWithWarmup.lr_lambda">[docs]</a>    <span class="k">def</span> <span class="nf">lr_lambda</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">current_step</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">warmup_steps</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">current_step</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">warmup_steps</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span>
+            <span class="mf">0.0</span><span class="p">,</span> 
+            <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">total_steps</span> <span class="o">-</span> <span class="n">current_step</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_steps</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">warmup_steps</span><span class="p">))</span>
+        <span class="p">)</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">_calc_mml</span><span class="p">(</span><span class="n">loss_tensor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Taken from dpr.models.reader to avoid extra-dependency&quot;&quot;&quot;</span>
+    <span class="n">marginal_likelihood</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span> <span class="n">loss_tensor</span> <span class="o">-</span> <span class="mf">1e10</span> <span class="o">*</span> <span class="p">(</span><span class="n">loss_tensor</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()),</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># Mean reduction: this is different from https://github.com/facebookresearch/DPR/blob/a31212dc0a54dfa85d8bfa01e1669f149ac832b7/dpr/models/reader.py#L180</span>
+    <span class="c1"># who use sum reduction</span>
+    <span class="c1"># by averaging, the loss does not depend on the batch size N (number of questions)</span>
+    <span class="c1"># it might still depend on M, the number of passages, if `max_pooling=True` in `multi_passage_rc_loss` (not recommanded)</span>
+    <span class="k">return</span> <span class="o">-</span><span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">marginal_likelihood</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">loss_tensor</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">marginal_likelihood</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">marginal_likelihood</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()))</span>
+
+
+<div class="viewcode-block" id="multi_passage_rc_loss"><a class="viewcode-back" href="../../../meerqat.train.optim.html#meerqat.train.optim.multi_passage_rc_loss">[docs]</a><span class="k">def</span> <span class="nf">multi_passage_rc_loss</span><span class="p">(</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">start_positions</span><span class="p">,</span> <span class="n">end_positions</span><span class="p">,</span> <span class="n">start_logits</span><span class="p">,</span> <span class="n">end_logits</span><span class="p">,</span> <span class="n">answer_mask</span><span class="p">,</span> <span class="n">max_pooling</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">n_times_m</span><span class="p">,</span> <span class="n">L</span> <span class="o">=</span> <span class="n">input_ids</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">start_positions</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">n_times_m</span> <span class="o">%</span> <span class="n">M</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="n">n_times_m</span><span class="o">//</span><span class="n">M</span>
+    <span class="c1"># sometimes the start/end positions are outside our model inputs, we ignore these terms</span>
+    <span class="n">ignored_index</span> <span class="o">=</span> <span class="n">L</span>
+    <span class="n">start_positions</span> <span class="o">=</span> <span class="n">start_positions</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ignored_index</span><span class="p">)</span>
+    <span class="n">end_positions</span> <span class="o">=</span> <span class="n">end_positions</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ignored_index</span><span class="p">)</span>
+    <span class="n">loss_fct</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">NLLLoss</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="n">ignored_index</span><span class="p">)</span>
+    <span class="n">log_softmax</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">LogSoftmax</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># reshape from (N * M, L) to (N, M * L) so that all M passages related to the same question</span>
+    <span class="c1"># will share the same softmax normalization</span>
+    <span class="n">start_logits</span><span class="p">,</span> <span class="n">end_logits</span> <span class="o">=</span> <span class="n">start_logits</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="o">*</span><span class="n">L</span><span class="p">),</span> <span class="n">end_logits</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="o">*</span><span class="n">L</span><span class="p">)</span>
+    <span class="n">start_log_probs</span><span class="p">,</span> <span class="n">end_log_probs</span> <span class="o">=</span> <span class="n">log_softmax</span><span class="p">(</span><span class="n">start_logits</span><span class="p">),</span> <span class="n">log_softmax</span><span class="p">(</span><span class="n">end_logits</span><span class="p">)</span>
+    <span class="c1"># after computing the softmax, reshape back to (N * M, L)</span>
+    <span class="c1"># because the last dimension, L, must match the position indices (i.e. class label) in start_positions, end_positions</span>
+    <span class="n">start_log_probs</span><span class="p">,</span> <span class="n">end_log_probs</span> <span class="o">=</span> <span class="n">start_log_probs</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">N</span><span class="o">*</span><span class="n">M</span><span class="p">,</span> <span class="n">L</span><span class="p">),</span> <span class="n">end_log_probs</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">N</span><span class="o">*</span><span class="n">M</span><span class="p">,</span> <span class="n">L</span><span class="p">)</span>
+    <span class="n">start_logits</span><span class="p">,</span> <span class="n">end_logits</span> <span class="o">=</span> <span class="n">start_logits</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">N</span><span class="o">*</span><span class="n">M</span><span class="p">,</span> <span class="n">L</span><span class="p">),</span> <span class="n">end_logits</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">N</span><span class="o">*</span><span class="n">M</span><span class="p">,</span> <span class="n">L</span><span class="p">)</span>
+
+    <span class="c1"># reshape to match model output</span>
+    <span class="n">start_positions</span><span class="p">,</span> <span class="n">end_positions</span> <span class="o">=</span> <span class="n">start_positions</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">N</span><span class="o">*</span><span class="n">M</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">end_positions</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">N</span><span class="o">*</span><span class="n">M</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">answer_mask</span> <span class="o">=</span> <span class="n">answer_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">input_ids</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">N</span><span class="o">*</span><span class="n">M</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># compute span loss for each answer position in passage (in range `max_n_answers`)</span>
+    <span class="c1"># note that start_log_probs is constant through the loop</span>
+    <span class="n">start_losses</span> <span class="o">=</span> <span class="p">[(</span><span class="n">loss_fct</span><span class="p">(</span><span class="n">start_log_probs</span><span class="p">,</span> <span class="n">_start_positions</span><span class="p">)</span> <span class="o">*</span> <span class="n">_span_mask</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="p">(</span><span class="n">_start_positions</span><span class="p">,</span> <span class="n">_span_mask</span><span class="p">)</span>
+                    <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">unbind</span><span class="p">(</span><span class="n">start_positions</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">unbind</span><span class="p">(</span><span class="n">answer_mask</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">))]</span>
+
+    <span class="n">end_losses</span> <span class="o">=</span> <span class="p">[(</span><span class="n">loss_fct</span><span class="p">(</span><span class="n">end_log_probs</span><span class="p">,</span> <span class="n">_end_positions</span><span class="p">)</span> <span class="o">*</span> <span class="n">_span_mask</span><span class="p">)</span>
+                  <span class="k">for</span> <span class="p">(</span><span class="n">_end_positions</span><span class="p">,</span> <span class="n">_span_mask</span><span class="p">)</span>
+                  <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">unbind</span><span class="p">(</span><span class="n">end_positions</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">unbind</span><span class="p">(</span><span class="n">answer_mask</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">))]</span>
+    <span class="n">loss_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">t</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">start_losses</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> \
+                  <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">t</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">end_losses</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="c1"># LEGACY: keep the maximum per passage for each question</span>
+    <span class="c1"># this might be used to reproduce the experiments of the ViQuAE paper (Lerner et al. 2022)</span>
+    <span class="c1"># but hurts performance. see https://github.com/facebookresearch/DPR/issues/244</span>
+    <span class="k">if</span> <span class="n">max_pooling</span><span class="p">:</span>
+        <span class="n">loss_tensor</span> <span class="o">=</span> <span class="n">loss_tensor</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="n">total_loss</span> <span class="o">=</span> <span class="n">_calc_mml</span><span class="p">(</span><span class="n">loss_tensor</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">total_loss</span><span class="p">,</span> <span class="n">start_positions</span><span class="p">,</span> <span class="n">end_positions</span><span class="p">,</span> <span class="n">start_logits</span><span class="p">,</span> <span class="n">end_logits</span><span class="p">,</span> <span class="n">start_log_probs</span><span class="p">,</span> <span class="n">end_log_probs</span></div>
+</pre></div>
+
+            </article>
+            
+            
+            
+            <footer class="bd-footer-article">
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+            </footer>
+            
+          </div>
+          
+          
+          
+            <div class="bd-sidebar-secondary bd-toc">
+              
+<div class="toc-item">
+  
+</div>
+
+<div class="toc-item">
+  
+</div>
+
+            </div>
+          
+          
+        </div>
+        <footer class="bd-footer-content">
+          <div class="bd-footer-content__inner">
+            
+          </div>
+        </footer>
+        
+      </main>
+    </div>
+  </div>
+
+  
+    
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b"></script>
+
+  <footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    
+<p class="copyright">
+
+    &copy; Copyright 2020-2023, CNRS.<br>
+
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+<p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.2.3.<br>
+</p>
+
+  </div>
+  
+</div>
+  </footer>
+  </body>
+</html>

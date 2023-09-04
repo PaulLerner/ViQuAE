@@ -1,0 +1,390 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>meerqat.viz.wtl_filter &#8212; meerqat v3.0.0-alpha documentation</title>
+  <script>
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+
+  
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/6.1.2/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b">
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/meerqat/viz/wtl_filter';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="docsearch:language" content="en">
+  </head>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__primary" id="__primary">
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__secondary" id="__secondary">
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+      
+<form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+    </div>
+  </div>
+
+  
+  <nav class="bd-header navbar navbar-expand-lg bd-navbar" id="navbar-main"><div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+      <span class="fas fa-bars"></span>
+  </label>
+  <div id="navbar-start">
+    
+    
+  
+
+
+<a class="navbar-brand logo" href="../../../index.html">
+
+  
+  
+  
+  
+  
+  
+  
+
+  
+  
+    <p class="title logo__title">meerqat v3.0.0-alpha documentation</p>
+  
+</a>
+    
+  </div>
+
+  
+  <div class="col-lg-9 navbar-header-items">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+    </ul>
+</nav>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      <div class="navbar-end-item navbar-end__search-button-container">
+        
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+
+
+  
+  <div class="search-button-container--mobile">
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+  </div>
+
+  
+  <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fas fa-outdent"></span>
+  </label>
+  
+
+</div>
+  </nav>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+    </ul>
+</nav>
+      </div>
+      
+      </div>
+    
+
+    
+    
+    <div class="sidebar-header-items__end">
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+    
+  </div>
+
+  
+
+  
+  <div class="sidebar-end-items sidebar-primary__section">
+    <div class="sidebar-end-items__item">
+    </div>
+  </div>
+
+      </div>
+      <main class="bd-main">
+        
+        
+        <div class="bd-content">
+          <div class="bd-article-container">
+            
+            <div class="bd-header-article">
+                
+            </div>
+            
+            
+            <article class="bd-article" role="main">
+              
+  <h1>Source code for meerqat.viz.wtl_filter</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding: utf-8</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">usage: wtl_filter.py [-h] --runA RUNA [--runB RUNB]</span>
+<span class="sd">                     [--filter {win,loose,intersection,union,nunion,nintersection}] [--kA KA]</span>
+<span class="sd">                     [--kB KB]</span>
+<span class="sd">                     &lt;dataset&gt; &lt;output&gt; &lt;qrels&gt;</span>
+
+<span class="sd">Filter a dataset for questions according to runs A and B and filter option. For example, find</span>
+<span class="sd">questions where A wins over B. By default (kA=kB=1), winning means that A has relevant result in</span>
+<span class="sd">top-1, while B top-1 is irrelevant. However, you can change the definition, e.g. kA=1, kB=100,</span>
+<span class="sd">means that A wins if it has a relevant result in top-1 and B has only irrelevant in its top-100.</span>
+
+<span class="sd">positional arguments:</span>
+<span class="sd">  &lt;dataset&gt;             Path of the dataset to filter.</span>
+<span class="sd">  &lt;output&gt;              Path to save the filtered dataset.</span>
+<span class="sd">  &lt;qrels&gt;               Path to the qrels.</span>
+
+<span class="sd">options:</span>
+<span class="sd">  -h, --help            show this help message and exit</span>
+<span class="sd">  --runA RUNA           Path to run A. (default: None)</span>
+<span class="sd">  --runB RUNB           Path to run B. Defaults: run A always win when its right. (default: None)</span>
+<span class="sd">  --filter {win,loose,intersection,union,nunion,nintersection}</span>
+<span class="sd">                        Save when A wins over B (default), looses over B, both wins (intersection),</span>
+<span class="sd">                        either win (union), both loose (nunion), or one looses (nintersection)</span>
+<span class="sd">                        (default: win)</span>
+<span class="sd">  --kA KA               Judge A on its top-K. (default: 1)</span>
+<span class="sd">  --kB KB               Judge B on its top-K. (default: 1)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">ranx</span>
+<span class="kn">from</span> <span class="nn">datasets</span> <span class="kn">import</span> <span class="n">load_from_disk</span>
+
+<div class="viewcode-block" id="get_wins"><a class="viewcode-back" href="../../../meerqat.viz.wtl_filter.html#meerqat.viz.wtl_filter.get_wins">[docs]</a><span class="k">def</span> <span class="nf">get_wins</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="n">topk</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">run</span><span class="o">.</span><span class="n">scores</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;hit_rate@</span><span class="si">{</span><span class="n">topk</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">}</span></div>
+    
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../meerqat.viz.wtl_filter.html#meerqat.viz.wtl_filter.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">qrels</span><span class="p">,</span> <span class="n">runA</span><span class="p">,</span> <span class="n">runB</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s1">&#39;win&#39;</span><span class="p">,</span> <span class="n">kA</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kB</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">load_from_disk</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+    
+    <span class="n">qrels</span> <span class="o">=</span> <span class="n">ranx</span><span class="o">.</span><span class="n">Qrels</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">qrels</span><span class="p">)</span>
+    <span class="n">runA</span> <span class="o">=</span> <span class="n">ranx</span><span class="o">.</span><span class="n">Run</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">runA</span><span class="p">)</span>
+    <span class="n">evaluateA</span> <span class="o">=</span> <span class="n">ranx</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">qrels</span><span class="o">=</span><span class="n">qrels</span><span class="p">,</span> <span class="n">run</span><span class="o">=</span><span class="n">runA</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;hit_rate@</span><span class="si">{</span><span class="n">kA</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">runA_wins</span> <span class="o">=</span> <span class="n">get_wins</span><span class="p">(</span><span class="n">runA</span><span class="p">,</span> <span class="n">topk</span><span class="o">=</span><span class="n">kA</span><span class="p">)</span>
+    <span class="n">runA</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;run A&quot;</span> <span class="k">if</span> <span class="n">runA</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">runA</span><span class="o">.</span><span class="n">name</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">runA</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;hit_rate@</span><span class="si">{</span><span class="n">kA</span><span class="si">}</span><span class="s1">:&#39;</span><span class="p">,</span> <span class="n">evaluateA</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;wins: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">runA_wins</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">runB</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">runB</span> <span class="o">=</span> <span class="n">ranx</span><span class="o">.</span><span class="n">Run</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">runB</span><span class="p">)</span> 
+        <span class="n">evaluateB</span> <span class="o">=</span> <span class="n">ranx</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">qrels</span><span class="o">=</span><span class="n">qrels</span><span class="p">,</span> <span class="n">run</span><span class="o">=</span><span class="n">runB</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;hit_rate@</span><span class="si">{</span><span class="n">kB</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">runB_wins</span> <span class="o">=</span> <span class="n">get_wins</span><span class="p">(</span><span class="n">runB</span><span class="p">,</span> <span class="n">topk</span><span class="o">=</span><span class="n">kB</span><span class="p">)</span>
+        <span class="n">runB</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;run B&quot;</span> <span class="k">if</span> <span class="n">runB</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">runB</span><span class="o">.</span><span class="n">name</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">runB</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;hit_rate@</span><span class="si">{</span><span class="n">kB</span><span class="si">}</span><span class="s1">:&#39;</span><span class="p">,</span> <span class="n">evaluateB</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;wins: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">runB_wins</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">intersection</span><span class="p">,</span> <span class="n">union</span> <span class="o">=</span> <span class="n">runA_wins</span><span class="o">&amp;</span><span class="n">runB_wins</span><span class="p">,</span> <span class="n">runA_wins</span><span class="o">|</span><span class="n">runB_wins</span>   
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;intersection: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">intersection</span><span class="p">)</span><span class="si">}</span><span class="s2">, union: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">union</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;A over B: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">runA_wins</span><span class="o">-</span><span class="n">runB_wins</span><span class="p">)</span><span class="si">}</span><span class="s2">, B over A: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">runB_wins</span><span class="o">-</span><span class="n">runA_wins</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  
+        <span class="n">switch_filter</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;win&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">id_</span><span class="p">:</span> <span class="n">id_</span> <span class="ow">in</span> <span class="n">runA_wins</span><span class="o">-</span><span class="n">runB_wins</span><span class="p">,</span>
+            <span class="s1">&#39;loose&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">id_</span><span class="p">:</span> <span class="n">id_</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">runB_wins</span><span class="o">-</span><span class="n">runA_wins</span><span class="p">,</span>
+            <span class="s1">&#39;intersection&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">id_</span><span class="p">:</span> <span class="n">id_</span> <span class="ow">in</span> <span class="n">intersection</span><span class="p">,</span>
+            <span class="s1">&#39;union&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">id_</span><span class="p">:</span> <span class="n">id_</span> <span class="ow">in</span> <span class="n">union</span><span class="p">,</span>
+            <span class="s1">&#39;nunion&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">id_</span><span class="p">:</span> <span class="n">id_</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">union</span><span class="p">,</span> 
+            <span class="s1">&#39;nintersection&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">id_</span><span class="p">:</span> <span class="n">id_</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">intersection</span>
+        <span class="p">}</span>
+        <span class="n">filtered</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">switch_filter</span><span class="p">[</span><span class="nb">filter</span><span class="p">],</span> <span class="n">input_columns</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>   
+        <span class="n">switch_filter</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;win&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">id_</span><span class="p">:</span> <span class="n">id_</span> <span class="ow">in</span> <span class="n">runA_wins</span><span class="p">,</span>
+            <span class="s1">&#39;loose&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">id_</span><span class="p">:</span> <span class="n">id_</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">runA_wins</span>
+        <span class="p">}</span>
+        <span class="n">filtered</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">switch_filter</span><span class="p">[</span><span class="nb">filter</span><span class="p">],</span> <span class="n">input_columns</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">filtered</span><span class="p">)</span>
+    <span class="n">filtered</span><span class="o">.</span><span class="n">save_to_disk</span><span class="p">(</span><span class="n">output</span><span class="p">)</span></div>
+        
+    
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span><span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Filter a dataset for questions according to runs A and B and filter option.</span>
+<span class="s2">    For example, find questions where A wins over B.</span>
+<span class="s2">    By default (kA=kB=1), winning means that A has relevant result in top-1, while B top-1 is irrelevant.</span>
+<span class="s2">    However, you can change the definition, e.g. kA=1, kB=100, </span>
+<span class="s2">    means that A wins if it has a relevant result in top-1 and B has only irrelevant in its top-100.</span>
+<span class="s2">    &quot;&quot;&quot;</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span> 
+        <span class="n">formatter_class</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentDefaultsHelpFormatter</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;dataset&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;&lt;dataset&gt;&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path of the dataset to filter.&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;output&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;&lt;output&gt;&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to save the filtered dataset.&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;qrels&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;&lt;qrels&gt;&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to the qrels.&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--runA&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to run A.&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--runB&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to run B. Defaults: run A always win when its right.&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--filter&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;win&#39;</span><span class="p">,</span> <span class="s1">&#39;loose&#39;</span><span class="p">,</span> <span class="s1">&#39;intersection&#39;</span><span class="p">,</span> <span class="s1">&#39;union&#39;</span><span class="p">,</span> <span class="s1">&#39;nunion&#39;</span><span class="p">,</span> <span class="s1">&#39;nintersection&#39;</span><span class="p">],</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;win&#39;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Save when A wins over B (default), looses over B, both wins (intersection), either win (union), both loose (nunion), or one looses (nintersection)&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--kA&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Judge A on its top-K.&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--kB&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Judge B on its top-K.&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+    <span class="n">main</span><span class="p">(</span><span class="o">**</span><span class="nb">vars</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+</pre></div>
+
+            </article>
+            
+            
+            
+            <footer class="bd-footer-article">
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+            </footer>
+            
+          </div>
+          
+          
+          
+            <div class="bd-sidebar-secondary bd-toc">
+              
+<div class="toc-item">
+  
+</div>
+
+<div class="toc-item">
+  
+</div>
+
+            </div>
+          
+          
+        </div>
+        <footer class="bd-footer-content">
+          <div class="bd-footer-content__inner">
+            
+          </div>
+        </footer>
+        
+      </main>
+    </div>
+  </div>
+
+  
+    
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b"></script>
+
+  <footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    
+<p class="copyright">
+
+    &copy; Copyright 2020-2023, CNRS.<br>
+
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+<p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.2.3.<br>
+</p>
+
+  </div>
+  
+</div>
+  </footer>
+  </body>
+</html>

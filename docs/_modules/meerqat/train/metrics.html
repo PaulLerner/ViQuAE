@@ -33,6 +33,7 @@
     <script src="../../../_static/underscore.js"></script>
     <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/meerqat/train/metrics';</script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -222,48 +223,184 @@
               
   <h1>Source code for meerqat.train.metrics</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Metrics to be used in trainer.&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Counter</span>                                                                                                                                                                                    
 
-<div class="viewcode-block" id="retrieval"><a class="viewcode-back" href="../../../meerqat.train.metrics.html#meerqat.train.metrics.retrieval">[docs]</a><span class="k">def</span> <span class="nf">retrieval</span><span class="p">(</span><span class="n">eval_prediction</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=-</span><span class="mi">100</span><span class="p">):</span>
+<span class="kn">import</span> <span class="nn">ranx</span>
+
+<span class="kn">from</span> <span class="nn">..data.loading</span> <span class="kn">import</span> <span class="n">answer_preprocess</span>
+    
+
+<div class="viewcode-block" id="accumulate_batch_metrics"><a class="viewcode-back" href="../../../meerqat.train.metrics.html#meerqat.train.metrics.accumulate_batch_metrics">[docs]</a><span class="k">def</span> <span class="nf">accumulate_batch_metrics</span><span class="p">(</span><span class="n">batch_metrics</span><span class="p">):</span>    
+    <span class="n">metrics</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">()</span>   
+    <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">batch_metrics</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">metric</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="n">v</span>
+    <span class="n">effective_size</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;batch_size&quot;</span><span class="p">)</span> <span class="o">-</span> <span class="n">metrics</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;ignored_predictions&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">metrics</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">metrics</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">/</span><span class="n">effective_size</span>
+    <span class="k">return</span> <span class="n">metrics</span></div>
+
+
+<span class="c1"># TODO https://torchmetrics.readthedocs.io/en/stable/retrieval/mrr.html</span>
+<div class="viewcode-block" id="batch_retrieval"><a class="viewcode-back" href="../../../meerqat.train.metrics.html#meerqat.train.metrics.batch_retrieval">[docs]</a><span class="k">def</span> <span class="nf">batch_retrieval</span><span class="p">(</span><span class="n">log_probs</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=-</span><span class="mi">100</span><span class="p">):</span>
+    <span class="n">mrr</span><span class="p">,</span> <span class="n">hits_at_1</span><span class="p">,</span> <span class="n">ignored_predictions</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="n">batch_size</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">log_probs</span><span class="o">.</span><span class="n">shape</span>
+    <span class="c1"># use argsort to rank the passages w.r.t. their log-probability (`-` to sort in desc. order)</span>
+    <span class="n">rankings</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">log_probs</span><span class="p">)</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">ranking</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">rankings</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">label</span> <span class="o">==</span> <span class="n">ignore_index</span><span class="p">:</span>
+            <span class="n">ignored_predictions</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">ranking</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">label</span><span class="p">:</span>
+            <span class="n">hits_at_1</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="c1"># +1 to count from 1 instead of 0</span>
+        <span class="n">rank</span> <span class="o">=</span> <span class="p">(</span><span class="n">ranking</span> <span class="o">==</span> <span class="n">label</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">mrr</span> <span class="o">+=</span> <span class="mi">1</span><span class="o">/</span><span class="n">rank</span>    
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;MRR@N*M&quot;</span><span class="p">:</span> <span class="n">mrr</span><span class="p">,</span> <span class="s2">&quot;hits@1&quot;</span><span class="p">:</span> <span class="n">hits_at_1</span><span class="p">,</span> 
+            <span class="s2">&quot;ignored_predictions&quot;</span><span class="p">:</span> <span class="n">ignored_predictions</span><span class="p">,</span> <span class="s2">&quot;batch_size&quot;</span><span class="p">:</span> <span class="n">batch_size</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="retrieval"><a class="viewcode-back" href="../../../meerqat.train.metrics.html#meerqat.train.metrics.retrieval">[docs]</a><span class="k">def</span> <span class="nf">retrieval</span><span class="p">(</span><span class="n">eval_outputs</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=-</span><span class="mi">100</span><span class="p">,</span> <span class="n">output_key</span><span class="o">=</span><span class="s1">&#39;log_probs&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes metric for retrieval training (at the batch-level)</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    eval_prediction: EvalPrediction (dict-like)</span>
-<span class="sd">        predictions: np.ndarray</span>
-<span class="sd">            shape (dataset_size, N*M)</span>
-<span class="sd">            This corresponds to the log-probability of the relevant passages per batch (N*M == batch size)</span>
-<span class="sd">        label_ids: np.ndarray</span>
-<span class="sd">            shape (dataset_size, )</span>
-<span class="sd">            Label at the batch-level (each value should be included in [0, N-1] inclusive)</span>
+<span class="sd">    eval_outputs: List[dict[str, Tensor]]</span>
+<span class="sd">        Contains log_probs and labels for all batches in the evaluation step (either validation or test)</span>
 <span class="sd">    ignore_index: int, optional</span>
 <span class="sd">        Labels with this value are not taken into account when computing metrics.</span>
 <span class="sd">        Defaults to -100</span>
+<span class="sd">    output_key: str, optional</span>
+<span class="sd">        Name of the model output in eval_outputs</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">metrics</span> <span class="o">=</span> <span class="p">{}</span>
-
-    <span class="n">log_probs</span> <span class="o">=</span> <span class="n">eval_prediction</span><span class="o">.</span><span class="n">predictions</span>
-    <span class="n">dataset_size</span><span class="p">,</span> <span class="n">N_times_M</span> <span class="o">=</span> <span class="n">log_probs</span><span class="o">.</span><span class="n">shape</span>
-    <span class="c1"># use argsort to rank the passages w.r.t. their log-probability (`-` to sort in desc. order)</span>
-    <span class="n">rankings</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">log_probs</span><span class="p">)</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">mrr</span><span class="p">,</span> <span class="n">ignored_predictions</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">ranking</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">rankings</span><span class="p">,</span> <span class="n">eval_prediction</span><span class="o">.</span><span class="n">label_ids</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">label</span> <span class="o">==</span> <span class="n">ignore_index</span><span class="p">:</span>
-            <span class="n">ignored_predictions</span> <span class="o">+=</span> <span class="mi">1</span>
-            <span class="k">continue</span>
-        <span class="c1"># +1 to count from 1 instead of 0</span>
-        <span class="n">rank</span> <span class="o">=</span> <span class="p">(</span><span class="n">ranking</span> <span class="o">==</span> <span class="n">label</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span>
-        <span class="n">mrr</span> <span class="o">+=</span> <span class="mi">1</span><span class="o">/</span><span class="n">rank</span>
-    <span class="n">mrr</span> <span class="o">/=</span> <span class="p">(</span><span class="n">dataset_size</span><span class="o">-</span><span class="n">ignored_predictions</span><span class="p">)</span>
-    <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;MRR@N*M&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mrr</span>
-
-    <span class="c1"># argmax to get index of prediction (equivalent to `log_probs.argmax(axis=1)`)</span>
-    <span class="n">predictions</span> <span class="o">=</span> <span class="n">rankings</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
-    <span class="c1"># hits@1</span>
-    <span class="n">where</span> <span class="o">=</span> <span class="n">eval_prediction</span><span class="o">.</span><span class="n">label_ids</span> <span class="o">!=</span> <span class="n">ignore_index</span>
-    <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;hits@1&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">predictions</span><span class="p">[</span><span class="n">where</span><span class="p">]</span> <span class="o">==</span> <span class="n">eval_prediction</span><span class="o">.</span><span class="n">label_ids</span><span class="p">[</span><span class="n">where</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-
+    <span class="n">metrics</span> <span class="o">=</span> <span class="p">{}</span>    
+    <span class="n">mrr</span><span class="p">,</span> <span class="n">hits_at_1</span><span class="p">,</span> <span class="n">ignored_predictions</span><span class="p">,</span> <span class="n">dataset_size</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">eval_outputs</span><span class="p">:</span>
+        <span class="n">log_probs</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="n">output_key</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">batch_size</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">log_probs</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">dataset_size</span> <span class="o">+=</span> <span class="n">batch_size</span>
+        <span class="c1"># use argsort to rank the passages w.r.t. their log-probability (`-` to sort in desc. order)</span>
+        <span class="n">rankings</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">log_probs</span><span class="p">)</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ranking</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">rankings</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">label</span> <span class="o">==</span> <span class="n">ignore_index</span><span class="p">:</span>
+                <span class="n">ignored_predictions</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">ranking</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">label</span><span class="p">:</span>
+                <span class="n">hits_at_1</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="c1"># +1 to count from 1 instead of 0</span>
+            <span class="n">rank</span> <span class="o">=</span> <span class="p">(</span><span class="n">ranking</span> <span class="o">==</span> <span class="n">label</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">mrr</span> <span class="o">+=</span> <span class="mi">1</span><span class="o">/</span><span class="n">rank</span>    
+    <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;MRR@N*M&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mrr</span> <span class="o">/</span> <span class="p">(</span><span class="n">dataset_size</span><span class="o">-</span><span class="n">ignored_predictions</span><span class="p">)</span>
+    <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;hits@1&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hits_at_1</span> <span class="o">/</span> <span class="p">(</span><span class="n">dataset_size</span><span class="o">-</span><span class="n">ignored_predictions</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">metrics</span></div>
+
+
+<div class="viewcode-block" id="get_run"><a class="viewcode-back" href="../../../meerqat.train.metrics.html#meerqat.train.metrics.get_run">[docs]</a><span class="k">def</span> <span class="nf">get_run</span><span class="p">(</span><span class="n">eval_outputs</span><span class="p">,</span> <span class="n">ir_run</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    eval_outputs: List[dict[str, Tensor]]</span>
+<span class="sd">        Contains logits for all batches in the evaluation step (either validation or test)</span>
+<span class="sd">    ir_run: ranx.Run</span>
+<span class="sd">        Original IR run being re-ranked.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">run</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">eval_outputs</span><span class="p">:</span>
+        <span class="n">logits</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s1">&#39;logits&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">N</span><span class="p">,</span> <span class="n">M</span> <span class="o">=</span> <span class="n">logits</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">question_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">batch</span><span class="p">[</span><span class="s1">&#39;ids&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N</span><span class="o">*</span><span class="n">M</span><span class="p">,</span> <span class="n">M</span><span class="p">)]</span>
+        <span class="n">rankings</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">logits</span><span class="p">)</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ranking</span><span class="p">,</span> <span class="n">logit</span><span class="p">,</span> <span class="n">question_id</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">rankings</span><span class="p">,</span> <span class="n">logits</span><span class="p">,</span> <span class="n">question_ids</span><span class="p">):</span>
+            <span class="n">ir_results</span> <span class="o">=</span> <span class="n">ir_run</span><span class="o">.</span><span class="n">run</span><span class="p">[</span><span class="n">question_id</span><span class="p">]</span>
+            <span class="c1"># nothing to re-rank. </span>
+            <span class="c1"># this can happen if searching for something unavailable in the query</span>
+            <span class="c1"># e.g. no face was detected but you are searching for face similarity (see ir.search)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">ir_results</span><span class="p">:</span>
+                <span class="n">run</span><span class="p">[</span><span class="n">question_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">ir_results</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">doc_ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">ir_results</span><span class="o">.</span><span class="n">keys</span><span class="p">())[:</span> <span class="n">M</span><span class="p">]</span>
+                <span class="n">run</span><span class="p">[</span><span class="n">question_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">doc_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span> <span class="n">logit</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ranking</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">ranx</span><span class="o">.</span><span class="n">Run</span><span class="p">(</span><span class="n">run</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="f1_score"><a class="viewcode-back" href="../../../meerqat.train.metrics.html#meerqat.train.metrics.f1_score">[docs]</a><span class="k">def</span> <span class="nf">f1_score</span><span class="p">(</span><span class="n">prediction</span><span class="p">,</span> <span class="n">ground_truth</span><span class="p">):</span>
+    <span class="n">prediction_tokens</span> <span class="o">=</span> <span class="n">answer_preprocess</span><span class="p">(</span><span class="n">prediction</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">ground_truth_tokens</span> <span class="o">=</span> <span class="n">answer_preprocess</span><span class="p">(</span><span class="n">ground_truth</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>                                                                                                                                                  
+    <span class="n">common</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">prediction_tokens</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">Counter</span><span class="p">(</span><span class="n">ground_truth_tokens</span><span class="p">)</span>
+    <span class="n">num_same</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">common</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">num_same</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="n">precision</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">num_same</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">prediction_tokens</span><span class="p">)</span>
+    <span class="n">recall</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">num_same</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">ground_truth_tokens</span><span class="p">)</span>
+    <span class="n">f1</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">precision</span> <span class="o">*</span> <span class="n">recall</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">precision</span> <span class="o">+</span> <span class="n">recall</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">f1</span></div>
+
+
+<div class="viewcode-block" id="exact_match_score"><a class="viewcode-back" href="../../../meerqat.train.metrics.html#meerqat.train.metrics.exact_match_score">[docs]</a><span class="k">def</span> <span class="nf">exact_match_score</span><span class="p">(</span><span class="n">prediction</span><span class="p">,</span> <span class="n">ground_truth</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">answer_preprocess</span><span class="p">(</span><span class="n">prediction</span><span class="p">)</span> <span class="o">==</span> <span class="n">answer_preprocess</span><span class="p">(</span><span class="n">ground_truth</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="metric_max_over_ground_truths"><a class="viewcode-back" href="../../../meerqat.train.metrics.html#meerqat.train.metrics.metric_max_over_ground_truths">[docs]</a><span class="k">def</span> <span class="nf">metric_max_over_ground_truths</span><span class="p">(</span><span class="n">metric_fn</span><span class="p">,</span> <span class="n">prediction</span><span class="p">,</span> <span class="n">ground_truths</span><span class="p">):</span>
+    <span class="n">scores_for_ground_truths</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">ground_truth</span> <span class="ow">in</span> <span class="n">ground_truths</span><span class="p">:</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="n">metric_fn</span><span class="p">(</span><span class="n">prediction</span><span class="p">,</span> <span class="n">ground_truth</span><span class="p">)</span>
+        <span class="n">scores_for_ground_truths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">score</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">scores_for_ground_truths</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="squad"><a class="viewcode-back" href="../../../meerqat.train.metrics.html#meerqat.train.metrics.squad">[docs]</a><span class="k">def</span> <span class="nf">squad</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">references</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adapted from datasets.load_metric(&#39;squad&#39;)</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    predictions: List[str]</span>
+<span class="sd">    references: List[List[str]]</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    metrics: dict[str, float]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">predictions</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">references</span><span class="p">)</span>
+    <span class="n">f1</span><span class="p">,</span> <span class="n">exact_match</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">prediction</span><span class="p">,</span> <span class="n">ground_truths</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">references</span><span class="p">):</span>
+        <span class="n">exact_match</span> <span class="o">+=</span> <span class="n">metric_max_over_ground_truths</span><span class="p">(</span><span class="n">exact_match_score</span><span class="p">,</span> <span class="n">prediction</span><span class="p">,</span> <span class="n">ground_truths</span><span class="p">)</span>
+        <span class="n">f1</span> <span class="o">+=</span> <span class="n">metric_max_over_ground_truths</span><span class="p">(</span><span class="n">f1_score</span><span class="p">,</span> <span class="n">prediction</span><span class="p">,</span> <span class="n">ground_truths</span><span class="p">)</span>
+
+    <span class="n">exact_match</span> <span class="o">=</span> <span class="n">exact_match</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">references</span><span class="p">)</span>
+    <span class="n">f1</span> <span class="o">=</span> <span class="n">f1</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">references</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;exact_match&quot;</span><span class="p">:</span> <span class="n">exact_match</span><span class="p">,</span> <span class="s2">&quot;f1&quot;</span><span class="p">:</span> <span class="n">f1</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="squad_per_question"><a class="viewcode-back" href="../../../meerqat.train.metrics.html#meerqat.train.metrics.squad_per_question">[docs]</a><span class="k">def</span> <span class="nf">squad_per_question</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">references</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the score of the metrics for each question instead of averaging like squad.</span>
+<span class="sd">    Keep different implementation because squad should in principle be loaded from datasets.</span>
+<span class="sd">    This should allow for stastitical significant testing downstream.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    predictions: List[str]</span>
+<span class="sd">    references: List[List[str]]</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    metrics: dict[str, List[float]]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">predictions</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">references</span><span class="p">)</span>
+    <span class="n">f1</span><span class="p">,</span> <span class="n">exact_match</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">prediction</span><span class="p">,</span> <span class="n">ground_truths</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">references</span><span class="p">):</span>
+        <span class="n">exact_match</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">metric_max_over_ground_truths</span><span class="p">(</span><span class="n">exact_match_score</span><span class="p">,</span> <span class="n">prediction</span><span class="p">,</span> <span class="n">ground_truths</span><span class="p">))</span>
+        <span class="n">f1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">metric_max_over_ground_truths</span><span class="p">(</span><span class="n">f1_score</span><span class="p">,</span> <span class="n">prediction</span><span class="p">,</span> <span class="n">ground_truths</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;exact_match&quot;</span><span class="p">:</span> <span class="n">exact_match</span><span class="p">,</span> <span class="s2">&quot;f1&quot;</span><span class="p">:</span> <span class="n">f1</span><span class="p">}</span></div>
+
 </pre></div>
 
             </article>
@@ -315,7 +452,7 @@
     
 <p class="copyright">
 
-    &copy; Copyright 2022, CNRS.<br>
+    &copy; Copyright 2020-2023, CNRS.<br>
 
 </p>
 
@@ -324,7 +461,7 @@
   <div class="footer-item">
     
 <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.1.1.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.2.3.<br>
 </p>
 
   </div>

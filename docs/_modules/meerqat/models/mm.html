@@ -33,6 +33,7 @@
     <script src="../../../_static/underscore.js"></script>
     <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/meerqat/models/mm';</script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -221,33 +222,23 @@
             <article class="bd-article" role="main">
               
   <h1>Source code for meerqat.models.mm</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Implements the two main architectures presented in the ECIR-submitted paper.&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span></span><span class="sd">&quot;&quot;&quot;Implements the two main architectures presented in the ECIR-2023 paper.&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
-<span class="kn">from</span> <span class="nn">transformers.modeling_outputs</span> <span class="kn">import</span> <span class="n">ModelOutput</span>
-<span class="kn">from</span> <span class="nn">transformers</span> <span class="kn">import</span> <span class="n">PreTrainedModel</span><span class="p">,</span> <span class="n">BertModel</span><span class="p">,</span> <span class="n">DPRQuestionEncoder</span><span class="p">,</span> <span class="n">DPRContextEncoder</span>
-<span class="kn">from</span> <span class="nn">transformers.models.bert</span> <span class="kn">import</span> <span class="n">BertConfig</span>
+<span class="kn">from</span> <span class="nn">transformers.modeling_outputs</span> <span class="kn">import</span> <span class="n">BaseModelOutputWithPastAndCrossAttentions</span>
+<span class="kn">from</span> <span class="nn">transformers</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">PreTrainedModel</span><span class="p">,</span> <span class="n">BertModel</span><span class="p">,</span> <span class="n">DPRQuestionEncoder</span><span class="p">,</span> <span class="n">DPRContextEncoder</span><span class="p">,</span> 
+    <span class="n">ViltPreTrainedModel</span><span class="p">,</span> <span class="n">ViltModel</span><span class="p">,</span> <span class="n">CLIPModel</span><span class="p">,</span> <span class="n">CLIPConfig</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">transformers.models.bert</span> <span class="kn">import</span> <span class="n">BertConfig</span><span class="p">,</span> <span class="n">BertPreTrainedModel</span>
 
+<span class="kn">from</span> <span class="nn">.outputs</span> <span class="kn">import</span> <span class="n">EncoderOutput</span><span class="p">,</span> <span class="n">ECAEncoderOutput</span>
 <span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">ImageEmbedding</span><span class="p">,</span> <span class="n">FaceEmbedding</span>
-
-
-<div class="viewcode-block" id="EncoderOutput"><a class="viewcode-back" href="../../../meerqat.models.mm.html#meerqat.models.mm.EncoderOutput">[docs]</a><span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">EncoderOutput</span><span class="p">(</span><span class="n">ModelOutput</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Generic class for any encoder output of the BiEncoder framework.&quot;&quot;&quot;</span>
-    <span class="n">pooler_output</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
-
-
-<div class="viewcode-block" id="DMREncoderOutput"><a class="viewcode-back" href="../../../meerqat.models.mm.html#meerqat.models.mm.DMREncoderOutput">[docs]</a><span class="nd">@dataclass</span> 
-<span class="k">class</span> <span class="nc">DMREncoderOutput</span><span class="p">(</span><span class="n">EncoderOutput</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Same as DPRQuestionEncoderOutput / DPRContextEncoderOutput</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">pooler_output</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">hidden_states</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">attentions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span></div>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">TanhGate</span>
+<span class="kn">from</span> <span class="nn">.bert</span> <span class="kn">import</span> <span class="n">BertAttention</span><span class="p">,</span> <span class="n">BertEmbeddings</span><span class="p">,</span> <span class="n">BertIntermediate</span><span class="p">,</span> <span class="n">BertOutput</span><span class="p">,</span> <span class="n">BertPooler</span><span class="p">,</span> <span class="n">BertLayer</span>
 
 
 <div class="viewcode-block" id="MMConfig"><a class="viewcode-back" href="../../../meerqat.models.mm.html#meerqat.models.mm.MMConfig">[docs]</a><span class="k">class</span> <span class="nc">MMConfig</span><span class="p">(</span><span class="n">BertConfig</span><span class="p">):</span>
@@ -257,7 +248,11 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    *args, **kwargs: </span>
-<span class="sd">        additionnal arguments are passed to BertConfig.</span>
+<span class="sd">        additional arguments are passed to BertConfig.</span>
+<span class="sd">    n_images: int, optional</span>
+<span class="sd">        Number of images to embed alongside with text. </span>
+<span class="sd">        Each image can be mapped to multiple face features or image features.</span>
+<span class="sd">        If greater than 1, will be assigned to a type embedding (analog to BERT).</span>
 <span class="sd">    n_faces: int, optional</span>
 <span class="sd">        Number of faces that the multimodal model should take as input. Defaults to 4.</span>
 <span class="sd">    face_kwargs: dict, optional</span>
@@ -276,17 +271,29 @@
 <span class="sd">        Whether to rely only on faces and images. </span>
 <span class="sd">        In this case, only the [CLS] token embedding is concatenated to the image features.</span>
 <span class="sd">        Defaults to False.</span>
+<span class="sd">    gating: bool, optional</span>
+<span class="sd">        Whether to use flamingo-style tanh gating (init at 0) [2]_</span>
+<span class="sd">        Defaults to no gating        </span>
+<span class="sd">        </span>
+<span class="sd">     References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [2] Jean-Baptiste Alayrac et al. (2022). </span>
+<span class="sd">       Flamingo: a Visual Language Model for Few-Shot Learning. ArXiv:2204.14198.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="o">*</span><span class="n">args</span><span class="p">,</span>
-                 <span class="n">n_faces</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
-                 <span class="n">face_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">image_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">face_and_image_are_exclusive</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                 <span class="n">no_text</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                 <span class="o">**</span><span class="n">kwargs</span>
-                 <span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+             <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+             <span class="n">n_images</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+             <span class="n">n_faces</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+             <span class="n">face_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+             <span class="n">image_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+             <span class="n">face_and_image_are_exclusive</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+             <span class="n">no_text</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+             <span class="n">gating</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+             <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_images</span> <span class="o">=</span> <span class="n">n_images</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_faces</span> <span class="o">=</span> <span class="n">n_faces</span>
         <span class="k">if</span> <span class="n">face_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">face_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">face_dim</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">bbox_dim</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
@@ -300,16 +307,486 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">image_kwargs</span> <span class="o">=</span> <span class="n">image_kwargs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">face_and_image_are_exclusive</span> <span class="o">=</span> <span class="n">face_and_image_are_exclusive</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">no_text</span> <span class="o">=</span> <span class="n">no_text</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">no_text</span> <span class="o">=</span> <span class="n">no_text</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gating</span> <span class="o">=</span> <span class="n">gating</span></div>
 
 
-<div class="viewcode-block" id="DMREncoder"><a class="viewcode-back" href="../../../meerqat.models.mm.html#meerqat.models.mm.DMREncoder">[docs]</a><span class="k">class</span> <span class="nc">DMREncoder</span><span class="p">(</span><span class="n">PreTrainedModel</span><span class="p">):</span>
+<div class="viewcode-block" id="FlamantConfig"><a class="viewcode-back" href="../../../meerqat.models.mm.html#meerqat.models.mm.FlamantConfig">[docs]</a><span class="k">class</span> <span class="nc">FlamantConfig</span><span class="p">(</span><span class="n">MMConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Hyperparameters for multimodal cross-attention layers</span>
+<span class="sd">    </span>
+<span class="sd">    Same defaults as BertConfig.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+                 <span class="n">multimodal_attention_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">image_num_attention_heads</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+                 <span class="n">image_intermediate_size</span><span class="o">=</span><span class="mi">3072</span><span class="p">,</span>
+                 <span class="n">image_hidden_dropout_prob</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+                 <span class="n">image_attention_probs_dropout_prob</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span>
+                 <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">multimodal_attention_every</span> <span class="o">=</span> <span class="n">multimodal_attention_every</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_num_attention_heads</span> <span class="o">=</span> <span class="n">image_num_attention_heads</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_intermediate_size</span> <span class="o">=</span> <span class="n">image_intermediate_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_hidden_dropout_prob</span> <span class="o">=</span> <span class="n">image_hidden_dropout_prob</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_attention_probs_dropout_prob</span> <span class="o">=</span> <span class="n">image_attention_probs_dropout_prob</span></div>
+        
+        
+<div class="viewcode-block" id="overwrite_bert_config"><a class="viewcode-back" href="../../../meerqat.models.mm.html#meerqat.models.mm.overwrite_bert_config">[docs]</a><span class="k">def</span> <span class="nf">overwrite_bert_config</span><span class="p">(</span><span class="n">flamant_config</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Overwrite BERT parameters in the input flamant_config if they start with &quot;image_&quot;.</span>
+<span class="sd">    See usage in FlamantLayer.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    flamant_config: FlamantConfig</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bert_config: BertConfig</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config_dict</span> <span class="o">=</span> <span class="n">flamant_config</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">config_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+        <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;image_&quot;</span><span class="p">):</span>
+            <span class="c1"># overwrite BERT parameter with the image version of Flamant</span>
+            <span class="n">config_dict</span><span class="p">[</span><span class="n">k</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="s2">&quot;image_&quot;</span><span class="p">):]]</span> <span class="o">=</span> <span class="n">config_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+            
+    <span class="k">return</span> <span class="n">BertConfig</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">config_dict</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FlamantLayer"><a class="viewcode-back" href="../../../meerqat.models.mm.html#meerqat.models.mm.FlamantLayer">[docs]</a><span class="k">class</span> <span class="nc">FlamantLayer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adapted from transformers.BertLayer&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">chunk_size_feed_forward</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chunk_size_feed_forward</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">chunk_size_feed_forward</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seq_len_dim</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_crossattention</span> <span class="o">=</span> <span class="n">BertAttention</span><span class="p">(</span><span class="n">overwrite_bert_config</span><span class="p">(</span><span class="n">config</span><span class="p">),</span> <span class="n">position_embedding_type</span><span class="o">=</span><span class="s2">&quot;absolute&quot;</span><span class="p">)</span>
+        <span class="c1"># like BertIntermediate + BertOutput without residual connection and layer-norm</span>
+        <span class="c1"># which must happen after gating</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_ffw</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">image_intermediate_size</span><span class="p">),</span>
+            <span class="c1"># FIXME: does not take into account config.hidden_act</span>
+            <span class="c1"># (because transformers.activations.ACT2FN returns a function and not a Module)</span>
+            <span class="c1"># Also: Squared-ReLU is used in Flamingo</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">GELU</span><span class="p">(),</span> 
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">image_intermediate_size</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_dropout_prob</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">LayerNorm</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">layer_norm_eps</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attention</span> <span class="o">=</span> <span class="n">BertAttention</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_decoder</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">is_decoder</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_cross_attention</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">add_cross_attention</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_cross_attention</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_decoder</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2"> should be used as a decoder model if cross attention is added&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">crossattention</span> <span class="o">=</span> <span class="n">BertAttention</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">position_embedding_type</span><span class="o">=</span><span class="s2">&quot;absolute&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intermediate</span> <span class="o">=</span> <span class="n">BertIntermediate</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="n">BertOutput</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">gating</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">attn_gate</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ffw_gate</span> <span class="o">=</span> <span class="n">TanhGate</span><span class="p">(),</span> <span class="n">TanhGate</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">attn_gate</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ffw_gate</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Identity</span><span class="p">(),</span> <span class="n">nn</span><span class="o">.</span><span class="n">Identity</span><span class="p">()</span>
+
+<div class="viewcode-block" id="FlamantLayer.forward"><a class="viewcode-back" href="../../../meerqat.models.mm.html#meerqat.models.mm.FlamantLayer.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">hidden_states</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>        
+        <span class="n">image_embeddings</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">attention_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">image_attention_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">head_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">encoder_hidden_states</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">encoder_attention_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">past_key_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">output_attentions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">past_key_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">output_attentions</span><span class="p">:</span>            
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+            
+        <span class="c1"># Flamingo-style gated cross-attention</span>
+        <span class="c1"># FIXME: BertAttention already has layer-norm and res connection</span>
+        <span class="n">hidden_states</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attn_gate</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">image_crossattention</span><span class="p">(</span>
+                <span class="n">hidden_states</span><span class="p">,</span> <span class="c1"># query</span>
+                <span class="n">attention_mask</span><span class="o">=</span><span class="n">attention_mask</span><span class="p">,</span>
+                <span class="n">head_mask</span><span class="o">=</span><span class="n">head_mask</span><span class="p">,</span>
+                <span class="n">encoder_hidden_states</span><span class="o">=</span><span class="n">image_embeddings</span><span class="p">,</span> <span class="c1"># key and value</span>
+                <span class="n">encoder_attention_mask</span><span class="o">=</span><span class="n">image_attention_mask</span><span class="p">,</span>
+                <span class="n">past_key_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">output_attentions</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span> <span class="o">+</span> <span class="n">hidden_states</span>
+        <span class="n">hidden_states</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ffw_gate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_ffw</span><span class="p">(</span><span class="n">hidden_states</span><span class="p">))</span> <span class="o">+</span> <span class="n">hidden_states</span>
+        <span class="c1"># tough architectural choice: keep BERT-style post layer-norm</span>
+        <span class="c1"># but it goes against the flamingo spirit of </span>
+        <span class="c1"># &quot;output should be the same as the pretrained language model after init&quot;</span>
+        <span class="n">hidden_states</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">(</span><span class="n">hidden_states</span><span class="p">)</span>
+        
+        <span class="c1"># ========================== #</span>
+        <span class="c1"># Below: standard BERT layer #</span>
+        <span class="c1"># ========================== #      </span>
+            
+        <span class="n">self_attention_outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attention</span><span class="p">(</span>
+            <span class="n">hidden_states</span><span class="p">,</span>
+            <span class="n">attention_mask</span><span class="p">,</span>
+            <span class="n">head_mask</span><span class="p">,</span>
+            <span class="n">output_attentions</span><span class="o">=</span><span class="n">output_attentions</span><span class="p">,</span>
+            <span class="n">past_key_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">attention_output</span> <span class="o">=</span> <span class="n">self_attention_outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># if decoder, the last output is tuple of self-attn cache</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_decoder</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="n">self_attention_outputs</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>  <span class="c1"># add self attentions if we output attention weights</span>
+
+        <span class="n">cross_attn_present_key_value</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_decoder</span> <span class="ow">and</span> <span class="n">encoder_hidden_states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+        <span class="n">layer_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feed_forward_chunk</span><span class="p">(</span><span class="n">attention_output</span><span class="p">)</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="p">(</span><span class="n">layer_output</span><span class="p">,)</span> <span class="o">+</span> <span class="n">outputs</span>
+
+        <span class="k">return</span> <span class="n">outputs</span></div>
+
+<div class="viewcode-block" id="FlamantLayer.feed_forward_chunk"><a class="viewcode-back" href="../../../meerqat.models.mm.html#meerqat.models.mm.FlamantLayer.feed_forward_chunk">[docs]</a>    <span class="k">def</span> <span class="nf">feed_forward_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attention_output</span><span class="p">):</span>
+        <span class="n">intermediate_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">intermediate</span><span class="p">(</span><span class="n">attention_output</span><span class="p">)</span>
+        <span class="n">layer_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="n">intermediate_output</span><span class="p">,</span> <span class="n">attention_output</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">layer_output</span></div></div>
+    
+    
+<div class="viewcode-block" id="FlamantEncoder"><a class="viewcode-back" href="../../../meerqat.models.mm.html#meerqat.models.mm.FlamantEncoder">[docs]</a><span class="k">class</span> <span class="nc">FlamantEncoder</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Like BertEncoder but with FlamantLayer instead of BertLayer every n layers&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layer</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">num_hidden_layers</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="n">config</span><span class="o">.</span><span class="n">multimodal_attention_every</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">FlamantLayer</span><span class="p">(</span><span class="n">config</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">BertLayer</span><span class="p">(</span><span class="n">config</span><span class="p">))</span>
+                
+        <span class="bp">self</span><span class="o">.</span><span class="n">gradient_checkpointing</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="FlamantEncoder.forward"><a class="viewcode-back" href="../../../meerqat.models.mm.html#meerqat.models.mm.FlamantEncoder.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">hidden_states</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">image_embeddings</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">attention_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">image_attention_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">head_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">encoder_hidden_states</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">encoder_attention_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">past_key_values</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">use_cache</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">output_attentions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">output_hidden_states</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">return_dict</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="n">use_cache</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+        <span class="n">all_hidden_states</span> <span class="o">=</span> <span class="p">()</span> <span class="k">if</span> <span class="n">output_hidden_states</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">all_self_attentions</span> <span class="o">=</span> <span class="p">()</span> <span class="k">if</span> <span class="n">output_attentions</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">all_cross_attentions</span> <span class="o">=</span> <span class="p">()</span> <span class="k">if</span> <span class="n">output_attentions</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">add_cross_attention</span> <span class="k">else</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">layer_module</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">output_hidden_states</span><span class="p">:</span>
+                <span class="n">all_hidden_states</span> <span class="o">=</span> <span class="n">all_hidden_states</span> <span class="o">+</span> <span class="p">(</span><span class="n">hidden_states</span><span class="p">,)</span>
+
+            <span class="n">inputs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+                <span class="n">hidden_states</span><span class="o">=</span><span class="n">hidden_states</span><span class="p">,</span>
+                <span class="n">attention_mask</span><span class="o">=</span><span class="n">attention_mask</span><span class="p">,</span>
+                <span class="n">encoder_hidden_states</span><span class="o">=</span><span class="n">encoder_hidden_states</span><span class="p">,</span>
+                <span class="n">encoder_attention_mask</span><span class="o">=</span><span class="n">encoder_attention_mask</span>
+            <span class="p">)</span>
+
+            <span class="c1"># feed image embeddings for multimodal cross-attention</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer_module</span><span class="p">,</span> <span class="n">FlamantLayer</span><span class="p">):</span>
+                <span class="n">inputs</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">hidden_states</span><span class="p">,</span>        
+                    <span class="n">image_embeddings</span><span class="p">,</span>
+                    <span class="n">attention_mask</span><span class="p">,</span>
+                    <span class="n">image_attention_mask</span><span class="p">,</span>
+                    <span class="n">head_mask</span><span class="p">,</span>
+                    <span class="n">encoder_hidden_states</span><span class="p">,</span>
+                    <span class="n">encoder_attention_mask</span>
+                <span class="p">)</span>
+            <span class="c1"># standard BERT inputs</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">inputs</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">hidden_states</span><span class="p">,</span>        
+                    <span class="n">attention_mask</span><span class="p">,</span>
+                    <span class="n">head_mask</span><span class="p">,</span>
+                    <span class="n">encoder_hidden_states</span><span class="p">,</span>
+                    <span class="n">encoder_attention_mask</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient_checkpointing</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
+                <span class="k">def</span> <span class="nf">create_custom_forward</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+                    <span class="k">def</span> <span class="nf">custom_forward</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="n">module</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+                    <span class="k">return</span> <span class="n">custom_forward</span>
+
+                <span class="n">layer_outputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">checkpoint</span><span class="o">.</span><span class="n">checkpoint</span><span class="p">(</span>
+                    <span class="n">create_custom_forward</span><span class="p">(</span><span class="n">layer_module</span><span class="p">),</span> <span class="o">*</span><span class="n">inputs</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">layer_outputs</span> <span class="o">=</span> <span class="n">layer_module</span><span class="p">(</span><span class="o">*</span><span class="n">inputs</span><span class="p">)</span>
+            <span class="n">hidden_states</span> <span class="o">=</span> <span class="n">layer_outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">output_attentions</span><span class="p">:</span>
+                <span class="n">all_self_attentions</span> <span class="o">=</span> <span class="n">all_self_attentions</span> <span class="o">+</span> <span class="p">(</span><span class="n">layer_outputs</span><span class="p">[</span><span class="mi">1</span><span class="p">],)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">add_cross_attention</span><span class="p">:</span>
+                    <span class="n">all_cross_attentions</span> <span class="o">=</span> <span class="n">all_cross_attentions</span> <span class="o">+</span> <span class="p">(</span><span class="n">layer_outputs</span><span class="p">[</span><span class="mi">2</span><span class="p">],)</span>
+
+        <span class="k">if</span> <span class="n">output_hidden_states</span><span class="p">:</span>
+            <span class="n">all_hidden_states</span> <span class="o">=</span> <span class="n">all_hidden_states</span> <span class="o">+</span> <span class="p">(</span><span class="n">hidden_states</span><span class="p">,)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">return_dict</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">v</span>
+                <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">[</span>
+                    <span class="n">hidden_states</span><span class="p">,</span>
+                    <span class="n">all_hidden_states</span><span class="p">,</span>
+                    <span class="n">all_self_attentions</span><span class="p">,</span>
+                    <span class="n">all_cross_attentions</span><span class="p">,</span>
+                <span class="p">]</span>
+                <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">BaseModelOutputWithPastAndCrossAttentions</span><span class="p">(</span>
+            <span class="n">last_hidden_state</span><span class="o">=</span><span class="n">hidden_states</span><span class="p">,</span>
+            <span class="n">hidden_states</span><span class="o">=</span><span class="n">all_hidden_states</span><span class="p">,</span>
+            <span class="n">attentions</span><span class="o">=</span><span class="n">all_self_attentions</span><span class="p">,</span>
+            <span class="n">cross_attentions</span><span class="o">=</span><span class="n">all_cross_attentions</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
+    
+
+<span class="c1"># TODO: refactor with *PreTrainedModel abstract classes</span>
+<div class="viewcode-block" id="FlamantModel"><a class="viewcode-back" href="../../../meerqat.models.mm.html#meerqat.models.mm.FlamantModel">[docs]</a><span class="k">class</span> <span class="nc">FlamantModel</span><span class="p">(</span><span class="n">BertPreTrainedModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fuses modalities with gated cross-attention layers like in Flamingo [2]_</span>
+<span class="sd">    Adapted from transformers.BertModel</span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+    <span class="n">config_class</span> <span class="o">=</span> <span class="n">FlamantConfig</span>
+    <span class="n">load_tf_weights</span> <span class="o">=</span> <span class="kc">None</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">add_pooling_layer</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span> <span class="o">=</span> <span class="n">BertEmbeddings</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span> <span class="o">=</span> <span class="n">FlamantEncoder</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pooler</span> <span class="o">=</span> <span class="n">BertPooler</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="k">if</span> <span class="n">add_pooling_layer</span> <span class="k">else</span> <span class="kc">None</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">n_images</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">image_type_embeddings</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Embedding</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">n_images</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">)</span>
+            <span class="n">image_layer_norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">layer_norm_eps</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">image_layer_norm</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">n_faces</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">face_embedding</span> <span class="o">=</span> <span class="n">FaceEmbedding</span><span class="p">(</span><span class="n">embedding_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">,</span>
+                                                <span class="n">dropout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_dropout_prob</span><span class="p">,</span>
+                                                <span class="n">layer_norm_eps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">layer_norm_eps</span><span class="p">,</span>
+                                                <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">face_kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">face_embedding</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_embeddings</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_gates</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleDict</span><span class="p">(),</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleDict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">image_kwarg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">image_kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">image_embeddings</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ImageEmbedding</span><span class="p">(</span><span class="n">embedding_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">,</span>
+                                                         <span class="n">dropout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_dropout_prob</span><span class="p">,</span>
+                                                         <span class="n">layer_norm_eps</span><span class="o">=</span><span class="n">image_layer_norm</span><span class="p">,</span>
+                                                         <span class="o">**</span><span class="n">image_kwarg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights_to_log</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># add pointers to the gate parameters so that they are logged in trainer</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">gating</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">layer_module</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">layer</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer_module</span><span class="p">,</span> <span class="n">FlamantLayer</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">weights_to_log</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;attn_gate_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">layer_module</span><span class="o">.</span><span class="n">attn_gate</span><span class="o">.</span><span class="n">gate_param</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">weights_to_log</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;ffw_gate_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">layer_module</span><span class="o">.</span><span class="n">ffw_gate</span><span class="o">.</span><span class="n">gate_param</span>
+                    
+        <span class="bp">self</span><span class="o">.</span><span class="n">post_init</span><span class="p">()</span>
+                
+<div class="viewcode-block" id="FlamantModel.get_input_embeddings"><a class="viewcode-back" href="../../../meerqat.models.mm.html#meerqat.models.mm.FlamantModel.get_input_embeddings">[docs]</a>    <span class="k">def</span> <span class="nf">get_input_embeddings</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span><span class="o">.</span><span class="n">word_embeddings</span></div>
+
+<div class="viewcode-block" id="FlamantModel.set_input_embeddings"><a class="viewcode-back" href="../../../meerqat.models.mm.html#meerqat.models.mm.FlamantModel.set_input_embeddings">[docs]</a>    <span class="k">def</span> <span class="nf">set_input_embeddings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span><span class="o">.</span><span class="n">word_embeddings</span> <span class="o">=</span> <span class="n">value</span></div>
+
+    <span class="k">def</span> <span class="nf">_prune_heads</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">heads_to_prune</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prunes heads of the model. heads_to_prune: dict of {layer_num: list of heads to prune in this layer} See base</span>
+<span class="sd">        class PreTrainedModel</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">layer</span><span class="p">,</span> <span class="n">heads</span> <span class="ow">in</span> <span class="n">heads_to_prune</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">layer</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span><span class="o">.</span><span class="n">attention</span><span class="o">.</span><span class="n">prune_heads</span><span class="p">(</span><span class="n">heads</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FlamantModel.forward"><a class="viewcode-back" href="../../../meerqat.models.mm.html#meerqat.models.mm.FlamantModel.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text_inputs</span><span class="p">,</span> <span class="n">face_inputs</span><span class="p">,</span> <span class="n">image_inputs</span><span class="p">,</span>
+                <span class="n">output_attentions</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">output_hidden_states</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">return_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Arguments</span>
+<span class="sd">        ---------</span>
+<span class="sd">        text_inputs: dict[str, torch.LongTensor]</span>
+<span class="sd">            usual BERT inputs, see transformers.BertModel</span>
+<span class="sd">        face_inputs: dict[str, torch.FloatTensor]</span>
+<span class="sd">            {</span>
+<span class="sd">                &quot;face&quot;: (batch_size, n_images, n_faces, face_dim),</span>
+<span class="sd">                &quot;bbox&quot;: (batch_size, n_images, n_faces, bbox_dim),</span>
+<span class="sd">                &quot;attention_mask&quot;: (batch_size, n_images, n_faces)</span>
+<span class="sd">            }</span>
+<span class="sd">        image_inputs: dict[str, dict[str, torch.FloatTensor]]</span>
+<span class="sd">            {</span>
+<span class="sd">                model:</span>
+<span class="sd">                {</span>
+<span class="sd">                    &quot;input&quot;: (batch_size, n_images, image_dim)</span>
+<span class="sd">                    &quot;attention_mask&quot;: (batch_size, n_images)</span>
+<span class="sd">                }</span>
+<span class="sd">            }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># reshape faces</span>
+        <span class="n">faces</span> <span class="o">=</span> <span class="n">face_inputs</span><span class="p">[</span><span class="s1">&#39;face&#39;</span><span class="p">]</span>
+        <span class="n">batch_size</span><span class="p">,</span> <span class="n">n_images</span><span class="p">,</span> <span class="n">n_faces</span><span class="p">,</span> <span class="n">face_dim</span> <span class="o">=</span> <span class="n">faces</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">if</span> <span class="n">n_faces</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">n_images</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">image_type_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">n_images</span><span class="p">,</span> <span class="n">n_faces</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">faces</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                <span class="c1"># broadcast arange to the right shape</span>
+                <span class="n">image_type_ids</span> <span class="o">+=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_images</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">faces</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_images</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">image_type_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_type_embeddings</span><span class="p">(</span><span class="n">image_type_ids</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="o">*</span><span class="n">n_images</span><span class="o">*</span><span class="n">n_faces</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">image_type_embeddings</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">faces</span> <span class="o">=</span> <span class="n">faces</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="o">*</span><span class="n">n_images</span><span class="o">*</span><span class="n">n_faces</span><span class="p">,</span> <span class="n">face_dim</span><span class="p">)</span>
+            <span class="n">bbox</span> <span class="o">=</span> <span class="n">face_inputs</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="o">*</span><span class="n">n_images</span><span class="o">*</span><span class="n">n_faces</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">face_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">face_embedding</span><span class="p">(</span><span class="n">face</span><span class="o">=</span><span class="n">faces</span><span class="p">,</span> <span class="n">bbox</span><span class="o">=</span><span class="n">bbox</span><span class="p">,</span> <span class="n">image_type_embeddings</span><span class="o">=</span><span class="n">image_type_embeddings</span><span class="p">)</span>
+            <span class="n">face_output</span> <span class="o">=</span> <span class="n">face_output</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">n_images</span><span class="o">*</span><span class="n">n_faces</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">face_output</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">faces</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">face_attention_mask</span> <span class="o">=</span> <span class="n">face_inputs</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">n_images</span><span class="o">*</span><span class="n">n_faces</span><span class="p">)</span>
+        
+        <span class="c1"># embed images</span>
+        <span class="k">if</span> <span class="n">image_inputs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">n_images</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">image_type_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">n_images</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">faces</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                <span class="n">image_type_ids</span> <span class="o">+=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_images</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">faces</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                <span class="n">image_type_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_type_embeddings</span><span class="p">(</span><span class="n">image_type_ids</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="o">*</span><span class="n">n_images</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">image_type_embeddings</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="n">image_outputs</span><span class="p">,</span> <span class="n">image_attention_mask</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">image_inputs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">image_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_embeddings</span><span class="p">[</span><span class="n">name</span><span class="p">](</span>
+                    <span class="n">image</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="o">*</span><span class="n">n_images</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> 
+                    <span class="n">image_type_embeddings</span><span class="o">=</span><span class="n">image_type_embeddings</span>
+                <span class="p">)</span>
+                <span class="n">image_outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">image_output</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">n_images</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+                <span class="n">image_attention_mask</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">image</span><span class="p">[</span><span class="s1">&#39;attention_mask&#39;</span><span class="p">])</span>
+            <span class="c1"># (n_models, batch_size, n_images, embedding_dim) -&gt; (batch_size, n_images*n_models, embedding_dim)</span>
+            <span class="n">image_outputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">image_outputs</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">image_attention_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">image_attention_mask</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">image_outputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">faces</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">image_attention_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">faces</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">face_and_image_are_exclusive</span><span class="p">:</span>
+            <span class="c1"># indices at the batch level: at least one face detected (i.e. not masked)</span>
+            <span class="n">where_are_faces</span> <span class="o">=</span> <span class="n">face_attention_mask</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+            <span class="c1"># mask images if at least one face was detected</span>
+            <span class="n">image_attention_mask</span><span class="p">[</span><span class="n">where_are_faces</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">no_text</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+                
+        <span class="c1"># embed text: (batch_size, sequence_length, embedding_dim)</span>
+        <span class="n">token_type_ids</span> <span class="o">=</span> <span class="n">text_inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;token_type_ids&#39;</span><span class="p">)</span>
+        <span class="n">text_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span><span class="p">(</span><span class="n">input_ids</span><span class="o">=</span><span class="n">text_inputs</span><span class="p">[</span><span class="s1">&#39;input_ids&#39;</span><span class="p">],</span>
+                                          <span class="n">token_type_ids</span><span class="o">=</span><span class="n">token_type_ids</span><span class="p">)</span>
+        <span class="n">attention_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_extended_attention_mask</span><span class="p">(</span>
+            <span class="n">text_inputs</span><span class="p">[</span><span class="s1">&#39;attention_mask&#39;</span><span class="p">],</span> <span class="n">text_embeddings</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">text_embeddings</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="c1"># (batch_size, n_faces+n_models, embedding_dim)</span>
+        <span class="n">image_embeddings</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">face_output</span><span class="p">,</span> <span class="n">image_outputs</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">image_attention_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">face_attention_mask</span><span class="p">,</span> <span class="n">image_attention_mask</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># N. B. looks like this produces the same output as get_extended_attention_mask</span>
+        <span class="c1"># I stick to what is in BertModel implementation</span>
+        <span class="n">image_attention_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">invert_attention_mask</span><span class="p">(</span><span class="n">image_attention_mask</span><span class="p">)</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span>
+            <span class="n">text_embeddings</span><span class="p">,</span> <span class="n">image_embeddings</span><span class="p">,</span> <span class="n">attention_mask</span><span class="o">=</span><span class="n">attention_mask</span><span class="p">,</span>
+            <span class="n">image_attention_mask</span><span class="o">=</span><span class="n">image_attention_mask</span><span class="p">,</span> <span class="n">output_attentions</span><span class="o">=</span><span class="n">output_attentions</span><span class="p">,</span>
+            <span class="n">output_hidden_states</span><span class="o">=</span><span class="n">output_hidden_states</span><span class="p">,</span> <span class="n">return_dict</span><span class="o">=</span><span class="n">return_dict</span><span class="p">)</span>
+
+        <span class="c1"># same as DPR: extract representation from [CLS]: the first token</span>
+        <span class="n">sequence_output</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">pooled_output</span> <span class="o">=</span> <span class="n">sequence_output</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">return_dict</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">pooled_output</span><span class="p">,</span> <span class="p">)</span> <span class="o">+</span> <span class="n">outputs</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+        
+        <span class="k">return</span> <span class="n">ECAEncoderOutput</span><span class="p">(</span>
+                <span class="n">pooler_output</span><span class="o">=</span><span class="n">pooled_output</span><span class="p">,</span>
+                <span class="n">hidden_states</span><span class="o">=</span><span class="n">outputs</span><span class="o">.</span><span class="n">hidden_states</span><span class="p">,</span> 
+                <span class="n">attentions</span><span class="o">=</span><span class="n">outputs</span><span class="o">.</span><span class="n">attentions</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ViltForIR"><a class="viewcode-back" href="../../../meerqat.models.mm.html#meerqat.models.mm.ViltForIR">[docs]</a><span class="k">class</span> <span class="nc">ViltForIR</span><span class="p">(</span><span class="n">ViltPreTrainedModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Pools ViLT using the representation of the [CLS] token, </span>
+<span class="sd">    i.e. DPR-style, *not* with ViltPooler (ITM pre-trained layer),</span>
+<span class="sd">    except if add_pooling_layer=True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">add_pooling_layer</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vilt</span> <span class="o">=</span> <span class="n">ViltModel</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">add_pooling_layer</span><span class="o">=</span><span class="n">add_pooling_layer</span><span class="p">)</span>
+        <span class="c1"># N. B. post_init is called in ViltModel</span>
+    
+<div class="viewcode-block" id="ViltForIR.forward"><a class="viewcode-back" href="../../../meerqat.models.mm.html#meerqat.models.mm.ViltForIR.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">return_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vilt</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">return_dict</span><span class="o">=</span><span class="n">return_dict</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># default behavior: pooling from [CLS] instead of ViltPooler (ITM pre-trained layer)</span>
+        <span class="k">if</span> <span class="n">outputs</span><span class="o">.</span><span class="n">pooler_output</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">outputs</span><span class="o">.</span><span class="n">pooler_output</span> <span class="o">=</span> <span class="n">outputs</span><span class="o">.</span><span class="n">last_hidden_state</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># else keep pooling from ViltPooler</span>
+        <span class="k">return</span> <span class="n">outputs</span></div></div>
+
+
+<div class="viewcode-block" id="CLIPForIR"><a class="viewcode-back" href="../../../meerqat.models.mm.html#meerqat.models.mm.CLIPForIR">[docs]</a><span class="k">class</span> <span class="nc">CLIPForIR</span><span class="p">(</span><span class="n">PreTrainedModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fuses image and text embeddings simply by summing them to be compatible with BiEncoder.</span>
+<span class="sd">    </span>
+<span class="sd">    Because BiEncoder uses dot-product similarity, note that this will be equivalent to computing:</span>
+<span class="sd">        i_q*i_p + i_q*t_p + t_q*t_p + t_q*i_p</span>
+<span class="sd">    Where i, t stand for image, text and _q and _p suffixes stand for question and passage (or context)</span>
+<span class="sd">    i.e. computing all mono-modal and cross-modal similarities.</span>
+<span class="sd">    </span>
+<span class="sd">    But it might be worth using another trainee than BiEncoder to be able to scale these similarities.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config_class</span> <span class="o">=</span> <span class="n">CLIPConfig</span>
+    <span class="n">base_model_prefix</span> <span class="o">=</span> <span class="s2">&quot;clip&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clip</span> <span class="o">=</span> <span class="n">CLIPModel</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="c1"># N. B. post_init is called in CLIPModel</span>
+    
+<div class="viewcode-block" id="CLIPForIR.forward"><a class="viewcode-back" href="../../../meerqat.models.mm.html#meerqat.models.mm.CLIPForIR.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">return_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_loss</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">return_dict</span><span class="o">=</span><span class="n">return_dict</span><span class="p">,</span> <span class="n">return_loss</span><span class="o">=</span><span class="n">return_loss</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">multimodal_output</span> <span class="o">=</span> <span class="n">outputs</span><span class="o">.</span><span class="n">text_embeds</span> <span class="o">+</span> <span class="n">outputs</span><span class="o">.</span><span class="n">image_embeds</span>
+        <span class="k">return</span> <span class="n">EncoderOutput</span><span class="p">(</span><span class="n">pooler_output</span><span class="o">=</span><span class="n">multimodal_output</span><span class="p">)</span></div></div>
+        
+        
+<div class="viewcode-block" id="ECAEncoder"><a class="viewcode-back" href="../../../meerqat.models.mm.html#meerqat.models.mm.ECAEncoder">[docs]</a><span class="k">class</span> <span class="nc">ECAEncoder</span><span class="p">(</span><span class="n">PreTrainedModel</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Text and image are fused by concatenating them at the sequence-level then feeding them to BERT, à la UNITER [1]_</span>
 <span class="sd">        - one face ≃ one token  </span>
 <span class="sd">        - one image ≃ one token</span>
 
-<span class="sd">    The multimodal representation is obtained from the &quot;[CLS]&quot; token</span>
+<span class="sd">    The multimodal representation is obtained from the &quot;[CLS]&quot; token.</span>
+<span class="sd">    </span>
+<span class="sd">    When using gating (see MMConfig), it is done before the attention layer, unlike in Flamingo [2]_</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
@@ -321,29 +798,72 @@
     <span class="n">load_tf_weights</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">base_model_prefix</span> <span class="o">=</span> <span class="s2">&quot;bert_model&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">init_weights_like_bert</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">init_weights_like_bert</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_init_weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_weights_like_bert</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_init_weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_weights_like_ict</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
-        <span class="c1"># FIXME: set add_pooling_layer=False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">bert_model</span> <span class="o">=</span> <span class="n">BertModel</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bert_model</span> <span class="o">=</span> <span class="n">BertModel</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">add_pooling_layer</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="c1"># add pointers to the gate parameters so that they are logged in trainer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights_to_log</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">n_images</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">image_type_embeddings</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Embedding</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">n_images</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">)</span>
+            <span class="n">image_layer_norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">layer_norm_eps</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">image_layer_norm</span> <span class="o">=</span> <span class="kc">None</span>
+            
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">n_faces</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">face_embedding</span> <span class="o">=</span> <span class="n">FaceEmbedding</span><span class="p">(</span><span class="n">embedding_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">,</span>
                                                 <span class="n">dropout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_dropout_prob</span><span class="p">,</span>
                                                 <span class="n">layer_norm_eps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">layer_norm_eps</span><span class="p">,</span>
                                                 <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">face_kwargs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">gating</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">face_gate</span> <span class="o">=</span> <span class="n">TanhGate</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">weights_to_log</span><span class="p">[</span><span class="s2">&quot;face_gate&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">face_gate</span><span class="o">.</span><span class="n">gate_param</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">face_gate</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Identity</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">face_embedding</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">image_embeddings</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleDict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_embeddings</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_gates</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleDict</span><span class="p">(),</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleDict</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">image_kwarg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">image_kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">image_embeddings</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ImageEmbedding</span><span class="p">(</span><span class="n">embedding_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">,</span>
                                                          <span class="n">dropout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_dropout_prob</span><span class="p">,</span>
+                                                         <span class="n">layer_norm_eps</span><span class="o">=</span><span class="n">image_layer_norm</span><span class="p">,</span>
                                                          <span class="o">**</span><span class="n">image_kwarg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">gating</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">image_gates</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">TanhGate</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">weights_to_log</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_gate&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_gates</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">gate_param</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">image_gates</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Identity</span><span class="p">()</span>
+                                
+    <span class="k">def</span> <span class="nf">_init_weights_like_ict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
+        <span class="c1"># same as BERT</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Embedding</span><span class="p">):</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">normal_</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">initializer_range</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">padding_idx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">module</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">module</span><span class="o">.</span><span class="n">padding_idx</span><span class="p">]</span><span class="o">.</span><span class="n">zero_</span><span class="p">()</span>
+        <span class="c1"># keep torch defaults for linear layers</span>
+        
+    <span class="k">def</span> <span class="nf">_init_weights_like_bert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
+        <span class="c1"># taken from BertPreTrainedModel</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">):</span>
+            <span class="c1"># Slightly different from the TF version which uses truncated_normal for initialization</span>
+            <span class="c1"># cf https://github.com/pytorch/pytorch/pull/5617</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">normal_</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">initializer_range</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">bias</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">module</span><span class="o">.</span><span class="n">bias</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">zero_</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Embedding</span><span class="p">):</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">normal_</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">initializer_range</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">padding_idx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">module</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">module</span><span class="o">.</span><span class="n">padding_idx</span><span class="p">]</span><span class="o">.</span><span class="n">zero_</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">):</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">bias</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">zero_</span><span class="p">()</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">fill_</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
             
-    <span class="k">def</span> <span class="nf">_init_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
-        <span class="c1"># keep torch defaults</span>
-        <span class="k">pass</span>
-    
-<div class="viewcode-block" id="DMREncoder.forward"><a class="viewcode-back" href="../../../meerqat.models.mm.html#meerqat.models.mm.DMREncoder.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text_inputs</span><span class="p">,</span> <span class="n">face_inputs</span><span class="p">,</span> <span class="n">image_inputs</span><span class="p">,</span>
+<div class="viewcode-block" id="ECAEncoder.forward"><a class="viewcode-back" href="../../../meerqat.models.mm.html#meerqat.models.mm.ECAEncoder.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text_inputs</span><span class="p">,</span> <span class="n">face_inputs</span><span class="p">,</span> <span class="n">image_inputs</span><span class="p">,</span>
                 <span class="n">output_attentions</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">output_hidden_states</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">return_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -354,45 +874,68 @@
 <span class="sd">            usual BERT inputs, see transformers.BertModel</span>
 <span class="sd">        face_inputs: dict[str, torch.FloatTensor]</span>
 <span class="sd">            {</span>
-<span class="sd">                &quot;face&quot;: (batch_size, n_faces, face_dim),</span>
-<span class="sd">                &quot;bbox&quot;: (batch_size, n_faces, bbox_dim),</span>
-<span class="sd">                &quot;attention_mask&quot;: (batch_size, n_faces)</span>
+<span class="sd">                &quot;face&quot;: (batch_size, n_images, n_faces, face_dim),</span>
+<span class="sd">                &quot;bbox&quot;: (batch_size, n_images, n_faces, bbox_dim),</span>
+<span class="sd">                &quot;attention_mask&quot;: (batch_size, n_images, n_faces)</span>
 <span class="sd">            }</span>
 <span class="sd">        image_inputs: dict[str, dict[str, torch.FloatTensor]]</span>
 <span class="sd">            {</span>
 <span class="sd">                model:</span>
 <span class="sd">                {</span>
-<span class="sd">                    &quot;input&quot;: (batch_size, image_dim)</span>
-<span class="sd">                    &quot;attention_mask&quot;: (batch_size, )</span>
+<span class="sd">                    &quot;input&quot;: (batch_size, n_images, image_dim)</span>
+<span class="sd">                    &quot;attention_mask&quot;: (batch_size, n_images)</span>
 <span class="sd">                }</span>
 <span class="sd">            }</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># reshape faces</span>
         <span class="n">faces</span> <span class="o">=</span> <span class="n">face_inputs</span><span class="p">[</span><span class="s1">&#39;face&#39;</span><span class="p">]</span>
-        <span class="n">batch_size</span><span class="p">,</span> <span class="n">n_faces</span><span class="p">,</span> <span class="n">face_dim</span> <span class="o">=</span> <span class="n">faces</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">batch_size</span><span class="p">,</span> <span class="n">n_images</span><span class="p">,</span> <span class="n">n_faces</span><span class="p">,</span> <span class="n">face_dim</span> <span class="o">=</span> <span class="n">faces</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">assert</span> <span class="n">n_images</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">n_images</span>
         <span class="k">if</span> <span class="n">n_faces</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">faces</span> <span class="o">=</span> <span class="n">faces</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span> <span class="o">*</span> <span class="n">n_faces</span><span class="p">,</span> <span class="n">face_dim</span><span class="p">)</span>
-            <span class="c1"># embed batch of size batch_size*n_faces</span>
-            <span class="n">face_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">face_embedding</span><span class="p">(</span><span class="n">face</span><span class="o">=</span><span class="n">faces</span><span class="p">,</span> <span class="n">bbox</span><span class="o">=</span><span class="n">face_inputs</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span> <span class="o">*</span> <span class="n">n_faces</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
-            <span class="n">face_output</span> <span class="o">=</span> <span class="n">face_output</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">n_faces</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">n_images</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">image_type_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">n_images</span><span class="p">,</span> <span class="n">n_faces</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">faces</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                <span class="c1"># broadcast arange to the right shape</span>
+                <span class="n">image_type_ids</span> <span class="o">+=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_images</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">faces</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_images</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">image_type_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_type_embeddings</span><span class="p">(</span><span class="n">image_type_ids</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="o">*</span><span class="n">n_images</span><span class="o">*</span><span class="n">n_faces</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">image_type_embeddings</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">faces</span> <span class="o">=</span> <span class="n">faces</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="o">*</span><span class="n">n_images</span><span class="o">*</span><span class="n">n_faces</span><span class="p">,</span> <span class="n">face_dim</span><span class="p">)</span>
+            <span class="n">bbox</span> <span class="o">=</span> <span class="n">face_inputs</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="o">*</span><span class="n">n_images</span><span class="o">*</span><span class="n">n_faces</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">face_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">face_embedding</span><span class="p">(</span><span class="n">face</span><span class="o">=</span><span class="n">faces</span><span class="p">,</span> <span class="n">bbox</span><span class="o">=</span><span class="n">bbox</span><span class="p">,</span> <span class="n">image_type_embeddings</span><span class="o">=</span><span class="n">image_type_embeddings</span><span class="p">)</span>
+            <span class="n">face_output</span> <span class="o">=</span> <span class="n">face_output</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">n_images</span><span class="o">*</span><span class="n">n_faces</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># maybe gate faces</span>
+            <span class="n">face_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">face_gate</span><span class="p">(</span><span class="n">face_output</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">face_output</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">faces</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">face_attention_mask</span> <span class="o">=</span> <span class="n">face_inputs</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">n_images</span><span class="o">*</span><span class="n">n_faces</span><span class="p">)</span>
 
         <span class="c1"># embed images</span>
         <span class="k">if</span> <span class="n">image_inputs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">n_images</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">image_type_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">n_images</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">faces</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                <span class="n">image_type_ids</span> <span class="o">+=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_images</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">faces</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                <span class="n">image_type_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_type_embeddings</span><span class="p">(</span><span class="n">image_type_ids</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="o">*</span><span class="n">n_images</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">image_type_embeddings</span> <span class="o">=</span> <span class="kc">None</span>
+
             <span class="n">image_outputs</span><span class="p">,</span> <span class="n">image_attention_mask</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">image_inputs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">image_outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_embeddings</span><span class="p">[</span><span class="n">name</span><span class="p">](</span><span class="n">image</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
-                <span class="n">image_attention_mask</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">image</span><span class="p">[</span><span class="s1">&#39;attention_mask&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
-            <span class="c1"># (n_images, batch_size, embedding_dim) -&gt; (batch_size, n_images, embedding_dim)</span>
-            <span class="n">image_outputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">image_outputs</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="n">image_attention_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">image_attention_mask</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">image_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_embeddings</span><span class="p">[</span><span class="n">name</span><span class="p">](</span>
+                    <span class="n">image</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="o">*</span><span class="n">n_images</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> 
+                    <span class="n">image_type_embeddings</span><span class="o">=</span><span class="n">image_type_embeddings</span>
+                <span class="p">)</span>
+                <span class="c1"># maybe gate image</span>
+                <span class="n">image_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_gates</span><span class="p">[</span><span class="n">name</span><span class="p">](</span><span class="n">image_output</span><span class="p">)</span>
+                <span class="n">image_outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">image_output</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">n_images</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+                <span class="n">image_attention_mask</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">image</span><span class="p">[</span><span class="s1">&#39;attention_mask&#39;</span><span class="p">])</span>
+            <span class="c1"># (n_models, batch_size, n_images, embedding_dim) -&gt; (batch_size, n_images*n_models, embedding_dim)</span>
+            <span class="n">image_outputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">image_outputs</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">image_attention_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">image_attention_mask</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">image_outputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">faces</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
             <span class="n">image_attention_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">faces</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">face_and_image_are_exclusive</span><span class="p">:</span>
-            <span class="n">face_attention_mask</span> <span class="o">=</span> <span class="n">face_inputs</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span>
             <span class="c1"># indices at the batch level: at least one face detected (i.e. not masked)</span>
             <span class="n">where_are_faces</span> <span class="o">=</span> <span class="n">face_attention_mask</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
             <span class="c1"># mask images if at least one face was detected</span>
@@ -410,9 +953,9 @@
         <span class="n">text_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bert_model</span><span class="o">.</span><span class="n">embeddings</span><span class="p">(</span><span class="n">input_ids</span><span class="o">=</span><span class="n">text_inputs</span><span class="p">[</span><span class="s1">&#39;input_ids&#39;</span><span class="p">],</span>
                                                      <span class="n">token_type_ids</span><span class="o">=</span><span class="n">token_type_ids</span><span class="p">)</span>
 
-        <span class="c1"># (batch_size, sequence_length+n_faces+n_images, embedding_dim)</span>
+        <span class="c1"># (batch_size, sequence_length+(n_faces+n_models)*n_images, embedding_dim)</span>
         <span class="n">multimodal_embeddings</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">text_embeddings</span><span class="p">,</span> <span class="n">face_output</span><span class="p">,</span> <span class="n">image_outputs</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">attention_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">text_inputs</span><span class="p">[</span><span class="s1">&#39;attention_mask&#39;</span><span class="p">],</span> <span class="n">face_inputs</span><span class="p">[</span><span class="s1">&#39;attention_mask&#39;</span><span class="p">],</span> <span class="n">image_attention_mask</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">attention_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">text_inputs</span><span class="p">[</span><span class="s1">&#39;attention_mask&#39;</span><span class="p">],</span> <span class="n">face_attention_mask</span><span class="p">,</span> <span class="n">image_attention_mask</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">extended_attention_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bert_model</span><span class="o">.</span><span class="n">get_extended_attention_mask</span><span class="p">(</span>
             <span class="n">attention_mask</span><span class="p">,</span> <span class="n">multimodal_embeddings</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">multimodal_embeddings</span><span class="o">.</span><span class="n">device</span>
         <span class="p">)</span>
@@ -426,14 +969,15 @@
         <span class="n">pooled_output</span> <span class="o">=</span> <span class="n">sequence_output</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
         
         <span class="k">if</span> <span class="ow">not</span> <span class="n">return_dict</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">(</span><span class="n">pooled_output</span><span class="p">,</span> <span class="p">)</span> <span class="o">+</span> <span class="n">outputs</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">pooled_output</span><span class="p">,</span> <span class="n">sequence_output</span><span class="p">)</span> <span class="o">+</span> <span class="n">outputs</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
         
-        <span class="k">return</span> <span class="n">DMREncoderOutput</span><span class="p">(</span>
+        <span class="k">return</span> <span class="n">ECAEncoderOutput</span><span class="p">(</span>
                 <span class="n">pooler_output</span><span class="o">=</span><span class="n">pooled_output</span><span class="p">,</span>
+                <span class="n">last_hidden_state</span><span class="o">=</span><span class="n">sequence_output</span><span class="p">,</span>
                 <span class="n">hidden_states</span><span class="o">=</span><span class="n">outputs</span><span class="o">.</span><span class="n">hidden_states</span><span class="p">,</span> 
                 <span class="n">attentions</span><span class="o">=</span><span class="n">outputs</span><span class="o">.</span><span class="n">attentions</span><span class="p">)</span></div></div>
 
-
+    
 <div class="viewcode-block" id="ILFConfig"><a class="viewcode-back" href="../../../meerqat.models.mm.html#meerqat.models.mm.ILFConfig">[docs]</a><span class="k">class</span> <span class="nc">ILFConfig</span><span class="p">(</span><span class="n">MMConfig</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Same as MMConfig with an extra parameter: </span>
@@ -457,6 +1001,8 @@
     <span class="n">base_model_prefix</span> <span class="o">=</span> <span class="s2">&quot;dpr_encoder&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">n_images</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">question_encoder</span><span class="p">:</span>
@@ -476,8 +1022,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_dropout_prob</span><span class="p">)</span>
         
     <span class="k">def</span> <span class="nf">_init_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
-        <span class="c1"># keep torch defaults</span>
-        <span class="k">pass</span>
+        <span class="c1"># same as BERT</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Embedding</span><span class="p">):</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">normal_</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">initializer_range</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">padding_idx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">module</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">module</span><span class="o">.</span><span class="n">padding_idx</span><span class="p">]</span><span class="o">.</span><span class="n">zero_</span><span class="p">()</span>
+        <span class="c1"># keep torch defaults for linear layers</span>
     
 <div class="viewcode-block" id="IntermediateLinearFusion.forward"><a class="viewcode-back" href="../../../meerqat.models.mm.html#meerqat.models.mm.IntermediateLinearFusion.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text_inputs</span><span class="p">,</span> <span class="n">face_inputs</span><span class="p">,</span> <span class="n">image_inputs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -506,7 +1056,9 @@
         
         <span class="c1"># reshape faces</span>
         <span class="n">faces</span> <span class="o">=</span> <span class="n">face_inputs</span><span class="p">[</span><span class="s1">&#39;face&#39;</span><span class="p">]</span>
-        <span class="n">batch_size</span><span class="p">,</span> <span class="n">n_faces</span><span class="p">,</span> <span class="n">face_dim</span> <span class="o">=</span> <span class="n">faces</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">batch_size</span><span class="p">,</span> <span class="n">n_images</span><span class="p">,</span> <span class="n">n_faces</span><span class="p">,</span> <span class="n">face_dim</span> <span class="o">=</span> <span class="n">faces</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">if</span> <span class="n">n_images</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">n_faces</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">faces</span> <span class="o">=</span> <span class="n">faces</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span> <span class="o">*</span> <span class="n">n_faces</span><span class="p">,</span> <span class="n">face_dim</span><span class="p">)</span>
             <span class="c1"># embed batch of size batch_size*n_faces</span>
@@ -527,7 +1079,7 @@
             <span class="c1"># mask images if at least one face was detected</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">face_and_image_are_exclusive</span><span class="p">:</span>
                 <span class="n">image</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">][</span><span class="n">where_are_faces</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="n">output</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_embeddings</span><span class="p">[</span><span class="n">name</span><span class="p">](</span><span class="n">image</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">])</span>
+            <span class="n">output</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_embeddings</span><span class="p">[</span><span class="n">name</span><span class="p">](</span><span class="n">image</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
         <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
         <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">EncoderOutput</span><span class="p">(</span><span class="n">pooler_output</span><span class="o">=</span><span class="n">output</span><span class="p">)</span></div></div>
@@ -582,7 +1134,7 @@
     
 <p class="copyright">
 
-    &copy; Copyright 2022, CNRS.<br>
+    &copy; Copyright 2020-2023, CNRS.<br>
 
 </p>
 
@@ -591,7 +1143,7 @@
   <div class="footer-item">
     
 <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.1.1.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.2.3.<br>
 </p>
 
   </div>

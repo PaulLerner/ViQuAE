@@ -1,32 +1,39 @@
 
+
 <!DOCTYPE html>
 
-<html lang="en">
+
+<html lang="en" >
+
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
     <title>meerqat.data.wiki module &#8212; meerqat v4.0.0-alpha documentation</title>
-  <script>
+  
+  
+  
+  <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
-<link href="_static/styles/pydata-sphinx-theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+  <link href="_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
 
   
-  <link rel="stylesheet"
-    href="_static/vendor/fontawesome/6.1.2/css/all.min.css">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b">
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
@@ -36,433 +43,314 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'meerqat.data.wiki';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="docsearch:language" content="en">
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
 
   
-  <input type="checkbox" class="sidebar-toggle" name="__primary" id="__primary">
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
   <label class="overlay overlay-primary" for="__primary"></label>
-
   
-  <input type="checkbox" class="sidebar-toggle" name="__secondary" id="__secondary">
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
   <label class="overlay overlay-secondary" for="__secondary"></label>
-
   
   <div class="search-button__wrapper">
     <div class="search-button__overlay"></div>
     <div class="search-button__search-container">
-      
-<form class="bd-search d-flex align-items-center" action="search.html" method="get">
-  <i class="icon fas fa-search"></i>
-  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form>
-    </div>
+</form></div>
   </div>
-
   
-  <nav class="bd-header navbar navbar-expand-lg bd-navbar" id="navbar-main"><div class="bd-header__inner bd-page-width">
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
   <label class="sidebar-toggle primary-toggle" for="__primary">
-      <span class="fas fa-bars"></span>
+    <span class="fa-solid fa-bars"></span>
   </label>
-  <div id="navbar-start">
-    
-    
   
-
+  <div class="navbar-header-items__start">
+    
+      <div class="navbar-item">
+  
 
 <a class="navbar-brand logo" href="index.html">
-
   
   
   
-  
-  
-  
-  
-
   
   
     <p class="title logo__title">meerqat v4.0.0-alpha documentation</p>
   
-</a>
+</a></div>
     
   </div>
-
+  
   
   <div class="col-lg-9 navbar-header-items">
-    <div id="navbar-center" class="mr-auto">
+    
+    <div class="me-auto navbar-header-items__center">
       
-      <div class="navbar-center-item">
-        <nav class="navbar-nav">
-    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
-        Site Navigation
-    </p>
-    <ul id="navbar-main-elements" class="navbar-nav">
-        
-    </ul>
-</nav>
-      </div>
-      
-    </div>
-
-    <div id="navbar-end">
-      <div class="navbar-end-item navbar-end__search-button-container">
-        
-<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
-  <i class="fas fa-search"></i>
-</button>
-      </div>
-      
-      <div class="navbar-end-item">
-        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
-    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
-    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
-    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
-</span>
-      </div>
-      
-      <div class="navbar-end-item">
-        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
-      </ul>
-      </div>
+        <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+  </ul>
+</nav></div>
       
     </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+        </div>
+      
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
   </div>
-
-
   
-  <div class="search-button-container--mobile">
-<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
-  <i class="fas fa-search"></i>
-</button>
-  </div>
-
   
-  <label class="sidebar-toggle secondary-toggle" for="__secondary">
-      <span class="fas fa-outdent"></span>
-  </label>
+    <div class="navbar-persistent--mobile">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+    </div>
   
 
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
 </div>
-  </nav>
-  
 
+    </nav>
+  
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
       
       <div class="bd-sidebar-primary bd-sidebar">
         
+
   
   <div class="sidebar-header-items sidebar-primary__section">
     
     
       <div class="sidebar-header-items__center">
-      
-      <div class="navbar-center-item">
-        <nav class="navbar-nav">
-    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
-        Site Navigation
-    </p>
-    <ul id="navbar-main-elements" class="navbar-nav">
         
-    </ul>
-</nav>
-      </div>
-      
-      </div>
-    
-
-    
-    
-    <div class="sidebar-header-items__end">
-      
-      <div class="navbar-end-item">
-        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
-    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
-    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
-    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
-</span>
-      </div>
-      
-      <div class="navbar-end-item">
-        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
-      </ul>
-      </div>
-      
-    </div>
-    
-  </div>
-
-  
-  <div class="sidebar-start-items sidebar-primary__section">
-    <div class="sidebar-start-items__item"><nav class="bd-links" id="bd-docs-nav" aria-label="Section navigation">
-  <p class="bd-links__title" role="heading" aria-level="1">
-    Section Navigation
+          <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
   </p>
-  <div class="bd-toc-item navbar-nav">
-    <ul class="current nav bd-sidenav">
- <li class="toctree-l1 current active has-children">
-  <a class="reference internal" href="meerqat.data.html">
-   meerqat.data package
-  </a>
-  <input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
-  <label class="toctree-toggle" for="toctree-checkbox-1">
-   <i class="fas fa-chevron-down">
-   </i>
-  </label>
-  <ul class="current">
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.data.kilt2vqa.html">
-     meerqat.data.kilt2vqa module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.data.kvqa.html">
-     meerqat.data.kvqa module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.data.labelstudio.html">
-     meerqat.data.labelstudio module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.data.loading.html">
-     meerqat.data.loading module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.data.mscelebs.html">
-     meerqat.data.mscelebs module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.data.utils.html">
-     meerqat.data.utils module
-    </a>
-   </li>
-   <li class="toctree-l2 current active">
-    <a class="current reference internal" href="#">
-     meerqat.data.wiki module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.data.wikidump.html">
-     meerqat.data.wikidump module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.data.wit.html">
-     meerqat.data.wit module
-    </a>
-   </li>
+  <ul class="bd-navbar-elements navbar-nav">
+    
   </ul>
- </li>
- <li class="toctree-l1 has-children">
-  <a class="reference internal" href="meerqat.image.html">
-   meerqat.image package
-  </a>
-  <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
-  <label class="toctree-toggle" for="toctree-checkbox-2">
-   <i class="fas fa-chevron-down">
-   </i>
-  </label>
-  <ul>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.image.embedding.html">
-     meerqat.image.embedding module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.image.face_box.html">
-     meerqat.image.face_box module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.image.face_detection.html">
-     meerqat.image.face_detection module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.image.face_recognition.html">
-     meerqat.image.face_recognition module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.image.resize.html">
-     meerqat.image.resize module
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toctree-l1 has-children">
-  <a class="reference internal" href="meerqat.ir.html">
-   meerqat.ir package
-  </a>
-  <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
-  <label class="toctree-toggle" for="toctree-checkbox-3">
-   <i class="fas fa-chevron-down">
-   </i>
-  </label>
-  <ul>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.ir.embedding.html">
-     meerqat.ir.embedding module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.ir.hp.html">
-     meerqat.ir.hp module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.ir.metrics.html">
-     meerqat.ir.metrics module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.ir.search.html">
-     meerqat.ir.search module
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toctree-l1 has-children">
-  <a class="reference internal" href="meerqat.models.html">
-   meerqat.models package
-  </a>
-  <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
-  <label class="toctree-toggle" for="toctree-checkbox-4">
-   <i class="fas fa-chevron-down">
-   </i>
-  </label>
-  <ul>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.models.image.html">
-     meerqat.models.image module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.models.mm.html">
-     meerqat.models.mm module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.models.qa.html">
-     meerqat.models.qa module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.models.utils.html">
-     meerqat.models.utils module
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toctree-l1 has-children">
-  <a class="reference internal" href="meerqat.train.html">
-   meerqat.train package
-  </a>
-  <input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/>
-  <label class="toctree-toggle" for="toctree-checkbox-5">
-   <i class="fas fa-chevron-down">
-   </i>
-  </label>
-  <ul>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.train.losses.html">
-     meerqat.train.losses module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.train.metrics.html">
-     meerqat.train.metrics module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.train.split_biencoder.html">
-     meerqat.train.split_biencoder module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.train.trainee.html">
-     meerqat.train.trainee module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.train.trainer.html">
-     meerqat.train.trainer module
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toctree-l1 has-children">
-  <a class="reference internal" href="meerqat.viz.html">
-   meerqat.viz package
-  </a>
-  <input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/>
-  <label class="toctree-toggle" for="toctree-checkbox-6">
-   <i class="fas fa-chevron-down">
-   </i>
-  </label>
-  <ul>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.viz.html.html">
-     meerqat.viz.html module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.viz.stats.html">
-     meerqat.viz.stats module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.viz.umap.html">
-     meerqat.viz.umap module
-    </a>
-   </li>
-  </ul>
- </li>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item"><nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="meerqat.data.html">meerqat.data package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.infoseek.html">meerqat.data.infoseek module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.kilt2vqa.html">meerqat.data.kilt2vqa module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.labelstudio.html">meerqat.data.labelstudio module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.loading.html">meerqat.data.loading module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.mscelebs.html">meerqat.data.mscelebs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.utils.html">meerqat.data.utils module</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">meerqat.data.wiki module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.wikidump.html">meerqat.data.wikidump module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.wit.html">meerqat.data.wit module</a></li>
 </ul>
-
-  </div>
-</nav>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="meerqat.image.html">meerqat.image package</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.image.embedding.html">meerqat.image.embedding module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.image.face_box.html">meerqat.image.face_box module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.image.face_detection.html">meerqat.image.face_detection module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.image.face_recognition.html">meerqat.image.face_recognition module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.image.resize.html">meerqat.image.resize module</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="meerqat.interact.html">meerqat.interact package</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.interact.system.html">meerqat.interact.system module</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="meerqat.ir.html">meerqat.ir package</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.ir.embedding.html">meerqat.ir.embedding module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.ir.fuse.html">meerqat.ir.fuse module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.ir.hp.html">meerqat.ir.hp module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.ir.metrics.html">meerqat.ir.metrics module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.ir.search.html">meerqat.ir.search module</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="meerqat.models.html">meerqat.models package</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.models.bert.html">meerqat.models.bert module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.models.image.html">meerqat.models.image module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.models.mm.html">meerqat.models.mm module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.models.outputs.html">meerqat.models.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.models.qa.html">meerqat.models.qa module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.models.rr.html">meerqat.models.rr module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.models.utils.html">meerqat.models.utils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.models.vilt.html">meerqat.models.vilt module</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="meerqat.train.html">meerqat.train package</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.train.callbacks.html">meerqat.train.callbacks module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.train.data.html">meerqat.train.data module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.train.metrics.html">meerqat.train.metrics module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.train.optim.html">meerqat.train.optim module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.train.save_ptm.html">meerqat.train.save_ptm module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.train.trainee.html">meerqat.train.trainee module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.train.trainer.html">meerqat.train.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="meerqat.viz.html">meerqat.viz package</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.viz.html.html">meerqat.viz.html module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.viz.stats.html">meerqat.viz.stats module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.viz.umap.html">meerqat.viz.umap module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.viz.wtl_filter.html">meerqat.viz.wtl_filter module</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</nav></div>
     </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
   </div>
   
+  <div id="rtd-footer-container"></div>
 
-  
-  <div class="sidebar-end-items sidebar-primary__section">
-    <div class="sidebar-end-items__item">
-    </div>
-  </div>
 
       </div>
-      <main class="bd-main">
+      
+      <main id="main-content" class="bd-main">
         
         
-        <div class="bd-content">
-          <div class="bd-article-container">
-            
-            <div class="bd-header-article">
-                
-            </div>
-            
-            
-            <article class="bd-article" role="main">
+          <div class="bd-content">
+            <div class="bd-article-container">
               
-  <div class="section" id="module-meerqat.data.wiki">
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumbs">
+  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">meerqat.data.wiki module</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="module-meerqat.data.wiki">
 <span id="meerqat-data-wiki-module"></span><h1>meerqat.data.wiki module<a class="headerlink" href="#module-meerqat.data.wiki" title="Permalink to this heading">#</a></h1>
-<div class="section" id="usages">
+<section id="usages">
 <h2>Usages<a class="headerlink" href="#usages" title="Permalink to this heading">#</a></h2>
 <p>Gathers data about entities mentioned in questions via Wikidata, Wikimedia Commons SPARQL services and Wikimedia REST API.</p>
 <p>You should run all of these in this order to get the whole cake:</p>
-<div class="section" id="data-entities">
+<section id="data-entities">
 <h3><code class="docutils literal notranslate"><span class="pre">data</span> <span class="pre">entities</span></code><a class="headerlink" href="#data-entities" title="Permalink to this heading">#</a></h3>
 <p><strong>input/output</strong>: <code class="docutils literal notranslate"><span class="pre">entities.json</span></code> (output of <code class="docutils literal notranslate"><span class="pre">kilt2vqa.py</span> <span class="pre">count_entities</span></code>)
 queries many different attributes for all entities in the questions</p>
@@ -476,34 +364,34 @@ queries many different attributes for all entities in the questions</p>
 </ul>
 </dd>
 </dl>
-</div>
-<div class="section" id="data-feminine">
+</section>
+<section id="data-feminine">
 <h3><code class="docutils literal notranslate"><span class="pre">data</span> <span class="pre">feminine</span></code><a class="headerlink" href="#data-feminine" title="Permalink to this heading">#</a></h3>
 <p><strong>input</strong>: <code class="docutils literal notranslate"><span class="pre">entities.json</span></code>
 <strong>output</strong>: <code class="docutils literal notranslate"><span class="pre">feminine_labels.json</span></code>
 gets feminine labels for classes and occupations of these entities</p>
-</div>
-<div class="section" id="data-superclasses">
+</section>
+<section id="data-superclasses">
 <h3><code class="docutils literal notranslate"><span class="pre">data</span> <span class="pre">superclasses</span></code><a class="headerlink" href="#data-superclasses" title="Permalink to this heading">#</a></h3>
 <p><strong>input</strong>: <code class="docutils literal notranslate"><span class="pre">entities.json</span></code>
 <strong>output</strong>: <code class="docutils literal notranslate"><span class="pre">&lt;n&gt;_superclasses.json</span></code></p>
 <p>gets the superclasses of the entities classes up <code class="docutils literal notranslate"><span class="pre">n</span></code> level (defaults to ‘all’, i.e. up to the root)</p>
-</div>
-<div class="section" id="depictions-optional">
+</section>
+<section id="depictions-optional">
 <h3>Depictions (optional)<a class="headerlink" href="#depictions-optional" title="Permalink to this heading">#</a></h3>
 <p>we found that heuristics/images based on depictions were not that discriminative</p>
-<div class="section" id="commons-sparql-depicts">
+<section id="commons-sparql-depicts">
 <h4><code class="docutils literal notranslate"><span class="pre">commons</span> <span class="pre">sparql</span> <span class="pre">depicts</span></code><a class="headerlink" href="#commons-sparql-depicts" title="Permalink to this heading">#</a></h4>
 <p><strong>input/output</strong>: <code class="docutils literal notranslate"><span class="pre">entities.json</span></code>
 Find all images in Commons that <em>depict</em> the entities</p>
-</div>
-<div class="section" id="commons-sparql-depicted">
+</section>
+<section id="commons-sparql-depicted">
 <h4><code class="docutils literal notranslate"><span class="pre">commons</span> <span class="pre">sparql</span> <span class="pre">depicted</span></code><a class="headerlink" href="#commons-sparql-depicted" title="Permalink to this heading">#</a></h4>
 <p><strong>input</strong>: <code class="docutils literal notranslate"><span class="pre">entities.json</span></code>
 <strong>output</strong>: <code class="docutils literal notranslate"><span class="pre">depictions.json</span></code>
 Find all entities depicted in the previously gathered step</p>
-</div>
-<div class="section" id="data-depicted">
+</section>
+<section id="data-depicted">
 <h4><code class="docutils literal notranslate"><span class="pre">data</span> <span class="pre">depicted</span></code><a class="headerlink" href="#data-depicted" title="Permalink to this heading">#</a></h4>
 <p><strong>input</strong>: <code class="docutils literal notranslate"><span class="pre">entities.json</span></code>, <code class="docutils literal notranslate"><span class="pre">depictions.json</span></code>
 <strong>output</strong>: <code class="docutils literal notranslate"><span class="pre">entities.json</span></code>
@@ -517,23 +405,23 @@ Then apply a heuristic to tell whether an image depicts the entity prominently o
 </ul>
 </div></blockquote>
 <p>Note this heuristic is not used in <code class="docutils literal notranslate"><span class="pre">commons</span> <span class="pre">heuristics</span></code></p>
-</div>
-</div>
-<div class="section" id="filter">
+</section>
+</section>
+<section id="filter">
 <h3><code class="docutils literal notranslate"><span class="pre">filter</span></code><a class="headerlink" href="#filter" title="Permalink to this heading">#</a></h3>
 <p><strong>input/output</strong>: <code class="docutils literal notranslate"><span class="pre">entities.json</span></code>
 Filters entities w.r.t. to their class/nature/”instance of” and date of death, see <code class="docutils literal notranslate"><span class="pre">wiki.py</span></code> docstring for option usage (TODO share concrete_entities/abstract_entities)
 Also entities with a ‘sex or gender’ (P21) or ‘occupation’ (P106) are kept by default.</p>
 <p>Note this deletes data so maybe save it if you’re unsure about the filter.</p>
-</div>
-<div class="section" id="commons-rest">
+</section>
+<section id="commons-rest">
 <h3><code class="docutils literal notranslate"><span class="pre">commons</span> <span class="pre">rest</span></code><a class="headerlink" href="#commons-rest" title="Permalink to this heading">#</a></h3>
 <p><strong>input/output</strong>: <code class="docutils literal notranslate"><span class="pre">entities.json</span></code></p>
 <p>Gathers images and subcategories recursively from the entity root commons-category</p>
 <p>Except if you have a very small dataset you should probably set <code class="docutils literal notranslate"><span class="pre">--max_images=0</span></code> to query only categories and use <code class="docutils literal notranslate"><span class="pre">wikidump.py</span></code> to gather images from those.
 <code class="docutils literal notranslate"><span class="pre">--max_categories</span></code> defaults to 100.</p>
-</div>
-<div class="section" id="commons-heuristics">
+</section>
+<section id="commons-heuristics">
 <h3><code class="docutils literal notranslate"><span class="pre">commons</span> <span class="pre">heuristics</span></code><a class="headerlink" href="#commons-heuristics" title="Permalink to this heading">#</a></h3>
 <p><strong>input/output</strong>: <code class="docutils literal notranslate"><span class="pre">entities.json</span></code>
 Run <code class="docutils literal notranslate"><span class="pre">wikidump.py</span></code> first to gather images.
@@ -546,9 +434,9 @@ Compute heuristics for the image (control with <code class="docutils literal not
 <li><p><code class="docutils literal notranslate"><span class="pre">depictions</span></code>: the image should be tagged as <em>depicting</em> the entity (gathered in <code class="docutils literal notranslate"><span class="pre">commons</span> <span class="pre">sparql</span> <span class="pre">depicts</span></code>)</p></li>
 </ul>
 </div></blockquote>
-</div>
-</div>
-<div class="section" id="for-docopt">
+</section>
+</section>
+<section id="for-docopt">
 <h2>For <code class="docutils literal notranslate"><span class="pre">docopt</span></code><a class="headerlink" href="#for-docopt" title="Permalink to this heading">#</a></h2>
 <p>Usage:
 wiki.py data entities &lt;subset&gt; [–skip=&lt;attribute&gt;]
@@ -594,15 +482,15 @@ Applied before negative_filter.</p>
 <dt>&lt;classes_to_exclude&gt;…          Additional classes to exclude in the negative_filter (e.g. “Q5 Q82794”)</dt><dd><p>Note that you can use this option even without –negative i.e. specifying your own “abstract_entities”</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="functions">
+</section>
+<section id="functions">
 <h2>Functions<a class="headerlink" href="#functions" title="Permalink to this heading">#</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="meerqat.data.wiki.file_name_to_thumbnail">
 <span class="sig-prename descclassname"><span class="pre">meerqat.data.wiki.</span></span><span class="sig-name descname"><span class="pre">file_name_to_thumbnail</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/data/wiki.html#file_name_to_thumbnail"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.data.wiki.file_name_to_thumbnail" title="Permalink to this definition">#</a></dt>
 <dd><p>get upload.wikimedia.org url from image file_name using the desired thumbnail width</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>file_name</strong> (<em>str</em>) – file name/title (without the “File:” prefix)</p></li>
 <li><p><strong>image_width</strong> (<em>int</em><em>, </em><em>optional</em>) – desired thumbnail width in pixels for the image url
@@ -692,7 +580,7 @@ where entities is n QIDs in wikidata_ids space-separated and prefixed by prefix
 <span class="sig-prename descclassname"><span class="pre">meerqat.data.wiki.</span></span><span class="sig-name descname"><span class="pre">query_commons_subcategories</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">categories</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_images</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_categories</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_queried_categories</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/data/wiki.html#query_commons_subcategories"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.data.wiki.query_commons_subcategories" title="Permalink to this definition">#</a></dt>
 <dd><p>Query all commons subcategories (and optionally images) from a root category recursively</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>category</strong> (<em>str</em>) – Root category</p></li>
 <li><p><strong>categories</strong> (<em>dict</em>) – {str: bool}, True if the category has been processed</p></li>
@@ -710,10 +598,10 @@ Should be equal to the number of True in categories
 Defaults to 0</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>categories, images</strong> – Same as input, hopefully enriched with new data</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
@@ -797,232 +685,116 @@ Defaults to 0</p></li>
 <span class="sig-prename descclassname"><span class="pre">meerqat.data.wiki.</span></span><span class="sig-name descname"><span class="pre">print_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entities</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/data/wiki.html#print_stats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.data.wiki.print_stats" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
-            </article>
-            
-            
-            
-            <footer class="bd-footer-article">
-                <!-- Previous / next buttons -->
-<div class='prev-next-area'>
-</div>
-            </footer>
-            
-          </div>
-          
-          
-          
-            <div class="bd-sidebar-secondary bd-toc">
+                </article>
               
-<div class="toc-item">
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
   
-<div class="tocsection onthispage">
-    <i class="fas fa-list"></i> On this page
-</div>
-<nav id="bd-toc-nav" class="page-toc">
-    <ul class="visible nav section-nav flex-column">
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#usages">
-   Usages
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#data-entities">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       data
-      </span>
-      <span class="pre">
-       entities
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#data-feminine">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       data
-      </span>
-      <span class="pre">
-       feminine
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#data-superclasses">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       data
-      </span>
-      <span class="pre">
-       superclasses
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#depictions-optional">
-     Depictions (optional)
-    </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#commons-sparql-depicts">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         commons
-        </span>
-        <span class="pre">
-         sparql
-        </span>
-        <span class="pre">
-         depicts
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#commons-sparql-depicted">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         commons
-        </span>
-        <span class="pre">
-         sparql
-        </span>
-        <span class="pre">
-         depicted
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#data-depicted">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         data
-        </span>
-        <span class="pre">
-         depicted
-        </span>
-       </code>
-      </a>
-     </li>
-    </ul>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#filter">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       filter
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#commons-rest">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       commons
-      </span>
-      <span class="pre">
-       rest
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#commons-heuristics">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       commons
-      </span>
-      <span class="pre">
-       heuristics
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#for-docopt">
-   For
-   <code class="docutils literal notranslate">
-    <span class="pre">
-     docopt
-    </span>
-   </code>
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#functions">
-   Functions
-  </a>
- </li>
-</ul>
-
-</nav>
-</div>
-
-<div class="toc-item">
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+</div></div>
   
 </div>
 
-<div class="toc-item">
-  
-<div class="tocsection sourcelink">
-    <a href="_sources/meerqat.data.wiki.rst.txt">
-        <i class="fas fa-file-alt"></i> Show Source
-    </a>
-</div>
-
-</div>
-
+                </footer>
+              
             </div>
-          
-          
-        </div>
-        <footer class="bd-footer-content">
-          <div class="bd-footer-content__inner">
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#usages">Usages</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data-entities"><code class="docutils literal notranslate"><span class="pre">data</span> <span class="pre">entities</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data-feminine"><code class="docutils literal notranslate"><span class="pre">data</span> <span class="pre">feminine</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data-superclasses"><code class="docutils literal notranslate"><span class="pre">data</span> <span class="pre">superclasses</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#depictions-optional">Depictions (optional)</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#commons-sparql-depicts"><code class="docutils literal notranslate"><span class="pre">commons</span> <span class="pre">sparql</span> <span class="pre">depicts</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#commons-sparql-depicted"><code class="docutils literal notranslate"><span class="pre">commons</span> <span class="pre">sparql</span> <span class="pre">depicted</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data-depicted"><code class="docutils literal notranslate"><span class="pre">data</span> <span class="pre">depicted</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#filter"><code class="docutils literal notranslate"><span class="pre">filter</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#commons-rest"><code class="docutils literal notranslate"><span class="pre">commons</span> <span class="pre">rest</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#commons-heuristics"><code class="docutils literal notranslate"><span class="pre">commons</span> <span class="pre">heuristics</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#for-docopt">For <code class="docutils literal notranslate"><span class="pre">docopt</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div class="tocsection sourcelink">
+    <a href="_sources/meerqat.data.wiki.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
             
           </div>
-        </footer>
+          <footer class="bd-footer-content">
+            
+          </footer>
         
       </main>
     </div>
   </div>
-
   
-    
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b"></script>
+  <script src="_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
 
-  <footer class="bd-footer"><div class="bd-footer__inner container">
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
   
-  <div class="footer-item">
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  <p class="copyright">
     
-<p class="copyright">
-
-    &copy; Copyright 2020-2023, CNRS.<br>
-
-</p>
-
-  </div>
+      © Copyright 2020-2023, CNRS.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
+    <br/>
+  </p>
+</div>
+      
+    </div>
   
-  <div class="footer-item">
-    
-<p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.1.1.<br>
-</p>
-
-  </div>
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
+</p></div>
+      
+    </div>
   
 </div>
+
   </footer>
   </body>
 </html>

@@ -33,6 +33,7 @@
     <script src="../../../_static/underscore.js"></script>
     <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/meerqat/data/wit';</script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -226,14 +227,14 @@
 <span class="sd">WIT for MICT</span>
 <span class="sd">============</span>
 
-<span class="sd">Generates the WIT subset for Multimodal Inverse Cloze Task as described in the ECIR-submitted paper:</span>
+<span class="sd">Generates the WIT subset for Multimodal Inverse Cloze Task as described in the ECIR-2023 paper:</span>
 <span class="sd">    - english-only subset</span>
 <span class="sd">    - images paired with the sections</span>
-<span class="sd">    - filtering out images with irrelevant formats (e.g. .svg)</span>
+<span class="sd">    - filtering out images with irrelevant formats (e.g. .svg) or not downloaded (e.g. you got a 404)</span>
 <span class="sd">    - splitting in train/validation/test without overlap between the articles</span>
 <span class="sd">    - splitting sections in sentences (``meerqat.data.loading sentences``)</span>
 <span class="sd">    - removing sections with a single sentence (DIY after)</span>
-<span class="sd">    - map the image url to its path (DIY after)</span>
+<span class="sd">    - images should be resized to have a maximum height or width of 512 pixels using ``meerqat.image.resize`` (DIY after)</span>
 
 <span class="sd">You should end up with:</span>
 <span class="sd">    - 877,635 pairs in train</span>
@@ -296,15 +297,20 @@
 <span class="sd">======</span>
 
 <span class="sd">Usage:</span>
-<span class="sd">wit.py &lt;root_path&gt; &lt;output_path&gt;</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">wit.py ict &lt;root_path&gt; &lt;output_path&gt; [--split]</span>
+<span class="sd">wit.py caption &lt;root_path&gt; &lt;output_path&gt; [--split --dedup]</span>
 
+<span class="sd">Options:</span>
+<span class="sd">    --split         Whether to split in train/dev/test sets</span>
+<span class="sd">    --dedup         Whether to de-duplicate identical caption-image pairs</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
 <span class="kn">from</span> <span class="nn">docopt</span> <span class="kn">import</span> <span class="n">docopt</span>
 <span class="kn">import</span> <span class="nn">random</span>
 
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">from</span> <span class="nn">datasets</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">DatasetDict</span>
+<span class="kn">from</span> <span class="nn">datasets</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">DatasetDict</span><span class="p">,</span> <span class="n">concatenate_datasets</span>
 
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 
@@ -319,15 +325,17 @@
     <span class="k">return</span> <span class="kc">False</span></div>
 
 
-<div class="viewcode-block" id="fill_wit_for_mict"><a class="viewcode-back" href="../../../meerqat.data.wit.html#meerqat.data.wit.fill_wit_for_mict">[docs]</a><span class="k">def</span> <span class="nf">fill_wit_for_mict</span><span class="p">(</span><span class="n">wit_for_mict</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">_</span><span class="p">,</span><span class="n">row</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">wit</span><span class="o">.</span><span class="n">iterrows</span><span class="p">(),</span> <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">wit</span><span class="p">)):</span>
+<div class="viewcode-block" id="fill_wit_for_mict"><a class="viewcode-back" href="../../../meerqat.data.wit.html#meerqat.data.wit.fill_wit_for_mict">[docs]</a><span class="k">def</span> <span class="nf">fill_wit_for_mict</span><span class="p">(</span><span class="n">wit</span><span class="p">,</span> <span class="n">wit_for_mict</span><span class="p">,</span> <span class="n">downloaded_images</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">wit</span><span class="o">.</span><span class="n">iterrows</span><span class="p">(),</span> <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">wit</span><span class="p">)):</span>
         <span class="n">wit_for_mict</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">page_title</span><span class="p">,</span> <span class="p">{})</span>
-        <span class="c1"># filtering out images with irrelevant formats</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">check_encoding</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">image_url</span><span class="p">):</span>
-            <span class="k">continue</span>
-        
+        <span class="n">image_path</span> <span class="o">=</span> <span class="n">downloaded_images</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">image_url</span><span class="p">]</span>        
         <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">is_main_image</span><span class="p">:</span>
-            <span class="n">wit_for_mict</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">page_title</span><span class="p">][</span><span class="s1">&#39;main_image_url&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">image_url</span>
+            <span class="n">wit_for_mict</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">page_title</span><span class="p">][</span><span class="s1">&#39;context_image_url&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">image_url</span>
+            <span class="n">wit_for_mict</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">page_title</span><span class="p">][</span><span class="s1">&#39;context_image_path&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">image_path</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">context_section_description</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="c1"># not used in ICT</span>
+            <span class="n">wit_for_mict</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">page_title</span><span class="p">][</span><span class="s1">&#39;context_text&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">context_section_description</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">context_section_description</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="k">continue</span>
@@ -337,54 +345,123 @@
             <span class="c1"># images paired with the sections</span>
             <span class="n">wit_for_mict</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">page_title</span><span class="p">][</span><span class="s1">&#39;sections&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">row</span><span class="o">.</span><span class="n">context_section_description</span><span class="p">,</span>
-                <span class="s2">&quot;image_url&quot;</span><span class="p">:</span> <span class="n">row</span><span class="o">.</span><span class="n">image_url</span>
+                <span class="s2">&quot;image_url&quot;</span><span class="p">:</span> <span class="n">row</span><span class="o">.</span><span class="n">image_url</span><span class="p">,</span>
+                <span class="s2">&quot;image_path&quot;</span><span class="p">:</span> <span class="n">image_path</span>
             <span class="p">}</span></div>
             
             
 <div class="viewcode-block" id="dict_to_dataset"><a class="viewcode-back" href="../../../meerqat.data.wit.html#meerqat.data.wit.dict_to_dataset">[docs]</a><span class="k">def</span> <span class="nf">dict_to_dataset</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
     <span class="n">table</span><span class="o">=</span><span class="p">[]</span>
     <span class="k">for</span> <span class="n">title</span><span class="p">,</span> <span class="n">article</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
-        <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">article</span><span class="p">[</span><span class="s1">&#39;sections&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">if</span> <span class="s1">&#39;context_image_path&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">article</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">article</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;sections&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="n">section</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">title</span>
-            <span class="n">section</span><span class="p">[</span><span class="s1">&#39;main_image_url&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">article</span><span class="p">[</span><span class="s1">&#39;main_image_url&#39;</span><span class="p">]</span>
-            <span class="n">section</span><span class="p">[</span><span class="s1">&#39;main_image_path&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">article</span><span class="p">[</span><span class="s1">&#39;main_image_path&#39;</span><span class="p">]</span>
+            <span class="n">section</span><span class="p">[</span><span class="s1">&#39;context_image_url&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">article</span><span class="p">[</span><span class="s1">&#39;context_image_url&#39;</span><span class="p">]</span>
+            <span class="n">section</span><span class="p">[</span><span class="s1">&#39;context_image_path&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">article</span><span class="p">[</span><span class="s1">&#39;context_image_path&#39;</span><span class="p">]</span>
             <span class="n">table</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">section</span><span class="p">)</span>
      
     <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
     <span class="n">dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="o">.</span><span class="n">from_pandas</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">dataset</span></div>
 
-    
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="n">args</span> <span class="o">=</span> <span class="n">docopt</span><span class="p">(</span><span class="vm">__doc__</span><span class="p">)</span>
-    <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;&lt;root_path&gt;&#39;</span><span class="p">])</span>
-    <span class="n">paths</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;wit_v1.train.all-00*&#39;</span><span class="p">))</span>
-    
+
+<div class="viewcode-block" id="common_filter"><a class="viewcode-back" href="../../../meerqat.data.wit.html#meerqat.data.wit.common_filter">[docs]</a><span class="k">def</span> <span class="nf">common_filter</span><span class="p">(</span><span class="n">wit</span><span class="p">,</span> <span class="n">downloaded_images</span><span class="p">):</span>
+    <span class="c1"># english-only subset</span>
+    <span class="n">wit</span> <span class="o">=</span> <span class="n">wit</span><span class="p">[</span><span class="n">wit</span><span class="o">.</span><span class="n">language</span><span class="o">==</span><span class="s1">&#39;en&#39;</span><span class="p">]</span>
+    <span class="c1"># downloaded and valid encoding</span>
+    <span class="n">wit</span> <span class="o">=</span> <span class="n">wit</span><span class="p">[</span><span class="n">wit</span><span class="o">.</span><span class="n">image_url</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">downloaded_images</span><span class="p">)]</span>
+    <span class="n">wit</span> <span class="o">=</span> <span class="n">wit</span><span class="p">[</span><span class="n">wit</span><span class="o">.</span><span class="n">image_url</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">check_encoding</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">wit</span></div>
+
+
+<div class="viewcode-block" id="mict"><a class="viewcode-back" href="../../../meerqat.data.wit.html#meerqat.data.wit.mict">[docs]</a><span class="k">def</span> <span class="nf">mict</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">downloaded_images</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="n">unique_wit_for_mict</span><span class="o">=</span><span class="p">{}</span>
     <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">paths</span><span class="p">):</span>
         <span class="n">wit</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="c1"># english-only subset</span>
-        <span class="n">wit</span> <span class="o">=</span> <span class="n">wit</span><span class="p">[</span><span class="n">wit</span><span class="o">.</span><span class="n">language</span><span class="o">==</span><span class="s1">&#39;en&#39;</span><span class="p">]</span>
-        <span class="n">fill_wit_for_mict</span><span class="p">(</span><span class="n">unique_wit_for_mict</span><span class="p">)</span>
- 
+        <span class="n">wit</span> <span class="o">=</span> <span class="n">common_filter</span><span class="p">(</span><span class="n">wit</span><span class="p">,</span> <span class="n">downloaded_images</span><span class="p">)</span>
+        <span class="n">fill_wit_for_mict</span><span class="p">(</span><span class="n">wit</span><span class="p">,</span> <span class="n">unique_wit_for_mict</span><span class="p">,</span> <span class="n">downloaded_images</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output</span><span class="o">/</span><span class="s1">&#39;english_wikipedia.json&#39;</span><span class="p">,</span> <span class="s1">&#39;wt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">unique_wit_for_mict</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
     <span class="c1"># split in test/validation/train without overlap between the articles</span>
-    <span class="n">titles</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">fill_wit_for_mict</span><span class="p">)</span>
-    <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">titles</span><span class="p">)</span>
-    <span class="c1"># 5% in test and validation, rest in train</span>
-    <span class="n">n_in_test</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">titles</span><span class="p">)</span><span class="o">*</span><span class="mf">0.05</span><span class="p">)</span>
-    <span class="n">superset</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">title</span> <span class="ow">in</span> <span class="n">titles</span><span class="p">[:</span><span class="n">n_in_test</span><span class="p">]:</span>
-        <span class="n">superset</span><span class="p">[</span><span class="s1">&#39;test&#39;</span><span class="p">][</span><span class="n">title</span><span class="p">]</span> <span class="o">=</span> <span class="n">unique_wit_for_mict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">title</span> <span class="ow">in</span> <span class="n">titles</span><span class="p">[</span><span class="n">n_in_test</span><span class="p">:</span> <span class="n">n_in_test</span><span class="o">*</span><span class="mi">2</span><span class="p">]:</span>
-        <span class="n">superset</span><span class="p">[</span><span class="s1">&#39;validation&#39;</span><span class="p">][</span><span class="n">title</span><span class="p">]</span> <span class="o">=</span> <span class="n">unique_wit_for_mict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">title</span> <span class="ow">in</span> <span class="n">titles</span><span class="p">[</span><span class="n">n_in_test</span><span class="o">*</span><span class="mi">2</span><span class="p">:</span> <span class="p">]:</span>
-        <span class="n">superset</span><span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">][</span><span class="n">title</span><span class="p">]</span> <span class="o">=</span> <span class="n">unique_wit_for_mict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">split</span><span class="p">:</span>
+        <span class="n">titles</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">fill_wit_for_mict</span><span class="p">)</span>
+        <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">titles</span><span class="p">)</span>
+        <span class="c1"># 5% in test and validation, rest in train</span>
+        <span class="n">n_in_test</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">titles</span><span class="p">)</span><span class="o">*</span><span class="mf">0.05</span><span class="p">)</span>
+        <span class="n">superset</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">title</span> <span class="ow">in</span> <span class="n">titles</span><span class="p">[:</span><span class="n">n_in_test</span><span class="p">]:</span>
+            <span class="n">superset</span><span class="p">[</span><span class="s1">&#39;test&#39;</span><span class="p">][</span><span class="n">title</span><span class="p">]</span> <span class="o">=</span> <span class="n">unique_wit_for_mict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">title</span> <span class="ow">in</span> <span class="n">titles</span><span class="p">[</span><span class="n">n_in_test</span><span class="p">:</span> <span class="n">n_in_test</span><span class="o">*</span><span class="mi">2</span><span class="p">]:</span>
+            <span class="n">superset</span><span class="p">[</span><span class="s1">&#39;validation&#39;</span><span class="p">][</span><span class="n">title</span><span class="p">]</span> <span class="o">=</span> <span class="n">unique_wit_for_mict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">title</span> <span class="ow">in</span> <span class="n">titles</span><span class="p">[</span><span class="n">n_in_test</span><span class="o">*</span><span class="mi">2</span><span class="p">:</span> <span class="p">]:</span>
+            <span class="n">superset</span><span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">][</span><span class="n">title</span><span class="p">]</span> <span class="o">=</span> <span class="n">unique_wit_for_mict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+            
+        <span class="n">dataset_dict</span> <span class="o">=</span> <span class="n">DatasetDict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">subset</span> <span class="ow">in</span> <span class="n">superset</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">dataset_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">dict_to_dataset</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dataset_dict</span> <span class="o">=</span> <span class="n">dict_to_dataset</span><span class="p">(</span><span class="n">unique_wit_for_mict</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">dataset_dict</span><span class="p">)</span>
+    <span class="n">dataset_dict</span><span class="o">.</span><span class="n">save_to_disk</span><span class="p">(</span><span class="n">output</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="is_unique"><a class="viewcode-back" href="../../../meerqat.data.wit.html#meerqat.data.wit.is_unique">[docs]</a><span class="k">def</span> <span class="nf">is_unique</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">unique_pairs</span><span class="p">):</span>
+    <span class="n">pair</span> <span class="o">=</span> <span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">],</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">pair</span> <span class="ow">in</span> <span class="n">unique_pairs</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="n">unique_pairs</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pair</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+   
+<div class="viewcode-block" id="caption"><a class="viewcode-back" href="../../../meerqat.data.wit.html#meerqat.data.wit.caption">[docs]</a><span class="k">def</span> <span class="nf">caption</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">downloaded_images</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dedup</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">dataset_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">paths</span><span class="p">):</span>
+        <span class="n">wit</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">wit</span> <span class="o">=</span> <span class="n">common_filter</span><span class="p">(</span><span class="n">wit</span><span class="p">,</span> <span class="n">downloaded_images</span><span class="p">)</span>
+        <span class="n">wit</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">downloaded_images</span><span class="p">[</span><span class="n">url</span><span class="p">]</span> <span class="k">for</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">wit</span><span class="o">.</span><span class="n">image_url</span><span class="p">]</span>
+        <span class="c1"># duplicate caption_reference_description and caption_attribution_description</span>
+        <span class="n">ref</span> <span class="o">=</span> <span class="n">wit</span><span class="p">[</span><span class="n">wit</span><span class="o">.</span><span class="n">caption_reference_description</span><span class="o">.</span><span class="n">notna</span><span class="p">()]</span>
+        <span class="n">ref</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;caption_reference_description&#39;</span><span class="p">:</span> <span class="s1">&#39;input&#39;</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">dataset_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_pandas</span><span class="p">(</span><span class="n">ref</span><span class="p">))</span>
+        <span class="n">attr</span> <span class="o">=</span> <span class="n">wit</span><span class="p">[</span><span class="n">wit</span><span class="o">.</span><span class="n">caption_attribution_description</span><span class="o">.</span><span class="n">notna</span><span class="p">()]</span>
+        <span class="n">attr</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;caption_attribution_description&#39;</span><span class="p">:</span> <span class="s1">&#39;input&#39;</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">dataset_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_pandas</span><span class="p">(</span><span class="n">attr</span><span class="p">))</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">concatenate_datasets</span><span class="p">(</span><span class="n">dataset_list</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dedup</span><span class="p">:</span>
+        <span class="n">before</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+        <span class="n">unique_pairs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="c1"># slower than numpy but saves 3.72 TiB of RAM</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">is_unique</span><span class="p">,</span> <span class="n">fn_kwargs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">unique_pairs</span><span class="o">=</span><span class="n">unique_pairs</span><span class="p">),</span> <span class="n">batched</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;De-duplication done. Removed </span><span class="si">{</span><span class="n">before</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="si">}</span><span class="s2"> image-caption pairs. </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="si">}</span><span class="s2"> remaining.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">split</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+    <span class="n">dataset</span><span class="o">.</span><span class="n">save_to_disk</span><span class="p">(</span><span class="n">output</span><span class="p">)</span></div>
+    
         
-    <span class="n">dataset_dict</span> <span class="o">=</span> <span class="n">DatasetDict</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">subset</span> <span class="ow">in</span> <span class="n">superset</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-        <span class="n">dataset_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">dict_to_dataset</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span>
-        
-    <span class="n">dataset_dict</span><span class="o">.</span><span class="n">save_to_disk</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;&lt;output_path&gt;&#39;</span><span class="p">])</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">docopt</span><span class="p">(</span><span class="vm">__doc__</span><span class="p">)</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;&lt;root_path&gt;&#39;</span><span class="p">])</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;&lt;output_path&gt;&#39;</span><span class="p">])</span>
+    <span class="n">output</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">paths</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;wit_v1.train.all-00*&#39;</span><span class="p">))</span>
+    <span class="c1"># TODO make this optional</span>
+    <span class="n">train_images</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
+        <span class="n">root</span><span class="o">/</span><span class="s1">&#39;train_images.tsv&#39;</span><span class="p">,</span>
+        <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span>
+        <span class="c1"># FIXME this is a hack for Jean Zay’s version which last rows are &quot;url     downloaded      path&quot;</span>
+        <span class="n">nrows</span><span class="o">=</span><span class="mi">11419528</span>
+    <span class="p">)</span>
+    <span class="n">downloaded_images</span> <span class="o">=</span> <span class="n">train_images</span><span class="p">[</span><span class="n">train_images</span><span class="o">.</span><span class="n">downloaded</span><span class="p">]</span>
+    <span class="n">downloaded_images</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">downloaded_images</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">downloaded_images</span><span class="o">.</span><span class="n">path</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;You have downloaded </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">downloaded_images</span><span class="p">)</span><span class="si">}</span><span class="s2"> out of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">train_images</span><span class="p">)</span><span class="si">}</span><span class="s2"> images.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;ict&#39;</span><span class="p">]:</span>
+        <span class="n">mict</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">downloaded_images</span><span class="o">=</span><span class="n">downloaded_images</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">output</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;--split&#39;</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;caption&#39;</span><span class="p">]:</span>
+        <span class="n">caption</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">downloaded_images</span><span class="o">=</span><span class="n">downloaded_images</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">output</span><span class="p">,</span> 
+                <span class="n">split</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;--split&#39;</span><span class="p">],</span> <span class="n">dedup</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;--dedup&#39;</span><span class="p">])</span>
+
 </pre></div>
 
             </article>
@@ -436,7 +513,7 @@
     
 <p class="copyright">
 
-    &copy; Copyright 2022, CNRS.<br>
+    &copy; Copyright 2020-2023, CNRS.<br>
 
 </p>
 
@@ -445,7 +522,7 @@
   <div class="footer-item">
     
 <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.1.1.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.2.3.<br>
 </p>
 
   </div>

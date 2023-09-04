@@ -1,32 +1,39 @@
 
+
 <!DOCTYPE html>
 
-<html lang="en">
+
+<html lang="en" >
+
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
     <title>meerqat.train.trainee module &#8212; meerqat v4.0.0-alpha documentation</title>
-  <script>
+  
+  
+  
+  <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
-<link href="_static/styles/pydata-sphinx-theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+  <link href="_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
 
   
-  <link rel="stylesheet"
-    href="_static/vendor/fontawesome/6.1.2/css/all.min.css">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b">
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
@@ -36,427 +43,308 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'meerqat.train.trainee';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="docsearch:language" content="en">
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
 
   
-  <input type="checkbox" class="sidebar-toggle" name="__primary" id="__primary">
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
   <label class="overlay overlay-primary" for="__primary"></label>
-
   
-  <input type="checkbox" class="sidebar-toggle" name="__secondary" id="__secondary">
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
   <label class="overlay overlay-secondary" for="__secondary"></label>
-
   
   <div class="search-button__wrapper">
     <div class="search-button__overlay"></div>
     <div class="search-button__search-container">
-      
-<form class="bd-search d-flex align-items-center" action="search.html" method="get">
-  <i class="icon fas fa-search"></i>
-  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form>
-    </div>
+</form></div>
   </div>
-
   
-  <nav class="bd-header navbar navbar-expand-lg bd-navbar" id="navbar-main"><div class="bd-header__inner bd-page-width">
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
   <label class="sidebar-toggle primary-toggle" for="__primary">
-      <span class="fas fa-bars"></span>
+    <span class="fa-solid fa-bars"></span>
   </label>
-  <div id="navbar-start">
-    
-    
   
-
+  <div class="navbar-header-items__start">
+    
+      <div class="navbar-item">
+  
 
 <a class="navbar-brand logo" href="index.html">
-
   
   
   
-  
-  
-  
-  
-
   
   
     <p class="title logo__title">meerqat v4.0.0-alpha documentation</p>
   
-</a>
+</a></div>
     
   </div>
-
+  
   
   <div class="col-lg-9 navbar-header-items">
-    <div id="navbar-center" class="mr-auto">
+    
+    <div class="me-auto navbar-header-items__center">
       
-      <div class="navbar-center-item">
-        <nav class="navbar-nav">
-    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
-        Site Navigation
-    </p>
-    <ul id="navbar-main-elements" class="navbar-nav">
-        
-    </ul>
-</nav>
-      </div>
-      
-    </div>
-
-    <div id="navbar-end">
-      <div class="navbar-end-item navbar-end__search-button-container">
-        
-<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
-  <i class="fas fa-search"></i>
-</button>
-      </div>
-      
-      <div class="navbar-end-item">
-        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
-    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
-    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
-    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
-</span>
-      </div>
-      
-      <div class="navbar-end-item">
-        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
-      </ul>
-      </div>
+        <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+  </ul>
+</nav></div>
       
     </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+        </div>
+      
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
   </div>
-
-
   
-  <div class="search-button-container--mobile">
-<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
-  <i class="fas fa-search"></i>
-</button>
-  </div>
-
   
-  <label class="sidebar-toggle secondary-toggle" for="__secondary">
-      <span class="fas fa-outdent"></span>
-  </label>
+    <div class="navbar-persistent--mobile">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+    </div>
   
 
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
 </div>
-  </nav>
-  
 
+    </nav>
+  
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
       
       <div class="bd-sidebar-primary bd-sidebar">
         
+
   
   <div class="sidebar-header-items sidebar-primary__section">
     
     
       <div class="sidebar-header-items__center">
-      
-      <div class="navbar-center-item">
-        <nav class="navbar-nav">
-    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
-        Site Navigation
-    </p>
-    <ul id="navbar-main-elements" class="navbar-nav">
         
-    </ul>
-</nav>
-      </div>
-      
-      </div>
-    
-
-    
-    
-    <div class="sidebar-header-items__end">
-      
-      <div class="navbar-end-item">
-        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
-    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
-    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
-    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
-</span>
-      </div>
-      
-      <div class="navbar-end-item">
-        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
-      </ul>
-      </div>
-      
-    </div>
-    
-  </div>
-
-  
-  <div class="sidebar-start-items sidebar-primary__section">
-    <div class="sidebar-start-items__item"><nav class="bd-links" id="bd-docs-nav" aria-label="Section navigation">
-  <p class="bd-links__title" role="heading" aria-level="1">
-    Section Navigation
+          <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
   </p>
-  <div class="bd-toc-item navbar-nav">
-    <ul class="current nav bd-sidenav">
- <li class="toctree-l1 has-children">
-  <a class="reference internal" href="meerqat.data.html">
-   meerqat.data package
-  </a>
-  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
-  <label class="toctree-toggle" for="toctree-checkbox-1">
-   <i class="fas fa-chevron-down">
-   </i>
-  </label>
-  <ul>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.data.kilt2vqa.html">
-     meerqat.data.kilt2vqa module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.data.kvqa.html">
-     meerqat.data.kvqa module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.data.labelstudio.html">
-     meerqat.data.labelstudio module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.data.loading.html">
-     meerqat.data.loading module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.data.mscelebs.html">
-     meerqat.data.mscelebs module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.data.utils.html">
-     meerqat.data.utils module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.data.wiki.html">
-     meerqat.data.wiki module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.data.wikidump.html">
-     meerqat.data.wikidump module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.data.wit.html">
-     meerqat.data.wit module
-    </a>
-   </li>
+  <ul class="bd-navbar-elements navbar-nav">
+    
   </ul>
- </li>
- <li class="toctree-l1 has-children">
-  <a class="reference internal" href="meerqat.image.html">
-   meerqat.image package
-  </a>
-  <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
-  <label class="toctree-toggle" for="toctree-checkbox-2">
-   <i class="fas fa-chevron-down">
-   </i>
-  </label>
-  <ul>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.image.embedding.html">
-     meerqat.image.embedding module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.image.face_box.html">
-     meerqat.image.face_box module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.image.face_detection.html">
-     meerqat.image.face_detection module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.image.face_recognition.html">
-     meerqat.image.face_recognition module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.image.resize.html">
-     meerqat.image.resize module
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toctree-l1 has-children">
-  <a class="reference internal" href="meerqat.ir.html">
-   meerqat.ir package
-  </a>
-  <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
-  <label class="toctree-toggle" for="toctree-checkbox-3">
-   <i class="fas fa-chevron-down">
-   </i>
-  </label>
-  <ul>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.ir.embedding.html">
-     meerqat.ir.embedding module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.ir.hp.html">
-     meerqat.ir.hp module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.ir.metrics.html">
-     meerqat.ir.metrics module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.ir.search.html">
-     meerqat.ir.search module
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toctree-l1 has-children">
-  <a class="reference internal" href="meerqat.models.html">
-   meerqat.models package
-  </a>
-  <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
-  <label class="toctree-toggle" for="toctree-checkbox-4">
-   <i class="fas fa-chevron-down">
-   </i>
-  </label>
-  <ul>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.models.image.html">
-     meerqat.models.image module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.models.mm.html">
-     meerqat.models.mm module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.models.qa.html">
-     meerqat.models.qa module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.models.utils.html">
-     meerqat.models.utils module
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toctree-l1 current active has-children">
-  <a class="reference internal" href="meerqat.train.html">
-   meerqat.train package
-  </a>
-  <input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/>
-  <label class="toctree-toggle" for="toctree-checkbox-5">
-   <i class="fas fa-chevron-down">
-   </i>
-  </label>
-  <ul class="current">
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.train.losses.html">
-     meerqat.train.losses module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.train.metrics.html">
-     meerqat.train.metrics module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.train.split_biencoder.html">
-     meerqat.train.split_biencoder module
-    </a>
-   </li>
-   <li class="toctree-l2 current active">
-    <a class="current reference internal" href="#">
-     meerqat.train.trainee module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.train.trainer.html">
-     meerqat.train.trainer module
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toctree-l1 has-children">
-  <a class="reference internal" href="meerqat.viz.html">
-   meerqat.viz package
-  </a>
-  <input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/>
-  <label class="toctree-toggle" for="toctree-checkbox-6">
-   <i class="fas fa-chevron-down">
-   </i>
-  </label>
-  <ul>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.viz.html.html">
-     meerqat.viz.html module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.viz.stats.html">
-     meerqat.viz.stats module
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="meerqat.viz.umap.html">
-     meerqat.viz.umap module
-    </a>
-   </li>
-  </ul>
- </li>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item"><nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="meerqat.data.html">meerqat.data package</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.infoseek.html">meerqat.data.infoseek module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.kilt2vqa.html">meerqat.data.kilt2vqa module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.labelstudio.html">meerqat.data.labelstudio module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.loading.html">meerqat.data.loading module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.mscelebs.html">meerqat.data.mscelebs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.utils.html">meerqat.data.utils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.wiki.html">meerqat.data.wiki module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.wikidump.html">meerqat.data.wikidump module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.data.wit.html">meerqat.data.wit module</a></li>
 </ul>
-
-  </div>
-</nav>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="meerqat.image.html">meerqat.image package</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.image.embedding.html">meerqat.image.embedding module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.image.face_box.html">meerqat.image.face_box module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.image.face_detection.html">meerqat.image.face_detection module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.image.face_recognition.html">meerqat.image.face_recognition module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.image.resize.html">meerqat.image.resize module</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="meerqat.interact.html">meerqat.interact package</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.interact.system.html">meerqat.interact.system module</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="meerqat.ir.html">meerqat.ir package</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.ir.embedding.html">meerqat.ir.embedding module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.ir.fuse.html">meerqat.ir.fuse module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.ir.hp.html">meerqat.ir.hp module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.ir.metrics.html">meerqat.ir.metrics module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.ir.search.html">meerqat.ir.search module</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="meerqat.models.html">meerqat.models package</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.models.bert.html">meerqat.models.bert module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.models.image.html">meerqat.models.image module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.models.mm.html">meerqat.models.mm module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.models.outputs.html">meerqat.models.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.models.qa.html">meerqat.models.qa module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.models.rr.html">meerqat.models.rr module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.models.utils.html">meerqat.models.utils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.models.vilt.html">meerqat.models.vilt module</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="meerqat.train.html">meerqat.train package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="meerqat.train.callbacks.html">meerqat.train.callbacks module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.train.data.html">meerqat.train.data module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.train.metrics.html">meerqat.train.metrics module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.train.optim.html">meerqat.train.optim module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.train.save_ptm.html">meerqat.train.save_ptm module</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">meerqat.train.trainee module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.train.trainer.html">meerqat.train.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="meerqat.viz.html">meerqat.viz package</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.viz.html.html">meerqat.viz.html module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.viz.stats.html">meerqat.viz.stats module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.viz.umap.html">meerqat.viz.umap module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meerqat.viz.wtl_filter.html">meerqat.viz.wtl_filter module</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</nav></div>
     </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
   </div>
   
+  <div id="rtd-footer-container"></div>
 
-  
-  <div class="sidebar-end-items sidebar-primary__section">
-    <div class="sidebar-end-items__item">
-    </div>
-  </div>
 
       </div>
-      <main class="bd-main">
+      
+      <main id="main-content" class="bd-main">
         
         
-        <div class="bd-content">
-          <div class="bd-article-container">
-            
-            <div class="bd-header-article">
-                
-            </div>
-            
-            
-            <article class="bd-article" role="main">
+          <div class="bd-content">
+            <div class="bd-article-container">
               
-  <div class="section" id="module-meerqat.train.trainee">
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumbs">
+  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">meerqat.train.trainee module</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="module-meerqat.train.trainee">
 <span id="meerqat-train-trainee-module"></span><h1>meerqat.train.trainee module<a class="headerlink" href="#module-meerqat.train.trainee" title="Permalink to this heading">#</a></h1>
 <p>Trainee is a pl.LightningModule that computes the loss so it is compatible with Trainer.</p>
 <dl class="py function">
@@ -466,11 +354,11 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="meerqat.train.trainee.Trainee">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.trainee.</span></span><span class="sig-name descname"><span class="pre">Trainee</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freeze_regex</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_checkpointing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">betas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.9,</span> <span class="pre">0.999)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_decay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Trainee"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Trainee" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.trainee.</span></span><span class="sig-name descname"><span class="pre">Trainee</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freeze_regex</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_checkpointing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">betas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.9,</span> <span class="pre">0.999)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_decay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_cpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Trainee"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Trainee" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">LightningModule</span></code></p>
 <p>Base class for all Trainee models (to be trained by a Trainer)</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>*args</strong> (<em>additionnal arguments are passed to pl.LightningModule</em>) – </p></li>
 <li><p><strong>**kwargs</strong> (<em>additionnal arguments are passed to pl.LightningModule</em>) – </p></li>
@@ -483,6 +371,7 @@ Defaults to None (keep model fully-trainable)</p></li>
 <li><p><strong>weight_decay</strong> (<em>float</em><em>, </em><em>optional</em>) – </p></li>
 <li><p><strong>betas</strong> (<em>Tuple</em><em>[</em><em>float</em><em>]</em><em>, </em><em>optional</em>) – </p></li>
 <li><p><strong>warmup_steps</strong> (<em>int</em><em>, </em><em>optional</em>) – Defaults to no warm-up</p></li>
+<li><p><strong>output_cpu</strong> (<em>bool</em><em>, </em><em>optional</em>) – </p></li>
 </ul>
 </dd>
 </dl>
@@ -494,6 +383,11 @@ Defaults to None (keep model fully-trainable)</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="meerqat.train.trainee.Trainee.step">
 <span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Trainee.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Trainee.step" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Trainee.eval_step">
+<span class="sig-name descname"><span class="pre">eval_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Trainee.eval_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Trainee.eval_step" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -574,11 +468,6 @@ Note that in other frameworks this feature can be referred to as “activation c
 activations”.</p>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.Trainee.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.Trainee.training" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -590,13 +479,13 @@ activations”.</p>
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#CrossModal.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.CrossModal.forward" title="Permalink to this definition">#</a></dt>
 <dd><p>Same as <code class="xref py py-meth docutils literal notranslate"><span class="pre">torch.nn.Module.forward()</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>*args</strong> – Whatever you decide to pass into the forward method.</p></li>
 <li><p><strong>**kwargs</strong> – Keyword arguments are also possible.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Your model’s output</p>
 </dd>
 </dl>
@@ -608,6 +497,11 @@ activations”.</p>
 <dd></dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.CrossModal.eval_step">
+<span class="sig-name descname"><span class="pre">eval_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#CrossModal.eval_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.CrossModal.eval_step" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="meerqat.train.trainee.CrossModal.eval_epoch_end">
 <span class="sig-name descname"><span class="pre">eval_epoch_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eval_outputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#CrossModal.eval_epoch_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.CrossModal.eval_epoch_end" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
@@ -615,26 +509,6 @@ activations”.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="meerqat.train.trainee.CrossModal.save_pretrained">
 <span class="sig-name descname"><span class="pre">save_pretrained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ckpt_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bert</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#CrossModal.save_pretrained"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.CrossModal.save_pretrained" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.CrossModal.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.CrossModal.training" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.CrossModal.precision">
-<span class="sig-name descname"><span class="pre">precision</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#meerqat.train.trainee.CrossModal.precision" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.CrossModal.prepare_data_per_node">
-<span class="sig-name descname"><span class="pre">prepare_data_per_node</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.CrossModal.prepare_data_per_node" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.CrossModal.allow_zero_length_dataloader_with_multiple_devices">
-<span class="sig-name descname"><span class="pre">allow_zero_length_dataloader_with_multiple_devices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.CrossModal.allow_zero_length_dataloader_with_multiple_devices" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -648,13 +522,13 @@ activations”.</p>
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">LongTensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paired_pixel_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">FloatTensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attention_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">LongTensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#JointMonoAndCrossModal.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.JointMonoAndCrossModal.forward" title="Permalink to this definition">#</a></dt>
 <dd><p>Same as <code class="xref py py-meth docutils literal notranslate"><span class="pre">torch.nn.Module.forward()</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>*args</strong> – Whatever you decide to pass into the forward method.</p></li>
 <li><p><strong>**kwargs</strong> – Keyword arguments are also possible.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Your model’s output</p>
 </dd>
 </dl>
@@ -663,6 +537,11 @@ activations”.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="meerqat.train.trainee.JointMonoAndCrossModal.step">
 <span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#JointMonoAndCrossModal.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.JointMonoAndCrossModal.step" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.JointMonoAndCrossModal.eval_step">
+<span class="sig-name descname"><span class="pre">eval_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#JointMonoAndCrossModal.eval_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.JointMonoAndCrossModal.eval_step" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -675,26 +554,6 @@ activations”.</p>
 <span class="sig-name descname"><span class="pre">save_pretrained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ckpt_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bert</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#JointMonoAndCrossModal.save_pretrained"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.JointMonoAndCrossModal.save_pretrained" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.JointMonoAndCrossModal.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.JointMonoAndCrossModal.training" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.JointMonoAndCrossModal.precision">
-<span class="sig-name descname"><span class="pre">precision</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#meerqat.train.trainee.JointMonoAndCrossModal.precision" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.JointMonoAndCrossModal.prepare_data_per_node">
-<span class="sig-name descname"><span class="pre">prepare_data_per_node</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.JointMonoAndCrossModal.prepare_data_per_node" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.JointMonoAndCrossModal.allow_zero_length_dataloader_with_multiple_devices">
-<span class="sig-name descname"><span class="pre">allow_zero_length_dataloader_with_multiple_devices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.JointMonoAndCrossModal.allow_zero_length_dataloader_with_multiple_devices" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -702,17 +561,16 @@ activations”.</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.trainee.</span></span><span class="sig-name descname"><span class="pre">BiEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">question_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">question_model_name_or_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_model_name_or_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">question_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">superclass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#BiEncoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.BiEncoder" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#meerqat.train.trainee.Trainee" title="meerqat.train.trainee.Trainee"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trainee</span></code></a></p>
 <p>The training objective is to minimize the negative log-likelihood of the similarities (dot product)
-between the questions and the passages embeddings, as described in <a class="footnote-reference brackets" href="#id2" id="id1">3</a>.</p>
+between the questions and the passages embeddings, as described in <a class="footnote-reference brackets" href="#id2" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></a>.</p>
 <p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id2"><span class="brackets"><a class="fn-backref" href="#id1">3</a></span></dt>
-<dd><p>Vladimir Karpukhin, Barlas Oguz, Sewon Min, Patrick Lewis, Ledell Wu, Sergey Edunov, Danqi Chen, Wen-tau Yih.
+<aside class="footnote brackets" id="id2" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">3</a><span class="fn-bracket">]</span></span>
+<p>Vladimir Karpukhin, Barlas Oguz, Sewon Min, Patrick Lewis, Ledell Wu, Sergey Edunov, Danqi Chen, Wen-tau Yih.
 Dense Passage Retrieval for Open-Domain Question Answering.
 Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 6769–6781, 2020.</p>
-</dd>
-</dl>
+</aside>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>*args</strong> (<em>additionnal arguments are passed to Trainee</em>) – </p></li>
 <li><p><strong>**kwargs</strong> (<em>additionnal arguments are passed to Trainee</em>) – </p></li>
@@ -733,7 +591,7 @@ Defaults to False.</p></li>
 <dt class="sig sig-object py" id="meerqat.train.trainee.BiEncoder.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">question_inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#BiEncoder.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.BiEncoder.forward" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>question_inputs</strong> (<em>dict</em>) – passed to the respective encoder</p></li>
 <li><p><strong>context_inputs</strong> (<em>dict</em>) – passed to the respective encoder</p></li>
@@ -747,11 +605,16 @@ Defaults to False.</p></li>
 <span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#BiEncoder.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.BiEncoder.step" title="Permalink to this definition">#</a></dt>
 <dd><p>Calculates In-batch negatives schema loss and supports to run it in DDP mode
 by exchanging the representations across all the nodes.</p>
-<p>Adapted from <a class="reference external" href="https://github.com/facebookresearch/DPR/blob/main/train_dense_encoder.py">https://github.com/facebookresearch/DPR/blob/main/train_dense_encoder.py</a>
-and <a class="reference external" href="https://github.com/Lightning-AI/lightning/discussions/14390">https://github.com/Lightning-AI/lightning/discussions/14390</a></p>
+<p>Adapted from <a class="github reference external" href="https://github.com/facebookresearch/DPR/blob/main/train_dense_encoder.py">facebookresearch/DPR</a>
+and <a class="github reference external" href="https://github.com/Lightning-AI/lightning/discussions/14390">Lightning-AI/lightning#14390</a></p>
 <p class="rubric">Notes</p>
 <p>This means that the whole representations of questions and contexts, and their similarity matrix, must fit on a single GPU.</p>
 </dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.BiEncoder.eval_step">
+<span class="sig-name descname"><span class="pre">eval_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#BiEncoder.eval_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.BiEncoder.eval_step" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="meerqat.train.trainee.BiEncoder.eval_epoch_end">
@@ -761,26 +624,6 @@ and <a class="reference external" href="https://github.com/Lightning-AI/lightnin
 <dl class="py method">
 <dt class="sig sig-object py" id="meerqat.train.trainee.BiEncoder.save_pretrained">
 <span class="sig-name descname"><span class="pre">save_pretrained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ckpt_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bert</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#BiEncoder.save_pretrained"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.BiEncoder.save_pretrained" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.BiEncoder.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.BiEncoder.training" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.BiEncoder.precision">
-<span class="sig-name descname"><span class="pre">precision</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#meerqat.train.trainee.BiEncoder.precision" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.BiEncoder.prepare_data_per_node">
-<span class="sig-name descname"><span class="pre">prepare_data_per_node</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.BiEncoder.prepare_data_per_node" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.BiEncoder.allow_zero_length_dataloader_with_multiple_devices">
-<span class="sig-name descname"><span class="pre">allow_zero_length_dataloader_with_multiple_devices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.BiEncoder.allow_zero_length_dataloader_with_multiple_devices" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -793,7 +636,7 @@ and <a class="reference external" href="https://github.com/Lightning-AI/lightnin
 <dt class="sig sig-object py" id="meerqat.train.trainee.JointBiEncoderAndClip.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">question_inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#JointBiEncoderAndClip.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.JointBiEncoderAndClip.forward" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>question_inputs</strong> (<em>dict</em>) – passed to the respective encoder</p></li>
 <li><p><strong>context_inputs</strong> (<em>dict</em>) – passed to the respective encoder</p></li>
@@ -807,11 +650,16 @@ and <a class="reference external" href="https://github.com/Lightning-AI/lightnin
 <span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#JointBiEncoderAndClip.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.JointBiEncoderAndClip.step" title="Permalink to this definition">#</a></dt>
 <dd><p>Calculates In-batch negatives schema loss and supports to run it in DDP mode
 by exchanging the representations across all the nodes.</p>
-<p>Adapted from <a class="reference external" href="https://github.com/facebookresearch/DPR/blob/main/train_dense_encoder.py">https://github.com/facebookresearch/DPR/blob/main/train_dense_encoder.py</a>
-and <a class="reference external" href="https://github.com/Lightning-AI/lightning/discussions/14390">https://github.com/Lightning-AI/lightning/discussions/14390</a></p>
+<p>Adapted from <a class="github reference external" href="https://github.com/facebookresearch/DPR/blob/main/train_dense_encoder.py">facebookresearch/DPR</a>
+and <a class="github reference external" href="https://github.com/Lightning-AI/lightning/discussions/14390">Lightning-AI/lightning#14390</a></p>
 <p class="rubric">Notes</p>
 <p>This means that the whole representations of questions and contexts, and their similarity matrix, must fit on a single GPU.</p>
 </dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.JointBiEncoderAndClip.eval_step">
+<span class="sig-name descname"><span class="pre">eval_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#JointBiEncoderAndClip.eval_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.JointBiEncoderAndClip.eval_step" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="meerqat.train.trainee.JointBiEncoderAndClip.eval_epoch_end">
@@ -823,26 +671,6 @@ and <a class="reference external" href="https://github.com/Lightning-AI/lightnin
 <span class="sig-name descname"><span class="pre">save_pretrained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ckpt_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bert</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#JointBiEncoderAndClip.save_pretrained"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.JointBiEncoderAndClip.save_pretrained" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.JointBiEncoderAndClip.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.JointBiEncoderAndClip.training" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.JointBiEncoderAndClip.precision">
-<span class="sig-name descname"><span class="pre">precision</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#meerqat.train.trainee.JointBiEncoderAndClip.precision" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.JointBiEncoderAndClip.prepare_data_per_node">
-<span class="sig-name descname"><span class="pre">prepare_data_per_node</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.JointBiEncoderAndClip.prepare_data_per_node" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.JointBiEncoderAndClip.allow_zero_length_dataloader_with_multiple_devices">
-<span class="sig-name descname"><span class="pre">allow_zero_length_dataloader_with_multiple_devices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.JointBiEncoderAndClip.allow_zero_length_dataloader_with_multiple_devices" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -850,7 +678,7 @@ and <a class="reference external" href="https://github.com/Lightning-AI/lightnin
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.trainee.</span></span><span class="sig-name descname"><span class="pre">ReRanker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_kwargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#ReRanker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.ReRanker" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#meerqat.train.trainee.Trainee" title="meerqat.train.trainee.Trainee"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trainee</span></code></a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model_kwargs</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em>) – Passed to get_pretrained</p></li>
 <li><p><strong>metric_kwargs</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Passed to ranx.evaluate to compute metrics during evaluation</p></li>
@@ -862,13 +690,13 @@ and <a class="reference external" href="https://github.com/Lightning-AI/lightnin
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#ReRanker.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.ReRanker.forward" title="Permalink to this definition">#</a></dt>
 <dd><p>Same as <code class="xref py py-meth docutils literal notranslate"><span class="pre">torch.nn.Module.forward()</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>*args</strong> – Whatever you decide to pass into the forward method.</p></li>
 <li><p><strong>**kwargs</strong> – Keyword arguments are also possible.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Your model’s output</p>
 </dd>
 </dl>
@@ -895,26 +723,6 @@ and <a class="reference external" href="https://github.com/Lightning-AI/lightnin
 <span class="sig-name descname"><span class="pre">save_pretrained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ckpt_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bert</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#ReRanker.save_pretrained"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.ReRanker.save_pretrained" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.ReRanker.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.ReRanker.training" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.ReRanker.precision">
-<span class="sig-name descname"><span class="pre">precision</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#meerqat.train.trainee.ReRanker.precision" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.ReRanker.prepare_data_per_node">
-<span class="sig-name descname"><span class="pre">prepare_data_per_node</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.ReRanker.prepare_data_per_node" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.ReRanker.allow_zero_length_dataloader_with_multiple_devices">
-<span class="sig-name descname"><span class="pre">allow_zero_length_dataloader_with_multiple_devices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.ReRanker.allow_zero_length_dataloader_with_multiple_devices" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="py function">
@@ -927,7 +735,7 @@ and <a class="reference external" href="https://github.com/Lightning-AI/lightnin
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meerqat.train.trainee.</span></span><span class="sig-name descname"><span class="pre">Reader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_kwargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tune_M</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Reader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Reader" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#meerqat.train.trainee.Trainee" title="meerqat.train.trainee.Trainee"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trainee</span></code></a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model_kwargs</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em>) – Passed to get_pretrained</p></li>
 <li><p><strong>tune_M</strong> (<em>bool</em><em>, </em><em>optional</em>) – Instead of extracting answers from the top-M input passages,
@@ -941,13 +749,13 @@ Defaults to False (use only self.trainer.datamodule.M)</p></li>
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Reader.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Reader.forward" title="Permalink to this definition">#</a></dt>
 <dd><p>Same as <code class="xref py py-meth docutils literal notranslate"><span class="pre">torch.nn.Module.forward()</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>*args</strong> – Whatever you decide to pass into the forward method.</p></li>
 <li><p><strong>**kwargs</strong> – Keyword arguments are also possible.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Your model’s output</p>
 </dd>
 </dl>
@@ -956,6 +764,11 @@ Defaults to False (use only self.trainer.datamodule.M)</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="meerqat.train.trainee.Reader.step">
 <span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Reader.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Reader.step" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Reader.eval_step">
+<span class="sig-name descname"><span class="pre">eval_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Reader.eval_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Reader.eval_step" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -972,28 +785,14 @@ Defaults to False (use only self.trainer.datamodule.M)</p></li>
 <dd></dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="meerqat.train.trainee.Reader.test_epoch_end">
+<span class="sig-name descname"><span class="pre">test_epoch_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Reader.test_epoch_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Reader.test_epoch_end" title="Permalink to this definition">#</a></dt>
+<dd><p>eval_epoch_end and log</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="meerqat.train.trainee.Reader.M_tuning">
 <span class="sig-name descname"><span class="pre">M_tuning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_start_log_probs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_end_log_probs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_input_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_answer_strings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_passage_scores</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/trainee.html#Reader.M_tuning"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.trainee.Reader.M_tuning" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.Reader.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.Reader.training" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.Reader.precision">
-<span class="sig-name descname"><span class="pre">precision</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#meerqat.train.trainee.Reader.precision" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.Reader.prepare_data_per_node">
-<span class="sig-name descname"><span class="pre">prepare_data_per_node</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.Reader.prepare_data_per_node" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="meerqat.train.trainee.Reader.allow_zero_length_dataloader_with_multiple_devices">
-<span class="sig-name descname"><span class="pre">allow_zero_length_dataloader_with_multiple_devices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#meerqat.train.trainee.Reader.allow_zero_length_dataloader_with_multiple_devices" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -1003,79 +802,89 @@ Defaults to False (use only self.trainer.datamodule.M)</p></li>
 
 </dd></dl>
 
-</div>
+</section>
 
 
-            </article>
-            
-            
-            
-            <footer class="bd-footer-article">
-                <!-- Previous / next buttons -->
-<div class='prev-next-area'>
-</div>
-            </footer>
-            
-          </div>
-          
-          
-          
-            <div class="bd-sidebar-secondary bd-toc">
+                </article>
               
-<div class="toc-item">
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+</div></div>
   
 </div>
 
-<div class="toc-item">
-  
-<div class="tocsection sourcelink">
-    <a href="_sources/meerqat.train.trainee.rst.txt">
-        <i class="fas fa-file-alt"></i> Show Source
-    </a>
-</div>
-
-</div>
-
+                </footer>
+              
             </div>
-          
-          
-        </div>
-        <footer class="bd-footer-content">
-          <div class="bd-footer-content__inner">
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="tocsection sourcelink">
+    <a href="_sources/meerqat.train.trainee.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
             
           </div>
-        </footer>
+          <footer class="bd-footer-content">
+            
+          </footer>
         
       </main>
     </div>
   </div>
-
   
-    
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b"></script>
+  <script src="_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
 
-  <footer class="bd-footer"><div class="bd-footer__inner container">
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
   
-  <div class="footer-item">
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  <p class="copyright">
     
-<p class="copyright">
-
-    &copy; Copyright 2020-2023, CNRS.<br>
-
-</p>
-
-  </div>
+      © Copyright 2020-2023, CNRS.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
+    <br/>
+  </p>
+</div>
+      
+    </div>
   
-  <div class="footer-item">
-    
-<p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.1.1.<br>
-</p>
-
-  </div>
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
+</p></div>
+      
+    </div>
   
 </div>
+
   </footer>
   </body>
 </html>

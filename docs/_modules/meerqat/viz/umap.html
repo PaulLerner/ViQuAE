@@ -1,36 +1,226 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>meerqat.viz.umap &#8212; meerqat v3.0.0-alpha documentation</title>
-    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+  <script>
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+
+  
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/6.1.2/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b">
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
     <script src="../../../_static/jquery.js"></script>
     <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../../_static/doctools.js"></script>
-    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/meerqat/viz/umap';</script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-   
-  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="docsearch:language" content="en">
+  </head>
   
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
 
-  </head><body>
+  
+  <input type="checkbox" class="sidebar-toggle" name="__primary" id="__primary">
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__secondary" id="__secondary">
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+      
+<form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+    </div>
+  </div>
+
+  
+  <nav class="bd-header navbar navbar-expand-lg bd-navbar" id="navbar-main"><div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+      <span class="fas fa-bars"></span>
+  </label>
+  <div id="navbar-start">
+    
+    
   
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          
 
-          <div class="body" role="main">
+<a class="navbar-brand logo" href="../../../index.html">
+
+  
+  
+  
+  
+  
+  
+  
+
+  
+  
+    <p class="title logo__title">meerqat v3.0.0-alpha documentation</p>
+  
+</a>
+    
+  </div>
+
+  
+  <div class="col-lg-9 navbar-header-items">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+    </ul>
+</nav>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      <div class="navbar-end-item navbar-end__search-button-container">
+        
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+
+
+  
+  <div class="search-button-container--mobile">
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
+  <i class="fas fa-search"></i>
+</button>
+  </div>
+
+  
+  <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fas fa-outdent"></span>
+  </label>
+  
+
+</div>
+  </nav>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+    </ul>
+</nav>
+      </div>
+      
+      </div>
+    
+
+    
+    
+    <div class="sidebar-header-items__end">
+      
+      <div class="navbar-end-item">
+        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+    
+  </div>
+
+  
+
+  
+  <div class="sidebar-end-items sidebar-primary__section">
+    <div class="sidebar-end-items__item">
+    </div>
+  </div>
+
+      </div>
+      <main class="bd-main">
+        
+        
+        <div class="bd-content">
+          <div class="bd-article-container">
             
+            <div class="bd-header-article">
+                
+            </div>
+            
+            
+            <article class="bd-article" role="main">
+              
   <h1>Source code for meerqat.viz.umap</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 
@@ -55,20 +245,20 @@
 <span class="kn">from</span> <span class="nn">..data.wiki</span> <span class="kn">import</span> <span class="n">thumbnail_to_file_name</span><span class="p">,</span> <span class="n">file_name_to_thumbnail</span>
 
 
-<div class="viewcode-block" id="reduce"><a class="viewcode-back" href="../../../meerqat.viz.html#meerqat.viz.umap.reduce">[docs]</a><span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;cosine&#39;</span><span class="p">):</span>    
+<div class="viewcode-block" id="reduce"><a class="viewcode-back" href="../../../meerqat.viz.umap.html#meerqat.viz.umap.reduce">[docs]</a><span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;cosine&#39;</span><span class="p">):</span>    
     <span class="n">reducer</span> <span class="o">=</span> <span class="n">umap</span><span class="o">.</span><span class="n">UMAP</span><span class="p">(</span><span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">)</span>
     <span class="n">reducer</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">embeddings</span><span class="p">)</span>
     <span class="n">reduced_embeddings</span> <span class="o">=</span> <span class="n">reducer</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">embeddings</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">reduced_embeddings</span></div>
 
 
-<div class="viewcode-block" id="fplot"><a class="viewcode-back" href="../../../meerqat.viz.html#meerqat.viz.umap.fplot">[docs]</a><span class="k">def</span> <span class="nf">fplot</span><span class="p">(</span><span class="n">reduced_embeddings</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="mi">20</span><span class="p">),</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+<div class="viewcode-block" id="fplot"><a class="viewcode-back" href="../../../meerqat.viz.umap.html#meerqat.viz.umap.fplot">[docs]</a><span class="k">def</span> <span class="nf">fplot</span><span class="p">(</span><span class="n">reduced_embeddings</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="mi">20</span><span class="p">),</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
     <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">reduced_embeddings</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">reduced_embeddings</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">s</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">fig</span></div>
 
 
-<div class="viewcode-block" id="iplot"><a class="viewcode-back" href="../../../meerqat.viz.html#meerqat.viz.umap.iplot">[docs]</a><span class="k">def</span> <span class="nf">iplot</span><span class="p">(</span><span class="n">reduced_embeddings</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">urls</span><span class="p">,</span> <span class="n">input_key</span><span class="o">=</span><span class="s1">&#39;input&#39;</span><span class="p">,</span> <span class="n">thumb_width</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;UMAP projection&#39;</span><span class="p">,</span>
+<div class="viewcode-block" id="iplot"><a class="viewcode-back" href="../../../meerqat.viz.umap.html#meerqat.viz.umap.iplot">[docs]</a><span class="k">def</span> <span class="nf">iplot</span><span class="p">(</span><span class="n">reduced_embeddings</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">urls</span><span class="p">,</span> <span class="n">input_key</span><span class="o">=</span><span class="s1">&#39;input&#39;</span><span class="p">,</span> <span class="n">thumb_width</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;UMAP projection&#39;</span><span class="p">,</span>
           <span class="n">plot_width</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">plot_height</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;pan, wheel_zoom, reset&#39;</span><span class="p">),</span>
           <span class="n">line_alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">fill_alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="s1">&#39;Viridis256&#39;</span><span class="p">):</span>
     <span class="n">thumbnails</span> <span class="o">=</span> <span class="p">[</span><span class="n">file_name_to_thumbnail</span><span class="p">(</span><span class="n">thumbnail_to_file_name</span><span class="p">(</span><span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">unquote</span><span class="p">(</span><span class="n">url</span><span class="p">)),</span> <span class="n">thumb_width</span><span class="p">)</span> <span class="k">for</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">urls</span><span class="p">]</span>
@@ -114,14 +304,14 @@
     <span class="k">return</span> <span class="n">fig</span></div>
 
 
-<div class="viewcode-block" id="get_ranx_run"><a class="viewcode-back" href="../../../meerqat.viz.html#meerqat.viz.umap.get_ranx_run">[docs]</a><span class="k">def</span> <span class="nf">get_ranx_run</span><span class="p">(</span><span class="n">qrels_path</span><span class="p">,</span> <span class="n">run_path</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;mrr&#39;</span><span class="p">):</span>
-    <span class="n">qrels</span> <span class="o">=</span> <span class="n">ranx</span><span class="o">.</span><span class="n">Qrels</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">qrels_path</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;trec&#39;</span><span class="p">)</span>
-    <span class="n">run</span> <span class="o">=</span> <span class="n">ranx</span><span class="o">.</span><span class="n">Run</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">run_path</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;trec&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="get_ranx_run"><a class="viewcode-back" href="../../../meerqat.viz.umap.html#meerqat.viz.umap.get_ranx_run">[docs]</a><span class="k">def</span> <span class="nf">get_ranx_run</span><span class="p">(</span><span class="n">qrels_path</span><span class="p">,</span> <span class="n">run_path</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;mrr&#39;</span><span class="p">):</span>
+    <span class="n">qrels</span> <span class="o">=</span> <span class="n">ranx</span><span class="o">.</span><span class="n">Qrels</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">qrels_path</span><span class="p">)</span>
+    <span class="n">run</span> <span class="o">=</span> <span class="n">ranx</span><span class="o">.</span><span class="n">Run</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">run_path</span><span class="p">)</span>
     <span class="n">ranx</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">qrels</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="n">metric</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">run</span><span class="p">,</span> <span class="n">metric</span></div>
 
     
-<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../meerqat.viz.html#meerqat.viz.umap.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">image_kb</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shard</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">url_key</span><span class="o">=</span><span class="s1">&#39;url&#39;</span><span class="p">,</span>
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../meerqat.viz.umap.html#meerqat.viz.umap.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">image_kb</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shard</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">url_key</span><span class="o">=</span><span class="s1">&#39;url&#39;</span><span class="p">,</span>
          <span class="n">reduce_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">fplot_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">iplot_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">ranx_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">face</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="n">output_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">shard</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -167,65 +357,70 @@
     <span class="n">main</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;&lt;key&gt;&#39;</span><span class="p">],</span> <span class="n">output_path</span><span class="p">,</span> <span class="o">**</span><span class="n">config</span><span class="p">)</span>
 </pre></div>
 
+            </article>
+            
+            
+            
+            <footer class="bd-footer-article">
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+            </footer>
+            
           </div>
           
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../../index.html">meerqat</a></h1>
-
-
-
-
-
-
-
-
-<h3>Navigation</h3>
-
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../../../index.html">Documentation overview</a><ul>
-  <li><a href="../../index.html">Module code</a><ul>
-  </ul></li>
-  </ul></li>
-</ul>
+          
+          
+            <div class="bd-sidebar-secondary bd-toc">
+              
+<div class="toc-item">
+  
 </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../../../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
-      <input type="submit" value="Go" />
-    </form>
-    </div>
+
+<div class="toc-item">
+  
 </div>
-<script>$('#searchbox').show(0);</script>
 
-
-
-
-
-
-
-
+            </div>
+          
+          
         </div>
-      </div>
-      <div class="clearer"></div>
+        <footer class="bd-footer-content">
+          <div class="bd-footer-content__inner">
+            
+          </div>
+        </footer>
+        
+      </main>
     </div>
-    <div class="footer">
-      &copy;2022, Paul Lerner.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
-      
-    </div>
+  </div>
 
+  
     
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b"></script>
 
+  <footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
     
+<p class="copyright">
+
+    &copy; Copyright 2020-2023, CNRS.<br>
+
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+<p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.2.3.<br>
+</p>
+
+  </div>
+  
+</div>
+  </footer>
   </body>
 </html>
