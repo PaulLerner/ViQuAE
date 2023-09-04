@@ -422,6 +422,8 @@ class CrossModalDataModule(DataModule):
         else:
             labels = torch.arange(strings)
         if self.paired_image is not None:
+            # TODO optionally sample a positive image in case of multiple reference images ?
+            # e.g. several reference images in the KB, as in WIT or Mensink's EVQA
             for k, v in self.image_formatter.format_pixels(items, image_key=self.paired_image).items():
                 if self.deduplicate:
                     batch[f"paired_{k}"] = v[where]

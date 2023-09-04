@@ -22,10 +22,16 @@ from pathlib import Path
 import enum
 
 import numpy as np
-from elasticsearch import Elasticsearch
+try:
+    from elasticsearch import Elasticsearch
+except ImportError as e:
+    warnings.warn(f"ImportError: {e}")
+try:
+    from pyserini.search.lucene import LuceneSearcher
+except ImportError as e:
+    warnings.warn(f"ImportError: {e}")
 from datasets import load_from_disk, set_caching_enabled
 from datasets.search import ElasticSearchIndex, FaissIndex
-from pyserini.search.lucene import LuceneSearcher
 import ranx
 
 from .metrics import find_relevant

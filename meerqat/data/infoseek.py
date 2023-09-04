@@ -327,7 +327,7 @@ def evaluate_infoseek_full(
             split_score = evaluate_infoseek(pred, qid2example)
             split_score['split'] = split
             infoseek_score[split] = split_score
-        print(pd.DataFrame(infoseek_score.values()).to_latex())
+        print(pd.DataFrame(infoseek_score.values()).to_latex(float_format="%.2f"))
         split_scores = [score['score'] for score in infoseek_score.values()]
         return {
             'final_score': round(harmonic_mean(*split_scores), 2),

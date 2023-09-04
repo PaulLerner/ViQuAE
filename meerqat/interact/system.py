@@ -12,6 +12,7 @@ from ..ir.fuse import Fusion
 
 
 class System:
+    """Interact with the KVQAE system"""
     def __init__(self, searcher_kwargs: dict, image_kwargs: dict, text_kwargs: dict, 
                  tokenizer_kwargs: dict, tokenization_kwargs: dict):
         self.searcher = Searcher(**searcher_kwargs)
@@ -68,12 +69,6 @@ class System:
             self.pipeline(batch)
             print(f"> {answer}\n")
         
-        
-def main(searcher_kwargs: dict):
-    """Interact with the KVQAE system"""
-    system = System()
-    system.user_loop()
-        
     
 if __name__ == '__main__':
-    CLI(main)
+    CLI(System)

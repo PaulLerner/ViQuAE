@@ -98,20 +98,23 @@ Functions
 =========
 """
 
+import warnings
 import json
 import numpy as np
 import pandas as pd
 import random
 import re
 import spacy
-from spacy.gold import align
+try:
+    from spacy.gold import align
+except ImportError as e:
+    warnings.warn(f"Got the following ImportError: {e}.\nTry using spacy==2.2.4")
 from spacy.symbols import DATE, TIME, PERCENT, MONEY, QUANTITY, ORDINAL, CARDINAL
 from spacy.symbols import dobj, nsubj, pobj, obj, nsubjpass, poss, obl, root
 
 from docopt import docopt
 from tqdm import tqdm
 from tabulate import tabulate
-import warnings
 
 import requests
 

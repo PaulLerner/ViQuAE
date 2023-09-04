@@ -7,11 +7,15 @@ Options:
 from docopt import docopt
 import json
 from pathlib import Path
+import warnings
 
 import numpy as np
 
 import torch
-from arcface_torch.backbones import get_model
+try:
+    from arcface_torch.backbones import get_model
+except ImportError as e:
+    warnings.warn(f"Got the following ImportError: {e}.\n Please install arcface_torch as instructed in README.")
 from datasets import load_from_disk, set_caching_enabled
 
 from torchvision.transforms import Compose, ToTensor, Normalize
