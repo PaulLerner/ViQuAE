@@ -33,10 +33,15 @@ import tensorflow_text as text
 
 from datasets import load_from_disk
 
+from .loading import DATA_ROOT_PATH
+
+
 # Got FailedPreconditionError (Error executing an HTTP request) 
 # when trying to read from gs so switched to local HF Transformers vocab
-_VOCAB_PATH = "/gpfsdsstore/projects/rech/fih/usl47jg/models/bert-base-uncased/vocab.txt" #'gs://cloud-tpu-checkpoints/bert/keras_bert/uncased_L-12_H-768_A-12/vocab.txt'
-_MODEL_PATH = 'https://tfhub.dev/google/answer_equivalence/bem/1'
+_VOCAB_PATH = str(DATA_ROOT_PATH/"models/bert-base-uncased/vocab.txt") #'gs://cloud-tpu-checkpoints/bert/keras_bert/uncased_L-12_H-768_A-12/vocab.txt'
+# similar problem here, cannot access the web from my GPU node
+# download it from https://tfhub.dev/google/answer_equivalence/bem/1 and extract it (it is actually a tar.gz archive)
+_MODEL_PATH = str(DATA_ROOT_PATH/"models/bem") #'https://tfhub.dev/google/answer_equivalence/bem/1'
 _PUNCTUATION_CHARACTERS = string.punctuation + '‘’´`_'
 _QUESTION_TYPES = ['templated', 'automatic', 'multi_answer', '2_hop']
 _DIGIT_MAP = {
@@ -478,7 +483,6 @@ def main(prediction_path: str, reference_path: str):
     print(average_scores)
     print((pd.DataFrame([average_scores])*100).to_latex(float_format="%.2f"))
 
-    
     
 if __name__ == "__main__":
     CLI(main)
