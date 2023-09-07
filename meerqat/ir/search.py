@@ -417,12 +417,14 @@ class Searcher:
                                                                     question_types):
                     self.runs[index_name].setdefault(q_id, {})
                     for score, i in zip(scores, indices):
+                        penalty = 0.0
                         if kb.index_mapping is not None:
                             for j in kb.index_mapping[i]:
                                 j = str(j)
                                 # assumes one2many mapping: simply overwrite any previous values
                                 if kb.many2one is None:
-                                    self.runs[index_name][q_id][j] = score
+                                    self.runs[index_name][q_id][j] = score - penalty
+                                    penalty += 1e-8
                                 # keep maximum score from many2one mapping
                                 elif kb.many2one == 'max':
                                     if j not in self.runs[index_name][q_id] or self.runs[index_name][q_id][j] < score:
