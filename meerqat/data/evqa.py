@@ -14,7 +14,7 @@
 # limitations under the License.
 
 # Mostly taken from https://github.com/google-research/google-research/tree/master/encyclopedic_vqa
-# added CLI
+# added CLI and EM and F1
 """Tools to evaluate answers in Encyclopedic-VQA."""
 
 from jsonargparse import CLI
@@ -34,6 +34,7 @@ import tensorflow_text as text
 from datasets import load_from_disk
 
 from .loading import DATA_ROOT_PATH
+from ..train.metrics import f1_score, exact_match_score, metric_max_over_ground_truths
 
 
 # Got FailedPreconditionError (Error executing an HTTP request) 
@@ -470,18 +471,31 @@ def main(prediction_path: str, reference_path: str):
     with open(prediction_path, 'rt') as file:
         predictions = json.load(file)
     reference = load_from_disk(reference_path)
-    scores = {question_type: [] for question_type in _QUESTION_TYPES}
+    scores = []
     assert len(predictions) == len(reference)
     for pred, item in zip(tqdm(predictions), reference):
-        score = evaluate_example(item['input'], item['output']['answer'], pred, item['answer_type'])
-        scores[item['answer_type']].append(score)
-    average_scores = {question_type: np.mean(score) for question_type, score in scores.items()}
-    all_scores = []
-    for question_type, score in scores.items():
-        all_scores.extend(score)
-    average_scores['overall'] = np.mean(all_scores)
+        ground_truths = item['output']['answer']
+        answer_type = item['answer_type']
+        exact_match = metric_max_over_ground_truths(exact_match_score, pred, ground_truths)
+        f1 = metric_max_over_ground_truths(f1_score, pred, ground_truths)
+        bem_score = evaluate_example(item['input'], ground_truths, pred, answer_type)
+        score = dict(exact_match=exact_match, 
+                     f1=f1, 
+                     bem_score=bem_score, 
+                     answer_type=answer_type)
+        scores.append(score)
+    scores = pd.DataFrame(scores)
+    average_scores = [scores.mean().add_prefix("overall-")] 
+    single_hop_single_answer = []
+    for answer_type, type_scores in scores.groupby('answer_type'):
+        average_scores.append(type_scores.mean().add_prefix(answer_type+"-"))
+        if answer_type in {'templated', 'automatic'}:
+            single_hop_single_answer.append(type_scores)
+    single_hop_single_answer = pd.concat(single_hop_single_answer)
+    average_scores.append(single_hop_single_answer.mean().add_prefix('single_hop_single_answer-'))
+    average_scores = pd.DataFrame({prediction_path: pd.concat(average_scores)})
     print(average_scores)
-    print((pd.DataFrame([average_scores])*100).to_latex(float_format="%.2f"))
+    print(((average_scores.T)*100).to_latex(float_format="%.2f"))
 
     
 if __name__ == "__main__":
