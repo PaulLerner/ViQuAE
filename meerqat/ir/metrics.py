@@ -433,8 +433,7 @@ if __name__ == '__main__':
             with open(args['--kwargs'], 'rt') as file:
                 kwargs = json.load(file)
         else:
-            ks = [1, 5, 10, 20, 100]
-            kwargs = dict(metrics=[f"{m}@{k}" for m in ["precision", "mrr"] for k in ks])
+            kwargs = dict(metrics=["mrr@100", "precision@1", "precision@20", "hit_rate@20"])
         if args['<run>'] is not None:
             runs_paths = args['<run>']
         else:

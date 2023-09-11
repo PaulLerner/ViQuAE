@@ -218,6 +218,8 @@ class Fusion:
     
     def test(self, best_params: dict, metrics: List[str] = None):
         """Applies best parameters"""
+        if metrics is None:
+            metrics = ["mrr@100", "precision@1", "precision@20", "hit_rate@20"]
         # custom norm: do it as a pre-processing and disable ranx norm
         if self.norm in NORMS:
             self.runs = [NORMS[self.norm](run) for run in self.runs]

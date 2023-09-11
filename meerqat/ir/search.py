@@ -323,7 +323,8 @@ class Searcher:
     fusion_kwargs: dict, optional
         Passed to Fusion (see fuse)
     metrics_kwargs: dict, optional
-        Passed to ranx.compare. Defaults to "mrr", "precision", "hit_rate" at ranks [1, 5, 10, 20, 100]
+        Passed to ranx.compare. 
+        Defaults to {"metrics": ["mrr@100", "precision@1", "precision@20", "hit_rate@20"]}
     do_fusion: bool, optional
         Whether to fuse results of the indexes. Defaults to True if their are multiple indexes.
     qnonrels: str, optional
@@ -393,8 +394,7 @@ class Searcher:
         self.fusion_kwargs = fusion_kwargs
         # I advise against using any kind of metric that uses recall (mAP, R-Precision, …) since we estimate
         # relevant document on the go so the number of relevant documents will *depend on the systemS* you use
-        ks = metrics_kwargs.pop("ks", [1, 5, 10, 20, 100])
-        default_metrics_kwargs = dict(metrics=[f"{m}@{k}" for m in ["mrr", "precision", "hit_rate"] for k in ks])
+        default_metrics_kwargs = dict(metrics=["mrr@100", "precision@1", "precision@20", "hit_rate@20"])
         default_metrics_kwargs.update(metrics_kwargs)
         self.metrics_kwargs = default_metrics_kwargs
 
@@ -519,7 +519,8 @@ def dataset_search(dataset, k=100, metric_save_path=None, map_kwargs={}, **kwarg
             qrels=searcher.qrels,
             runs=list(searcher.runs.values()),        
             output=metric_save_path,
-            **searcher.fusion_kwargs
+            **searcher.fusion_kwargs,
+            **searcher.metrics_kwargs
         )
         getattr(fuser, subcommand)(**subcommand_kwargs)    
 
