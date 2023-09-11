@@ -25,6 +25,7 @@ def resize(file_name, transform, output_root):
     output_path = output_root/file_name
     if output_path.exists():
         return None
+    output_path.parent.mkdir(exist_ok=True, parents=True)
     image = load_image(file_name)
     if image is None:
         return None
