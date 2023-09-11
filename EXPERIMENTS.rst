@@ -423,6 +423,7 @@ BM25 (ViQuAE)
 Before running any of the commands below you should `launch the Elastic
 Search
 server <https://www.elastic.co/guide/en/elastic-stack-get-started/current/get-started-elastic-stack.html#install-elasticsearch>`__.
+Alternatively, if you're using pyserini instead of elasticsearch, follow those instructions: https://github.com/castorini/pyserini/blob/master/docs/usage-index.md#building-a-bm25-index-direct-java-implementation
 
 First you might want to optimize BM25 hyperparameters, ``b`` and
 ``k_1``. We did this with a grid-search using ``optuna``: the ``--k``
