@@ -410,8 +410,7 @@ def make_passage_dataset(input_path, output_path, sentencizer=False, **kwargs):
     # spacy sentence segmentation
     if sentencizer:
         model = English()
-        sentencizer = model.create_pipe("sentencizer")
-        model.add_pipe(sentencizer)
+        model.add_pipe("sentencizer")
         kwargs["model"] = model
 
     dataset = dataset.map(make_passage_item, with_indices=True, fn_kwargs=dict(passage_dict=passage_dict, **kwargs))
@@ -436,8 +435,7 @@ def make_sentences_item(item, model):
 def make_sentences_dataset(dataset_path):
     dataset = load_from_disk(dataset_path)
     model = English()
-    sentencizer = model.create_pipe("sentencizer")
-    model.add_pipe(sentencizer)
+    model.add_pipe("sentencizer")
     dataset = dataset.map(make_sentences_item, fn_kwargs=dict(model=model))
     dataset.save_to_disk(dataset_path)
 
