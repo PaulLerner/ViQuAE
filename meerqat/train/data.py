@@ -198,7 +198,12 @@ class ImageFormatter:
             # in case of padding passage
             if image_key not in item:
                 continue
-            image = load_image(item[image_key])
+            image = item[image_key]            
+            # CrossModalDataModule: optionally sample a positive image in case of multiple reference images
+            # e.g. several reference images in the KB, as in WIT or Mensink's EVQA
+            if isinstance(image, list):
+                image = np.random.choice(image)
+            image = load_image(image)
             # trouble during loading. user is already warned
             if image is None:
                 continue
@@ -422,8 +427,6 @@ class CrossModalDataModule(DataModule):
         else:
             labels = torch.arange(strings)
         if self.paired_image is not None:
-            # TODO optionally sample a positive image in case of multiple reference images ?
-            # e.g. several reference images in the KB, as in WIT or Mensink's EVQA
             for k, v in self.image_formatter.format_pixels(items, image_key=self.paired_image).items():
                 if self.deduplicate:
                     batch[f"paired_{k}"] = v[where]
