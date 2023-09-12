@@ -125,6 +125,15 @@ def get_model_and_transform(model_kwargs={}, transform_kwargs={}):
 def embed(batch, model, transform, save_as='image_embedding', image_key='image', 
           call=None, pool=None):
     images = load_image_batch(batch[image_key], pool=pool)
+    not_None_images, not_None_indices, output = [], [], []
+    for i, image in enumerate(images):
+        output.append(None)
+        if image is not None:
+            not_None_images.append(image)
+            not_None_indices.append(i)
+    if len(not_None_images) == 0:
+        return output
+    images = not_None_images
     if isinstance(transform, FeatureExtractionMixin):
         if pool is not None:
             image_list = pool.map(transform, images)
@@ -150,7 +159,10 @@ def embed(batch, model, transform, save_as='image_embedding', image_key='image',
             image_embeddings = method(**images)
         else:
             image_embeddings = method(images)
-    batch[save_as] = image_embeddings.squeeze().cpu().numpy()
+    not_None_output = image_embeddings.squeeze().cpu().numpy()
+    for i, j in enumerate(not_None_indices):
+        output[j] = not_None_output[i]
+    batch[save_as] = output
     return batch
 
 
