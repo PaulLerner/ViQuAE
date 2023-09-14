@@ -519,8 +519,7 @@ def dataset_search(dataset, k=100, metric_save_path=None, map_kwargs={}, **kwarg
             qrels=searcher.qrels,
             runs=list(searcher.runs.values()),        
             output=metric_save_path,
-            **searcher.fusion_kwargs,
-            **searcher.metrics_kwargs
+            **searcher.fusion_kwargs
         )
         getattr(fuser, subcommand)(**subcommand_kwargs)    
 
