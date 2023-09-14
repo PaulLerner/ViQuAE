@@ -485,14 +485,14 @@ def main(prediction_path: str, reference_path: str):
                      answer_type=answer_type)
         scores.append(score)
     scores = pd.DataFrame(scores)
-    average_scores = [scores.mean().add_prefix("overall-")] 
+    average_scores = [scores.mean(numeric_only=True).add_prefix("overall-")] 
     single_hop_single_answer = []
     for answer_type, type_scores in scores.groupby('answer_type'):
-        average_scores.append(type_scores.mean().add_prefix(answer_type+"-"))
+        average_scores.append(type_scores.mean(numeric_only=True).add_prefix(answer_type+"-"))
         if answer_type in {'templated', 'automatic'}:
             single_hop_single_answer.append(type_scores)
     single_hop_single_answer = pd.concat(single_hop_single_answer)
-    average_scores.append(single_hop_single_answer.mean().add_prefix('single_hop_single_answer-'))
+    average_scores.append(single_hop_single_answer.mean(numeric_only=True).add_prefix('single_hop_single_answer-'))
     average_scores = pd.DataFrame({prediction_path: pd.concat(average_scores)})
     print(average_scores)
     print(((average_scores.T)*100).to_latex(float_format="%.2f"))
