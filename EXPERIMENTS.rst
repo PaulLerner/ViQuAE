@@ -740,6 +740,38 @@ Simply set ``run_path:"/path/to/run.trec"`` in experiments/rc/viquae/config.yaml
 and run ``meerqat.train.trainer test`` again.
 
 
+Note on the loss function
+~~~~~~~~~~~~~~~~~~~~~~~~~
+Multi-passage BERT is trained to independently predict the start and the end of the answer span in the passages. 
+At inference, the probability of the answer span being [i:j] 
+is the product of the start being i and the end being j. 
+
+Crucially, in Multi-passage BERT, all K passages related to a question share the same softmax normalization. 
+The answer can appear up to R times in the same passage. 
+Therefore, the objective should be, given a_kl the score predicted for the answer to start 
+(the reasoning is analogous for the end of the answer span) at the l-th token of the k-th passage:
+
+.. math::
+
+    -\sum_{r=1}^R \sum_{k=1}^{K}\sum_{l=1}^{L} y_{rkl} \log{\frac{\exp{(a_{kl})}}{\sum_{k'=1}^{K}\sum_{l'=1}^{L}\exp{(a_{k'l'})}}}
+    
+Where :math:`y_{rkl} \in \{0,1\}` denotes the ground truth.
+
+However, our initial implementation, therefore the results of the ViQuAE and MICT papers,
+was based on Karpukhin's DPR who implemented:
+
+
+.. math::
+
+    -\sum_{r=1}^R \max_{k=1}^{K}\sum_{l=1}^{L} y_{rkl} \log{\frac{\exp{(a_{kl})}}{\sum_{k'=1}^{K}\sum_{l'=1}^{L}\exp{(a_{k'l'})}}}
+    
+I've opened `an issue <https://github.com/facebookresearch/DPR/issues/244>`__ on Karpukhin's DPR repo
+but did not get an answer. This initial max-pooling is still mysterious to me.
+
+Anyway, that explains the difference between v3-alpha and v4-alpha, and, as a consequence,
+between the ViQuAE/MICT papers and my thesis/yet-to-be-published cross-modal paper (English version, not CORIA-2023).
+
+
 References
 ==========
 TODO use links between main text and references
