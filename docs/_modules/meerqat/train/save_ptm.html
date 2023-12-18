@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>meerqat.train.save_ptm &#8212; meerqat v3.0.0-alpha documentation</title>
+    <title>meerqat.train.save_ptm &#8212; meerqat v4.0.0-alpha documentation</title>
   
   
   
@@ -103,7 +103,7 @@
   
   
   
-    <p class="title logo__title">meerqat v3.0.0-alpha documentation</p>
+    <p class="title logo__title">meerqat v4.0.0-alpha documentation</p>
   
 </a></div>
     
@@ -275,17 +275,17 @@ document.write(`
   <h1>Source code for meerqat.train.save_ptm</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">usage: save_ptm.py [-h] [--bert] &lt;config&gt; &lt;ckpt&gt;</span>
+<span class="sd">usage: save_ptm.py [-h] [--config &lt;config&gt;] [--bert] &lt;ckpt&gt;</span>
 
 <span class="sd">Save the PreTrainedModel(s) wrapped inside the Trainee (LightningModule).</span>
 
 <span class="sd">positional arguments:</span>
-<span class="sd">  &lt;config&gt;    Path to the lightning config file (YAML).</span>
-<span class="sd">  &lt;ckpt&gt;      Path to the lightning checkpoint.</span>
+<span class="sd">  &lt;ckpt&gt;             Path to the lightning checkpoint.</span>
 
-<span class="sd">optional arguments:</span>
-<span class="sd">  -h, --help  show this help message and exit</span>
-<span class="sd">  --bert      For DPR-based BiEncoder, save BertModel instead of DPR*Encoder</span>
+<span class="sd">options:</span>
+<span class="sd">  -h, --help         show this help message and exit</span>
+<span class="sd">  --config &lt;config&gt;  Path to the lightning config file (YAML).</span>
+<span class="sd">  --bert             For DPR-based BiEncoder, save BertModel instead of DPR*Encoder</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">argparse</span>
 <span class="kn">import</span> <span class="nn">yaml</span>
@@ -294,7 +294,9 @@ document.write(`
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">trainee</span>
 
 
-<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../meerqat.train.save_ptm.html#meerqat.train.save_ptm.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">ckpt</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../meerqat.train.save_ptm.html#meerqat.train.save_ptm.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">ckpt</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">ckpt</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">/</span><span class="s1">&#39;config.yaml&#39;</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;rt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>                                                               
         <span class="n">config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">Loader</span><span class="p">)</span> 
     <span class="n">class_name</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">][</span><span class="s1">&#39;class_path&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
@@ -306,8 +308,8 @@ document.write(`
     
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span><span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;Save the PreTrainedModel(s) wrapped inside the Trainee (LightningModule).&#39;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;config&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;&lt;config&gt;&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to the lightning config file (YAML).&#39;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;ckpt&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;&lt;ckpt&gt;&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to the lightning checkpoint.&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--config&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;&lt;config&gt;&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path to the lightning config file (YAML).&#39;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--bert&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;For DPR-based BiEncoder, save BertModel instead of DPR*Encoder&#39;</span><span class="p">)</span>
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
     <span class="n">main</span><span class="p">(</span><span class="o">**</span><span class="nb">vars</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>

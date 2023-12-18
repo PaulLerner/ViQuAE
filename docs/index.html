@@ -901,7 +901,8 @@ dev set to maximize MRR.</p>
 <h4>BM25 (ViQuAE)<a class="headerlink" href="#bm25-viquae" title="Permalink to this heading">#</a></h4>
 <p>Before running any of the commands below you should <a class="reference external" href="https://www.elastic.co/guide/en/elastic-stack-get-started/current/get-started-elastic-stack.html#install-elasticsearch">launch the Elastic
 Search
-server</a>.</p>
+server</a>.
+Alternatively, if you’re using pyserini instead of elasticsearch, follow those instructions: <a class="github reference external" href="https://github.com/castorini/pyserini/blob/master/docs/usage-index.md#building-a-bm25-index-direct-java-implementation">castorini/pyserini</a></p>
 <p>First you might want to optimize BM25 hyperparameters, <code class="docutils literal notranslate"><span class="pre">b</span></code> and
 <code class="docutils literal notranslate"><span class="pre">k_1</span></code>. We did this with a grid-search using <code class="docutils literal notranslate"><span class="pre">optuna</span></code>: the <code class="docutils literal notranslate"><span class="pre">--k</span></code>
 option asks for the top-K search results.</p>
@@ -1171,6 +1172,27 @@ where retrieved by the IR system.</p></li>
 <p>Simply set <code class="docutils literal notranslate"><span class="pre">run_path:&quot;/path/to/run.trec&quot;</span></code> in experiments/rc/viquae/config.yaml
 and run <code class="docutils literal notranslate"><span class="pre">meerqat.train.trainer</span> <span class="pre">test</span></code> again.</p>
 </section>
+<section id="note-on-the-loss-function">
+<h4>Note on the loss function<a class="headerlink" href="#note-on-the-loss-function" title="Permalink to this heading">#</a></h4>
+<p>Multi-passage BERT is trained to independently predict the start and the end of the answer span in the passages.
+At inference, the probability of the answer span being [i:j]
+is the product of the start being i and the end being j.</p>
+<p>Crucially, in Multi-passage BERT, all K passages related to a question share the same softmax normalization.
+The answer can appear up to R times in the same passage.
+Therefore, the objective should be, given a_kl the score predicted for the answer to start
+(the reasoning is analogous for the end of the answer span) at the l-th token of the k-th passage:</p>
+<div class="math notranslate nohighlight">
+\[-\sum_{r=1}^R \sum_{k=1}^{K}\sum_{l=1}^{L} y_{rkl} \log{\frac{\exp{(a_{kl})}}{\sum_{k'=1}^{K}\sum_{l'=1}^{L}\exp{(a_{k'l'})}}}\]</div>
+<p>Where <span class="math notranslate nohighlight">\(y_{rkl} \in \{0,1\}\)</span> denotes the ground truth.</p>
+<p>However, our initial implementation, therefore the results of the ViQuAE and MICT papers,
+was based on Karpukhin’s DPR who implemented:</p>
+<div class="math notranslate nohighlight">
+\[-\sum_{r=1}^R \max_{k=1}^{K}\sum_{l=1}^{L} y_{rkl} \log{\frac{\exp{(a_{kl})}}{\sum_{k'=1}^{K}\sum_{l'=1}^{L}\exp{(a_{k'l'})}}}\]</div>
+<p>I’ve opened <a class="reference external" href="https://github.com/facebookresearch/DPR/issues/244">an issue</a> on Karpukhin’s DPR repo
+but did not get an answer. This initial max-pooling is still mysterious to me.</p>
+<p>Anyway, that explains the difference between v3-alpha and v4-alpha, and, as a consequence,
+between the ViQuAE/MICT papers and my thesis/yet-to-be-published cross-modal paper (English version, not CORIA-2023).</p>
+</section>
 </section>
 </section>
 <section id="references">
@@ -1325,6 +1347,7 @@ Signal Processing Letters.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pre-training-on-triviaqa-viquae">Pre-training on TriviaQA (ViQuAE)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fine-tuning-on-viquae-viquae">Fine-tuning on ViQuAE (ViQuAE)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#switching-ir-inputs-at-inference-mict">Switching IR inputs at inference (MICT)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#note-on-the-loss-function">Note on the loss function</a></li>
 </ul>
 </li>
 </ul>

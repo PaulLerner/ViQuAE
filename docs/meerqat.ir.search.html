@@ -552,7 +552,8 @@ At least one of {reference_kb_path, qrels} should be provided</p></li>
 <li><p><strong>request_timeout</strong> (<em>int</em><em>, </em><em>optional</em>) – Timeout for Elasticsearch</p></li>
 <li><p><strong>es_client_kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Passed to Elasticsearch</p></li>
 <li><p><strong>fusion_kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Passed to Fusion (see fuse)</p></li>
-<li><p><strong>metrics_kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Passed to ranx.compare. Defaults to “mrr”, “precision”, “hit_rate” at ranks [1, 5, 10, 20, 100]</p></li>
+<li><p><strong>metrics_kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Passed to ranx.compare.
+Defaults to {“metrics”: [”<a class="reference external" href="mailto:mrr&#37;&#52;&#48;100">mrr<span>&#64;</span>100</a>”, “precision&#64;1”, “<a class="reference external" href="mailto:precision&#37;&#52;&#48;20">precision<span>&#64;</span>20</a>”, “<a class="reference external" href="mailto:hit_rate&#37;&#52;&#48;20">hit_rate<span>&#64;</span>20</a>”]}</p></li>
 <li><p><strong>do_fusion</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to fuse results of the indexes. Defaults to True if their are multiple indexes.</p></li>
 <li><p><strong>qnonrels</strong> (<em>str</em><em>, </em><em>optional</em>) – Path towards a JSON collection of irrelevant documents. Used as cache to make search faster.
 Defaults to look for all results.</p></li>

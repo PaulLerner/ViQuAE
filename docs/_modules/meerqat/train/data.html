@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>meerqat.train.data &#8212; meerqat v3.0.0-alpha documentation</title>
+    <title>meerqat.train.data &#8212; meerqat v4.0.0-alpha documentation</title>
   
   
   
@@ -103,7 +103,7 @@
   
   
   
-    <p class="title logo__title">meerqat v3.0.0-alpha documentation</p>
+    <p class="title logo__title">meerqat v4.0.0-alpha documentation</p>
   
 </a></div>
     
@@ -473,7 +473,12 @@ document.write(`
             <span class="c1"># in case of padding passage</span>
             <span class="k">if</span> <span class="n">image_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">item</span><span class="p">:</span>
                 <span class="k">continue</span>
-            <span class="n">image</span> <span class="o">=</span> <span class="n">load_image</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="n">image_key</span><span class="p">])</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="n">image_key</span><span class="p">]</span>            
+            <span class="c1"># CrossModalDataModule: optionally sample a positive image in case of multiple reference images</span>
+            <span class="c1"># e.g. several reference images in the KB, as in WIT or Mensink&#39;s EVQA</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">load_image</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
             <span class="c1"># trouble during loading. user is already warned</span>
             <span class="k">if</span> <span class="n">image</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">continue</span>
@@ -697,8 +702,6 @@ document.write(`
         <span class="k">else</span><span class="p">:</span>
             <span class="n">labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">strings</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">paired_image</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># TODO optionally sample a positive image in case of multiple reference images ?</span>
-            <span class="c1"># e.g. several reference images in the KB, as in WIT or Mensink&#39;s EVQA</span>
             <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_formatter</span><span class="o">.</span><span class="n">format_pixels</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">image_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">paired_image</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">deduplicate</span><span class="p">:</span>
                     <span class="n">batch</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;paired_</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="n">where</span><span class="p">]</span>

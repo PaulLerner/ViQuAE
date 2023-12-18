@@ -346,15 +346,17 @@ document.write(`
                   
   <section id="module-meerqat.train.save_ptm">
 <span id="meerqat-train-save-ptm-module"></span><h1>meerqat.train.save_ptm module<a class="headerlink" href="#module-meerqat.train.save_ptm" title="Permalink to this heading">#</a></h1>
-<p>usage: save_ptm.py [-h] [–bert] &lt;config&gt; &lt;ckpt&gt;</p>
+<p>usage: save_ptm.py [-h] [–config &lt;config&gt;] [–bert] &lt;ckpt&gt;</p>
 <p>Save the PreTrainedModel(s) wrapped inside the Trainee (LightningModule).</p>
 <dl>
-<dt>positional arguments:</dt><dd><p>&lt;config&gt;    Path to the lightning config file (YAML).
-&lt;ckpt&gt;      Path to the lightning checkpoint.</p>
+<dt>positional arguments:</dt><dd><p>&lt;ckpt&gt;             Path to the lightning checkpoint.</p>
 </dd>
-<dt>optional arguments:</dt><dd><dl class="option-list">
+<dt>options:</dt><dd><dl class="option-list">
 <dt><kbd><span class="option">-h</span>, <span class="option">--help</span></kbd></dt>
 <dd><p>show this help message and exit</p>
+</dd>
+<dt><kbd><span class="option">--config <var>&lt;config&gt;</var></span></kbd></dt>
+<dd><p>Path to the lightning config file (YAML).</p>
 </dd>
 <dt><kbd><span class="option">--bert</span></kbd></dt>
 <dd><p>For DPR-based BiEncoder, save BertModel instead of DPR*Encoder</p>
@@ -364,7 +366,7 @@ document.write(`
 </dl>
 <dl class="py function">
 <dt class="sig sig-object py" id="meerqat.train.save_ptm.main">
-<span class="sig-prename descclassname"><span class="pre">meerqat.train.save_ptm.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ckpt</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/save_ptm.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.save_ptm.main" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">meerqat.train.save_ptm.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ckpt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/meerqat/train/save_ptm.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#meerqat.train.save_ptm.main" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </section>

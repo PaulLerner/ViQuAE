@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>meerqat.ir.search &#8212; meerqat v3.0.0-alpha documentation</title>
+    <title>meerqat.ir.search &#8212; meerqat v4.0.0-alpha documentation</title>
   
   
   
@@ -103,7 +103,7 @@
   
   
   
-    <p class="title logo__title">meerqat v3.0.0-alpha documentation</p>
+    <p class="title logo__title">meerqat v4.0.0-alpha documentation</p>
   
 </a></div>
     
@@ -598,7 +598,8 @@ document.write(`
 <span class="sd">    fusion_kwargs: dict, optional</span>
 <span class="sd">        Passed to Fusion (see fuse)</span>
 <span class="sd">    metrics_kwargs: dict, optional</span>
-<span class="sd">        Passed to ranx.compare. Defaults to &quot;mrr&quot;, &quot;precision&quot;, &quot;hit_rate&quot; at ranks [1, 5, 10, 20, 100]</span>
+<span class="sd">        Passed to ranx.compare. </span>
+<span class="sd">        Defaults to {&quot;metrics&quot;: [&quot;mrr@100&quot;, &quot;precision@1&quot;, &quot;precision@20&quot;, &quot;hit_rate@20&quot;]}</span>
 <span class="sd">    do_fusion: bool, optional</span>
 <span class="sd">        Whether to fuse results of the indexes. Defaults to True if their are multiple indexes.</span>
 <span class="sd">    qnonrels: str, optional</span>
@@ -668,8 +669,7 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">fusion_kwargs</span> <span class="o">=</span> <span class="n">fusion_kwargs</span>
         <span class="c1"># I advise against using any kind of metric that uses recall (mAP, R-Precision, …) since we estimate</span>
         <span class="c1"># relevant document on the go so the number of relevant documents will *depend on the systemS* you use</span>
-        <span class="n">ks</span> <span class="o">=</span> <span class="n">metrics_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;ks&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">100</span><span class="p">])</span>
-        <span class="n">default_metrics_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;mrr&quot;</span><span class="p">,</span> <span class="s2">&quot;precision&quot;</span><span class="p">,</span> <span class="s2">&quot;hit_rate&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ks</span><span class="p">])</span>
+        <span class="n">default_metrics_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;mrr@100&quot;</span><span class="p">,</span> <span class="s2">&quot;precision@1&quot;</span><span class="p">,</span> <span class="s2">&quot;precision@20&quot;</span><span class="p">,</span> <span class="s2">&quot;hit_rate@20&quot;</span><span class="p">])</span>
         <span class="n">default_metrics_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">metrics_kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metrics_kwargs</span> <span class="o">=</span> <span class="n">default_metrics_kwargs</span>
 
@@ -692,12 +692,14 @@ document.write(`
                                                                     <span class="n">question_types</span><span class="p">):</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="p">[</span><span class="n">index_name</span><span class="p">]</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">q_id</span><span class="p">,</span> <span class="p">{})</span>
                     <span class="k">for</span> <span class="n">score</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+                        <span class="n">penalty</span> <span class="o">=</span> <span class="mf">0.0</span>
                         <span class="k">if</span> <span class="n">kb</span><span class="o">.</span><span class="n">index_mapping</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                             <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">kb</span><span class="o">.</span><span class="n">index_mapping</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
                                 <span class="n">j</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
                                 <span class="c1"># assumes one2many mapping: simply overwrite any previous values</span>
                                 <span class="k">if</span> <span class="n">kb</span><span class="o">.</span><span class="n">many2one</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                                    <span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="p">[</span><span class="n">index_name</span><span class="p">][</span><span class="n">q_id</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">score</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="p">[</span><span class="n">index_name</span><span class="p">][</span><span class="n">q_id</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">score</span> <span class="o">-</span> <span class="n">penalty</span>
+                                    <span class="n">penalty</span> <span class="o">+=</span> <span class="mf">1e-8</span>
                                 <span class="c1"># keep maximum score from many2one mapping</span>
                                 <span class="k">elif</span> <span class="n">kb</span><span class="o">.</span><span class="n">many2one</span> <span class="o">==</span> <span class="s1">&#39;max&#39;</span><span class="p">:</span>
                                     <span class="k">if</span> <span class="n">j</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="p">[</span><span class="n">index_name</span><span class="p">][</span><span class="n">q_id</span><span class="p">]</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="p">[</span><span class="n">index_name</span><span class="p">][</span><span class="n">q_id</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">score</span><span class="p">:</span>
