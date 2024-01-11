@@ -8,6 +8,7 @@ Source code and data used in the papers:
       (Lerner et al., SIGIR’22) 
     - `Multimodal Inverse Cloze Task for Knowledge-based Visual Question Answering <https://hal.science/hal-03933089>`__  
       (Lerner et al., ECIR'23)
+    - `Cross-modal Retrieval for Knowledge-based Visual Question Answering <https://hal.science/hal-04384431>`__ (Lerner et al., ECIR'24)
 
 See also `MEERQAT project <https://www.meerqat.fr/>`__.
 
@@ -117,7 +118,6 @@ Again, the format of the KB is very similar to `KILT’s
 Wikipedia <https://huggingface.co/datasets/kilt_wikipedia>`__ so I will
 not describe all fields exhaustively.
 
-TODO share the entities JSON file
 
 .. code:: py
 
@@ -212,21 +212,41 @@ If you use the ViQuAE dataset or KB, please cite:
       address = {New York, NY, USA}
    }
    
-If you use this code for multimodal information retrieval, please cite:
+If you use this code for multimodal information retrieval or early fusion or Inverse Cloze Task pre-training, please cite:
 ::
 
-    @unpublished{lerner2023ict,
+    @inproceedings{lerner2023ict,
       TITLE = {{Multimodal Inverse Cloze Task for Knowledge-based Visual Question Answering}},
       AUTHOR = {Lerner, Paul and Ferret, Olivier and Guinaudeau, Camille},
       URL = {https://hal.science/hal-03933089},
-      NOTE = {working paper or preprint. accepted at ECIR 2023.},
+      BOOKTITLE = {{European Conference on Information Retrieval (ECIR 2023)}},
+      ADDRESS = {Dublin, Ireland},
       YEAR = {2023},
-      MONTH = Jan,
+      MONTH = Apr,
       KEYWORDS = {Visual Question Answering ; Pre-training ; Multimodal Fusion},
-      PDF = {https://hal.science/hal-03933089/file/main.pdf},
+      PDF = {https://hal.science/hal-03933089v2/file/ecir-2023-vf-authors.pdf},
       HAL_ID = {hal-03933089},
+      HAL_VERSION = {v2},
+    }
+
+
+
+If you use this code for mono- or cross-modal information retrieval with CLIP or fine-tuning CLIP, please cite:
+::
+
+    @unpublished{lerner2024cross,
+      TITLE = {{Cross-modal Retrieval for Knowledge-based Visual Question Answering}},
+      AUTHOR = {Lerner, Paul and Ferret, Olivier and Guinaudeau, Camille},
+      URL = {https://hal.science/hal-04384431},
+      NOTE = {Accepted at ECIR 2024},
+      YEAR = {2024},
+      MONTH = Jan,
+      KEYWORDS = {Visual Question Answering ; Multimodal ; Cross-modal Retrieval ; Named Entities},
+      PDF = {https://hal.science/hal-04384431/file/camera_ecir_2024_cross_modal_arXiv.pdf},
+      HAL_ID = {hal-04384431},
       HAL_VERSION = {v1},
     }
+
 
 
 Installation

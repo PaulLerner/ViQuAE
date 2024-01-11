@@ -17,7 +17,7 @@ on ``torch``. Even when not training models, all of our code is based on
 
 Instructions specific to the ECIR-2023 Multimodal ICT paper are marked with "(MICT)",
 while the instructions specific to the SIGIR ViQuAE dataset paper are marqued with "(ViQuAE)"
-and those for the CORIA-2023 CLIP cross-modal paper are marked with "(Cross-modal)".
+and those for the ECIR-2024 CLIP cross-modal paper are marked with "(Cross-modal)".
 Note that, while face detection (MTCNN) and recognition (ArcFace) are not specific to ViQuAE,
 they did not give promising results with MICT.
 
@@ -154,7 +154,7 @@ Text embedding (Cross-modal)
 
 Instead of embedding the images of the knowledge base with CLIP, you can also embed its text,
 e.g. the title of each article, to be able to then perform cross-modal retrieval, to reproduce
-the results of the CORIA paper.
+the results of the Cross-modal paper (ECIR 2024).
 
 .. code:: sh
 
@@ -395,7 +395,7 @@ Once fine-tuning is done, save the PreTrainedModel using the same command as abo
 Fine-tuning CLIP for image retrieval (Cross-modal)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To reproduce the results of the CORIA paper, fine-tune CLIP so that images of ViQuAE
+To reproduce the results of the Cross-modal paper (ECIR 24), fine-tune CLIP so that images of ViQuAE
 are closer to the name of the depicted entity! 
 
 ``python -m meerqat.train.trainer fit --config=experiments/jcm/config.yaml``
@@ -618,13 +618,13 @@ downstream performance aside (e.g. comparing ImageNet-Resnet with
 another representation for the full image), you should:
  - ``filter`` the dataset so that you don’t evaluate on irrelevant questions (e.g. those
    were the search is done with ArcFace because a face was detected)
- - evaluate at the *document-level* instead of passage-level as in the CORIA paper
+ - evaluate at the *document-level* instead of passage-level as in the Cross-modal paper (ECIR 24)
  
 See the following instructions.
 
 Cross-modal results 
 ^^^^^^^^^^^^^^^^^^^
-To reproduce the article-level results of the CORIA paper, you can use a config very similar to
+To reproduce the article-level results of the Cross-modal paper (ECIR 24), you can use a config very similar to
 ``experiments/ir/viquae/dpr+clip-cross-modal/config_test.json`` although the results 
 will **not** be mapped to corresponding passage indices, and the relevance of the article
 will be evaluated directly through the "document" ``reference_key``:
@@ -769,7 +769,7 @@ I've opened `an issue <https://github.com/facebookresearch/DPR/issues/244>`__ on
 but did not get an answer. This initial max-pooling is still mysterious to me.
 
 Anyway, that explains the difference between v3-alpha and v4-alpha, and, as a consequence,
-between the ViQuAE/MICT papers and my thesis/yet-to-be-published cross-modal paper (English version, not CORIA-2023).
+between the ViQuAE/MICT papers and the cross-modal paper (ECIR 2024).
 
 
 References
