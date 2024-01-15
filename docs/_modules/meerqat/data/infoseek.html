@@ -1,226 +1,277 @@
 
+
 <!DOCTYPE html>
 
-<html lang="en">
+
+<html lang="en" >
+
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>meerqat.data.infoseek &#8212; meerqat v3.0.0-alpha documentation</title>
-  <script>
+    <title>meerqat.data.infoseek &#8212; meerqat v4.0.0-alpha documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../_static/styles/theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
-<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=9b1a4fa89bdd0e95b23b" rel="stylesheet">
+  <link href="../../../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
 
   
-  <link rel="stylesheet"
-    href="../../../_static/vendor/fontawesome/6.1.2/css/all.min.css">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
+  <link href="../../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b">
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
     <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
     <script src="../../../_static/jquery.js"></script>
     <script src="../../../_static/underscore.js"></script>
     <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../../_static/doctools.js"></script>
-    <script src="../../../_static/sphinx_highlight.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/meerqat/data/infoseek';</script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="docsearch:language" content="en">
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
 
   
-  <input type="checkbox" class="sidebar-toggle" name="__primary" id="__primary">
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
   <label class="overlay overlay-primary" for="__primary"></label>
-
   
-  <input type="checkbox" class="sidebar-toggle" name="__secondary" id="__secondary">
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
   <label class="overlay overlay-secondary" for="__secondary"></label>
-
   
   <div class="search-button__wrapper">
     <div class="search-button__overlay"></div>
     <div class="search-button__search-container">
-      
-<form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
-  <i class="icon fas fa-search"></i>
-  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form>
-    </div>
+</form></div>
   </div>
-
   
-  <nav class="bd-header navbar navbar-expand-lg bd-navbar" id="navbar-main"><div class="bd-header__inner bd-page-width">
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
   <label class="sidebar-toggle primary-toggle" for="__primary">
-      <span class="fas fa-bars"></span>
+    <span class="fa-solid fa-bars"></span>
   </label>
-  <div id="navbar-start">
-    
-    
   
-
+  <div class="navbar-header-items__start">
+    
+      <div class="navbar-item">
+  
 
 <a class="navbar-brand logo" href="../../../index.html">
-
   
   
   
   
   
+    <p class="title logo__title">meerqat v4.0.0-alpha documentation</p>
   
-  
-
-  
-  
-    <p class="title logo__title">meerqat v3.0.0-alpha documentation</p>
-  
-</a>
+</a></div>
     
   </div>
-
+  
   
   <div class="col-lg-9 navbar-header-items">
-    <div id="navbar-center" class="mr-auto">
+    
+    <div class="me-auto navbar-header-items__center">
       
-      <div class="navbar-center-item">
-        <nav class="navbar-nav">
-    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
-        Site Navigation
-    </p>
-    <ul id="navbar-main-elements" class="navbar-nav">
-        
-    </ul>
-</nav>
-      </div>
-      
-    </div>
-
-    <div id="navbar-end">
-      <div class="navbar-end-item navbar-end__search-button-container">
-        
-<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
-  <i class="fas fa-search"></i>
-</button>
-      </div>
-      
-      <div class="navbar-end-item">
-        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
-    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
-    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
-    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
-</span>
-      </div>
-      
-      <div class="navbar-end-item">
-        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
-      </ul>
-      </div>
+        <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+  </ul>
+</nav></div>
       
     </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+        </div>
+      
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
   </div>
-
-
   
-  <div class="search-button-container--mobile">
-<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search">
-  <i class="fas fa-search"></i>
-</button>
-  </div>
-
   
-  <label class="sidebar-toggle secondary-toggle" for="__secondary">
-      <span class="fas fa-outdent"></span>
-  </label>
+    <div class="navbar-persistent--mobile">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+    </div>
   
 
+  
 </div>
-  </nav>
-  
 
+    </nav>
+  
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
       
       <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
         
+
   
   <div class="sidebar-header-items sidebar-primary__section">
     
     
       <div class="sidebar-header-items__center">
-      
-      <div class="navbar-center-item">
-        <nav class="navbar-nav">
-    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
-        Site Navigation
-    </p>
-    <ul id="navbar-main-elements" class="navbar-nav">
         
-    </ul>
-</nav>
-      </div>
-      
+          <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+  </ul>
+</nav></div>
+        
       </div>
     
-
     
     
-    <div class="sidebar-header-items__end">
-      
-      <div class="navbar-end-item">
-        <span class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle">
-    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
-    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
-    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
-</span>
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+        
       </div>
-      
-      <div class="navbar-end-item">
-        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
-      </ul>
-      </div>
-      
-    </div>
     
   </div>
-
   
-
   
-  <div class="sidebar-end-items sidebar-primary__section">
-    <div class="sidebar-end-items__item">
-    </div>
+  <div class="sidebar-primary-items__end sidebar-primary__section">
   </div>
+  
+  <div id="rtd-footer-container"></div>
+
 
       </div>
-      <main class="bd-main">
+      
+      <main id="main-content" class="bd-main">
         
         
-        <div class="bd-content">
-          <div class="bd-article-container">
-            
-            <div class="bd-header-article">
-                
-            </div>
-            
-            
-            <article class="bd-article" role="main">
+          <div class="bd-content">
+            <div class="bd-article-container">
               
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumbs">
+  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">meerqat.data.infoseek</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
   <h1>Source code for meerqat.data.infoseek</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 <span class="c1"># mostly taken from https://github.com/edchengg/infoseek_eval/blob/main/infoseek_eval.py</span>
@@ -245,13 +296,13 @@
 
 
 <div class="viewcode-block" id="in_range"><a class="viewcode-back" href="../../../meerqat.data.infoseek.html#meerqat.data.infoseek.in_range">[docs]</a><span class="k">def</span> <span class="nf">in_range</span><span class="p">(</span><span class="n">number</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">range_list</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Check if a number is within the specified range (inclusive).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if a number is within the specified range (inclusive).&quot;&quot;&quot;</span>
     <span class="n">min_num</span><span class="p">,</span> <span class="n">max_num</span> <span class="o">=</span> <span class="n">range_list</span>
     <span class="k">return</span> <span class="n">min_num</span> <span class="o">&lt;=</span> <span class="n">number</span> <span class="o">&lt;=</span> <span class="n">max_num</span></div>
 
 
 <div class="viewcode-block" id="safe_division"><a class="viewcode-back" href="../../../meerqat.data.infoseek.html#meerqat.data.infoseek.safe_division">[docs]</a><span class="k">def</span> <span class="nf">safe_division</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Divide x by y, returning 0 if y is 0.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Divide x by y, returning 0 if y is 0.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">x</span> <span class="o">/</span> <span class="n">y</span> <span class="k">if</span> <span class="n">y</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span></div>
 
 
@@ -260,7 +311,7 @@
     <span class="n">answer</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span>
     <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Scores numerical questions based on ranges and tolerances.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Scores numerical questions based on ranges and tolerances.</span>
 
 <span class="sd">    1) First, convert single number answer to a range with +/- tolerance.</span>
 <span class="sd">    2) If prediction is a single number, return 1 if it&#39;s in the answer range, 0</span>
@@ -313,7 +364,7 @@
 
 
 <div class="viewcode-block" id="process_numerical_answer"><a class="viewcode-back" href="../../../meerqat.data.infoseek.html#meerqat.data.infoseek.process_numerical_answer">[docs]</a><span class="k">def</span> <span class="nf">process_numerical_answer</span><span class="p">(</span><span class="n">string_number</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
-    <span class="sd">&quot;&quot;&quot;Parses numerical answer string into numbers (a single number or a range).</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parses numerical answer string into numbers (a single number or a range).</span>
 
 <span class="sd">    1) Clean the string and extract numbers;</span>
 <span class="sd">    2) if there are 2 numbers, return a range as [minimum value, maximum value]</span>
@@ -343,7 +394,7 @@
 
 
 <div class="viewcode-block" id="find_all"><a class="viewcode-back" href="../../../meerqat.data.infoseek.html#meerqat.data.infoseek.find_all">[docs]</a><span class="k">def</span> <span class="nf">find_all</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;Find all occurrences of a character in a string and return their indices.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find all occurrences of a character in a string and return their indices.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        s: The input string to search.</span>
@@ -359,7 +410,7 @@
 
 
 <div class="viewcode-block" id="clean_str_range"><a class="viewcode-back" href="../../../meerqat.data.infoseek.html#meerqat.data.infoseek.clean_str_range">[docs]</a><span class="k">def</span> <span class="nf">clean_str_range</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Clean range expression in a string (e.g., &#39;9-10&#39; --&gt; &#39;9 - 10&#39;).</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Clean range expression in a string (e.g., &#39;9-10&#39; --&gt; &#39;9 - 10&#39;).</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        text: The input string containing the range expression.</span>
@@ -380,7 +431,7 @@
 <div class="viewcode-block" id="range_intersection_over_union"><a class="viewcode-back" href="../../../meerqat.data.infoseek.html#meerqat.data.infoseek.range_intersection_over_union">[docs]</a><span class="k">def</span> <span class="nf">range_intersection_over_union</span><span class="p">(</span>
         <span class="n">x_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">y_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Calculate the intersection over union (IOU) of two ranges.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate the intersection over union (IOU) of two ranges.&quot;&quot;&quot;</span>
     <span class="n">min_1</span><span class="p">,</span> <span class="n">max_1</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">x_list</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">x_list</span><span class="p">)</span>
     <span class="n">min_2</span><span class="p">,</span> <span class="n">max_2</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">y_list</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">y_list</span><span class="p">)</span>
 
@@ -395,7 +446,7 @@
     <span class="n">quantity_pred</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]],</span>
     <span class="n">quantity_answer</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;Evaluate numerical predictions against numerical answers.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Evaluate numerical predictions against numerical answers.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">[</span>
         <span class="n">metric_numerical_range</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">ans</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">pred</span><span class="p">,</span> <span class="n">ans</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">quantity_pred</span><span class="p">,</span> <span class="n">quantity_answer</span><span class="p">)</span>
@@ -405,7 +456,7 @@
 <div class="viewcode-block" id="evaluate_entity"><a class="viewcode-back" href="../../../meerqat.data.infoseek.html#meerqat.data.infoseek.evaluate_entity">[docs]</a><span class="k">def</span> <span class="nf">evaluate_entity</span><span class="p">(</span>
         <span class="n">entity_pred</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">entity_answer</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;Evaluate entity predictions against entity answers.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Evaluate entity predictions against entity answers.</span>
 
 <span class="sd">    Criteria: Maximum score of exact match to entity answer.</span>
 
@@ -425,7 +476,7 @@
 <div class="viewcode-block" id="evaluate_time"><a class="viewcode-back" href="../../../meerqat.data.infoseek.html#meerqat.data.infoseek.evaluate_time">[docs]</a><span class="k">def</span> <span class="nf">evaluate_time</span><span class="p">(</span>
         <span class="n">time_pred</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">time_answer</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;Evaluate time predictions against time answers.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Evaluate time predictions against time answers.</span>
 
 <span class="sd">    Criteria:</span>
 <span class="sd">    1) +/- one year --&gt; correct</span>
@@ -444,7 +495,7 @@
 <div class="viewcode-block" id="evaluation"><a class="viewcode-back" href="../../../meerqat.data.infoseek.html#meerqat.data.infoseek.evaluation">[docs]</a><span class="k">def</span> <span class="nf">evaluation</span><span class="p">(</span>
         <span class="n">predictions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">qid2example</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
-    <span class="sd">&quot;&quot;&quot;Evaluate predictions against ground truth answers.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Evaluate predictions against ground truth answers.</span>
 
 <span class="sd">    Separate questions into time, numerical, and string categories.</span>
 
@@ -488,7 +539,7 @@
 <div class="viewcode-block" id="get_results"><a class="viewcode-back" href="../../../meerqat.data.infoseek.html#meerqat.data.infoseek.get_results">[docs]</a><span class="k">def</span> <span class="nf">get_results</span><span class="p">(</span>
     <span class="n">predictions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">qid2example</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;Get evaluation scores for predictions.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get evaluation scores for predictions.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        predictions: A list of predictions.</span>
@@ -512,7 +563,7 @@
 
 
 <div class="viewcode-block" id="harmonic_mean"><a class="viewcode-back" href="../../../meerqat.data.infoseek.html#meerqat.data.infoseek.harmonic_mean">[docs]</a><span class="k">def</span> <span class="nf">harmonic_mean</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Calculate the harmonic mean of the input arguments.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate the harmonic mean of the input arguments.&quot;&quot;&quot;</span>
     <span class="n">args_safe</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="k">if</span> <span class="n">a</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">1e-12</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span><span class="p">]</span>
     <span class="n">hmean</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">args_safe</span><span class="p">)</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">((</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">args_safe</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">hmean</span></div>
@@ -521,7 +572,7 @@
 <div class="viewcode-block" id="evaluate_infoseek"><a class="viewcode-back" href="../../../meerqat.data.infoseek.html#meerqat.data.infoseek.evaluate_infoseek">[docs]</a><span class="k">def</span> <span class="nf">evaluate_infoseek</span><span class="p">(</span>
     <span class="n">predictions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">qid2example</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;Evaluate predictions against references.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Evaluate predictions against references.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        predictions: A list of predictions.</span>
@@ -569,7 +620,7 @@
         <span class="n">reference_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dataset</span><span class="p">],</span>
         <span class="n">do_fix_space</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;Evaluate predictions against references.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Evaluate predictions against references.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        prediction_path: Path to prediction file.</span>
@@ -620,7 +671,7 @@
 <div class="viewcode-block" id="prepare_qid2example"><a class="viewcode-back" href="../../../meerqat.data.infoseek.html#meerqat.data.infoseek.prepare_qid2example">[docs]</a><span class="k">def</span> <span class="nf">prepare_qid2example</span><span class="p">(</span>
     <span class="n">reference</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
-    <span class="sd">&quot;&quot;&quot;Convert reference to qid2example dictionary.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert reference to qid2example dictionary.&quot;&quot;&quot;</span>
     <span class="n">qid2example</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">reference</span><span class="p">:</span>
         <span class="n">qid</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;data_id&#39;</span><span class="p">]</span>
@@ -640,7 +691,7 @@
 
 
 <div class="viewcode-block" id="load_jsonl"><a class="viewcode-back" href="../../../meerqat.data.infoseek.html#meerqat.data.infoseek.load_jsonl">[docs]</a><span class="k">def</span> <span class="nf">load_jsonl</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
-    <span class="sd">&quot;&quot;&quot;Load a JSONL file into a list of Dict[strionaries.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load a JSONL file into a list of Dict[strionaries.&quot;&quot;&quot;</span>
     <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>
@@ -662,70 +713,74 @@
     <span class="n">CLI</span><span class="p">(</span><span class="n">main</span><span class="p">)</span>
 </pre></div>
 
-            </article>
-            
-            
-            
-            <footer class="bd-footer-article">
-                <!-- Previous / next buttons -->
-<div class='prev-next-area'>
-</div>
-            </footer>
-            
-          </div>
-          
-          
-          
-            <div class="bd-sidebar-secondary bd-toc">
+                </article>
               
-<div class="toc-item">
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+</div></div>
   
 </div>
 
-<div class="toc-item">
-  
-</div>
-
+                </footer>
+              
             </div>
-          
-          
-        </div>
-        <footer class="bd-footer-content">
-          <div class="bd-footer-content__inner">
+            
+            
+              
             
           </div>
-        </footer>
+          <footer class="bd-footer-content">
+            
+          </footer>
         
       </main>
     </div>
   </div>
-
   
-    
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=9b1a4fa89bdd0e95b23b"></script>
+  <script src="../../../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
 
-  <footer class="bd-footer"><div class="bd-footer__inner container">
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
   
-  <div class="footer-item">
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  <p class="copyright">
     
-<p class="copyright">
-
-    &copy; Copyright 2020-2023, CNRS.<br>
-
-</p>
-
-  </div>
+      © Copyright 2020-2023, CNRS.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
+    <br/>
+  </p>
+</div>
+      
+    </div>
   
-  <div class="footer-item">
-    
-<p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.2.3.<br>
-</p>
-
-  </div>
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
+</p></div>
+      
+    </div>
   
 </div>
+
   </footer>
   </body>
 </html>

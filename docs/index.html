@@ -270,6 +270,7 @@ document.write(`
 (Lerner et al., SIGIR’22)</p></li>
 <li><p><a class="reference external" href="https://hal.science/hal-03933089">Multimodal Inverse Cloze Task for Knowledge-based Visual Question Answering</a>
 (Lerner et al., ECIR’23)</p></li>
+<li><p><a class="reference external" href="https://hal.science/hal-04384431">Cross-modal Retrieval for Knowledge-based Visual Question Answering</a> (Lerner et al., ECIR’24)</p></li>
 </ul>
 </dd>
 </dl>
@@ -371,7 +372,6 @@ features are basically the output of each step described in
 <p>Again, the format of the KB is very similar to <a class="reference external" href="https://huggingface.co/datasets/kilt_wikipedia">KILT’s
 Wikipedia</a> so I will
 not describe all fields exhaustively.</p>
-<p>TODO share the entities JSON file</p>
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># again you can also clone directly from https://huggingface.co/datasets/PaulLerner/viquae_wikipedia to get the raw data</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">data_files</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
     <span class="n">humans_with_faces</span><span class="o">=</span><span class="s1">&#39;humans_with_faces.jsonl.gz&#39;</span><span class="p">,</span>
@@ -459,17 +459,33 @@ to reproduce our experiments</p>
 }
 </pre></div>
 </div>
-<p>If you use this code for multimodal information retrieval, please cite:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@unpublished</span><span class="p">{</span><span class="n">lerner2023ict</span><span class="p">,</span>
+<p>If you use this code for multimodal information retrieval or early fusion or Inverse Cloze Task pre-training, please cite:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@inproceedings</span><span class="p">{</span><span class="n">lerner2023ict</span><span class="p">,</span>
   <span class="n">TITLE</span> <span class="o">=</span> <span class="p">{{</span><span class="n">Multimodal</span> <span class="n">Inverse</span> <span class="n">Cloze</span> <span class="n">Task</span> <span class="k">for</span> <span class="n">Knowledge</span><span class="o">-</span><span class="n">based</span> <span class="n">Visual</span> <span class="n">Question</span> <span class="n">Answering</span><span class="p">}},</span>
   <span class="n">AUTHOR</span> <span class="o">=</span> <span class="p">{</span><span class="n">Lerner</span><span class="p">,</span> <span class="n">Paul</span> <span class="ow">and</span> <span class="n">Ferret</span><span class="p">,</span> <span class="n">Olivier</span> <span class="ow">and</span> <span class="n">Guinaudeau</span><span class="p">,</span> <span class="n">Camille</span><span class="p">},</span>
   <span class="n">URL</span> <span class="o">=</span> <span class="p">{</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">hal</span><span class="o">.</span><span class="n">science</span><span class="o">/</span><span class="n">hal</span><span class="o">-</span><span class="mi">03933089</span><span class="p">},</span>
-  <span class="n">NOTE</span> <span class="o">=</span> <span class="p">{</span><span class="n">working</span> <span class="n">paper</span> <span class="ow">or</span> <span class="n">preprint</span><span class="o">.</span> <span class="n">accepted</span> <span class="n">at</span> <span class="n">ECIR</span> <span class="mf">2023.</span><span class="p">},</span>
+  <span class="n">BOOKTITLE</span> <span class="o">=</span> <span class="p">{{</span><span class="n">European</span> <span class="n">Conference</span> <span class="n">on</span> <span class="n">Information</span> <span class="n">Retrieval</span> <span class="p">(</span><span class="n">ECIR</span> <span class="mi">2023</span><span class="p">)}},</span>
+  <span class="n">ADDRESS</span> <span class="o">=</span> <span class="p">{</span><span class="n">Dublin</span><span class="p">,</span> <span class="n">Ireland</span><span class="p">},</span>
   <span class="n">YEAR</span> <span class="o">=</span> <span class="p">{</span><span class="mi">2023</span><span class="p">},</span>
-  <span class="n">MONTH</span> <span class="o">=</span> <span class="n">Jan</span><span class="p">,</span>
+  <span class="n">MONTH</span> <span class="o">=</span> <span class="n">Apr</span><span class="p">,</span>
   <span class="n">KEYWORDS</span> <span class="o">=</span> <span class="p">{</span><span class="n">Visual</span> <span class="n">Question</span> <span class="n">Answering</span> <span class="p">;</span> <span class="n">Pre</span><span class="o">-</span><span class="n">training</span> <span class="p">;</span> <span class="n">Multimodal</span> <span class="n">Fusion</span><span class="p">},</span>
-  <span class="n">PDF</span> <span class="o">=</span> <span class="p">{</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">hal</span><span class="o">.</span><span class="n">science</span><span class="o">/</span><span class="n">hal</span><span class="o">-</span><span class="mi">03933089</span><span class="o">/</span><span class="n">file</span><span class="o">/</span><span class="n">main</span><span class="o">.</span><span class="n">pdf</span><span class="p">},</span>
+  <span class="n">PDF</span> <span class="o">=</span> <span class="p">{</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">hal</span><span class="o">.</span><span class="n">science</span><span class="o">/</span><span class="n">hal</span><span class="o">-</span><span class="mi">03933089</span><span class="n">v2</span><span class="o">/</span><span class="n">file</span><span class="o">/</span><span class="n">ecir</span><span class="o">-</span><span class="mi">2023</span><span class="o">-</span><span class="n">vf</span><span class="o">-</span><span class="n">authors</span><span class="o">.</span><span class="n">pdf</span><span class="p">},</span>
   <span class="n">HAL_ID</span> <span class="o">=</span> <span class="p">{</span><span class="n">hal</span><span class="o">-</span><span class="mi">03933089</span><span class="p">},</span>
+  <span class="n">HAL_VERSION</span> <span class="o">=</span> <span class="p">{</span><span class="n">v2</span><span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>If you use this code for mono- or cross-modal information retrieval with CLIP or fine-tuning CLIP, please cite:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@unpublished</span><span class="p">{</span><span class="n">lerner2024cross</span><span class="p">,</span>
+  <span class="n">TITLE</span> <span class="o">=</span> <span class="p">{{</span><span class="n">Cross</span><span class="o">-</span><span class="n">modal</span> <span class="n">Retrieval</span> <span class="k">for</span> <span class="n">Knowledge</span><span class="o">-</span><span class="n">based</span> <span class="n">Visual</span> <span class="n">Question</span> <span class="n">Answering</span><span class="p">}},</span>
+  <span class="n">AUTHOR</span> <span class="o">=</span> <span class="p">{</span><span class="n">Lerner</span><span class="p">,</span> <span class="n">Paul</span> <span class="ow">and</span> <span class="n">Ferret</span><span class="p">,</span> <span class="n">Olivier</span> <span class="ow">and</span> <span class="n">Guinaudeau</span><span class="p">,</span> <span class="n">Camille</span><span class="p">},</span>
+  <span class="n">URL</span> <span class="o">=</span> <span class="p">{</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">hal</span><span class="o">.</span><span class="n">science</span><span class="o">/</span><span class="n">hal</span><span class="o">-</span><span class="mi">04384431</span><span class="p">},</span>
+  <span class="n">NOTE</span> <span class="o">=</span> <span class="p">{</span><span class="n">Accepted</span> <span class="n">at</span> <span class="n">ECIR</span> <span class="mi">2024</span><span class="p">},</span>
+  <span class="n">YEAR</span> <span class="o">=</span> <span class="p">{</span><span class="mi">2024</span><span class="p">},</span>
+  <span class="n">MONTH</span> <span class="o">=</span> <span class="n">Jan</span><span class="p">,</span>
+  <span class="n">KEYWORDS</span> <span class="o">=</span> <span class="p">{</span><span class="n">Visual</span> <span class="n">Question</span> <span class="n">Answering</span> <span class="p">;</span> <span class="n">Multimodal</span> <span class="p">;</span> <span class="n">Cross</span><span class="o">-</span><span class="n">modal</span> <span class="n">Retrieval</span> <span class="p">;</span> <span class="n">Named</span> <span class="n">Entities</span><span class="p">},</span>
+  <span class="n">PDF</span> <span class="o">=</span> <span class="p">{</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">hal</span><span class="o">.</span><span class="n">science</span><span class="o">/</span><span class="n">hal</span><span class="o">-</span><span class="mi">04384431</span><span class="o">/</span><span class="n">file</span><span class="o">/</span><span class="n">camera_ecir_2024_cross_modal_arXiv</span><span class="o">.</span><span class="n">pdf</span><span class="p">},</span>
+  <span class="n">HAL_ID</span> <span class="o">=</span> <span class="p">{</span><span class="n">hal</span><span class="o">-</span><span class="mi">04384431</span><span class="p">},</span>
   <span class="n">HAL_VERSION</span> <span class="o">=</span> <span class="p">{</span><span class="n">v1</span><span class="p">},</span>
 <span class="p">}</span>
 </pre></div>
@@ -511,7 +527,7 @@ on <code class="docutils literal notranslate"><span class="pre">torch</span></co
 <code class="docutils literal notranslate"><span class="pre">torch</span></code>.</p>
 <p>Instructions specific to the ECIR-2023 Multimodal ICT paper are marked with “(MICT)”,
 while the instructions specific to the SIGIR ViQuAE dataset paper are marqued with “(ViQuAE)”
-and those for the CORIA-2023 CLIP cross-modal paper are marked with “(Cross-modal)”.
+and those for the ECIR-2024 CLIP cross-modal paper are marked with “(Cross-modal)”.
 Note that, while face detection (MTCNN) and recognition (ArcFace) are not specific to ViQuAE,
 they did not give promising results with MICT.</p>
 <section id="preprocessing-passages">
@@ -629,7 +645,7 @@ so that it matches the data format and works with the trainer.</p>
 <h4>Text embedding (Cross-modal)<a class="headerlink" href="#text-embedding-cross-modal" title="Permalink to this heading">#</a></h4>
 <p>Instead of embedding the images of the knowledge base with CLIP, you can also embed its text,
 e.g. the title of each article, to be able to then perform cross-modal retrieval, to reproduce
-the results of the CORIA paper.</p>
+the results of the Cross-modal paper (ECIR 2024).</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>meerqat.ir.embedding<span class="w"> </span>data/viquae_wikipedia<span class="w"> </span>experiments/ir/viquae/clip/config.json
 </pre></div>
 </div>
@@ -881,7 +897,7 @@ e.g. <code class="docutils literal notranslate"><span class="pre">&quot;question
 </section>
 <section id="fine-tuning-clip-for-image-retrieval-cross-modal">
 <h4>Fine-tuning CLIP for image retrieval (Cross-modal)<a class="headerlink" href="#fine-tuning-clip-for-image-retrieval-cross-modal" title="Permalink to this heading">#</a></h4>
-<p>To reproduce the results of the CORIA paper, fine-tune CLIP so that images of ViQuAE
+<p>To reproduce the results of the Cross-modal paper (ECIR 24), fine-tune CLIP so that images of ViQuAE
 are closer to the name of the depicted entity!</p>
 <p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">meerqat.train.trainer</span> <span class="pre">fit</span> <span class="pre">--config=experiments/jcm/config.yaml</span></code></p>
 <p>TODO for mono-modal fine-tuning, you should add the corresponding image of the entity in the KB as “wikipedia_image” in the dataset.</p>
@@ -1073,14 +1089,14 @@ another representation for the full image), you should:</p>
 <div><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">filter</span></code> the dataset so that you don’t evaluate on irrelevant questions (e.g. those
 were the search is done with ArcFace because a face was detected)</p></li>
-<li><p>evaluate at the <em>document-level</em> instead of passage-level as in the CORIA paper</p></li>
+<li><p>evaluate at the <em>document-level</em> instead of passage-level as in the Cross-modal paper (ECIR 24)</p></li>
 </ul>
 </div></blockquote>
 <p>See the following instructions.</p>
 </section>
 <section id="cross-modal-results">
 <h5>Cross-modal results<a class="headerlink" href="#cross-modal-results" title="Permalink to this heading">#</a></h5>
-<p>To reproduce the article-level results of the CORIA paper, you can use a config very similar to
+<p>To reproduce the article-level results of the Cross-modal paper (ECIR 24), you can use a config very similar to
 <code class="docutils literal notranslate"><span class="pre">experiments/ir/viquae/dpr+clip-cross-modal/config_test.json</span></code> although the results
 will <strong>not</strong> be mapped to corresponding passage indices, and the relevance of the article
 will be evaluated directly through the “document” <code class="docutils literal notranslate"><span class="pre">reference_key</span></code>:</p>
@@ -1191,7 +1207,7 @@ was based on Karpukhin’s DPR who implemented:</p>
 <p>I’ve opened <a class="reference external" href="https://github.com/facebookresearch/DPR/issues/244">an issue</a> on Karpukhin’s DPR repo
 but did not get an answer. This initial max-pooling is still mysterious to me.</p>
 <p>Anyway, that explains the difference between v3-alpha and v4-alpha, and, as a consequence,
-between the ViQuAE/MICT papers and my thesis/yet-to-be-published cross-modal paper (English version, not CORIA-2023).</p>
+between the ViQuAE/MICT papers and the cross-modal paper (ECIR 2024).</p>
 </section>
 </section>
 </section>
