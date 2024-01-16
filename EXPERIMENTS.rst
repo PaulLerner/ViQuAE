@@ -667,7 +667,7 @@ Pre-training on TriviaQA (ViQuAE)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you want to skip this step you can get our pretrained model at
-https://huggingface.co/PaulLerner/multi_passage_bert_triviaqa_without_viquae
+https://huggingface.co/PaulLerner/multi_passage_bert_triviaqa_without_viquae_mean_pool_loss
 
 Our training set consists of questions that were not used to generate
 any ViQuAE questions, even those that were discarded or remain to be
@@ -704,7 +704,7 @@ Fine-tuning on ViQuAE (ViQuAE)
 
 Again, use ``meerqat.train.save_ptm`` on the best checkpoint and set it
 as pre-trained model instead of ``bert-base-uncased``
-(``PaulLerner/multi_passage_bert_triviaqa_without_viquae`` to use ours).
+(``PaulLerner/multi_passage_bert_triviaqa_without_viquae_mean_pool_loss`` to use ours).
 
 Then you can fine-tune the model:
 
@@ -770,6 +770,8 @@ but did not get an answer. This initial max-pooling is still mysterious to me.
 
 Anyway, that explains the difference between v3-alpha and v4-alpha, and, as a consequence,
 between the ViQuAE/MICT papers and the cross-modal paper (ECIR 2024).
+
+
 
 
 References
