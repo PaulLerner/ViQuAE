@@ -695,7 +695,7 @@ of KILT’s Wikipedia instead of our multimodal KB.
 
    python -m meerqat.train.trainer fit --config=experiments/rc/triviaqa/config.json
 
-The best checkpoint should be at step 46000.
+The best checkpoint should be at step 21000.
 
 .. _fine-tuning-on-viquae-1:
 
@@ -712,7 +712,7 @@ Then you can fine-tune the model:
 
    python -m meerqat.train.trainer fit --config=experiments/rc/viquae/config.yaml
 
-The best checkpoint should be at step 3600. This run uses the
+The best checkpoint should be at step 894. This run uses the
 default seed in ``transformers``: 42. To have multiple runs, like in the
 paper, set ``seed_everything: <int>`` in the config. We used
 seeds ``[0, 1, 2, 3, 42]``. The expected output provided is with
@@ -721,7 +721,7 @@ seeds ``[0, 1, 2, 3, 42]``. The expected output provided is with
 
 .. code:: sh
 
-   python -m meerqat.train.trainer test --config=experiments/rc/viquae/config.yaml --ckpt_path=experiments/rc/viquae/version_1/checkpoints/step=3600.ckpt
+   python -m meerqat.train.trainer test --config=experiments/rc/viquae/config.yaml --ckpt_path=experiments/rc/viquae/version_1/checkpoints/step=894.ckpt
 
 
 To reproduce the oracle results: 
